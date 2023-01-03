@@ -26,7 +26,7 @@ from .value import RegisterValueType
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
 from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
-from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
 from ..catalog import Catalog, Dict
 
 # This file handles processing the input items according to the specifications in config['input'].
@@ -45,6 +45,13 @@ valid_input_types = {}
 # We also keep track of the connected value or gsobject types.
 # These are registered by the value or gsobject types that use each input object.
 connected_types = {}
+
+# Input objects can choose not to use an input manager, and instead use the shared memory model
+# described in the AtmosphericScreen doc string.  To make that work, they would set
+# use_proxy=False and provide worker_init and worker_initargs functions.
+# These are collected here to be run buy the MultiProcess function in config.util.
+worker_init_fns = []
+worker_initargs_fns = []
 
 # Ref: https://stackoverflow.com/questions/26499548/
 # This custom proxy lets us access attributes and properties of input objects, not just methods,
@@ -137,6 +144,8 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
             # Register each input field with the InputManager class
             for key in all_keys:
+                if not valid_input_types[key].use_proxy:
+                    continue
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
                 for num in range(nfields):
@@ -254,7 +263,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         return None
 
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
-    if '_input_manager' in config:
+    if '_input_manager' in config and valid_input_types[key].use_proxy:
         tag = key + str(num)
         if 'logger' in kwargs:
             # Loggers can't be pickled. (At least prior to py3.7.  Maybe they fixed this?)
@@ -432,12 +441,39 @@ class InputLoader:
                 to use for the output files in a YAML file, which you plan to read in as a
                 dict input object. Thus, dict is our canonical example of an input type for
                 which this parameter should be True.
+
+    takes_logger
+                Whether the input object has a logger attribute.  If so, and a proxy is being
+                used, then the logger will be replaced with a logger proxy. [default: False]
+
+    use_proxy
+                Whether to use a proxy for commicating between processes.  This is normally
+                necessary whenever multiprocessing is being used, but there are cases where it
+                is not necessary and just slows things down.  [default: True]
+
+    worker_init
+                One way to avoid using a proxy is to follow the shared memory model decsribed
+                in the doc string of `AtmosphericScreen`.  This mode uses a global dict, which
+                is initialized for each worker at the start of multi-processing.  To use this
+                method, one needs to provide an initialization function that gets run when
+                each worker starts.  [default: None]
+
+    worker_initargs
+                A function to provide the necessary arguments to worker_init. [default: None]
+                This is required whenever worker_init is not None.
     """
-    def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False):
+    def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False,
+                 use_proxy=True, worker_init=None, worker_initargs=None):
         self.init_func = init_func
         self.has_nobj = has_nobj
         self.file_scope = file_scope
         self.takes_logger = takes_logger
+        self.use_proxy = use_proxy
+        if (worker_init is None) != (worker_initargs is None):
+            raise GalSimError("Must provide both worker_init and worker_initargs")
+        if worker_init is not None:
+            worker_init_fns.append(worker_init)
+            worker_initargs_fns.append(worker_initargs)
 
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the input object.
