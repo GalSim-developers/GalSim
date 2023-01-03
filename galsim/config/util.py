@@ -689,6 +689,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     """
     import time
     import traceback
+    from .input import worker_init_fns, worker_initargs_fns
 
     # The worker function will be run once in each process.
     # It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue
@@ -696,10 +697,13 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
     # with the kwargs from the list of jobs.
     # Each job also carries with it its index in the original list of all jobs.
-    def worker(task_queue, results_queue, config, logger):
+    def worker(task_queue, results_queue, config, logger, initializers, initargs):
         from io import StringIO
 
         proc = current_process().name
+
+        for init, args in zip(initializers, initargs):
+            init(*args)
 
         # The logger object passed in here is a proxy object.  This means that all the arguments
         # to any logging commands are passed through the pipe to the real Logger object on the
@@ -799,7 +803,10 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 # multiprocessing, then it just keeps incrementing the numbers, rather than starting
                 # over at Process-1.  As far as I can tell, it's not actually spawning more
                 # processes, so for the sake of the logging output, we name the processes explicitly.
-                p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy),
+                initializers = worker_init_fns
+                initargs = [initargs_fn() for initargs_fn in worker_initargs_fns]
+                p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy,
+                                                 initializers, initargs),
                             name='Process-%d'%(j+1))
                 p.start()
                 p_list.append(p)
