@@ -56,7 +56,8 @@ time $python demo10.py || exit
 time galsim -v2 demo10.yaml || exit
 
 time $python demo11.py || exit
-time galsim -v2 demo11.yaml || exit
+# In the yaml file, image.nproc=-1.  On e.g. nersc, this becomes huge, so keep it reasonable.
+time galsim -v2 demo11.yaml image.nproc=4 || exit
 
 time $python demo12.py || exit
 time galsim -v2 demo12.yaml || exit
