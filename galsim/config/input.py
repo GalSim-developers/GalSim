@@ -441,6 +441,26 @@ class InputLoader:
                 to use for the output files in a YAML file, which you plan to read in as a
                 dict input object. Thus, dict is our canonical example of an input type for
                 which this parameter should be True.
+
+    takes_logger
+                Whether the input object has a logger attribute.  If so, and a proxy is being
+                used, then the logger will be replaced with a logger proxy. [default: False]
+
+    use_proxy
+                Whether to use a proxy for commicating between processes.  This is normally
+                necessary whenever multiprocessing is being used, but there are cases where it
+                is not necessary and just slows things down.  [default: True]
+
+    worker_init
+                One way to avoid using a proxy is to follow the shared memory model decsribed
+                in the doc string of `AtmosphericScreen`.  This mode uses a global dict, which
+                is initialized for each worker at the start of multi-processing.  To use this
+                method, one needs to provide an initialization function that gets run when
+                each worker starts.  [default: None]
+
+    worker_initargs
+                A function to provude the necessary arguments to worker_init. [default: None]
+                This is required whenever worker_init is not None.
     """
     def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False,
                  use_proxy=True, worker_init=None, worker_initargs=None):
