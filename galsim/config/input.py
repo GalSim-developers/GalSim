@@ -46,26 +46,31 @@ valid_input_types = {}
 # These are registered by the value or gsobject types that use each input object.
 connected_types = {}
 
-# From https://stackoverflow.com/questions/65451457/how-can-i-update-class-members-in-processes
+# Ref: https://stackoverflow.com/questions/26499548/
 # This custom proxy lets us access attributes and properties of input objects, not just methods,
 # which are normally the only thing exposed in proxies.
-# Thanks to martineau and shts38, who combined to create this implementation for what (IMO)
-# should be the regular behavior of the AutoProxy class.
+# I started out with the answers from martineau and shts38, but it didn't always work.
+# This implementation is my own (MJ) combining their ideas with some things that the AutoProxy
+# function in the multiprocessing package does.
+
 def InputProxy(target):
     """ Create a derived NamespaceProxy class for `target`. """
-    def __getattr__(self, key):
-        result = self._callmethod('__getattribute__', (key,))
-        if isinstance(result, types.MethodType):
-            def wrapper(*args, **kwargs):
-                return self._callmethod(key, args, kwargs)
-            return wrapper
-        else:
-            return result
 
-    dic = {'types': types, '__getattr__': __getattr__}
-    proxy_name = target.__name__ + "Proxy"
-    ProxyType = type(proxy_name, (NamespaceProxy,), dic)  # Create subclass.
-    ProxyType._exposed_ = tuple(dir(target))
+    # This bit follows what multiprocessing.managers.MakeProxy normally does.
+    dic = {}
+    public_methods = [m for m in dir(target) if m[0] != '_']
+    for meth in public_methods:
+        exec('''def %s(self, *args, **kwds):
+                    return self._callmethod(%r, args, kwds)
+             '''%(meth,meth), dic)
+
+    # NamespaceProxy starts with __getattribute__ defined, so subclass from that rather than
+    # BaseProxy, as MakeProxy normally does.
+    proxy_name = target.__name__ + "_Proxy"
+    ProxyType = type(proxy_name, (NamespaceProxy,), dic)
+
+    # Expose all the public methods and also __getattribute__ and __setattr__.
+    ProxyType._exposed_ = tuple(public_methods + ['__getattribute__', '__setattr__'])
 
     return ProxyType
 
