@@ -144,7 +144,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
             # Register each input field with the InputManager class
             for key in all_keys:
-                if not valid_input_types[key].use_proxy:
+                if not valid_input_types[key].useProxy(config, logger):
                     continue
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
@@ -263,7 +263,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         return None
 
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
-    if '_input_manager' in config and valid_input_types[key].use_proxy:
+    if '_input_manager' in config and valid_input_types[key].useProxy(config, logger):
         tag = key + str(num)
         if 'logger' in kwargs:
             # Loggers can't be pickled. (At least prior to py3.7.  Maybe they fixed this?)
@@ -513,6 +513,19 @@ class InputLoader:
         if self.takes_logger:
             kwargs['logger'] = logger
         return kwargs, safe
+
+    def useProxy(self, config, logger=None):
+        """Return whether to use a proxy for the input object.
+
+        The default behavior is to return self.use_proxy, which is set by the constructor
+        parameters.  But if you want to decide whether to use a proxy based on something
+        in the config dict, you can override this and decide at run time.
+
+        Parameters:
+            config:     The base configuration dict.
+            logger:     If given, a logger object to log progress.  [default: None]
+        """
+        return self.use_proxy
 
     def setupImage(self, input_obj, config, base, logger):
         """Do any necessary setup at the start of each image.
