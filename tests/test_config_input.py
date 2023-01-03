@@ -188,6 +188,99 @@ def test_approx_nobjects():
     assert images3[1] == images1[1]
 
 
+@timer
+def test_atm_input():
+    """Test an imsim-like AtmosphericPSF as an input object.
+    """
+    import multiprocessing
+
+    class AtmPSF:
+
+        def __init__(self):
+            ctx = multiprocessing.get_context('fork')
+            rng = galsim.BaseDeviate(1234)
+            atm = galsim.Atmosphere(mp_context=ctx, r0_500=0.2,
+                                    altitude=[0.2, 2.58, 5.16],  # Same as imsim, but just 3 layers
+                                    r0_weights=[0.652, 0.172, 0.055],
+                                    rng=rng, screen_size=256, screen_scale=1)
+            self.aper = galsim.Aperture(diam=2, lam=500, screen_list=atm)
+            with galsim.utilities.single_threaded():
+                with ctx.Pool(3, initializer=galsim.phase_screens.initWorker,
+                              initargs=galsim.phase_screens.initWorkerArgs()) as pool:
+                    atm.instantiate(pool=pool, check='FFT')
+            self.atm = atm
+
+        def getGSScreenShare(self):
+            return self.atm[0].getGSScreenShare()
+
+        def getPSF(self):
+            return self.atm.makePSF(500, aper=self.aper)
+
+    def BuildAtmPSF(config, base, ignore, gsparams, logger):
+        atm = galsim.config.GetInputObj('atm_psf', config, base, 'AtmPSF')
+        return atm.getPSF(), True
+
+    galsim.config.RegisterInputType('atm_psf',
+            galsim.config.InputLoader(AtmPSF, use_proxy=False,
+                                      worker_init=galsim.phase_screens.initWorker,
+                                      worker_initargs=galsim.phase_screens.initWorkerArgs))
+    galsim.config.RegisterObjectType('AtmPSF', BuildAtmPSF, input_type='atm_psf')
+
+    config = {
+        'input': {
+            'atm_psf': {}
+        },
+        'image': {
+            'type': 'Single',
+            'random_seed': 1234,
+        },
+        'gal': {
+            'type': 'Gaussian',
+            'sigma': {'type': 'Random', 'min': 1, 'max': 2},
+            'flux': 100,
+        },
+        'psf': {
+            'type': 'AtmPSF',
+        },
+        'output': {
+            'type': 'MultiFits',
+            'nimages': 3,
+            'file_name': "output_fits/test_atm.fits",
+        },
+    }
+
+    # Basically the check here is that multiprocessing works here
+    # and that it produces the same images as serial processing
+
+    # First nproc=1.
+    config1 = galsim.config.CopyConfig(config)
+    galsim.config.Process(config1)
+
+    # Now nproc=3 in output field.
+    # This doesn't actually do 3 processes, since there is only 1 output file,
+    # but even this fails without the use_proxy=False bit above.
+    config2 = galsim.config.CopyConfig(config)
+    config2['output']['nproc'] = 3
+    config2['output']['file_name'] = "output_fits/test_atm_output_nproc_3.fits"
+    galsim.config.Process(config2)
+
+    # Finally nproc=3 in image field.
+    # This really does parallelize the run over the 3 images.
+    config3 = galsim.config.CopyConfig(config)
+    config3['image']['nproc'] = 3
+    config3['output']['file_name'] = "output_fits/test_atm_image_nproc_3.fits"
+    galsim.config.Process(config3)
+
+    # Check that the results match
+    ims1 = galsim.fits.readMulti("output_fits/test_atm.fits")
+    ims2 = galsim.fits.readMulti("output_fits/test_atm_output_nproc_3.fits")
+    ims3 = galsim.fits.readMulti("output_fits/test_atm_image_nproc_3.fits")
+
+    for im1, im2, im3 in zip(ims1,ims2,ims3):
+        assert im1 == im2
+        assert im1 == im3
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
