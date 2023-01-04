@@ -24,7 +24,7 @@ import sys
 import logging
 
 import galsim
-from galsim_test_helpers import timer, CaptureLog
+from galsim_test_helpers import timer, CaptureLog, assert_raises
 
 @timer
 def test_input_init():
@@ -280,6 +280,13 @@ def test_atm_input():
         assert im1 == im2
         assert im1 == im3
 
+    # Both worker_init and worker_initargs are required when either is provided.
+    with assert_raises(galsim.GalSimError):
+        galsim.config.InputLoader(AtmPSF, use_proxy=False,
+                                  worker_init=galsim.phase_screens.initWorker)
+    with assert_raises(galsim.GalSimError):
+        galsim.config.InputLoader(AtmPSF, use_proxy=False,
+                                  worker_initargs=galsim.phase_screens.initWorkerArgs)
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
