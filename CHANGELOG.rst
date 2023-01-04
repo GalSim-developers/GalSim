@@ -143,5 +143,8 @@ Changes from v2.4.5 to v2.4.6
 Changes from v2.4.6 to v2.4.7
 =============================
 
+- Fix the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
+- Add --log_format option to galsim executable. (#1201)
 - Allow input objects with has_nobj=True to return an approximate number of objects for the
   initial pass, rather than the eventual exact number. (#1202)
+- Update the Great3 links to non-broken URLs. (#1205)
