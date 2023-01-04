@@ -144,8 +144,6 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
             # Register each input field with the InputManager class
             for key in all_keys:
-                if not valid_input_types[key].useProxy(config, logger):
-                    continue
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
                 for num in range(nfields):
@@ -263,7 +261,10 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         return None
 
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
-    if '_input_manager' in config and valid_input_types[key].useProxy(config, logger):
+    use_proxy = ('_input_manager' in config
+                 and 'current_nproc' not in config
+                 and valid_input_types[key].useProxy(config, logger))
+    if use_proxy:
         tag = key + str(num)
         if 'logger' in kwargs:
             # Loggers can't be pickled. (At least prior to py3.7.  Maybe they fixed this?)
