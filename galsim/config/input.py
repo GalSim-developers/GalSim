@@ -67,7 +67,7 @@ def InputProxy(target):
     dic = {}
     public_methods = [m for m in dir(target) if m[0] != '_']
     for meth in public_methods:
-        exec('''def %s(self, /, *args, **kwds):
+        exec('''def %s(self, *args, **kwds):
                     return self._callmethod(%r, args, kwds)
              '''%(meth,meth), dic)
 
