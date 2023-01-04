@@ -460,7 +460,7 @@ class InputLoader:
                 each worker starts.  [default: None]
 
     worker_initargs
-                A function to provude the necessary arguments to worker_init. [default: None]
+                A function to provide the necessary arguments to worker_init. [default: None]
                 This is required whenever worker_init is not None.
     """
     def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False,
