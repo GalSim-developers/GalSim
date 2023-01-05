@@ -32,6 +32,14 @@ v2.4
 - Added option to ``initialize`` input objects in an `InputLoader`. (#1162, #1163)
 - Fixed error in returned variance for ``CCDNoise`` builder. (#1166, #1167)
 - Changed the way the internal random number sequence works. (#1169)
+- Made it possible to delete items in a config list. (#1183)
+- Fixed error in how input fields check when they are current. (#1184)
+- Fixed drawImage to work correctly for method=fft when using photon_ops. (#1193)
+- Fixed the proxies used by config Input items to allow access to attributes. (#1195)
+- Add --log_format option to galsim executable. (#1201)
+- Allow input objects with has_nobj=True to return an approximate number of objects. (#1202)
+- Add options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
+- Only use proxies for input objects if not yet in a multiprocessing context. (#1206)
 
 
 *New Features*
@@ -65,6 +73,9 @@ v2.4
 - Fixed error in `InterpolatedImage.withGSParams` not updating stepk and maxk. (#1154)
 - Fixed error in `ChromaticSum` photon shooting when ``n_photons`` is given. (#1156, #1157)
 - Fixed some rounding errors that could happen with integer-typed images. (#1160)
+- Fixed an assert error that would trigger if hsm was run on images with negative stride. (#1185)
+- Fix the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
+
 
 v2.3
 ----
