@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Image Field &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Image Field &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -297,7 +297,7 @@ add the noise properly.</p>
 
 <dl class="py method">
 <dt id="galsim.config.ImageBuilder.getNObj">
-<code class="sig-name descname"><span class="pre">getNObj</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getNObj</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be built for this image.</p>
 <p>For Single, this is just 1, but other image types would figure this out from the
 configuration parameters.</p>
@@ -308,6 +308,7 @@ configuration parameters.</p>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>approx</strong> – Whether an approximate/overestimate is ok [default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -111,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">RemoveCurrent</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">GetLoggerProxy</span><span class="p">,</span> <span class="n">get_cls_params</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">SafeManager</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">PropagateIndexKeyRNGNum</span>
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span><span class="p">,</span> <span class="n">_GetBoolValue</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimError</span>
 <span class="kn">from</span> <span class="nn">..catalog</span> <span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="c1"># This file handles processing the input items according to the specifications in config[&#39;input&#39;].</span>
@@ -131,26 +131,38 @@
 <span class="c1"># These are registered by the value or gsobject types that use each input object.</span>
 <span class="n">connected_types</span> <span class="o">=</span> <span class="p">{}</span>
 
-<span class="c1"># From https://stackoverflow.com/questions/65451457/how-can-i-update-class-members-in-processes</span>
+<span class="c1"># Input objects can choose not to use an input manager, and instead use the shared memory model</span>
+<span class="c1"># described in the AtmosphericScreen doc string.  To make that work, they would set</span>
+<span class="c1"># use_proxy=False and provide worker_init and worker_initargs functions.</span>
+<span class="c1"># These are collected here to be run buy the MultiProcess function in config.util.</span>
+<span class="n">worker_init_fns</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">worker_initargs_fns</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Ref: https://stackoverflow.com/questions/65451457/how-can-i-update-class-members-in-processes</span>
 <span class="c1"># This custom proxy lets us access attributes and properties of input objects, not just methods,</span>
 <span class="c1"># which are normally the only thing exposed in proxies.</span>
-<span class="c1"># Thanks to martineau and shts38, who combined to create this implementation for what (IMO)</span>
-<span class="c1"># should be the regular behavior of the AutoProxy class.</span>
+<span class="c1"># I started out with the answers from martineau and shts38, but it didn&#39;t always work.</span>
+<span class="c1"># This implementation is my own (MJ) combining their ideas with some things that the AutoProxy</span>
+<span class="c1"># function in the multiprocessing package does.</span>
+
 <span class="k">def</span> <span class="nf">InputProxy</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Create a derived NamespaceProxy class for `target`. &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callmethod</span><span class="p">(</span><span class="s1">&#39;__getattribute__&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,))</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">MethodType</span><span class="p">):</span>
-            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callmethod</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">wrapper</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">result</span>
 
-    <span class="n">dic</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="s1">&#39;__getattr__&#39;</span><span class="p">:</span> <span class="fm">__getattr__</span><span class="p">}</span>
-    <span class="n">proxy_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;Proxy&quot;</span>
-    <span class="n">ProxyType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">proxy_name</span><span class="p">,</span> <span class="p">(</span><span class="n">NamespaceProxy</span><span class="p">,),</span> <span class="n">dic</span><span class="p">)</span>  <span class="c1"># Create subclass.</span>
-    <span class="n">ProxyType</span><span class="o">.</span><span class="n">_exposed_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+    <span class="c1"># This bit follows what multiprocessing.managers.MakeProxy normally does.</span>
+    <span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">public_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">meth</span> <span class="ow">in</span> <span class="n">public_methods</span><span class="p">:</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;def </span><span class="si">%s</span><span class="s1">(self, *args, **kwds):</span>
+<span class="s1">                    return self._callmethod(</span><span class="si">%r</span><span class="s1">, args, kwds)</span>
+<span class="s1">             &#39;&#39;&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span><span class="n">meth</span><span class="p">),</span> <span class="n">dic</span><span class="p">)</span>
+
+    <span class="c1"># NamespaceProxy starts with __getattribute__ defined, so subclass from that rather than</span>
+    <span class="c1"># BaseProxy, as MakeProxy normally does.</span>
+    <span class="n">proxy_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;_Proxy&quot;</span>
+    <span class="n">ProxyType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">proxy_name</span><span class="p">,</span> <span class="p">(</span><span class="n">NamespaceProxy</span><span class="p">,),</span> <span class="n">dic</span><span class="p">)</span>
+
+    <span class="c1"># Expose all the public methods and also __getattribute__ and __setattr__.</span>
+    <span class="n">ProxyType</span><span class="o">.</span><span class="n">_exposed_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">public_methods</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;__getattribute__&#39;</span><span class="p">,</span> <span class="s1">&#39;__setattr__&#39;</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">ProxyType</span>
 
@@ -334,7 +346,10 @@
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: </span><span class="si">%s</span><span class="s1"> kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;_input_manager&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+    <span class="n">use_proxy</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_input_manager&#39;</span> <span class="ow">in</span> <span class="n">config</span>
+                 <span class="ow">and</span> <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span>
+                 <span class="ow">and</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">useProxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">use_proxy</span><span class="p">:</span>
         <span class="n">tag</span> <span class="o">=</span> <span class="n">key</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;logger&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="c1"># Loggers can&#39;t be pickled. (At least prior to py3.7.  Maybe they fixed this?)</span>
@@ -348,7 +363,10 @@
     <span class="k">if</span> <span class="s1">&#39;file_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: file_name = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">loader</span><span class="o">.</span><span class="n">has_nobj</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Input </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="s1">&#39;getApproxNObjects&#39;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Input </span><span class="si">%s</span><span class="s1"> has approximately </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getApproxNObjects</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Input </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
 
     <span class="n">input_objs</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_obj</span>
     <span class="n">loader</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">input_objs</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
@@ -369,7 +387,7 @@
     <span class="k">return</span> <span class="n">input_obj</span>
 
 
-<div class="viewcode-block" id="ProcessInputNObjects"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessInputNObjects">[docs]</a><span class="k">def</span> <span class="nf">ProcessInputNObjects</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ProcessInputNObjects"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessInputNObjects">[docs]</a><span class="k">def</span> <span class="nf">ProcessInputNObjects</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Process the input field, just enough to determine the number of objects.</span>
 
 <span class="sd">    Some input items are relevant for determining the number of objects in a file or image.</span>
@@ -387,6 +405,7 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     The configuration dict to process</span>
 <span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        approx:     Whether an approximate count is ok. [default: False]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the number of objects to use.</span>
@@ -399,9 +418,13 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">loader</span><span class="o">.</span><span class="n">has_nobj</span><span class="p">:</span>
                 <span class="c1"># If it&#39;s a list, just use the first one.</span>
                 <span class="n">input_obj</span> <span class="o">=</span> <span class="n">LoadInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">approx</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="s1">&#39;getApproxNObjects&#39;</span><span class="p">):</span>
+                    <span class="n">nobj</span> <span class="o">=</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getApproxNObjects</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nobj</span> <span class="o">=</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Found nobjects = </span><span class="si">%d</span><span class="s1"> for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                             <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">(),</span><span class="n">key</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span>
+                             <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">nobj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">nobj</span>
     <span class="c1"># If didn&#39;t find anything, return None.</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -489,6 +512,12 @@
 <span class="sd">                how many objects there are.  Other attributes may use lazy properties to delay</span>
 <span class="sd">                finishing the read if that is efficient.</span>
 
+<span class="sd">                It may optionally also have a ``getApproxNObjects()`` method, which may</span>
+<span class="sd">                return an approximate estimate of the number of objects.  This is used for the</span>
+<span class="sd">                initial calculation of what object numbers to use for each file/image, and it</span>
+<span class="sd">                is generally acceptable if this is an over-estimate, even a pretty egregious</span>
+<span class="sd">                over-estimate if necessary.</span>
+
 <span class="sd">    file_scope</span>
 <span class="sd">                Whether the input object might be relevant at file scope when the file and</span>
 <span class="sd">                image is initially being set up. [default: False]</span>
@@ -498,12 +527,39 @@
 <span class="sd">                to use for the output files in a YAML file, which you plan to read in as a</span>
 <span class="sd">                dict input object. Thus, dict is our canonical example of an input type for</span>
 <span class="sd">                which this parameter should be True.</span>
+
+<span class="sd">    takes_logger</span>
+<span class="sd">                Whether the input object has a logger attribute.  If so, and a proxy is being</span>
+<span class="sd">                used, then the logger will be replaced with a logger proxy. [default: False]</span>
+
+<span class="sd">    use_proxy</span>
+<span class="sd">                Whether to use a proxy for commicating between processes.  This is normally</span>
+<span class="sd">                necessary whenever multiprocessing is being used, but there are cases where it</span>
+<span class="sd">                is not necessary and just slows things down.  [default: True]</span>
+
+<span class="sd">    worker_init</span>
+<span class="sd">                One way to avoid using a proxy is to follow the shared memory model decsribed</span>
+<span class="sd">                in the doc string of `AtmosphericScreen`.  This mode uses a global dict, which</span>
+<span class="sd">                is initialized for each worker at the start of multi-processing.  To use this</span>
+<span class="sd">                method, one needs to provide an initialization function that gets run when</span>
+<span class="sd">                each worker starts.  [default: None]</span>
+
+<span class="sd">    worker_initargs</span>
+<span class="sd">                A function to provide the necessary arguments to worker_init. [default: None]</span>
+<span class="sd">                This is required whenever worker_init is not None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">has_nobj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">file_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">takes_logger</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">has_nobj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">file_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">takes_logger</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">use_proxy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">worker_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">worker_initargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_nobj</span> <span class="o">=</span> <span class="n">has_nobj</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_scope</span> <span class="o">=</span> <span class="n">file_scope</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">takes_logger</span> <span class="o">=</span> <span class="n">takes_logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_proxy</span> <span class="o">=</span> <span class="n">use_proxy</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">worker_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">worker_initargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Must provide both worker_init and worker_initargs&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">worker_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">worker_init_fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker_init</span><span class="p">)</span>
+            <span class="n">worker_initargs_fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker_initargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InputLoader.getKwargs"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.getKwargs">[docs]</a>    <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Parse the config dict and return the kwargs needed to build the input object.</span>
@@ -543,6 +599,19 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">takes_logger</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logger</span>
         <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<div class="viewcode-block" id="InputLoader.useProxy"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.useProxy">[docs]</a>    <span class="k">def</span> <span class="nf">useProxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return whether to use a proxy for the input object.</span>
+
+<span class="sd">        The default behavior is to return self.use_proxy, which is set by the constructor</span>
+<span class="sd">        parameters.  But if you want to decide whether to use a proxy based on something</span>
+<span class="sd">        in the config dict, you can override this and decide at run time.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.  [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_proxy</span></div>
 
 <div class="viewcode-block" id="InputLoader.setupImage"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.setupImage">[docs]</a>    <span class="k">def</span> <span class="nf">setupImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Do any necessary setup at the start of each image.</span>

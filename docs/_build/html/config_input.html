@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Input Field &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Input Field &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -280,7 +280,7 @@ to load whatever information you want loaded:</p>
 which the config code will use to build your input object with the right initialization kwargs.</p>
 <dl class="py class">
 <dt id="galsim.config.InputLoader">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">InputLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">InputLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define how to load a particular input type.</p>
 <p>The base class is often sufficient for simple types, but you may derive from it and
 override some of the functions to deal with special handling requirements.</p>
@@ -298,6 +298,11 @@ build will just be the number of objects in the input catalog. [default: False]<
 method.  The constructor may (if practical) only load enough to figure out
 how many objects there are.  Other attributes may use lazy properties to delay
 finishing the read if that is efficient.</p>
+<p>It may optionally also have a <code class="docutils literal notranslate"><span class="pre">getApproxNObjects()</span></code> method, which may
+return an approximate estimate of the number of objects.  This is used for the
+initial calculation of what object numbers to use for each file/image, and it
+is generally acceptable if this is an over-estimate, even a pretty egregious
+over-estimate if necessary.</p>
 </dd>
 <dt>file_scope</dt><dd><p>Whether the input object might be relevant at file scope when the file and
 image is initially being set up. [default: False]</p>
@@ -306,6 +311,22 @@ initial file setup.  For example, you might store the file names you want
 to use for the output files in a YAML file, which you plan to read in as a
 dict input object. Thus, dict is our canonical example of an input type for
 which this parameter should be True.</p>
+</dd>
+<dt>takes_logger</dt><dd><p>Whether the input object has a logger attribute.  If so, and a proxy is being
+used, then the logger will be replaced with a logger proxy. [default: False]</p>
+</dd>
+<dt>use_proxy</dt><dd><p>Whether to use a proxy for commicating between processes.  This is normally
+necessary whenever multiprocessing is being used, but there are cases where it
+is not necessary and just slows things down.  [default: True]</p>
+</dd>
+<dt>worker_init</dt><dd><p>One way to avoid using a proxy is to follow the shared memory model decsribed
+in the doc string of <a class="reference internal" href="phase_psf.html#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>.  This mode uses a global dict, which
+is initialized for each worker at the start of multi-processing.  To use this
+method, one needs to provide an initialization function that gets run when
+each worker starts.  [default: None]</p>
+</dd>
+<dt>worker_initargs</dt><dd><p>A function to provide the necessary arguments to worker_init. [default: None]
+This is required whenever worker_init is not None.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -377,6 +398,23 @@ for an example that does require some setup at the start of each image.</p>
 <li><p><strong>input_obj</strong> – The input object to use</p></li>
 <li><p><strong>config</strong> – The configuration dict for the input type</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.config.InputLoader.useProxy">
+<code class="sig-name descname"><span class="pre">useProxy</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.useProxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader.useProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether to use a proxy for the input object.</p>
+<p>The default behavior is to return self.use_proxy, which is set by the constructor
+parameters.  But if you want to decide whether to use a proxy based on something
+in the config dict, you can override this and decide at run time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The base configuration dict.</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress.  [default: None]</p></li>
 </ul>
 </dd>
@@ -456,7 +494,7 @@ which is used by <a class="reference download internal" download="" href="_downl
 
 <dl class="py class">
 <dt id="galsim.config.input_nfw.NFWLoader">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.input_nfw.</span></code><code class="sig-name descname"><span class="pre">NFWLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#NFWLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_nfw.NFWLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.input_nfw.</span></code><code class="sig-name descname"><span class="pre">NFWLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#NFWLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_nfw.NFWLoader" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -473,7 +511,7 @@ which is used by <a class="reference download internal" download="" href="_downl
 
 <dl class="py class">
 <dt id="galsim.config.input_powerspectrum.PowerSpectrumLoader">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.input_powerspectrum.</span></code><code class="sig-name descname"><span class="pre">PowerSpectrumLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#PowerSpectrumLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.config.input_powerspectrum.</span></code><code class="sig-name descname"><span class="pre">PowerSpectrumLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#PowerSpectrumLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">

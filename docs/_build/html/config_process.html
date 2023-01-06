@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Processing From Python &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Processing From Python &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -330,7 +330,7 @@ information in the config dict.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNObjForFile">
-<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">GetNObjForFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNObjForFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.GetNObjForFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">GetNObjForFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNObjForFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.GetNObjForFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be made for each image built as part of the file file_num,
 which starts at image number image_num, based on the information in the config dict.</p>
 <dl class="field-list simple">
@@ -340,6 +340,7 @@ which starts at image number image_num, based on the information in the config d
 <li><p><strong>file_num</strong> – The current file number.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+<li><p><strong>approx</strong> – Whether an approximate/overestimate is ok [default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -472,7 +473,7 @@ the provided image size.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNObjForImage">
-<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">GetNObjForImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#GetNObjForImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.GetNObjForImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">GetNObjForImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#GetNObjForImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.GetNObjForImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be made for the image number image_num based on
 the information in the config dict.</p>
 <dl class="field-list simple">
@@ -481,6 +482,7 @@ the information in the config dict.</p>
 <li><p><strong>config</strong> – The configuration dict.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>approx</strong> – Whether an approximate/overestimate is ok [default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1036,7 +1038,7 @@ used by multiple processes if appropriate. [default: False]</p></li>
 
 <dl class="py function">
 <dt id="galsim.config.ProcessInputNObjects">
-<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">ProcessInputNObjects</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#ProcessInputNObjects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ProcessInputNObjects" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">ProcessInputNObjects</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#ProcessInputNObjects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ProcessInputNObjects" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process the input field, just enough to determine the number of objects.</p>
 <p>Some input items are relevant for determining the number of objects in a file or image.
 This means we need to have them processed before splitting up jobs over multiple processes
@@ -1055,6 +1057,7 @@ galsim.config “magic”.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – The configuration dict to process</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+<li><p><strong>approx</strong> – Whether an approximate count is ok. [default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

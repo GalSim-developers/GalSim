@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.image &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.image &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -399,7 +399,7 @@
     <span class="k">return</span> <span class="n">image</span></div>
 
 
-<div class="viewcode-block" id="GetNObjForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNObjForImage">[docs]</a><span class="k">def</span> <span class="nf">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="GetNObjForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNObjForImage">[docs]</a><span class="k">def</span> <span class="nf">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of objects that will be made for the image number image_num based on</span>
 <span class="sd">    the information in the config dict.</span>
@@ -408,6 +408,7 @@
 <span class="sd">        config:         The configuration dict.</span>
 <span class="sd">        image_num:      The current image number.</span>
 <span class="sd">        logger:         If given, a logger object to log progress.</span>
+<span class="sd">        approx:         Whether an approximate/overestimate is ok [default: False]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the number of objects</span>
@@ -417,7 +418,8 @@
     <span class="k">if</span> <span class="n">image_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_image_types</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid image.type.&quot;</span><span class="p">,</span> <span class="n">image_type</span><span class="p">,</span>
                                      <span class="nb">list</span><span class="p">(</span><span class="n">valid_image_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-    <span class="k">return</span> <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span><span class="o">.</span><span class="n">getNObj</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span><span class="o">.</span><span class="n">getNObj</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span>
+                                                 <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="n">approx</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FlattenNoiseVariance"><a class="viewcode-back" href="../../../config_process.html#galsim.config.FlattenNoiseVariance">[docs]</a><span class="k">def</span> <span class="nf">FlattenNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -653,17 +655,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="ImageBuilder.getNObj"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.getNObj">[docs]</a>    <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ImageBuilder.getNObj"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.getNObj">[docs]</a>    <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the number of objects that will be built for this image.</span>
 
 <span class="sd">        For Single, this is just 1, but other image types would figure this out from the</span>
 <span class="sd">        configuration parameters.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            config:     The configuration dict for the image field.</span>
-<span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            image_num:  The current image number.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            config:         The configuration dict for the image field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            image_num:      The current image number.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">            approx:         Whether an approximate/overestimate is ok [default: False]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the number of objects</span>

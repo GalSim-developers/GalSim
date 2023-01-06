@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.util &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.util &mdash; GalSim 2.4.7 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -774,6 +774,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">time</span>
     <span class="kn">import</span> <span class="nn">traceback</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">worker_init_fns</span><span class="p">,</span> <span class="n">worker_initargs_fns</span>
 
     <span class="c1"># The worker function will be run once in each process.</span>
     <span class="c1"># It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue</span>
@@ -781,10 +782,13 @@
     <span class="c1"># The *tasks* can be made up of more than one *job*.  Each job involves calling job_func</span>
     <span class="c1"># with the kwargs from the list of jobs.</span>
     <span class="c1"># Each job also carries with it its index in the original list of all jobs.</span>
-    <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 
         <span class="n">proc</span> <span class="o">=</span> <span class="n">current_process</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">for</span> <span class="n">init</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">):</span>
+            <span class="n">init</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
         <span class="c1"># The logger object passed in here is a proxy object.  This means that all the arguments</span>
         <span class="c1"># to any logging commands are passed through the pipe to the real Logger object on the</span>
@@ -884,7 +888,10 @@
                 <span class="c1"># multiprocessing, then it just keeps incrementing the numbers, rather than starting</span>
                 <span class="c1"># over at Process-1.  As far as I can tell, it&#39;s not actually spawning more</span>
                 <span class="c1"># processes, so for the sake of the logging output, we name the processes explicitly.</span>
-                <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger_proxy</span><span class="p">),</span>
+                <span class="n">initializers</span> <span class="o">=</span> <span class="n">worker_init_fns</span>
+                <span class="n">initargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">initargs_fn</span><span class="p">()</span> <span class="k">for</span> <span class="n">initargs_fn</span> <span class="ow">in</span> <span class="n">worker_initargs_fns</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger_proxy</span><span class="p">,</span>
+                                                 <span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">),</span>
                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Process-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
                 <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
                 <span class="n">p_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
