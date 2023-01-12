@@ -95,23 +95,23 @@ class TruthBuilder(ExtraOutputBuilder):
         # Note: Provide a default here, because if all items were skipped it would otherwise
         # lead to a KeyError.
         types = self.scratch.pop('types', [float] * len(cols))
-        self.cat = OutputCatalog(names=cols.keys(), types=types)
+        cat = OutputCatalog(names=list(cols.keys()), types=types)
 
         # Add all the rows in order to the OutputCatalog
         # Note: types was popped above, so only the obj_num keys are left.
         obj_nums = sorted(self.scratch.keys())
         for obj_num in obj_nums:
             row = self.scratch[obj_num]
-            self.cat.addRow(row)
-        return self.cat
+            cat.addRow(row)
+        return cat  # This becomes self.final_data
 
     # Write the catalog to a file
     def writeFile(self, file_name, config, base, logger):
-        self.cat.write(file_name)
+        self.final_data.write(file_name)
 
     # Create an HDU of the FITS binary table.
     def writeHdu(self, config, base, logger):
-        return self.cat.writeFitsHdu()
+        return self.final_data.writeFitsHdu()
 
 # Register this as a valid extra output
 RegisterExtraOutput('truth', TruthBuilder())

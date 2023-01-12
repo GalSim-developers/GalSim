@@ -589,7 +589,7 @@ class OutputCatalog:
                 self.names, type_str, self.rows)
 
     def __str__(self):
-        return "galsim.OutputCatalog(name=%r)"%self.names
+        return "galsim.OutputCatalog(names=%r)"%self.names
 
     def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
