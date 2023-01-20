@@ -81,7 +81,7 @@ copt =  {
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ manual OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64',
+    'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
                       '-Wno-shorten-64-to-32','-fvisibility=hidden'],
     'unknown' : [],
@@ -93,8 +93,8 @@ lopt =  {
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
     'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
     'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
-    'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64',
-                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version','-v'],
+    'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
+                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version'],
     'unknown' : [],
 }
 
@@ -851,7 +851,7 @@ def add_dirs(builder, output=False):
     if hasattr(builder, 'library_dirs'):
         if fftw_libpath != '':
             builder.library_dirs.append(fftw_libpath)
-        builder.libraries.append('galsim')  # Make sure galsim comes before fftw3
+        #builder.libraries.append('galsim')  # Make sure galsim comes before fftw3
         builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
     fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
     if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):

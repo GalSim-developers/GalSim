@@ -260,6 +260,9 @@ namespace galsim {
                              });
     }
 
+    // this is no longer used within the main loop, but it is still required for
+    // fillWithPixelAreas, which cannot use the GPU version as the GPU may not have
+    // been initialised
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -510,89 +513,6 @@ namespace galsim {
         result.updateBounds();
     }
 
-    // Checks if a point is inside a pixel based on the new linear boundaries.
-    template <typename T>
-    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                              ImageView<T> target, bool* off_edge) const
-    {
-        // This scales the pixel distortion based on the zconv, which is the depth
-        // at which the electron is created, and then tests to see if the delivered
-        // point is inside the pixel.
-        // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
-        // photon within the pixel, with (0,0) in the lower left
-
-        // If test pixel is off the image, return false.  (Avoids seg faults!)
-        if (!target.getBounds().includes(Position<int>(ix,iy))) {
-            if (off_edge) *off_edge = true;
-            return false;
-        }
-        xdbg<<"insidePixel: "<<ix<<','<<iy<<','<<x<<','<<y<<','<<off_edge<<std::endl;
-
-        const int i1 = target.getXMin();
-        const int i2 = target.getXMax();
-        const int j1 = target.getYMin();
-        const int j2 = target.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
-
-        int index = (ix - i1) * ny + (iy - j1);
-        xdbg<<"index = "<<index<<std::endl;
-        xdbg<<"p = "<<x<<','<<y<<std::endl;
-        xdbg<<"inner = "<<_pixelInnerBounds[index]<<std::endl;
-        xdbg<<"outer = "<<_pixelOuterBounds[index]<<std::endl;
-
-        // First do some easy checks if the point isn't terribly close to the boundary.
-#ifdef _OPENMP
-        int t = omp_get_thread_num();
-#else
-        int t  = 0;
-#endif
-        Position<double> p(x,y);
-        bool inside;
-        if (_pixelInnerBounds[index].includes(p)) {
-            xdbg<<"trivial\n";
-            inside = true;
-        } else if (!_pixelOuterBounds[index].includes(p)) {
-            xdbg<<"trivially not\n";
-            inside = false;
-        } else {
-            xdbg<<"maybe\n";
-            // OK, it must be near the boundary, so now be careful.
-            // The term zfactor decreases the pixel shifts as we get closer to the bottom
-            // It is an empirical fit to the Poisson solver simulations, and only matters
-            // when we get quite close to the bottom.  This could be more accurate by making
-            // the Vertices files have an additional look-up variable (z), but this doesn't
-            // seem necessary at this point
-            const double zfit = 12.0;
-            const double zfactor = std::tanh(zconv / zfit);
-
-            // Scale the testpoly vertices by zfactor
-            scaleBoundsToPoly(ix - i1, iy - j1, nx, ny, _emptypoly, _testpoly[t],
-                              zfactor);
-
-            // Now test to see if the point is inside
-            inside = _testpoly[t].contains(p);
-        }
-
-        // If the nominal pixel is on the edge of the image and the photon misses in the
-        // direction of falling off the image, (possibly) report that in off_edge.
-        if (!inside && off_edge) {
-            xdbg<<"Check for off_edge\n";
-            xdbg<<"inner = "<<_pixelInnerBounds[index]<<std::endl;
-            xdbg<<"ix,i1,i2 = "<<ix<<','<<i1<<','<<i2<<std::endl;
-            xdbg<<"iy,j1,j2 = "<<iy<<','<<j1<<','<<j2<<std::endl;
-            *off_edge = false;
-            xdbg<<"ix == i1 ? "<<(ix == i1)<<std::endl;
-            xdbg<<"x < inner.xmin? "<<(x < _pixelInnerBounds[index].getXMin())<<std::endl;
-            if ((ix == i1) && (x < _pixelInnerBounds[index].getXMin())) *off_edge = true;
-            if ((ix == i2) && (x > _pixelInnerBounds[index].getXMax())) *off_edge = true;
-            if ((iy == j1) && (y < _pixelInnerBounds[index].getYMin())) *off_edge = true;
-            if ((iy == j2) && (y > _pixelInnerBounds[index].getYMax())) *off_edge = true;
-            xdbg<<"off_edge = "<<*off_edge<<std::endl;
-        }
-        return inside;
-    }
-
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
 
@@ -633,45 +553,6 @@ namespace galsim {
         } else {
             return si_length;
         }
-    }
-
-    static const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
-    static const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-
-    // Break this bit out mostly to make it easier when profiling to see how much it would help
-    // to further optimize this part of the code.
-    template <typename T>
-    bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
-                         ImageView<T> target, int& step)
-    {
-        xdbg<<"searchNeighbors for "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
-        // The following code finds which pixel we are in given
-        // pixel distortion due to the brighter-fatter effect
-        // The following are set up to start the search in the undistorted pixel, then
-        // search in the nearest neighbor first if it's not in the undistorted pixel.
-        if      ((x > y) && (x > 1.0 - y)) step = 1;
-        else if ((x < y) && (x < 1.0 - y)) step = 7;
-        else if ((x < y) && (x > 1.0 - y)) step = 3;
-        else step = 5;
-        int n=step;
-        xdbg<<"step = "<<step<<std::endl;
-        for (int m=1; m<9; m++) {
-            int ix_off = ix + xoff[n];
-            int iy_off = iy + yoff[n];
-            double x_off = x - xoff[n];
-            double y_off = y - yoff[n];
-            xdbg<<n<<"  "<<ix_off<<"  "<<iy_off<<"  "<<x_off<<"  "<<y_off<<std::endl;
-            if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv, target)) {
-                xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
-                    <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
-                ix = ix_off;
-                iy = iy_off;
-                return true;
-            }
-            n = ((n-1) + step) % 8 + 1;
-            // This is intended to start with the nearest neighbor, then cycle through others.
-        }
-        return false;
     }
 
     // Calculates the area of a pixel based on the linear boundaries.
@@ -815,36 +696,6 @@ namespace galsim {
         }
     }
 
-#if 0
-    template <typename T>
-    void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
-    {
-        Bounds<int> b = target.getBounds();
-        if (!b.isDefined())
-            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
-                                     " undefined Bounds");
-
-        const int nx = b.getXMax() - b.getXMin() + 1;
-        const int ny = b.getYMax() - b.getYMin() + 1;
-        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-
-        initializeBoundaryPoints(nx, ny);
-
-        dbg<<"Built poly list\n";
-        // Now we add in the tree ring distortions
-        addTreeRingDistortions(target, orig_center);
-
-        // Start with the correct distortions for the initial image as it is already
-        dbg<<"Initial updatePixelDistortions\n";
-        updatePixelDistortions(target);
-
-        // Keep track of the charge we are accumulating on a separate image for efficiency
-        // of the distortion updates.
-        _delta.resize(b);
-        _delta.setZero();
-    }
-#endif
-  
     template <typename T>
     void Silicon::subtractDelta(ImageView<T> target)
     {
@@ -878,145 +729,6 @@ namespace galsim {
         
 #pragma omp target update from(targetData[0:imageDataSize])
     }
-
-#if 0
-    template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
-                               BaseDeviate rng, ImageView<T> target)
-    {
-        const int nphotons = i2 - i1;
-        dbg<<"Start accumulate: nphot = "<<nphotons<<std::endl;
-
-        // Generate random numbers in advance
-        std::vector<double> conversionDepthRandom(nphotons);
-        std::vector<double> pixelNotFoundRandom(nphotons);
-        std::vector<double> diffStepRandom(nphotons * 2);
-
-        UniformDeviate ud(rng);
-        GaussianDeviate gd(ud, 0, 1);
-
-        for (int i=0; i<nphotons; i++) {
-            diffStepRandom[i*2] = gd();
-            diffStepRandom[i*2+1] = gd();
-            pixelNotFoundRandom[i] = ud();
-            conversionDepthRandom[i] = ud();
-        }
-
-        const double invPixelSize = 1./_pixelSize; // pixels/micron
-        const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
-        Bounds<int> b = target.getBounds();
-        double addedFlux = 0.;
-
-#ifdef _OPENMP
-#pragma omp parallel reduction (+:addedFlux)
-        {
-#pragma omp for
-#endif
-        for (int i=i1; i<i2; i++) {
-            // Get the location where the photon strikes the silicon:
-            double x0 = photons.getX(i); // in pixels
-            double y0 = photons.getY(i); // in pixels
-            xdbg<<"x0,y0 = "<<x0<<','<<y0;
-
-            double dz = calculateConversionDepth(photons, i, conversionDepthRandom[i-i1]);
-            if (photons.hasAllocatedAngles()) {
-                double dxdz = photons.getDXDZ(i);
-                double dydz = photons.getDYDZ(i);
-                double dz_pixel = dz * invPixelSize;
-                x0 += dxdz * dz_pixel; // dx in pixels
-                y0 += dydz * dz_pixel; // dy in pixels
-            }
-            xdbg<<" => "<<x0<<','<<y0;
-            // This is the reverse of depth. zconv is how far above the substrate the e- converts.
-            double zconv = _sensorThickness - dz;
-            xdbg<<"zconv = "<<zconv<<std::endl;
-            if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
-            // TODO: Do something more realistic if it hits the bottom.
-
-            // Now we add in a displacement due to diffusion
-            if (_diffStep != 0.) {
-                double diffStep = std::max(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
-                x0 += diffStep * diffStepRandom[(i-i1)*2];
-                y0 += diffStep * diffStepRandom[(i-i1)*2+1];
-            }
-            xdbg<<" => "<<x0<<','<<y0<<std::endl;
-            double flux = photons.getFlux(i);
-
-#ifdef DEBUGLOGGING
-            if (i % 1000 == 0) {
-                xdbg<<"diffStep = "<<_diffStep<<std::endl;
-                xdbg<<"zconv = "<<zconv<<std::endl;
-                xdbg<<"x0 = "<<x0<<std::endl;
-                xdbg<<"y0 = "<<y0<<std::endl;
-            }
-#endif
-
-            // Now we find the undistorted pixel
-            int ix = int(floor(x0 + 0.5));
-            int iy = int(floor(y0 + 0.5));
-
-#ifdef DEBUGLOGGING
-            int ix0 = ix;
-            int iy0 = iy;
-#endif
-
-            double x = x0 - ix + 0.5;
-            double y = y0 - iy + 0.5;
-            // (ix,iy) are the undistorted pixel coordinates.
-            // (x,y) are the coordinates within the pixel, centered at the lower left
-
-            // First check the obvious choice, since this will usually work.
-            bool off_edge;
-            bool foundPixel;
-            foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
-
-            // If the nominal position is on the edge of the image, off_edge reports whether
-            // the photon has fallen off the edge of the image. In this case, we won't find it in
-            // any of the neighbors either.  Just let the photon fall off the edge in this case.
-            if (!foundPixel && off_edge) continue;
-
-            // Then check neighbors
-            int step;  // We might need this below, so let searchNeighbors return it.
-            if (!foundPixel) {
-                foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
-            }
-
-            // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
-            // If we do arrive here due to roundoff error of the pixel boundary, put the electron
-            // in the undistorted pixel or the nearest neighbor with equal probability.
-            if (!foundPixel) {
-#ifdef DEBUGLOGGING
-                dbg<<"Not found in any pixel\n";
-                dbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
-                dbg<<"b = "<<b<<std::endl;
-                dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
-                set_verbose(2);
-                bool off_edge;
-                insidePixel(ix, iy, x, y, zconv, target, &off_edge);
-                searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
-                set_verbose(1);
-#endif
-                int n = (pixelNotFoundRandom[i-i1] > 0.5) ? 0 : step;
-                ix = ix + xoff[n];
-                iy = iy + yoff[n];
-            }
-
-            if (b.includes(ix,iy)) {
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-                _delta(ix,iy) += flux;
-
-                // This isn't atomic -- openmp is handling the reduction for us.
-                addedFlux += flux;
-            }
-        }
-#ifdef _OPENMP
-        }
-#endif
-        return addedFlux;
-    }
-#endif
   
     template <typename T>
     void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
@@ -1179,26 +891,22 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-            //#pragma omp target update from(targetData[0:imageDataSize])
-
 #pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-            //#pragma omp target update from(targetData[0:imageDataSize])
-
 #pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
     }
     
-    bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
-				 Bounds<int>& targetBounds, bool* off_edge,
-                                 int emptypolySize,
-                                 Bounds<double>* pixelInnerBoundsData,
-                                 Bounds<double>* pixelOuterBoundsData,
-                                 Position<float>* horizontalBoundaryPointsData,
-                                 Position<float>* verticalBoundaryPointsData,
-                                 Position<double>* emptypolyData) const
+    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
+                              Bounds<int>& targetBounds, bool* off_edge,
+                              int emptypolySize,
+                              Bounds<double>* pixelInnerBoundsData,
+                              Bounds<double>* pixelOuterBoundsData,
+                              Position<float>* horizontalBoundaryPointsData,
+                              Position<float>* verticalBoundaryPointsData,
+                              Position<double>* emptypolyData) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -1338,13 +1046,13 @@ namespace galsim {
         return inside;
     }
 
-    bool searchNeighborsGPU(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
-			    Bounds<int>& targetBounds, int& step, int emptypolysize,
-                            Bounds<double>* pixelInnerBoundsData,
-                            Bounds<double>* pixelOuterBoundsData,
-                            Position<float>* horizontalBoundaryPointsData,
-                            Position<float>* verticalBoundaryPointsData,
-                            Position<double>* emptypolyData)
+    bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
+                         Bounds<int>& targetBounds, int& step, int emptypolysize,
+                         Bounds<double>* pixelInnerBoundsData,
+                         Bounds<double>* pixelOuterBoundsData,
+                         Position<float>* horizontalBoundaryPointsData,
+                         Position<float>* verticalBoundaryPointsData,
+                         Position<double>* emptypolyData)
     {
         const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
         const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
@@ -1363,12 +1071,12 @@ namespace galsim {
             int iy_off = iy + yoff[n];
             double x_off = x - xoff[n];
             double y_off = y - yoff[n];
-	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv,
-                                       targetBounds, nullptr, emptypolysize,
-                                       pixelInnerBoundsData, pixelOuterBoundsData,
-                                       horizontalBoundaryPointsData,
-                                       verticalBoundaryPointsData,
-                                       emptypolyData)) {
+	    if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv,
+                                    targetBounds, nullptr, emptypolysize,
+                                    pixelInnerBoundsData, pixelOuterBoundsData,
+                                    horizontalBoundaryPointsData,
+                                    verticalBoundaryPointsData,
+                                    emptypolyData)) {
                 ix = ix_off;
                 iy = iy_off;
                 return true;
@@ -1521,24 +1229,24 @@ namespace galsim {
 	    bool off_edge;
 	    bool foundPixel;
 
-	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, b, &off_edge,
-                                        emptypolySize, pixelInnerBoundsData,
-                                        pixelOuterBoundsData,
-                                        horizontalBoundaryPointsData,
-                                        verticalBoundaryPointsData,
-                                        emptypolyData);
+	    foundPixel = insidePixel(ix, iy, x, y, zconv, b, &off_edge,
+                                     emptypolySize, pixelInnerBoundsData,
+                                     pixelOuterBoundsData,
+                                     horizontalBoundaryPointsData,
+                                     verticalBoundaryPointsData,
+                                     emptypolyData);
 
 	    if (!foundPixel && off_edge) continue;
 
 	    int step;
 	    if (!foundPixel) {
-		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv,
-                                                b, step, emptypolySize,
-                                                pixelInnerBoundsData,
-                                                pixelOuterBoundsData,
-                                                horizontalBoundaryPointsData,
-                                                verticalBoundaryPointsData,
-                                                emptypolyData);
+		foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv,
+                                             b, step, emptypolySize,
+                                             pixelInnerBoundsData,
+                                             pixelOuterBoundsData,
+                                             horizontalBoundaryPointsData,
+                                             verticalBoundaryPointsData,
+                                             emptypolyData);
             }
 
 	    if (!foundPixel) {
@@ -1558,7 +1266,7 @@ namespace galsim {
 		addedFlux += flux;
             }
 	}
-
+        
         return addedFlux;
     }
 
@@ -1703,7 +1411,6 @@ namespace galsim {
         pixelOuterBoundsData[k].setYMax(obymax);
     }
 
-#if 1
     template <typename T>
     void Silicon::update(ImageView<T> target)
     {
@@ -1862,17 +1569,6 @@ namespace galsim {
             deltaData[i] = 0.0;
 	}
     }
-#endif
-  
-#if 0
-    template <typename T>
-    void Silicon::update(ImageView<T> target)
-    {
-        updatePixelDistortions(_delta.view());
-        target += _delta;
-        _delta.setZero();
-    }
-#endif
   
     int SetOMPThreads(int num_threads)
     {
@@ -1893,11 +1589,6 @@ namespace galsim {
 #endif
     }
 
-    template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<double> target, bool*) const;
-    template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<float> target, bool*) const;
-
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
 
@@ -1914,24 +1605,13 @@ namespace galsim {
     template void Silicon::initialize(ImageView<double> target, Position<int> orig_center);
     template void Silicon::initialize(ImageView<float> target, Position<int> orig_center);
 
-  //template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
-  //template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
-
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<double> target);
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<float> target);
 
-  /*template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
-					   BaseDeviate rng, ImageView<double> target);
-  template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
-  BaseDeviate rng, ImageView<float> target);*/
-
     template void Silicon::update(ImageView<double> target);
     template void Silicon::update(ImageView<float> target);
-
-  //template void Silicon::updateGPU(ImageView<double> target);
-  //template void Silicon::updateGPU(ImageView<float> target);
 
     template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center,
                                               bool);
