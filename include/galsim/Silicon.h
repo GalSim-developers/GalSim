@@ -43,18 +43,14 @@ namespace galsim
                 const Table& abs_length_table, bool transpose);
         ~Silicon();
     
-        template <typename T>
-        bool insidePixel(int ix, int iy, double x, double y, double zconv,
-			 ImageView<T> target, bool* off_edge=0) const;
-
-	bool insidePixelGPU(int ix, int iy, double x, double y, double zconv,
-			    Bounds<int>& targetBounds, bool* off_edge,
-                            int emptypolySize,
-                            Bounds<double>* pixelInnerBoundsData,
-                            Bounds<double>* pixelOuterBoundsData,
-                            Position<float>* horizontalBoundaryPointsData,
-                            Position<float>* verticalBoundaryPointsData,
-                            Position<double>* emptypolyData) const;
+	bool insidePixel(int ix, int iy, double x, double y, double zconv,
+                         Bounds<int>& targetBounds, bool* off_edge,
+                         int emptypolySize,
+                         Bounds<double>* pixelInnerBoundsData,
+                         Bounds<double>* pixelOuterBoundsData,
+                         Position<float>* horizontalBoundaryPointsData,
+                         Position<float>* verticalBoundaryPointsData,
+                         Position<double>* emptypolyData) const;
 
 	void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
@@ -81,24 +77,14 @@ namespace galsim
         template <typename T>
         void initialize(ImageView<T> target, Position<int> orig_center);
 
-        /*template <typename T>
-	  void initializeGPU(ImageView<T> target, Position<int> orig_center);*/
-
         void finalize();
     
         template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);
 
-	/*template <typename T>
-	double accumulateGPU(const PhotonArray& photons, int i1, int i2,
-	BaseDeviate rng, ImageView<T> target);*/
-	
         template <typename T>
         void update(ImageView<T> target);
-
-        /*template <typename T>
-	  void updateGPU(ImageView<T> target);*/
 
         double pixelArea(int i, int j, int nx, int ny) const;
 
