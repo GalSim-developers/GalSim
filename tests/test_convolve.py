@@ -485,6 +485,7 @@ def test_deconvolve():
     myImg2.setCenter(0,0)
 
     psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    psf = psf.withGSParams(maxk_threshold=3.e-4)
     inv_psf = galsim.Deconvolve(psf)
     psf.drawImage(myImg1, method='no_pixel')
     conv = galsim.Convolve(psf,psf,inv_psf)

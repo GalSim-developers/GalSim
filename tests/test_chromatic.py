@@ -106,6 +106,7 @@ def test_draw_add_commutativity():
     for w in ws:
         flux = bulge_SED(w) * bandpass(w) * h
         mPSF = galsim.Moffat(flux=flux, beta=PSF_beta, half_light_radius=PSF_hlr*dilate_fn(w))
+        mPSF = mPSF.withGSParams(maxk_threshold=1.e-4)
         mPSF = mPSF.shear(e1=PSF_e1, e2=PSF_e2)
         mPSF = mPSF.shift(shift_fn(w))
         mPSFs.append(mPSF)
@@ -145,6 +146,7 @@ def test_draw_add_commutativity():
 
     # make chromatic PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
+    mono_PSF = mono_PSF.withGSParams(maxk_threshold=1.e-4)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticTransformation(mono_PSF, flux_ratio=1.0)
     do_pickle(chromatic_PSF, lambda x: (x.evaluateAtWavelength(bandpass.effective_wavelength)

@@ -528,13 +528,14 @@ def test_drawKImage():
     # So this should draw in Fourier space the same image as the Exponential drawn in
     # test_drawImage().
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
+    obj = obj.withGSParams(maxk_threshold=1.e-4)
 
     # First test drawKImage() with no kwargs.  It should:
     #   - create new images
     #   - return the new images
     #   - set the scale to 2pi/(N*obj.nyquist_scale)
     im1 = obj.drawKImage()
-    N = 1162
+    N = 1174
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
     stepk = obj.stepk
@@ -604,7 +605,7 @@ def test_drawKImage():
     np.testing.assert_almost_equal(CalculateScale(im7), 2, 1,
                                    "Measured wrong scale after obj.drawKImage(dx)")
     # This image is smaller because not using nyquist scale for stepk
-    np.testing.assert_equal(im7.bounds, galsim.BoundsI(-36,36,-36,36),
+    np.testing.assert_equal(im7.bounds, galsim.BoundsI(-37,37,-37,37),
                             "obj.drawKImage(dx) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:
@@ -1274,8 +1275,9 @@ def test_fft():
 
     # Now use drawKImage (as above in test_drawKImage) to get a more realistic k-space image
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
+    obj = obj.withGSParams(maxk_threshold=1.e-4)
     im1 = obj.drawKImage()
-    N = 1162  # NB. It is useful to have this come out not a multiple of 4, since some of the
+    N = 1174  # NB. It is useful to have this come out not a multiple of 4, since some of the
               #     calculation needs to be different when N/2 is odd.
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
