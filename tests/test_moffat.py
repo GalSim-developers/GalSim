@@ -136,7 +136,7 @@ def test_moffat_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxk, 11.613036117918105)
+    np.testing.assert_almost_equal(psf.maxk, 11.634597424960159)
     np.testing.assert_almost_equal(psf.stepk, 0.62831853071795873)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
@@ -150,7 +150,7 @@ def test_moffat_properties():
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid, cen)
-    np.testing.assert_almost_equal(psf.maxk, 11.613036112206663)
+    np.testing.assert_almost_equal(psf.maxk, 11.634597426100862)
     np.testing.assert_almost_equal(psf.stepk, 0.62831853071795862)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.half_light_radius, 1.0)

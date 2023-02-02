@@ -872,6 +872,7 @@ def test_extra_psf_sn():
             'type' : 'Moffat',
             'beta' : 3.5,
             'fwhm' : 0.7,
+            'gsparams' : { 'maxk_threshold': 3.e-4 }
         },
         'output' : {
             'psf' : {}
