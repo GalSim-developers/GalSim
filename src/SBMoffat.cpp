@@ -583,15 +583,9 @@ namespace galsim {
         for(double k=0.; k < 50; k += dk) {
 
             double val;
-            if (_trunc > 0) {
-                val = math::hankel_trunc(I, k, 0., _maxRrD,
-                                         this->gsparams.integration_relerr,
-                                         this->gsparams.integration_abserr);
-            } else {
-                val = math::hankel_inf(I, k, 0.,
-                                       this->gsparams.integration_relerr,
-                                       this->gsparams.integration_abserr);
-            }
+            val = math::hankel_trunc(I, k, 0., _maxRrD,
+                                     this->gsparams.integration_relerr,
+                                     this->gsparams.integration_abserr);
             val *= prefactor;
 
             xdbg<<"ft("<<k<<") = "<<val<<std::endl;
