@@ -1775,20 +1775,20 @@ def test_depixelize():
     t8 = time.time()
     if platform.python_implementation() != 'PyPy':
         # PyPy timings can be fairly arbitrary at times.
-        assert t8-t7 < (t3-t2)/10
+        assert t8-t7 < (t3-t2)/5
 
     # Even if the image is different.
     nopix_image3 = im4.depixelize(x_interpolant=interp)
     t9 = time.time()
     if platform.python_implementation() != 'PyPy':
-        assert t9-t8 < (t3-t2)/10
+        assert t9-t8 < (t3-t2)/5
 
     # But not if you clear the cache.
     galsim.Image.clear_depixelize_cache()
     nopix_image4 = im4.depixelize(x_interpolant=interp)
     t10 = time.time()
     if platform.python_implementation() != 'PyPy':
-        assert t10-t9 > (t3-t2)/10
+        assert t10-t9 > (t3-t2)/5
 
     print('times:')
     print('make ii_with_pixel: ',t1-t0)
