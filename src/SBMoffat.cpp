@@ -202,6 +202,7 @@ namespace galsim {
         _maxRrD_sq = _maxRrD * _maxRrD;
         _norm = _flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
         _knorm = _flux;
+        _knorm2 = 1.;
 
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
             << " norm " << _norm << " maxR " << _maxR << std::endl;
@@ -230,15 +231,16 @@ namespace galsim {
         else if (std::abs(_beta-2.5) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_25;
         else if (std::abs(_beta-3) < this->gsparams.kvalue_accuracy) {
-            _kV = &SBMoffatImpl::kV_3; _knorm /= 2.;
+            _kV = &SBMoffatImpl::kV_3; _knorm2 /= 2.;
         } else if (std::abs(_beta-3.5) < this->gsparams.kvalue_accuracy) {
-            _kV = &SBMoffatImpl::kV_35; _knorm /= 3.;
+            _kV = &SBMoffatImpl::kV_35; _knorm2 /= 3.;
         } else if (std::abs(_beta-4) < this->gsparams.kvalue_accuracy) {
-            _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
+            _kV = &SBMoffatImpl::kV_4; _knorm2 /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
-            _knorm *= 4. / (std::tgamma(beta-1.) * std::pow(2.,beta));
+            _knorm2 *= 4. / (std::tgamma(beta-1.) * std::pow(2.,beta));
         }
+        _knorm *= _knorm2;
     }
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const
@@ -273,6 +275,12 @@ namespace galsim {
     {
         double ksq = (k.x*k.x + k.y*k.y)*_rD_sq;
         return _knorm * (this->*_kV)(ksq);
+    }
+
+    // Used by MoffatMaxKSolver
+    double SBMoffat::SBMoffatImpl::kV2(double ksq) const
+    {
+        return _knorm2 * (this->*_kV)(ksq);
     }
 
     double SBMoffat::SBMoffatImpl::kV_15(double ksq) const
@@ -470,36 +478,36 @@ namespace galsim {
         }
     }
 
+    class MoffatMaxKSolver
+    {
+    public:
+        MoffatMaxKSolver(const SBMoffat::SBMoffatImpl* impl, double thresh) :
+            _impl(impl), _thresh(thresh) {}
+        double operator()(double ksq) const
+        {
+            dbg<<"Try ksq = "<<ksq<<", kv = "<<_impl->kV2(ksq)<<std::endl;
+            return _impl->kV2(ksq) - _thresh;
+        }
+    private:
+        const SBMoffat::SBMoffatImpl* _impl;
+        const double _thresh;
+    };
+
+
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBMoffat::SBMoffatImpl::maxK() const
     {
         if (_maxk == 0.) {
             if (_trunc == 0.) {
-                // f(k) = 4 K(beta-1,k) (k/2)^beta / Gamma(beta-1)
-                //
-                // The asymptotic formula for K(beta-1,k) is
-                //     K(beta-1,k) ~= sqrt(pi/(2k)) exp(-k)
-                //
-                // So f(k) becomes
-                //
-                // f(k) ~= 2 sqrt(pi) (k/2)^(beta-1/2) exp(-k) / Gamma(beta-1)
-                //
-                // Solve for f(k) = maxk_threshold
-                //
-                double temp = (this->gsparams.maxk_threshold
-                               * std::tgamma(_beta-1.)
-                               * std::pow(2.,_beta-0.5)
-                               / (2. * sqrt(M_PI)));
-                // Solve k^(beta-1/2) exp(-k) = temp
-                // (beta-1/2) log(k) - k = log(temp)
-                // k = (beta-1/2) log(k) - log(temp)
-                temp = std::log(temp);
-                _maxk = -temp;
-                dbg<<"temp = "<<temp<<std::endl;
-                for (int i=0;i<5;++i) {
-                    _maxk = (_beta-0.5) * std::log(_maxk) - temp;
-                    dbg<<"_maxk = "<<_maxk<<std::endl;
-                }
+                MoffatMaxKSolver func(this, this->gsparams.maxk_threshold);
+                double ksq1 = 0.;
+                double ksq2 = 100;  // k=10 is usually close, so it makes a good starting guess.
+                Solve<MoffatMaxKSolver> solver(func,ksq1,ksq2);
+                solver.setMethod(Brent);
+                solver.bracketUpper();
+                double maxksq = solver.root();
+                _maxk = sqrt(maxksq);
+                dbg<<"Found _maxk = "<<_maxk<<std::endl;
             } else {
                 // _maxk is determined during setupFT() as the last k value to have a
                 // kValue > 1.e-3.
@@ -599,6 +607,20 @@ namespace galsim {
         }
         _ft.finalize();
         dbg<<"maxk = "<<_maxk<<std::endl;
+        xdbg<<"f(maxk) = "<<_ft(_maxk*_maxk)<<std::endl;
+        // Tweak the maxk value to be a bit more accurate.
+        // We know the real maxk should be between _maxk and _maxk+dk
+        double k1 = _maxk;
+        double k2 = _maxk + dk;
+        if (k2 < 50) {
+            double f1 = std::abs(_ft(k1*k1));
+            double f2 = std::abs(_ft(k2*k2));
+            xdbg<<"k1, f1 = "<<k1<<"  "<<f1<<std::endl;
+            xdbg<<"k2, f2 = "<<k2<<"  "<<f2<<std::endl;
+            _maxk = (k1*(f2-maxk_val) + k2*(maxk_val-f1)) / (f2-f1);
+            dbg<<"maxk => "<<_maxk<<std::endl;
+            xdbg<<"f(maxk) = "<<_ft(_maxk*_maxk)<<std::endl;
+        }
     }
 
     void SBMoffat::SBMoffatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const

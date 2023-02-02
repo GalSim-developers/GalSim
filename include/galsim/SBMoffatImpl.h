@@ -38,6 +38,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const;
+        double kV2(double ksq) const;
 
         bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams.maxk_threshold; }
@@ -106,6 +107,7 @@ namespace galsim {
         double _flux; ///< Flux.
         double _norm; ///< Normalization. (Including the flux)
         double _knorm; ///< Normalization for kValue. (Including the flux)
+        double _knorm2; ///< Normalization for kValue. (Not including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         double _rD_sq;
         double _inv_rD;

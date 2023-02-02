@@ -79,6 +79,7 @@ namespace galsim {
     protected:
 
         class SBMoffatImpl;
+        friend class MoffatMaxKSolver;
 
     private:
         // op= is undefined
