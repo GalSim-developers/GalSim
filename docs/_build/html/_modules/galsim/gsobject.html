@@ -829,6 +829,20 @@
 
 <div class="viewcode-block" id="GSObject.withGSParams"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given `GSParams`.</span>
+
+<span class="sd">        You may either provide a `GSParams` instance::</span>
+
+<span class="sd">            &gt;&gt;&gt; gsparams = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4)</span>
+<span class="sd">            &gt;&gt;&gt; obj = obj.withGSParams(gsparams)</span>
+
+<span class="sd">        or one or more named parameters as keyword arguments::</span>
+
+<span class="sd">            &gt;&gt;&gt; obj = obj.withGSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4)</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            The latter style will leave all non-named parameters at their current</span>
+<span class="sd">            values. It only updates the named parameters to the given values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note to developers: objects that wrap other objects should override this in order</span>
         <span class="c1"># to apply the new gsparams to the components.</span>
@@ -1404,6 +1418,7 @@
 <span class="sd">        area large enough to include at least 99.5% of the flux.</span>
 
 <span class="sd">        .. note::</span>
+
 <span class="sd">            This value 0.995 is really ``1 - folding_threshold``.  You can change the value of</span>
 <span class="sd">            ``folding_threshold`` for any object via `GSParams`.</span>
 

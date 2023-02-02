@@ -114,10 +114,11 @@ instance of this class.  e.g.:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.4</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">3.2</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsp</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> needs to be provided when the object is initialized, rather than when the
-object is drawn (as would perhaps be slightly more intuitive), because most of the relevant
-approximations happen during the initialization of the object, rather than during the actual
-rendering.</p>
+<p>One can also update the parameters for an existing object using the method
+<a class="reference internal" href="gsobject.html#galsim.GSObject.withGSParams" title="galsim.GSObject.withGSParams"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.withGSParams</span></code></a>.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>All parameters have reasonable default values.  You only need to specify the ones you want
 to change.</p>
 <dl class="field-list simple">

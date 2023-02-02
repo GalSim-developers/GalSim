@@ -252,6 +252,20 @@ image.</p></li>
 <dt id="galsim.RealGalaxy.withGSParams">
 <code class="sig-name descname"><span class="pre">withGSParams</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxy.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<p>You may either provide a <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or one or more named parameters as keyword arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The latter style will leave all non-named parameters at their current
+values. It only updates the named parameters to the given values.</p>
+</div>
 </dd></dl>
 
 </dd></dl>

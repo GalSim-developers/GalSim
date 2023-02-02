@@ -113,10 +113,10 @@
 <span class="sd">        &gt;&gt;&gt; gsp = galsim.GSParams(folding_threshold=1.e-3)</span>
 <span class="sd">        &gt;&gt;&gt; gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)</span>
 
-<span class="sd">    Note that ``gsparams`` needs to be provided when the object is initialized, rather than when the</span>
-<span class="sd">    object is drawn (as would perhaps be slightly more intuitive), because most of the relevant</span>
-<span class="sd">    approximations happen during the initialization of the object, rather than during the actual</span>
-<span class="sd">    rendering.</span>
+<span class="sd">    One can also update the parameters for an existing object using the method</span>
+<span class="sd">    `GSObject.withGSParams`.  e.g.::</span>
+
+<span class="sd">        &gt;&gt;&gt; gal = gal.withGSParams(kvalue_accuracy=1.e-8)</span>
 
 <span class="sd">    All parameters have reasonable default values.  You only need to specify the ones you want</span>
 <span class="sd">    to change.</span>
