@@ -744,6 +744,20 @@ class GSObject:
 
     def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given `GSParams`.
+
+        You may either provide a `GSParams` instance::
+
+            >>> gsparams = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4)
+            >>> obj = obj.withGSParams(gsparams)
+
+        or one or more named parameters as keyword arguments::
+
+            >>> obj = obj.withGSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4)
+
+        .. note::
+
+            The latter style will leave all non-named parameters at their current
+            values. It only updates the named parameters to the given values.
         """
         # Note to developers: objects that wrap other objects should override this in order
         # to apply the new gsparams to the components.
@@ -1319,6 +1333,7 @@ class GSObject:
         area large enough to include at least 99.5% of the flux.
 
         .. note::
+
             This value 0.995 is really ``1 - folding_threshold``.  You can change the value of
             ``folding_threshold`` for any object via `GSParams`.
 
