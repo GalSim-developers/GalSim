@@ -28,6 +28,10 @@
 #if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
+
+// Clang incorrectly defines __CUDA_ARCH__ in host code when building for
+// OpenMP target offload, so we have to undefine it or Eigen gets confused
+#undef __CUDA_ARCH__
 #include "Eigen/Dense"
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
