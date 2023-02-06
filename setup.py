@@ -851,8 +851,6 @@ def add_dirs(builder, output=False):
     if hasattr(builder, 'library_dirs'):
         if fftw_libpath != '':
             builder.library_dirs.append(fftw_libpath)
-        #builder.libraries.append('galsim')  # Make sure galsim comes before fftw3
-        builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
     fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
     if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):
         print('Include directory for fftw3 is ',fftw_include)
@@ -1304,7 +1302,8 @@ lib=("galsim", {'sources' : cpp_sources,
 ext=Extension("galsim._galsim",
               py_sources,
               depends = cpp_sources + headers + inst,
-              undef_macros = undef_macros)
+              undef_macros = undef_macros,
+              extra_link_args = ["-lfftw3"])
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
