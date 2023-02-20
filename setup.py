@@ -83,7 +83,7 @@ copt =  {
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
-                      '-Wno-shorten-64-to-32','-fvisibility=hidden'],
+                      '-Wno-shorten-64-to-32','-fvisibility=hidden', '-DGALSIM_USE_GPU'],
     'unknown' : [],
 }
 lopt =  {
