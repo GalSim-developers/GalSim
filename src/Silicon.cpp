@@ -513,6 +513,151 @@ namespace galsim {
         result.updateBounds();
     }
 
+    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
+                              Bounds<int>& targetBounds, bool* off_edge,
+                              int emptypolySize,
+                              Bounds<double>* pixelInnerBoundsData,
+                              Bounds<double>* pixelOuterBoundsData,
+                              Position<float>* horizontalBoundaryPointsData,
+                              Position<float>* verticalBoundaryPointsData,
+                              Position<double>* emptypolyData) const
+    {
+        // This scales the pixel distortion based on the zconv, which is the depth
+        // at which the electron is created, and then tests to see if the delivered
+        // point is inside the pixel.
+        // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
+        // photon within the pixel, with (0,0) in the lower left
+
+        // If test pixel is off the image, return false.  (Avoids seg faults!)
+        if ((ix < targetBounds.getXMin()) || (ix > targetBounds.getXMax()) ||
+            (iy < targetBounds.getYMin()) || (iy > targetBounds.getYMax())) {
+            if (off_edge) *off_edge = true;
+            return false;
+        }
+
+        const int i1 = targetBounds.getXMin();
+        const int i2 = targetBounds.getXMax();
+        const int j1 = targetBounds.getYMin();
+        const int j2 = targetBounds.getYMax();
+        const int nx = i2-i1+1;
+        const int ny = j2-j1+1;
+
+        int index = (ix - i1) * ny + (iy - j1);
+
+        // First do some easy checks if the point isn't terribly close to the boundary.
+
+        bool inside;
+        if ((x >= pixelInnerBoundsData[index].getXMin()) && (x <= pixelInnerBoundsData[index].getXMax()) &&
+            (y >= pixelInnerBoundsData[index].getYMin()) && (y <= pixelInnerBoundsData[index].getYMax())) {
+            inside = true;
+        } else if ((x < pixelOuterBoundsData[index].getXMin()) || (x > pixelOuterBoundsData[index].getXMax()) ||
+                   (y < pixelOuterBoundsData[index].getYMin()) || (y > pixelOuterBoundsData[index].getYMax())) {
+            inside = false;
+        } else {
+            // OK, it must be near the boundary, so now be careful.
+            // The term zfactor decreases the pixel shifts as we get closer to the bottom
+            // It is an empirical fit to the Poisson solver simulations, and only matters
+            // when we get quite close to the bottom.  This could be more accurate by making
+            // the Vertices files have an additional look-up variable (z), but this doesn't
+            // seem necessary at this point
+            const double zfit = 12.0;
+            const double zfactor = std::tanh(zconv / zfit);
+
+            // new version not using testpoly
+            // first compute first point of polygon (index 0)
+            double x1, y1, xfirst, yfirst, xinters = 0.0;
+            inside = false;
+            for (int n = 0; n <= _nv; n++) {
+                double xp = 0.0, yp = 0.0;
+                double epx = 0.0, epy = 0.0;
+                if (n < _nv) {
+                    epx = emptypolyData[n].x;
+                    epy = emptypolyData[n].y;
+                }
+                xp = epx;
+                yp = epy;
+                int idx;
+
+                // compute this point
+                if (n < cornerIndexBottomLeft()) {
+                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
+                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
+                }
+                else if (n <= cornerIndexBottomRight()) {
+                    // bottom row including corners
+                    idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
+                    double px = horizontalBoundaryPointsData[idx].x;
+                    xp += (px - epx) * zfactor;
+                    yp += (horizontalBoundaryPointsData[idx].y - epy) * zfactor;
+                }
+                // RHS
+                else if (n < cornerIndexTopRight()) {
+                    idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
+                    xp += ((verticalBoundaryPointsData[idx].x + 1.0) - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
+                }
+                // top row including corners
+                else if (n <= cornerIndexTopLeft()) {
+                    idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
+                    double px = horizontalBoundaryPointsData[idx].x;
+                    xp += (px - epx) * zfactor;
+                    yp += ((horizontalBoundaryPointsData[idx].y + 1.0) - epy) * zfactor;
+                }
+                else if (n < _nv) {
+                    // LHS upper half
+                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
+                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
+                }
+                if (n == 0) {
+                    // save first point for later
+                    x1 = xp;
+                    y1 = yp;
+                    xfirst = xp;
+                    yfirst = yp;
+                }
+                else {
+                    // shoelace algorithm
+                    double x2 = xp;
+                    double y2 = yp;
+                    if (n == _nv) {
+                        x2 = xfirst;
+                        y2 = yfirst;
+                    }
+                    double ymin = y1 < y2 ? y1 : y2;
+                    double ymax = y1 > y2 ? y1 : y2;
+                    double xmax = x1 > x2 ? x1 : x2;
+                    if (y > ymin) {
+                        if (y <= ymax) {
+                            if (x <= xmax) {
+                                if (y1 != y2) {
+                                    xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1;
+                                }
+                                if ((x1 == x2) || (x <= xinters)) {
+                                    inside = !inside;
+                                }
+                            }
+                        }
+                    }
+                    x1 = x2;
+                    y1 = y2;
+                }
+            }
+        }
+
+        // If the nominal pixel is on the edge of the image and the photon misses in the
+        // direction of falling off the image, (possibly) report that in off_edge.
+        if (!inside && off_edge) {
+            *off_edge = false;
+            if ((ix == i1) && (x < pixelInnerBoundsData[index].getXMin())) *off_edge = true;
+            if ((ix == i2) && (x > pixelInnerBoundsData[index].getXMax())) *off_edge = true;
+            if ((iy == j1) && (y < pixelInnerBoundsData[index].getYMin())) *off_edge = true;
+            if ((iy == j2) && (y > pixelInnerBoundsData[index].getYMax())) *off_edge = true;
+        }
+        return inside;
+    }
+
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
 
@@ -553,6 +698,47 @@ namespace galsim {
         } else {
             return si_length;
         }
+    }
+
+    bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
+                         Bounds<int>& targetBounds, int& step, int emptypolysize,
+                         Bounds<double>* pixelInnerBoundsData,
+                         Bounds<double>* pixelOuterBoundsData,
+                         Position<float>* horizontalBoundaryPointsData,
+                         Position<float>* verticalBoundaryPointsData,
+                         Position<double>* emptypolyData)
+    {
+        const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+        const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+
+        // The following code finds which pixel we are in given
+        // pixel distortion due to the brighter-fatter effect
+        // The following are set up to start the search in the undistorted pixel, then
+        // search in the nearest neighbor first if it's not in the undistorted pixel.
+        if      ((x > y) && (x > 1.0 - y)) step = 1;
+        else if ((x < y) && (x < 1.0 - y)) step = 7;
+        else if ((x < y) && (x > 1.0 - y)) step = 3;
+        else step = 5;
+        int n=step;
+        for (int m=1; m<9; m++) {
+            int ix_off = ix + xoff[n];
+            int iy_off = iy + yoff[n];
+            double x_off = x - xoff[n];
+            double y_off = y - yoff[n];
+            if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv,
+                                    targetBounds, nullptr, emptypolysize,
+                                    pixelInnerBoundsData, pixelOuterBoundsData,
+                                    horizontalBoundaryPointsData,
+                                    verticalBoundaryPointsData,
+                                    emptypolyData)) {
+                ix = ix_off;
+                iy = iy_off;
+                return true;
+            }
+            n = ((n-1) + step) % 8 + 1;
+            // This is intended to start with the nearest neighbor, then cycle through others.
+        }
+        return false;
     }
 
     // Calculates the area of a pixel based on the linear boundaries.
@@ -697,6 +883,179 @@ namespace galsim {
     }
 
     template <typename T>
+    void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
+    {
+        // release old GPU storage if allocated
+        if (_targetData != nullptr) {
+            finalize();
+        }
+
+        // and store target image pointer and type for later
+        _targetData = static_cast<void*>(target.getData());
+        _targetIsDouble = (sizeof(T) == 8);
+        
+        Bounds<int> b = target.getBounds();
+        if (!b.isDefined())
+            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
+                                     " undefined Bounds");
+
+        const int nx = b.getXMax() - b.getXMin() + 1;
+        const int ny = b.getYMax() - b.getYMin() + 1;
+        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
+
+        initializeBoundaryPoints(nx, ny);
+
+        dbg<<"Built poly list\n";
+        // Now we add in the tree ring distortions
+        addTreeRingDistortions(target, orig_center);
+
+        // Start with the correct distortions for the initial image as it is already
+        dbg<<"Initial updatePixelDistortions\n";
+        updatePixelDistortions(target);
+
+        // Keep track of the charge we are accumulating on a separate image for efficiency
+        // of the distortion updates.
+        _delta.resize(b);
+        _delta.setZero();
+
+
+        // convert and map data for GPU
+        double* deltaData = _delta.getData();
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+
+        T* targetData = target.getData();
+        
+        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+
+        int hbpSize = _horizontalBoundaryPoints.size();
+        int vbpSize = _verticalBoundaryPoints.size();
+
+        int hdSize = _horizontalDistortions.size();
+        int vdSize = _verticalDistortions.size();
+        
+        // first item is for lambda=255.0, last for lambda=1450.0
+        const double abs_length_table[240] = {
+            0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
+            0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
+            0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
+            0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
+            0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
+            0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
+            0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
+            1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
+            1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
+            2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
+            3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
+            5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
+            6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
+            9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
+            13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
+            18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
+            26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
+            40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
+            66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
+            120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
+            228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
+            541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
+            1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
+            3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
+            8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
+            26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
+            288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
+            1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
+            4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
+            27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
+            103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
+            294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
+            877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
+            3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
+            14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
+            34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
+            86956521739.130432, 106837606837.606827, 128205128205.128204,
+            185528756957.328400, 182815356489.945160, 263157894736.842072,
+            398406374501.992065, 558659217877.094971, 469483568075.117371,
+            833333333333.333374, 917431192660.550415, 1058201058201.058228
+        };
+
+        _abs_length_table_GPU.resize(240);
+        for (int i = 0; i < 240; i++) {
+            _abs_length_table_GPU[i] = abs_length_table[i];
+        }
+        double* abs_length_table_data = _abs_length_table_GPU.data();
+        
+        int emptypolySize = _emptypoly.size();
+        _emptypolyGPU.resize(emptypolySize);
+        for (int i = 0; i < emptypolySize; i++) {
+            _emptypolyGPU[i].x = _emptypoly[i].x;
+            _emptypolyGPU[i].y = _emptypoly[i].y;
+        }
+        Position<double>* emptypolyData = _emptypolyGPU.data();
+        
+        int nxny = nx * ny;
+        _changed = std::shared_ptr<bool>(new bool[nxny]);
+        bool* changedData = _changed.get();
+        for (int i = 0; i < nxny; i++) changedData[i] = false;
+
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
+
+        // map all data to the GPU
+#ifdef GALSIM_USE_GPU
+#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#endif
+    }
+
+    void Silicon::finalize()
+    {
+#ifdef GALSIM_USE_GPU
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
+
+        double* abs_length_table_data = _abs_length_table_GPU.data();
+        
+        Bounds<int> b = _delta.getBounds();
+        const int nx = b.getXMax() - b.getXMin() + 1;
+        const int ny = b.getYMax() - b.getYMin() + 1;
+        int nxny = nx * ny;
+
+        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+
+        int hbpSize = _horizontalBoundaryPoints.size();
+        int vbpSize = _verticalBoundaryPoints.size();
+
+        int hdSize = _horizontalDistortions.size();
+        int vdSize = _verticalDistortions.size();
+        
+        int emptypolySize = _emptypoly.size();
+        Position<double>* emptypolyData = _emptypolyGPU.data();
+
+        bool* changedData = _changed.get();
+        
+        double* deltaData = _delta.getData();
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+
+        if (_targetIsDouble) {
+            double* targetData = static_cast<double*>(_targetData);
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+        }
+        else {
+            float* targetData = static_cast<float*>(_targetData);
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+        }
+#endif
+    }
+    
+    template <typename T>
     void Silicon::subtractDelta(ImageView<T> target)
     {
         // perform update on GPU
@@ -745,371 +1104,10 @@ namespace galsim {
 #pragma omp target update from(targetData[0:imageDataSize])
 #endif
     }
-  
-    template <typename T>
-    void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
-    {
-        // release old GPU storage if allocated
-        if (_targetData != nullptr) {
-            finalize();
-        }
-
-        // and store target image pointer and type for later
-        _targetData = static_cast<void*>(target.getData());
-        _targetIsDouble = (sizeof(T) == 8);
-        
-        Bounds<int> b = target.getBounds();
-        if (!b.isDefined())
-            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
-                                     " undefined Bounds");
-
-        const int nx = b.getXMax() - b.getXMin() + 1;
-        const int ny = b.getYMax() - b.getYMin() + 1;
-        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-
-        initializeBoundaryPoints(nx, ny);
-
-        dbg<<"Built poly list\n";
-        // Now we add in the tree ring distortions
-        addTreeRingDistortions(target, orig_center);
-
-        // Start with the correct distortions for the initial image as it is already
-        dbg<<"Initial updatePixelDistortions\n";
-        updatePixelDistortions(target);
-
-        // Keep track of the charge we are accumulating on a separate image for efficiency
-        // of the distortion updates.
-        _delta.resize(b);
-        _delta.setZero();
-
-
-	// convert and map data for GPU
-        double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
-
-        T* targetData = target.getData();
-        
-        int pixelInnerBoundsSize = _pixelInnerBounds.size();
-
-        int hbpSize = _horizontalBoundaryPoints.size();
-        int vbpSize = _verticalBoundaryPoints.size();
-
-        int hdSize = _horizontalDistortions.size();
-        int vdSize = _verticalDistortions.size();
-        
-	// first item is for lambda=255.0, last for lambda=1450.0
-	const double abs_length_table[240] = {
-	    0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
-	    0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
-	    0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
-	    0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
-	    0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
-	    0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
-	    0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
-	    1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
-	    1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
-	    2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
-	    3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
-	    5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
-	    6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
-	    9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
-	    13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
-	    18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
-	    26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
-	    40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
-	    66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
-	    120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
-	    228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
-	    541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
-	    1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
-	    3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
-	    8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
-	    26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
-	    288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
-	    1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
-	    4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
-	    27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
-	    103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
-	    294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
-	    877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
-	    3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
-	    14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
-	    34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
-	    86956521739.130432, 106837606837.606827, 128205128205.128204,
-	    185528756957.328400, 182815356489.945160, 263157894736.842072,
-	    398406374501.992065, 558659217877.094971, 469483568075.117371,
-	    833333333333.333374, 917431192660.550415, 1058201058201.058228
-	};
-
-        _abs_length_table_GPU.resize(240);
-	for (int i = 0; i < 240; i++) {
-	    _abs_length_table_GPU[i] = abs_length_table[i];
-	}
-        double* abs_length_table_data = _abs_length_table_GPU.data();
-        
-	int emptypolySize = _emptypoly.size();
-        _emptypolyGPU.resize(emptypolySize);
-	for (int i = 0; i < emptypolySize; i++) {
-	    _emptypolyGPU[i].x = _emptypoly[i].x;
-	    _emptypolyGPU[i].y = _emptypoly[i].y;
-	}
-        Position<double>* emptypolyData = _emptypolyGPU.data();
-        
-        int nxny = nx * ny;
-        _changed = std::shared_ptr<bool>(new bool[nxny]);
-        bool* changedData = _changed.get();
-        for (int i = 0; i < nxny; i++) changedData[i] = false;
-
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
-
-        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
-        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
-        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
-        Position<float>* verticalDistortionsData = _verticalDistortions.data();
-
-        // map all data to the GPU
-#ifdef GALSIM_USE_GPU
-#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
-#endif
-    }
-
-    void Silicon::finalize()
-    {
-#ifdef GALSIM_USE_GPU
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
-
-        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
-        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
-        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
-        Position<float>* verticalDistortionsData = _verticalDistortions.data();
-
-        double* abs_length_table_data = _abs_length_table_GPU.data();
-        
-        Bounds<int> b = _delta.getBounds();
-        const int nx = b.getXMax() - b.getXMin() + 1;
-        const int ny = b.getYMax() - b.getYMin() + 1;
-        int nxny = nx * ny;
-
-        int pixelInnerBoundsSize = _pixelInnerBounds.size();
-
-        int hbpSize = _horizontalBoundaryPoints.size();
-        int vbpSize = _verticalBoundaryPoints.size();
-
-        int hdSize = _horizontalDistortions.size();
-        int vdSize = _verticalDistortions.size();
-        
-	int emptypolySize = _emptypoly.size();
-        Position<double>* emptypolyData = _emptypolyGPU.data();
-
-        bool* changedData = _changed.get();
-        
-        double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
-
-        if (_targetIsDouble) {
-            double* targetData = static_cast<double*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
-        }
-        else {
-            float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
-        }
-#endif
-    }
-    
-    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                              Bounds<int>& targetBounds, bool* off_edge,
-                              int emptypolySize,
-                              Bounds<double>* pixelInnerBoundsData,
-                              Bounds<double>* pixelOuterBoundsData,
-                              Position<float>* horizontalBoundaryPointsData,
-                              Position<float>* verticalBoundaryPointsData,
-                              Position<double>* emptypolyData) const
-    {
-        // This scales the pixel distortion based on the zconv, which is the depth
-        // at which the electron is created, and then tests to see if the delivered
-        // point is inside the pixel.
-        // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
-        // photon within the pixel, with (0,0) in the lower left
-
-        // If test pixel is off the image, return false.  (Avoids seg faults!)
-	if ((ix < targetBounds.getXMin()) || (ix > targetBounds.getXMax()) ||
-	    (iy < targetBounds.getYMin()) || (iy > targetBounds.getYMax())) {
-            if (off_edge) *off_edge = true;
-            return false;
-        }
-
-        const int i1 = targetBounds.getXMin();
-        const int i2 = targetBounds.getXMax();
-        const int j1 = targetBounds.getYMin();
-        const int j2 = targetBounds.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
-
-        int index = (ix - i1) * ny + (iy - j1);
-
-        // First do some easy checks if the point isn't terribly close to the boundary.
-
-        bool inside;
-	if ((x >= pixelInnerBoundsData[index].getXMin()) && (x <= pixelInnerBoundsData[index].getXMax()) &&
-	    (y >= pixelInnerBoundsData[index].getYMin()) && (y <= pixelInnerBoundsData[index].getYMax())) {
-            inside = true;
-	} else if ((x < pixelOuterBoundsData[index].getXMin()) || (x > pixelOuterBoundsData[index].getXMax()) ||
-		   (y < pixelOuterBoundsData[index].getYMin()) || (y > pixelOuterBoundsData[index].getYMax())) {
-            inside = false;
-        } else {
-            // OK, it must be near the boundary, so now be careful.
-            // The term zfactor decreases the pixel shifts as we get closer to the bottom
-            // It is an empirical fit to the Poisson solver simulations, and only matters
-            // when we get quite close to the bottom.  This could be more accurate by making
-            // the Vertices files have an additional look-up variable (z), but this doesn't
-            // seem necessary at this point
-            const double zfit = 12.0;
-            const double zfactor = std::tanh(zconv / zfit);
-
-            // new version not using testpoly
-            // first compute first point of polygon (index 0)
-            double x1, y1, xfirst, yfirst, xinters = 0.0;
-            inside = false;
-            for (int n = 0; n <= _nv; n++) {
-                double xp = 0.0, yp = 0.0;
-                double epx = 0.0, epy = 0.0;
-                if (n < _nv) {
-                    epx = emptypolyData[n].x;
-                    epy = emptypolyData[n].y;
-                }
-                xp = epx;
-                yp = epy;
-                int idx;
-
-                // compute this point
-                if (n < cornerIndexBottomLeft()) {
-                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
-                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
-                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
-                }
-                else if (n <= cornerIndexBottomRight()) {
-                    // bottom row including corners
-                    idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
-                    double px = horizontalBoundaryPointsData[idx].x;
-                    //if (n == cornerIndexBottomRight()) px += 1.0;
-                    xp += (px - epx) * zfactor;
-                    yp += (horizontalBoundaryPointsData[idx].y - epy) * zfactor;
-                }
-                // RHS
-                else if (n < cornerIndexTopRight()) {
-                    idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
-                    xp += ((verticalBoundaryPointsData[idx].x + 1.0) - epx) * zfactor;
-                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
-                }
-                // top row including corners
-                else if (n <= cornerIndexTopLeft()) {
-                    idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
-                    double px = horizontalBoundaryPointsData[idx].x;
-                    //if (n == cornerIndexTopRight()) px += 1.0;
-                    xp += (px - epx) * zfactor;
-                    yp += ((horizontalBoundaryPointsData[idx].y + 1.0) - epy) * zfactor;
-                }
-                else if (n < _nv) {
-                    // LHS upper half
-                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
-                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
-                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
-                }
-                if (n == 0) {
-                    // save first point for later
-                    x1 = xp;
-                    y1 = yp;
-		    xfirst = xp;
-		    yfirst = yp;
-                }
-                else {
-                    // shoelace algorithm
-                    double x2 = xp;
-                    double y2 = yp;
-                    if (n == _nv) {
-                        x2 = xfirst;
-                        y2 = yfirst;
-                    }
-                    double ymin = y1 < y2 ? y1 : y2;
-                    double ymax = y1 > y2 ? y1 : y2;
-                    double xmax = x1 > x2 ? x1 : x2;
-                    if (y > ymin) {
-                        if (y <= ymax) {
-                            if (x <= xmax) {
-                                if (y1 != y2) {
-                                    xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1;
-                                }
-                                if ((x1 == x2) || (x <= xinters)) {
-                                    inside = !inside;
-                                }
-                            }
-                        }
-                    }
-                    x1 = x2;
-                    y1 = y2;
-                }
-            }
-        }
-
-        // If the nominal pixel is on the edge of the image and the photon misses in the
-        // direction of falling off the image, (possibly) report that in off_edge.
-        if (!inside && off_edge) {
-            *off_edge = false;
-            if ((ix == i1) && (x < pixelInnerBoundsData[index].getXMin())) *off_edge = true;
-            if ((ix == i2) && (x > pixelInnerBoundsData[index].getXMax())) *off_edge = true;
-            if ((iy == j1) && (y < pixelInnerBoundsData[index].getYMin())) *off_edge = true;
-            if ((iy == j2) && (y > pixelInnerBoundsData[index].getYMax())) *off_edge = true;
-        }
-        return inside;
-    }
-
-    bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
-                         Bounds<int>& targetBounds, int& step, int emptypolysize,
-                         Bounds<double>* pixelInnerBoundsData,
-                         Bounds<double>* pixelOuterBoundsData,
-                         Position<float>* horizontalBoundaryPointsData,
-                         Position<float>* verticalBoundaryPointsData,
-                         Position<double>* emptypolyData)
-    {
-        const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
-        const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-
-        // The following code finds which pixel we are in given
-        // pixel distortion due to the brighter-fatter effect
-        // The following are set up to start the search in the undistorted pixel, then
-        // search in the nearest neighbor first if it's not in the undistorted pixel.
-        if      ((x > y) && (x > 1.0 - y)) step = 1;
-        else if ((x < y) && (x < 1.0 - y)) step = 7;
-        else if ((x < y) && (x > 1.0 - y)) step = 3;
-        else step = 5;
-        int n=step;
-        for (int m=1; m<9; m++) {
-            int ix_off = ix + xoff[n];
-            int iy_off = iy + yoff[n];
-            double x_off = x - xoff[n];
-            double y_off = y - yoff[n];
-	    if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv,
-                                    targetBounds, nullptr, emptypolysize,
-                                    pixelInnerBoundsData, pixelOuterBoundsData,
-                                    horizontalBoundaryPointsData,
-                                    verticalBoundaryPointsData,
-                                    emptypolyData)) {
-                ix = ix_off;
-                iy = iy_off;
-                return true;
-            }
-            n = ((n-1) + step) % 8 + 1;
-            // This is intended to start with the nearest neighbor, then cycle through others.
-        }
-        return false;
-    }
 
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
-			       BaseDeviate rng, ImageView<T> target)
+                               BaseDeviate rng, ImageView<T> target)
     {
         const int nphotons = i2 - i1;
 
@@ -1135,18 +1133,18 @@ namespace galsim {
         Bounds<int> b = target.getBounds();
         double addedFlux = 0.;
 
-	// Get everything out of C++ classes and into arrays/structures suitable for GPU
-	// photons
+        // Get everything out of C++ classes and into arrays/structures suitable for GPU
+        // photons
         // can't get pointers to internal data from a const reference
         PhotonArray& photonsMutable = const_cast<PhotonArray&>(photons);        
-	double* photonsX = photonsMutable.getXArray();
-	double* photonsY = photonsMutable.getYArray();
-	double* photonsDXDZ = photonsMutable.getDXDZArray();
-	double* photonsDYDZ = photonsMutable.getDYDZArray();
-	double* photonsFlux = photonsMutable.getFluxArray();
-	double* photonsWavelength = photonsMutable.getWavelengthArray();
-	bool photonsHasAllocatedAngles = photons.hasAllocatedAngles();
-	bool photonsHasAllocatedWavelengths = photons.hasAllocatedWavelengths();
+        double* photonsX = photonsMutable.getXArray();
+        double* photonsY = photonsMutable.getYArray();
+        double* photonsDXDZ = photonsMutable.getDXDZArray();
+        double* photonsDYDZ = photonsMutable.getDYDZArray();
+        double* photonsFlux = photonsMutable.getFluxArray();
+        double* photonsWavelength = photonsMutable.getWavelengthArray();
+        bool photonsHasAllocatedAngles = photons.hasAllocatedAngles();
+        bool photonsHasAllocatedWavelengths = photons.hasAllocatedWavelengths();
 
         // if no wavelengths allocated, photonsWavelength will be null, but some
         // compilers don't like mapping a null pointer to the GPU, so assign it to
@@ -1161,20 +1159,20 @@ namespace galsim {
             photonsDYDZ = photonsY;
         }
         
-	// random arrays
-	double* diffStepRandomArray = diffStepRandom.data();
-	double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
-	double* conversionDepthRandomArray = conversionDepthRandom.data();
-	
-	// delta image
-	int deltaXMin = _delta.getXMin();
-	int deltaYMin = _delta.getYMin();
+        // random arrays
+        double* diffStepRandomArray = diffStepRandom.data();
+        double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
+        double* conversionDepthRandomArray = conversionDepthRandom.data();
+        
+        // delta image
+        int deltaXMin = _delta.getXMin();
+        int deltaYMin = _delta.getYMin();
         int deltaXMax = _delta.getXMax();
         int deltaYMax = _delta.getYMax();
-	int deltaStep = _delta.getStep();
-	int deltaStride = _delta.getStride();
+        int deltaStep = _delta.getStep();
+        int deltaStride = _delta.getStride();
 
-	int emptypolySize = _emptypoly.size();
+        int emptypolySize = _emptypoly.size();
 
         double* deltaData = _delta.getData();
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
@@ -1193,80 +1191,108 @@ namespace galsim {
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[0:(i2-i1)*2], conversionDepthRandomArray[0:i2-i1], pixelNotFoundRandomArray[0:i2-i1]) reduction(+:addedFlux)
 #endif
 #endif
-	for (int i = i1; i < i2; i++) {
-	    double x0 = photonsX[i];
-	    double y0 = photonsY[i];
+        for (int i = i1; i < i2; i++) {
+            // Get the location where the photon strikes the silicon:
+            double x0 = photonsX[i]; // in pixels
+            double y0 = photonsY[i]; // in pixels
+            xdbg<<"x0,y0 = "<<x0<<','<<y0;
 
-	    // calculateConversionDepth
-	    double dz;
-	    if (photonsHasAllocatedWavelengths) {
-		double lambda = photonsWavelength[i];
+            // calculateConversionDepth
+            double dz;
+            if (photonsHasAllocatedWavelengths) {
+                double lambda = photonsWavelength[i];
 
-		// perform abs_length_table lookup with linear interpolation
-		int tableIdx = int((lambda - 255.0) / 5.0);
-		double alpha = (lambda - ((float(tableIdx) * 5.0) + 255.0)) / 5.0;
+                // perform abs_length_table lookup with linear interpolation
+                int tableIdx = int((lambda - 255.0) / 5.0);
+                double alpha = (lambda - ((float(tableIdx) * 5.0) + 255.0)) / 5.0;
                 if (tableIdx < 0) tableIdx = 0;
-		int tableIdx1 = tableIdx + 1;
+                int tableIdx1 = tableIdx + 1;
                 if (tableIdx > 239) tableIdx = 239;
                 if (tableIdx1 > 239) tableIdx1 = 239;
-		double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
-		    (abs_length_table_data[tableIdx1] * alpha);
+                double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
+                    (abs_length_table_data[tableIdx1] * alpha);
 
-		dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
-	    }
-	    else {
-		dz = 1.0;
-	    }
+                dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
+            }
+            else {
+                dz = 1.0;
+            }
 
-	    if (photonsHasAllocatedAngles) {
-		double dxdz = photonsDXDZ[i];
-		double dydz = photonsDYDZ[i];
-		double pdz = dz / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz);
+            if (photonsHasAllocatedAngles) {
+                double dxdz = photonsDXDZ[i];
+                double dydz = photonsDYDZ[i];
+                double pdz = dz / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz);
                 dz = _sensorThickness - 1.0;
                 if (pdz < dz) dz = pdz;
-	    }
+            }
 
-	    if (photonsHasAllocatedAngles) {
-		double dxdz = photonsDXDZ[i];
-		double dydz = photonsDYDZ[i];
-		double dz_pixel = dz * invPixelSize;
-		x0 += dxdz * dz_pixel;
-		y0 += dydz * dz_pixel;
-	    }
+            if (photonsHasAllocatedAngles) {
+                double dxdz = photonsDXDZ[i];
+                double dydz = photonsDYDZ[i];
+                double dz_pixel = dz * invPixelSize;
+                x0 += dxdz * dz_pixel;
+                y0 += dydz * dz_pixel;
+            }
+            xdbg<<" => "<<x0<<','<<y0;
+            // This is the reverse of depth. zconv is how far above the substrate the e- converts.
+            double zconv = _sensorThickness - dz;
+            xdbg<<"zconv = "<<zconv<<std::endl;
+            if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
+            // TODO: Do something more realistic if it hits the bottom
 
-	    double zconv = _sensorThickness - dz;
-	    if (zconv < 0.0) continue;
-
-	    if (_diffStep != 0.) {
-		double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
+            // Now we add in a displacement due to diffusion
+            if (_diffStep != 0.) {
+                double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
                 if (diffStep < 0.0) diffStep = 0.0;
-		x0 += diffStep * diffStepRandomArray[(i-i1)*2];
-		y0 += diffStep * diffStepRandomArray[(i-i1)*2+1];
-	    }
+                x0 += diffStep * diffStepRandomArray[(i-i1)*2];
+                y0 += diffStep * diffStepRandomArray[(i-i1)*2+1];
+            }
+            xdbg<<" => "<<x0<<','<<y0<<std::endl;
+            double flux = photonsFlux[i];
 
-	    double flux = photonsFlux[i];
+#ifdef DEBUGLOGGING
+            if (i % 1000 == 0) {
+                xdbg<<"diffStep = "<<_diffStep<<std::endl;
+                xdbg<<"zconv = "<<zconv<<std::endl;
+                xdbg<<"x0 = "<<x0<<std::endl;
+                xdbg<<"y0 = "<<y0<<std::endl;
+            }
+#endif
 
-	    int ix = int(std::floor(x0 + 0.5));
-	    int iy = int(std::floor(y0 + 0.5));
+            // Now we find the undistorted pixel
+            int ix = int(std::floor(x0 + 0.5));
+            int iy = int(std::floor(y0 + 0.5));
 
-	    double x = x0 - ix + 0.5;
-	    double y = y0 - iy + 0.5;
+#ifdef DEBUGLOGGING
+            int ix0 = ix;
+            int iy0 = iy;
+#endif
 
-	    bool off_edge;
-	    bool foundPixel;
+            double x = x0 - ix + 0.5;
+            double y = y0 - iy + 0.5;
+            // (ix,iy) are the undistorted pixel coordinates.
+            // (x,y) are the coordinates within the pixel, centered at the lower left
 
-	    foundPixel = insidePixel(ix, iy, x, y, zconv, b, &off_edge,
+            // First check the obvious choice, since this will usually work.
+            bool off_edge;
+            bool foundPixel;
+
+            foundPixel = insidePixel(ix, iy, x, y, zconv, b, &off_edge,
                                      emptypolySize, pixelInnerBoundsData,
                                      pixelOuterBoundsData,
                                      horizontalBoundaryPointsData,
                                      verticalBoundaryPointsData,
                                      emptypolyData);
 
-	    if (!foundPixel && off_edge) continue;
+            // If the nominal position is on the edge of the image, off_edge reports whether
+            // the photon has fallen off the edge of the image. In this case, we won't find it in
+            // any of the neighbors either.  Just let the photon fall off the edge in this case.
+            if (!foundPixel && off_edge) continue;
 
-	    int step;
-	    if (!foundPixel) {
-		foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv,
+            // Then check neighbors
+            int step;  // We might need this below, so let searchNeighbors return it.
+            if (!foundPixel) {
+                foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv,
                                              b, step, emptypolySize,
                                              pixelInnerBoundsData,
                                              pixelOuterBoundsData,
@@ -1275,25 +1301,49 @@ namespace galsim {
                                              emptypolyData);
             }
 
-	    if (!foundPixel) {
-		const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
-		const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-		int n = (pixelNotFoundRandomArray[i-i1] > 0.5) ? 0 : step;
-		ix = ix + xoff[n];
-		iy = iy + yoff[n];
-	    }
+            // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
+            // If we do arrive here due to roundoff error of the pixel boundary, put the electron
+            // in the undistorted pixel or the nearest neighbor with equal probability.
+            if (!foundPixel) {
+#ifdef DEBUGLOGGING
+                dbg<<"Not found in any pixel\n";
+                dbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
+                dbg<<"b = "<<b<<std::endl;
+                dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
+                set_verbose(2);
+                bool off_edge;
+                insidePixel(ix, iy, x, y, zconv, target, &off_edge,
+                            emptypolySize, pixelInnerBoundsData,
+                            pixelOuterBoundsData,
+                            horizontalBoundaryPointsData,
+                            verticalBoundaryPointsData,
+                            emptypolyData);
+                searchNeighbors(*this, ix, iy, x, y, zconv, b, step, emptyPolySize,
+                                pixelInnerBoundsData, pixelOuterBoundsData,
+                                horizontalBoundaryPointsData,
+                                verticalBoundaryPointsData, emptyPolyData);
+                set_verbose(1);
+#endif
+                const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+                const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+                int n = (pixelNotFoundRandomArray[i-i1] > 0.5) ? 0 : step;
+                ix = ix + xoff[n];
+                iy = iy + yoff[n];
+            }
 
-	    if ((ix >= b.getXMin()) && (ix <= b.getXMax()) &&
+            if ((ix >= b.getXMin()) && (ix <= b.getXMax()) &&
                 (iy >= b.getYMin()) && (iy <= b.getYMax())) {
 
-		int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
+                int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
                 deltaData[deltaIdx] += flux;
-		addedFlux += flux;
+
+                // This isn't atomic -- openmp is handling the reduction for us.
+                addedFlux += flux;
             }
-	}
+        }
         
         return addedFlux;
     }
@@ -1442,6 +1492,11 @@ namespace galsim {
     template <typename T>
     void Silicon::update(ImageView<T> target)
     {
+        // This updates the pixel distortions in the _imagepolys
+        // pixel list based on the amount of additional charge in each pixel
+        // This distortion assumes the electron is created at the
+        // top of the silicon.  It mus be scaled based on the conversion depth
+        // This is handled in insidePixel.
         int nxCenter = (_nx - 1) / 2;
         int nyCenter = (_ny - 1) / 2;
 
@@ -1599,7 +1654,7 @@ namespace galsim {
 #endif
         for (size_t k=0; k<nxny; ++k) {
             if (changedData[k]) {
-	        updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
+                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
                                      pixelOuterBoundsData,
                                      horizontalBoundaryPointsData,
                                      verticalBoundaryPointsData);
@@ -1619,7 +1674,7 @@ namespace galsim {
         for (int i = 0; i < imageDataSize; i++) {
             targetData[i] += deltaData[i];
             deltaData[i] = 0.0;
-	}
+        }
     }
   
     int SetOMPThreads(int num_threads)
