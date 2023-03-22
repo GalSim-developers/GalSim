@@ -2306,7 +2306,10 @@ def test_Image_constructor():
 
         # Make a NumPy array directly, with non-trivially interesting values.
         test_arr = np.ones((3,4), dtype=types[i])
-        test_arr[1,3] = -5
+        if np.dtype(types[i]).kind == 'u':
+            test_arr[1,3] = -5 % np.iinfo(types[i]).max
+        else:
+            test_arr[1,3] = -5
         test_arr[2,2] = 7
         # Initialize the Image from it.
         test_im = galsim.Image(test_arr)
@@ -2318,7 +2321,10 @@ def test_Image_constructor():
         # Now make an opposite-endian Numpy array, to initialize the Image.
         new_type = array_dtype.newbyteorder('S')
         test_arr = np.ones((3,4), dtype=new_type)
-        test_arr[1,3] = -5
+        if np.dtype(types[i]).kind == 'u':
+            test_arr[1,3] = -5 % np.iinfo(types[i]).max
+        else:
+            test_arr[1,3] = -5
         test_arr[2,2] = 7
         # Initialize the Image from it.
         test_im = galsim.Image(test_arr)
