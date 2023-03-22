@@ -284,12 +284,14 @@ class LoggerWrapper:
     def __init__(self, logger):
         if isinstance(logger,LoggerWrapper):
             self.logger = logger.logger
+            self.level = logger.level
         else:
             self.logger = logger
-        # When multiprocessing, it is faster to check if the level is enabled locally, rather than
-        # communicating over the pipe to ask the base logger if it isEnabledFor a given level.
-        # If the logger is None, use more than the top logging level (CRITICAL).
-        self.level = self.logger.getEffectiveLevel() if self.logger else logging.CRITICAL+1
+            # When multiprocessing, it is faster to check if the level is enabled locally, rather
+            # than communicating over the pipe to ask the base logger if it isEnabledFor a given
+            # level.
+            # If the logger is None, use more than the top logging level (CRITICAL).
+            self.level = self.logger.getEffectiveLevel() if self.logger else logging.CRITICAL+1
 
     def getEffectiveLevel(self):
         return self.level
