@@ -151,3 +151,8 @@ Changes from v2.4.6 to v2.4.7
 - Add options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
 - Only use proxies for input objects if not yet in a multiprocessing context. This had been
   causing significant slow downs in some imsim runs. (#1206)
+
+Changes from v2.4.6 to v2.4.8
+=============================
+
+- Fix a slow-down in multiprocessing especially when running very many (>10) processes.
