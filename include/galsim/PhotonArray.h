@@ -90,6 +90,12 @@ namespace galsim {
         double* getDXDZArray() { return _dxdz; }
         double* getDYDZArray() { return _dydz; }
         double* getWavelengthArray() { return _wave; }
+        const double* getXArray() const { return _x; }
+        const double* getYArray() const { return _y; }
+        const double* getFluxArray() const { return _flux; }
+        const double* getDXDZArray() const { return _dxdz; }
+        const double* getDYDZArray() const { return _dydz; }
+        const double* getWavelengthArray() const { return _wave; }
         bool hasAllocatedAngles() const { return _dxdz != 0 && _dydz != 0; }
         bool hasAllocatedWavelengths() const { return _wave != 0; }
         /**

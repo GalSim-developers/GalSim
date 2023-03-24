@@ -1136,14 +1136,12 @@ namespace galsim {
 
         // Get everything out of C++ classes and into arrays/structures suitable for GPU
         // photons
-        // can't get pointers to internal data from a const reference
-        PhotonArray& photonsMutable = const_cast<PhotonArray&>(photons);        
-        double* photonsX = photonsMutable.getXArray();
-        double* photonsY = photonsMutable.getYArray();
-        double* photonsDXDZ = photonsMutable.getDXDZArray();
-        double* photonsDYDZ = photonsMutable.getDYDZArray();
-        double* photonsFlux = photonsMutable.getFluxArray();
-        double* photonsWavelength = photonsMutable.getWavelengthArray();
+        const double* photonsX = photons.getXArray();
+        const double* photonsY = photons.getYArray();
+        const double* photonsDXDZ = photons.getDXDZArray();
+        const double* photonsDYDZ = photons.getDYDZArray();
+        const double* photonsFlux = photons.getFluxArray();
+        const double* photonsWavelength = photons.getWavelengthArray();
         bool photonsHasAllocatedAngles = photons.hasAllocatedAngles();
         bool photonsHasAllocatedWavelengths = photons.hasAllocatedWavelengths();
 
