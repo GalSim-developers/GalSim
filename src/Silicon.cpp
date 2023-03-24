@@ -1114,18 +1114,19 @@ namespace galsim {
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
         // Generate random numbers in advance
-        std::vector<double> conversionDepthRandom(nphotons);
-        std::vector<double> pixelNotFoundRandom(nphotons);
-        std::vector<double> diffStepRandom(nphotons * 2);
+        // Now using a single array as having three separate arrays requires too
+        // many arguments for the OpenMP kernel on GPU (at least with the Clang
+        // runtime)
+        std::vector<double> randomValues(nphotons * 4);
 
         UniformDeviate ud(rng);
         GaussianDeviate gd(ud, 0, 1);
 
         for (int i=0; i<nphotons; i++) {
-            diffStepRandom[i*2] = gd();
-            diffStepRandom[i*2+1] = gd();
-            pixelNotFoundRandom[i] = ud();
-            conversionDepthRandom[i] = ud();
+            randomValues[i*4] = gd();    // diffStep x
+            randomValues[i*4+1] = gd();  // diffstep y
+            randomValues[i*4+2] = ud();  // pixel not found
+            randomValues[i*4+3] = ud();  // conversion depth
         }
 
         const double invPixelSize = 1./_pixelSize; // pixels/micron
@@ -1159,10 +1160,8 @@ namespace galsim {
             photonsDYDZ = photonsY;
         }
         
-        // random arrays
-        double* diffStepRandomArray = diffStepRandom.data();
-        double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
-        double* conversionDepthRandomArray = conversionDepthRandom.data();
+        // random array
+        double* randomArray = randomValues.data();
         
         // delta image
         int deltaXMin = _delta.getXMin();
@@ -1188,7 +1187,7 @@ namespace galsim {
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for reduction(+:addedFlux)
 #else
-#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[0:(i2-i1)*2], conversionDepthRandomArray[0:i2-i1], pixelNotFoundRandomArray[0:i2-i1]) reduction(+:addedFlux)
+#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], randomArray[0:(i2-i1)*4]) reduction(+:addedFlux)
 #endif
 #endif
         for (int i = i1; i < i2; i++) {
@@ -1212,7 +1211,7 @@ namespace galsim {
                 double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
                     (abs_length_table_data[tableIdx1] * alpha);
 
-                dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
+                dz = -abs_length * std::log(1.0 - randomArray[(i - i1) * 4 + 3]);
             }
             else {
                 dz = 1.0;
@@ -1244,8 +1243,8 @@ namespace galsim {
             if (_diffStep != 0.) {
                 double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
                 if (diffStep < 0.0) diffStep = 0.0;
-                x0 += diffStep * diffStepRandomArray[(i-i1)*2];
-                y0 += diffStep * diffStepRandomArray[(i-i1)*2+1];
+                x0 += diffStep * randomArray[(i-i1)*4];
+                y0 += diffStep * randomArray[(i-i1)*4+1];
             }
             xdbg<<" => "<<x0<<','<<y0<<std::endl;
             double flux = photonsFlux[i];
@@ -1326,7 +1325,7 @@ namespace galsim {
 #endif
                 const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
                 const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-                int n = (pixelNotFoundRandomArray[i-i1] > 0.5) ? 0 : step;
+                int n = (randomArray[(i-i1) * 4 + 2] > 0.5) ? 0 : step;
                 ix = ix + xoff[n];
                 iy = iy + yoff[n];
             }
