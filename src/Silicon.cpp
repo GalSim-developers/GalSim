@@ -421,9 +421,8 @@ namespace galsim {
 
         int nxny = nx * ny;
         
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
-
-        double* deltaData = _delta.getData();
+        int imageDataSize = (i2 - i1) * step + (j2 - j1) * stride;
+        T* targetData = target.getData();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
@@ -466,7 +465,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = deltaData[(j * stride) + (i * step)];
+                    double charge = targetData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -522,7 +521,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = deltaData[(j * stride) + (i * step)];
+                    double charge = targetData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1083,10 +1082,6 @@ namespace galsim {
         // Now we add in the tree ring distortions
         addTreeRingDistortions(target, orig_center);
 
-        // Start with the correct distortions for the initial image as it is already
-        dbg<<"Initial updatePixelDistortions\n";
-        updatePixelDistortions(target);
-
         // Keep track of the charge we are accumulating on a separate image for efficiency
         // of the distortion updates.
         _delta.resize(b);
@@ -1149,6 +1144,10 @@ namespace galsim {
 #ifdef GALSIM_USE_GPU
 #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
+
+        // Start with the correct distortions for the initial image as it is already
+        dbg<<"Initial updatePixelDistortions\n";
+        updatePixelDistortionsGPU(target);
     }
 
     void Silicon::finalize()
