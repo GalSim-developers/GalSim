@@ -1107,54 +1107,21 @@ namespace galsim {
         int hdSize = _horizontalDistortions.size();
         int vdSize = _verticalDistortions.size();
         
-        // first item is for lambda=255.0, last for lambda=1450.0
-        const double abs_length_table[240] = {
-            0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
-            0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
-            0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
-            0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
-            0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
-            0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
-            0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
-            1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
-            1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
-            2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
-            3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
-            5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
-            6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
-            9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
-            13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
-            18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
-            26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
-            40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
-            66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
-            120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
-            228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
-            541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
-            1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
-            3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
-            8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
-            26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
-            288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
-            1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
-            4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
-            27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
-            103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
-            294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
-            877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
-            3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
-            14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
-            34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
-            86956521739.130432, 106837606837.606827, 128205128205.128204,
-            185528756957.328400, 182815356489.945160, 263157894736.842072,
-            398406374501.992065, 558659217877.094971, 469483568075.117371,
-            833333333333.333374, 917431192660.550415, 1058201058201.058228
-        };
+        // this will only be fully accurate for cases where the table uses linear
+        // interpolation, and the data points are evenly spaced. Currently this is
+        // always the case for _abs_length_table.
+        _abs_length_arg_min = _abs_length_table.argMin();
+        _abs_length_arg_max = _abs_length_table.argMax();
+        _abs_length_size = _abs_length_table.size();
 
-        _abs_length_table_GPU.resize(240);
-        for (int i = 0; i < 240; i++) {
-            _abs_length_table_GPU[i] = abs_length_table[i];
+        _abs_length_table_GPU.resize(_abs_length_size);
+        _abs_length_increment = (_abs_length_arg_max - _abs_length_arg_min) /
+            (double)(_abs_length_size - 1);
+        for (int i = 0; i < _abs_length_size; i++) {
+            _abs_length_table_GPU[i] =
+                _abs_length_table.lookup(_abs_length_arg_min + (((double)i) * _abs_length_increment));
         }
+
         double* abs_length_table_data = _abs_length_table_GPU.data();
         
         int emptypolySize = _emptypoly.size();
@@ -1180,7 +1147,7 @@ namespace galsim {
 
         // map all data to the GPU
 #ifdef GALSIM_USE_GPU
-#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
     }
 
@@ -1220,11 +1187,11 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
 #endif
     }
@@ -1374,12 +1341,13 @@ namespace galsim {
                 double lambda = photonsWavelength[i];
 
                 // perform abs_length_table lookup with linear interpolation
-                int tableIdx = int((lambda - 255.0) / 5.0);
-                double alpha = (lambda - ((float(tableIdx) * 5.0) + 255.0)) / 5.0;
+                int tableIdx = int((lambda - _abs_length_arg_min) / _abs_length_increment);
+                double alpha = (lambda - ((float(tableIdx) * _abs_length_increment) +
+                                          _abs_length_arg_min)) / _abs_length_increment;
                 if (tableIdx < 0) tableIdx = 0;
                 int tableIdx1 = tableIdx + 1;
-                if (tableIdx > 239) tableIdx = 239;
-                if (tableIdx1 > 239) tableIdx1 = 239;
+                if (tableIdx >= _abs_length_size) tableIdx = _abs_length_size - 1;
+                if (tableIdx1 >= _abs_length_size) tableIdx1 = _abs_length_size - 1;
                 double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
                     (abs_length_table_data[tableIdx1] * alpha);
 

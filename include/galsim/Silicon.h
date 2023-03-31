@@ -285,6 +285,9 @@ namespace galsim
 	// GPU data
         std::vector<double> _abs_length_table_GPU;
         std::vector<Position<double> > _emptypolyGPU;
+        double _abs_length_arg_min, _abs_length_arg_max;
+        double _abs_length_increment;
+        int _abs_length_size;
 
         // need to keep a pointer to the last target image's data and its data type
         // so we can release it on the GPU later
