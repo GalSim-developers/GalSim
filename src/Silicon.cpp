@@ -397,6 +397,180 @@ namespace galsim {
         }
     }
 
+    template <typename T>
+    void Silicon::updatePixelDistortionsGPU(ImageView<T> target)
+    {
+        dbg<<"updatePixelDistortionsGPU\n";
+        // This updates the pixel distortions in the _imagepolys
+        // pixel list based on the amount of additional charge in each pixel
+        // This distortion assumes the electron is created at the
+        // top of the silicon.  It mus be scaled based on the conversion depth
+        // This is handled in insidePixel.
+        int nxCenter = (_nx - 1) / 2;
+        int nyCenter = (_ny - 1) / 2;
+
+        // Now add in the displacements
+        const int i1 = target.getXMin();
+        const int i2 = target.getXMax();
+        const int j1 = target.getYMin();
+        const int j2 = target.getYMax();
+        const int nx = i2-i1+1;
+        const int ny = j2-j1+1;
+        const int step = target.getStep();
+        const int stride = target.getStride();
+
+        int nxny = nx * ny;
+        
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+
+        double* deltaData = _delta.getData();
+
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
+
+        bool* changedData = _changed.get();
+        
+        // Loop through the boundary arrays and update any points affected by nearby pixels
+        // Horizontal array first
+        // map image data and changed array throughout all GPU loops
+
+#ifdef _OPENMP
+#ifndef GALSIM_USE_GPU
+#pragma omp parallel for
+#else
+#pragma omp target teams distribute parallel for
+#endif
+#endif
+        for (int p=0; p < nxny; p++) {
+            // Calculate which pixel we are currently below
+            int x = p % nx;
+            int y = p / nx;
+
+            // Loop over rectangle of pixels that could affect this row of points
+            // std::min and std::max are causing this loop to crash, even though
+            // the same functions run fine in the accumulate loop.
+            int polyi1 = x - _qDist;
+            if (polyi1 < 0) polyi1 = 0;
+            int polyi2 = x + _qDist;
+            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+            int polyj1 = y - (_qDist + 1);
+            if (polyj1 < 0) polyj1 = 0;
+            int polyj2 = y + _qDist;
+            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+
+            // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
+
+            bool change = false;
+            for (int j=polyj1; j <= polyj2; j++) {
+                for (int i=polyi1; i <= polyi2; i++) {
+                    // Check whether this pixel has charge on it
+                    double charge = deltaData[(j * stride) + (i * step)];
+
+                    if (charge != 0.0) {
+                        change = true;
+
+                        // Work out corresponding index into distortions array
+                        int dist_index = (((y - j + nyCenter) * _nx) + (x - i + nxCenter)) * horizontalPixelStride();
+                        int index = p * horizontalPixelStride();
+
+                        // Loop over boundary points and update them
+                        for (int n=0; n < horizontalPixelStride(); ++n, ++index, ++dist_index) {
+                            horizontalBoundaryPointsData[index].x =
+                                double(horizontalBoundaryPointsData[index].x) +
+                                horizontalDistortionsData[dist_index].x * charge;
+                            horizontalBoundaryPointsData[index].y =
+                                double(horizontalBoundaryPointsData[index].y) +
+                                horizontalDistortionsData[dist_index].y * charge;
+                        }
+                    }
+                }
+            }
+            
+            // update changed array
+            if (change) {
+                if (y < ny) changedData[(x * ny) + y] = true; // pixel above
+                if (y > 0)  changedData[(x * ny) + (y - 1)] = true; // pixel below
+            }
+        }
+
+        // Now vertical array
+#ifdef _OPENMP
+#ifndef GALSIM_USE_GPU
+#pragma omp parallel for
+#else
+#pragma omp target teams distribute parallel for
+#endif
+#endif
+        for (int p=0; p < (nx * ny); p++) {
+            // Calculate which pixel we are currently on
+            int x = p / ny;
+            int y = (ny - 1) - (p % ny); // remember vertical points run top-to-bottom
+
+            // Loop over rectangle of pixels that could affect this column of points
+            int polyi1 = x - (_qDist + 1);
+            if (polyi1 < 0) polyi1 = 0;
+            int polyi2 = x + _qDist;
+            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+            int polyj1 = y - _qDist;
+            if (polyj1 < 0) polyj1 = 0;
+            int polyj2 = y + _qDist;
+            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+
+            bool change = false;
+            for (int j=polyj1; j <= polyj2; j++) {
+                for (int i=polyi1; i <= polyi2; i++) {
+                    // Check whether this pixel has charge on it
+                    double charge = deltaData[(j * stride) + (i * step)];
+
+                    if (charge != 0.0) {
+                        change = true;
+
+                        // Work out corresponding index into distortions array
+                        int dist_index = (((x - i + nxCenter) * _ny) + ((_ny - 1) - (y - j + nyCenter))) * verticalPixelStride() + (verticalPixelStride() - 1);
+                        int index = p * verticalPixelStride() + (verticalPixelStride() - 1);
+
+                        // Loop over boundary points and update them
+                        for (int n=0; n < verticalPixelStride(); ++n, --index, --dist_index) {
+                            verticalBoundaryPointsData[index].x =
+                                double(verticalBoundaryPointsData[index].x) +
+                                verticalDistortionsData[dist_index].x * charge;
+                            verticalBoundaryPointsData[index].y =
+                                double(verticalBoundaryPointsData[index].y) +
+                                verticalDistortionsData[dist_index].y * charge;
+                        }
+                    }
+                }
+            }
+
+            // update changed array
+            if (change) {
+                if (x < nx) changedData[(x * ny) + y] = true;
+                if (x > 0)  changedData[((x - 1) * ny) + y] = true;
+            }
+        }
+
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+#ifdef _OPENMP
+#ifndef GALSIM_USE_GPU
+#pragma omp parallel for
+#else
+#pragma omp target teams distribute parallel for
+#endif
+#endif
+        for (size_t k=0; k<nxny; ++k) {
+            if (changedData[k]) {
+                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
+                                     pixelOuterBoundsData,
+                                     horizontalBoundaryPointsData,
+                                     verticalBoundaryPointsData);
+                changedData[k] = false;
+            }
+        }
+    }
+
     // This version of calculateTreeRingDistortion only distorts a polygon.
     // Used in the no-flux pixel area calculation.
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
@@ -1489,178 +1663,17 @@ namespace galsim {
     template <typename T>
     void Silicon::update(ImageView<T> target)
     {
-        // This updates the pixel distortions in the _imagepolys
-        // pixel list based on the amount of additional charge in each pixel
-        // This distortion assumes the electron is created at the
-        // top of the silicon.  It mus be scaled based on the conversion depth
-        // This is handled in insidePixel.
-        int nxCenter = (_nx - 1) / 2;
-        int nyCenter = (_ny - 1) / 2;
-
-        // Now add in the displacements
-        const int i1 = target.getXMin();
-        const int i2 = target.getXMax();
-        const int j1 = target.getYMin();
-        const int j2 = target.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
-        const int step = target.getStep();
-        const int stride = target.getStride();
-
-        int nxny = nx * ny;
-        
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
-
-        T* targetData = target.getData();
-        double* deltaData = _delta.getData();
-
-        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
-        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
-        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
-        Position<float>* verticalDistortionsData = _verticalDistortions.data();
-
-        bool* changedData = _changed.get();
-        
-        // Loop through the boundary arrays and update any points affected by nearby pixels
-        // Horizontal array first
-        // map image data and changed array throughout all GPU loops
-
-#ifdef _OPENMP
-#ifndef GALSIM_USE_GPU
-#pragma omp parallel for
-#else
-#pragma omp target teams distribute parallel for
-#endif
-#endif
-        for (int p=0; p < nxny; p++) {
-            // Calculate which pixel we are currently below
-            int x = p % nx;
-            int y = p / nx;
-
-            // Loop over rectangle of pixels that could affect this row of points
-            // std::min and std::max are causing this loop to crash, even though
-            // the same functions run fine in the accumulate loop.
-            int polyi1 = x - _qDist;
-            if (polyi1 < 0) polyi1 = 0;
-            int polyi2 = x + _qDist;
-            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
-            int polyj1 = y - (_qDist + 1);
-            if (polyj1 < 0) polyj1 = 0;
-            int polyj2 = y + _qDist;
-            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
-
-            // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
-
-            bool change = false;
-            for (int j=polyj1; j <= polyj2; j++) {
-                for (int i=polyi1; i <= polyi2; i++) {
-                    // Check whether this pixel has charge on it
-                    double charge = deltaData[(j * stride) + (i * step)];
-
-                    if (charge != 0.0) {
-                        change = true;
-
-                        // Work out corresponding index into distortions array
-                        int dist_index = (((y - j + nyCenter) * _nx) + (x - i + nxCenter)) * horizontalPixelStride();
-                        int index = p * horizontalPixelStride();
-
-                        // Loop over boundary points and update them
-                        for (int n=0; n < horizontalPixelStride(); ++n, ++index, ++dist_index) {
-                            horizontalBoundaryPointsData[index].x =
-                                double(horizontalBoundaryPointsData[index].x) +
-                                horizontalDistortionsData[dist_index].x * charge;
-                            horizontalBoundaryPointsData[index].y =
-                                double(horizontalBoundaryPointsData[index].y) +
-                                horizontalDistortionsData[dist_index].y * charge;
-                        }
-                    }
-                }
-            }
-            
-            // update changed array
-            if (change) {
-                if (y < ny) changedData[(x * ny) + y] = true; // pixel above
-                if (y > 0)  changedData[(x * ny) + (y - 1)] = true; // pixel below
-            }
-        }
-
-        // Now vertical array
-#ifdef _OPENMP
-#ifndef GALSIM_USE_GPU
-#pragma omp parallel for
-#else
-#pragma omp target teams distribute parallel for
-#endif
-#endif
-        for (int p=0; p < (nx * ny); p++) {
-            // Calculate which pixel we are currently on
-            int x = p / ny;
-            int y = (ny - 1) - (p % ny); // remember vertical points run top-to-bottom
-
-            // Loop over rectangle of pixels that could affect this column of points
-            int polyi1 = x - (_qDist + 1);
-            if (polyi1 < 0) polyi1 = 0;
-            int polyi2 = x + _qDist;
-            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
-            int polyj1 = y - _qDist;
-            if (polyj1 < 0) polyj1 = 0;
-            int polyj2 = y + _qDist;
-            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
-
-            bool change = false;
-            for (int j=polyj1; j <= polyj2; j++) {
-                for (int i=polyi1; i <= polyi2; i++) {
-                    // Check whether this pixel has charge on it
-                    double charge = deltaData[(j * stride) + (i * step)];
-
-                    if (charge != 0.0) {
-                        change = true;
-
-                        // Work out corresponding index into distortions array
-                        int dist_index = (((x - i + nxCenter) * _ny) + ((_ny - 1) - (y - j + nyCenter))) * verticalPixelStride() + (verticalPixelStride() - 1);
-                        int index = p * verticalPixelStride() + (verticalPixelStride() - 1);
-
-                        // Loop over boundary points and update them
-                        for (int n=0; n < verticalPixelStride(); ++n, --index, --dist_index) {
-                            verticalBoundaryPointsData[index].x =
-                                double(verticalBoundaryPointsData[index].x) +
-                                verticalDistortionsData[dist_index].x * charge;
-                            verticalBoundaryPointsData[index].y =
-                                double(verticalBoundaryPointsData[index].y) +
-                                verticalDistortionsData[dist_index].y * charge;
-                        }
-                    }
-                }
-            }
-
-            // update changed array
-            if (change) {
-                if (x < nx) changedData[(x * ny) + y] = true;
-                if (x > 0)  changedData[((x - 1) * ny) + y] = true;
-            }
-        }
-
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
-#ifdef _OPENMP
-#ifndef GALSIM_USE_GPU
-#pragma omp parallel for
-#else
-#pragma omp target teams distribute parallel for
-#endif
-#endif
-        for (size_t k=0; k<nxny; ++k) {
-            if (changedData[k]) {
-                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
-                                     pixelOuterBoundsData,
-                                     horizontalBoundaryPointsData,
-                                     verticalBoundaryPointsData);
-                changedData[k] = false;
-            }
-        }
+        updatePixelDistortionsGPU(_delta.view());
         
         // update target from delta and zero delta on GPU
         // CPU delta is not zeroed but that shouldn't matter
+        // addDelta is not used here because 1. we want to zero _delta at the same
+        // time, and 2. we don't want to copy data back to the CPU
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+
+        double* deltaData = _delta.getData();
+        T* targetData = target.getData();
+        
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
@@ -1695,6 +1708,9 @@ namespace galsim {
 
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
+
+    template void Silicon::updatePixelDistortionsGPU(ImageView<double> target);
+    template void Silicon::updatePixelDistortionsGPU(ImageView<float> target);
 
     template void Silicon::addTreeRingDistortions(ImageView<double> target,
                                                   Position<int> orig_center);
