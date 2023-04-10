@@ -317,12 +317,11 @@ namespace galsim {
             if (polyi1 < 0) polyi1 = 0;
             int polyi2 = x + _qDist;
             if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+            // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
             int polyj1 = y - (_qDist + 1);
             if (polyj1 < 0) polyj1 = 0;
             int polyj2 = y + _qDist;
             if (polyj2 > (ny - 1)) polyj2 = ny - 1;
-
-            // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -1125,10 +1124,11 @@ namespace galsim {
 
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
-        // Generate random numbers in advance
-        // Now using a single array as having three separate arrays requires too
-        // many arguments for the OpenMP kernel on GPU (at least with the Clang
-        // runtime)
+        // Generate random numbers in advance for reproducibility across CPU, GPU,
+        // different numbers of threads
+        // we store four random numbers for each photon in a single array.
+        // using separate arrays would require too many arguments for the OpenMP
+        // kernel on GPU (at least with the Clang runtime)
         std::vector<double> randomValues(nphotons * 4);
 
         UniformDeviate ud(rng);
@@ -1222,6 +1222,8 @@ namespace galsim {
                 double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
                     (abs_length_table_data[tableIdx1] * alpha);
 
+                // get uniform random number for conversion depth from randomArray
+                // (4th of 4 numbers for this photon)
                 dz = -abs_length * std::log(1.0 - randomArray[(i - i1) * 4 + 3]);
             }
             else {
@@ -1240,20 +1242,22 @@ namespace galsim {
                 double dxdz = photonsDXDZ[i];
                 double dydz = photonsDYDZ[i];
                 double dz_pixel = dz * invPixelSize;
-                x0 += dxdz * dz_pixel;
-                y0 += dydz * dz_pixel;
+                x0 += dxdz * dz_pixel; // dx in pixels
+                y0 += dydz * dz_pixel; // dy in pixels
             }
             xdbg<<" => "<<x0<<','<<y0;
             // This is the reverse of depth. zconv is how far above the substrate the e- converts.
             double zconv = _sensorThickness - dz;
             xdbg<<"zconv = "<<zconv<<std::endl;
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
-            // TODO: Do something more realistic if it hits the bottom
+            // TODO: Do something more realistic if it hits the bottom.
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
                 double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
                 if (diffStep < 0.0) diffStep = 0.0;
+                // use gaussian random numbers for diffStep from randomArray
+                // (1st and 2nd of 4 numbers for this photon)
                 x0 += diffStep * randomArray[(i-i1)*4];
                 y0 += diffStep * randomArray[(i-i1)*4+1];
             }
@@ -1336,6 +1340,8 @@ namespace galsim {
 #endif
                 const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
                 const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+                // use uniform random numbers for pixel not found from randomArray
+                // (3rd of 4 numbers for this photon)
                 int n = (randomArray[(i-i1) * 4 + 2] > 0.5) ? 0 : step;
                 ix = ix + xoff[n];
                 iy = iy + yoff[n];
