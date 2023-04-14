@@ -696,15 +696,29 @@ namespace galsim {
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
 
-    double Silicon::calculateConversionDepth(const PhotonArray& photons, int i,
+    double Silicon::calculateConversionDepth(bool photonsHasAllocatedWavelengths,
+                                             const double* photonsWavelength,
+                                             const double* abs_length_table_data,
+                                             bool photonsHasAllocatedAngles,
+                                             const double* photonsDXDZ,
+                                             const double* photonsDYDZ, int i,
                                              double randomNumber) const
     {
         // Determine the distance the photon travels into the silicon
         double si_length;
-        if (photons.hasAllocatedWavelengths()) {
-            double lambda = photons.getWavelength(i); // in nm
+        if (photonsHasAllocatedWavelengths) {
+            double lambda = photonsWavelength[i]; // in nm
             // Lookup the absorption length in the imported table
-            double abs_length = _abs_length_table.lookup(lambda); // in microns
+            // perform abs_length_table lookup with linear interpolation
+            int tableIdx = int((lambda - _abs_length_arg_min) / _abs_length_increment);
+            double alpha = (lambda - ((float(tableIdx) * _abs_length_increment) +
+                                      _abs_length_arg_min)) / _abs_length_increment;
+            if (tableIdx < 0) tableIdx = 0;
+            int tableIdx1 = tableIdx + 1;
+            if (tableIdx >= _abs_length_size) tableIdx = _abs_length_size - 1;
+            if (tableIdx1 >= _abs_length_size) tableIdx1 = _abs_length_size - 1;
+            double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
+                (abs_length_table_data[tableIdx1] * alpha); // in microns
             si_length = -abs_length * log(1.0 - randomNumber); // in microns
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
@@ -718,9 +732,9 @@ namespace galsim {
         }
 
         // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
-        if (photons.hasAllocatedAngles()) {
-            double dxdz = photons.getDXDZ(i);
-            double dydz = photons.getDYDZ(i);
+        if (photonsHasAllocatedAngles) {
+            double dxdz = photonsDXDZ[i];
+            double dydz = photonsDYDZ[i];
             double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
@@ -1206,38 +1220,15 @@ namespace galsim {
             double y0 = photonsY[i]; // in pixels
             xdbg<<"x0,y0 = "<<x0<<','<<y0;
 
-            // calculateConversionDepth
-            double dz;
-            if (photonsHasAllocatedWavelengths) {
-                double lambda = photonsWavelength[i];
-
-                // perform abs_length_table lookup with linear interpolation
-                int tableIdx = int((lambda - _abs_length_arg_min) / _abs_length_increment);
-                double alpha = (lambda - ((float(tableIdx) * _abs_length_increment) +
-                                          _abs_length_arg_min)) / _abs_length_increment;
-                if (tableIdx < 0) tableIdx = 0;
-                int tableIdx1 = tableIdx + 1;
-                if (tableIdx >= _abs_length_size) tableIdx = _abs_length_size - 1;
-                if (tableIdx1 >= _abs_length_size) tableIdx1 = _abs_length_size - 1;
-                double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
-                    (abs_length_table_data[tableIdx1] * alpha);
-
-                // get uniform random number for conversion depth from randomArray
-                // (4th of 4 numbers for this photon)
-                dz = -abs_length * std::log(1.0 - randomArray[(i - i1) * 4 + 3]);
-            }
-            else {
-                dz = 1.0;
-            }
-
-            if (photonsHasAllocatedAngles) {
-                double dxdz = photonsDXDZ[i];
-                double dydz = photonsDYDZ[i];
-                double pdz = dz / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz);
-                dz = _sensorThickness - 1.0;
-                if (pdz < dz) dz = pdz;
-            }
-
+            // get uniform random number for conversion depth from randomArray
+            // (4th of 4 numbers for this photon)
+            double dz = calculateConversionDepth(photonsHasAllocatedWavelengths,
+                                                 photonsWavelength,
+                                                 abs_length_table_data,
+                                                 photonsHasAllocatedAngles,
+                                                 photonsDXDZ,
+                                                 photonsDYDZ, i,
+                                                 randomArray[(i - i1) * 4 + 3]);
             if (photonsHasAllocatedAngles) {
                 double dxdz = photonsDXDZ[i];
                 double dydz = photonsDYDZ[i];

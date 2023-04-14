@@ -56,7 +56,13 @@ namespace galsim
                                const Polygon& emptypoly, Polygon& result,
                                double factor) const;
 
-        double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
+        double calculateConversionDepth(bool photonsHasAllocatedWavelengths,
+                                        const double* photonsWavelength,
+                                        const double* abs_length_table_data,
+                                        bool photonsHasAllocatedAngles,
+                                        const double* photonsDXDZ,
+                                        const double* photonsDYDZ, int i,
+                                        double randomNumber) const;
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
