@@ -564,8 +564,7 @@ namespace galsim {
         // photon within the pixel, with (0,0) in the lower left
 
         // If test pixel is off the image, return false.  (Avoids seg faults!)
-        if ((ix < targetBounds.getXMin()) || (ix > targetBounds.getXMax()) ||
-            (iy < targetBounds.getYMin()) || (iy > targetBounds.getYMax())) {
+        if (!targetBounds.includes(ix, iy)) {
             if (off_edge) *off_edge = true;
             return false;
         }
@@ -582,11 +581,9 @@ namespace galsim {
         // First do some easy checks if the point isn't terribly close to the boundary.
 
         bool inside;
-        if ((x >= pixelInnerBoundsData[index].getXMin()) && (x <= pixelInnerBoundsData[index].getXMax()) &&
-            (y >= pixelInnerBoundsData[index].getYMin()) && (y <= pixelInnerBoundsData[index].getYMax())) {
+        if (pixelInnerBoundsData[index].includes(x, y)) {
             inside = true;
-        } else if ((x < pixelOuterBoundsData[index].getXMin()) || (x > pixelOuterBoundsData[index].getXMax()) ||
-                   (y < pixelOuterBoundsData[index].getYMin()) || (y > pixelOuterBoundsData[index].getYMax())) {
+        } else if (!pixelOuterBoundsData[index].includes(x, y)) {
             inside = false;
         } else {
             // OK, it must be near the boundary, so now be careful.
@@ -1340,9 +1337,7 @@ namespace galsim {
                 iy = iy + yoff[n];
             }
 
-            if ((ix >= b.getXMin()) && (ix <= b.getXMax()) &&
-                (iy >= b.getYMin()) && (iy <= b.getYMax())) {
-
+            if (b.includes(ix, iy)) {
                 int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
 #ifdef _OPENMP
 #pragma omp atomic
