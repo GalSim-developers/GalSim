@@ -1160,7 +1160,9 @@ namespace galsim {
         Bounds<int> b = target.getBounds();
         double addedFlux = 0.;
 
-        // Get everything out of C++ classes and into arrays/structures suitable for GPU
+        // Get everything out of C++ classes and into arrays/structures suitable for GPU.
+        // Mapping to GPU requires raw pointers - std::vector and similar objects cannot
+        // presently be mapped correctly.
         // photons
         const double* photonsX = photons.getXArray();
         const double* photonsY = photons.getYArray();
