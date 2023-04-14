@@ -260,13 +260,11 @@ namespace galsim
 
         void initializeBoundaryPoints(int nx, int ny);
 
-        void updatePixelBounds(int nx, int ny, size_t k);
-
-        void updatePixelBoundsGPU(int nx, int ny, size_t k,
-                                  Bounds<double>* pixelInnerBoundsData,
-                                  Bounds<double>* pixelOuterBoundsData,
-                                  Position<float>* horizontalBoundaryPointsData,
-                                  Position<float>* verticalBoundaryPointsData);
+        void updatePixelBounds(int nx, int ny, size_t k,
+                               Bounds<double>* pixelInnerBoundsData,
+                               Bounds<double>* pixelOuterBoundsData,
+                               Position<float>* horizontalBoundaryPointsData,
+                               Position<float>* verticalBoundaryPointsData);
 
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
