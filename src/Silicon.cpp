@@ -225,41 +225,6 @@ namespace galsim {
         }
     }
     
-    void Silicon::updatePixelBounds(int nx, int ny, size_t k)
-    {
-        // update the bounding rectangles for pixel k
-        // get pixel co-ordinates
-        int x = k / ny;
-        int y = k % ny;
-
-        // compute outer bounds first
-        _pixelOuterBounds[k] = Bounds<double>();
-
-        iteratePixelBoundary(x, y, nx, ny, [this, k](int n, Position<float>& pt, bool rhs, bool top) {
-                             Position<double> p = pt;
-                             if (rhs) p.x += 1.0;
-                             if (top) p.y += 1.0;
-                             _pixelOuterBounds[k] += p;
-                             });
-
-        Position<double> center = _pixelOuterBounds[k].center();
-
-        // now compute inner bounds manually
-        _pixelInnerBounds[k] = _pixelOuterBounds[k];
-        Bounds<double>& inner = _pixelInnerBounds[k];
-
-        iteratePixelBoundary(x, y, nx, ny, [&](int n, Position<float>& pt, bool rhs, bool top) {
-                             Position<double> p = pt;
-                             if (rhs) p.x += 1.0;
-                             if (top) p.y += 1.0;
-
-                             if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
-                             if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
-                             if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
-                             if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
-                             });
-    }
-
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -423,10 +388,10 @@ namespace galsim {
 #endif
         for (size_t k=0; k<nxny; ++k) {
             if (changedData[k]) {
-                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
-                                     pixelOuterBoundsData,
-                                     horizontalBoundaryPointsData,
-                                     verticalBoundaryPointsData);
+                updatePixelBounds(nx, ny, k, pixelInnerBoundsData,
+                                  pixelOuterBoundsData,
+                                  horizontalBoundaryPointsData,
+                                  verticalBoundaryPointsData);
                 changedData[k] = false;
             }
         }
@@ -525,7 +490,10 @@ namespace galsim {
         }
         for (size_t k=0; k<changed.size(); ++k) {
             if (changed[k]) {
-                updatePixelBounds(nx, ny, k);
+                updatePixelBounds(nx, ny, k, _pixelInnerBounds.data(),
+                                  _pixelOuterBounds.data(),
+                                  _horizontalBoundaryPoints.data(),
+                                  _verticalBoundaryPoints.data());
             }
         }
     }
@@ -933,7 +901,10 @@ namespace galsim {
         _pixelInnerBounds.resize(nx * ny);
         _pixelOuterBounds.resize(nx * ny);
         for (int k = 0; k < (nx * ny); k++) {
-            updatePixelBounds(nx, ny, k);
+            updatePixelBounds(nx, ny, k, _pixelInnerBounds.data(),
+                              _pixelOuterBounds.data(),
+                              _horizontalBoundaryPoints.data(),
+                              _verticalBoundaryPoints.data());
         }
     }
 
@@ -1352,11 +1323,11 @@ namespace galsim {
         return addedFlux;
     }
 
-    void Silicon::updatePixelBoundsGPU(int nx, int ny, size_t k,
-                                       Bounds<double>* pixelInnerBoundsData,
-                                       Bounds<double>* pixelOuterBoundsData,
-                                       Position<float>* horizontalBoundaryPointsData,
-                                       Position<float>* verticalBoundaryPointsData)
+    void Silicon::updatePixelBounds(int nx, int ny, size_t k,
+                                    Bounds<double>* pixelInnerBoundsData,
+                                    Bounds<double>* pixelOuterBoundsData,
+                                    Position<float>* horizontalBoundaryPointsData,
+                                    Position<float>* verticalBoundaryPointsData)
     {
         // update the bounding rectangles for pixel k
         // get pixel co-ordinates
