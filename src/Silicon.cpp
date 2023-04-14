@@ -284,7 +284,7 @@ namespace galsim {
 
         int nxny = nx * ny;
         
-        int imageDataSize = (i2 - i1) * step + (j2 - j1) * stride;
+        int imageDataSize = target.getMaxPtr() - target.getData();
         T* targetData = target.getData();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
@@ -961,7 +961,7 @@ namespace galsim {
 
         // convert and map data for GPU
         double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         T* targetData = target.getData();
         
@@ -1053,7 +1053,7 @@ namespace galsim {
         bool* changedData = _changed.get();
         
         double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
@@ -1070,7 +1070,7 @@ namespace galsim {
     void Silicon::subtractDelta(ImageView<T> target)
     {
         // perform update on GPU
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
@@ -1095,8 +1095,8 @@ namespace galsim {
     void Silicon::addDelta(ImageView<T> target)
     {
         // perform update on GPU
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
-
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
+        
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
 
@@ -1122,7 +1122,7 @@ namespace galsim {
     {
         const int nphotons = i2 - i1;
 
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         // Generate random numbers in advance for reproducibility across CPU, GPU,
         // different numbers of threads
@@ -1514,8 +1514,8 @@ namespace galsim {
         // CPU delta is not zeroed but that shouldn't matter
         // addDelta is not used here because 1. we want to zero _delta at the same
         // time, and 2. we don't want to copy data back to the CPU
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
-
+        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
+        
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
         
