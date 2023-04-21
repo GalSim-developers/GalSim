@@ -981,7 +981,7 @@ namespace galsim {
         Position<double>* emptypolyData = _emptypolyGPU.data();
         
         int nxny = nx * ny;
-        _changed = std::shared_ptr<bool>(new bool[nxny]);
+	_changed.reset(new bool[nxny]);
         bool* changedData = _changed.get();
         for (int i = 0; i < nxny; i++) changedData[i] = false;
 
