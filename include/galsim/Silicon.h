@@ -282,7 +282,7 @@ namespace galsim
         Table _abs_length_table;
         bool _transpose;
         ImageAlloc<double> _delta;
-        std::shared_ptr<bool> _changed;
+        std::unique_ptr<bool[]> _changed;
 
 	// GPU data
         std::vector<double> _abs_length_table_GPU;

@@ -149,7 +149,7 @@ jobs:
 
                 # Extra packages needed for testing
                 pip install -U -r test_requirements.txt
-                pip install -U nose codecov coverage
+                pip install -U nose coverage
                 pip install -U matplotlib astroplan
 
             - name: Install CPython-only dependencies
