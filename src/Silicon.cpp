@@ -225,6 +225,147 @@ namespace galsim {
         }
     }
     
+    void Silicon::updatePixelBounds(int nx, int ny, size_t k,
+                                    Bounds<double>* pixelInnerBoundsData,
+                                    Bounds<double>* pixelOuterBoundsData,
+                                    Position<float>* horizontalBoundaryPointsData,
+                                    Position<float>* verticalBoundaryPointsData)
+    {
+        // update the bounding rectangles for pixel k
+        // get pixel co-ordinates
+        int x = k / ny;
+        int y = k % ny;
+
+        // compute outer bounds first
+        // initialise outer bounds
+        double obxmin = 1000000.0, obxmax = -1000000.0;
+        double obymin = 1000000.0, obymax = -1000000.0;
+
+        // iterate over pixel boundary
+        int n, idx;
+        // LHS lower half
+        for (n = 0; n < cornerIndexBottomLeft(); n++) {
+            idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
+        }
+        // bottom row including corners
+        for (; n <= cornerIndexBottomRight(); n++) {
+            idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y;
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
+        }
+        // RHS
+        for (; n < cornerIndexTopRight(); n++) {
+            idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
+            double px = verticalBoundaryPointsData[idx].x + 1.0;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
+        }
+        // top row including corners
+        for (; n <= cornerIndexTopLeft(); n++) {
+            idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y + 1.0;
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
+        }
+        // LHS upper half
+        for (; n < _nv; n++) {
+            idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
+        }
+
+        // compute center
+        double centerx = (obxmin + obxmax) * 0.5;
+        double centery = (obymin + obymax) * 0.5;
+
+        // compute inner bounds
+        // initialize inner from outer
+        double ibxmin = obxmin, ibxmax = obxmax, ibymin = obymin, ibymax = obymax;
+
+        // iterate over pixel boundary
+        // LHS lower half
+        for (n = 0; n < cornerIndexBottomLeft(); n++) {
+            idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
+            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
+            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
+            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
+        }
+        // bottom row including corners
+        for (; n <= cornerIndexBottomRight(); n++) {
+            idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y;
+            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
+            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
+            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
+            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
+        }
+        // RHS
+        for (; n < cornerIndexTopRight(); n++) {
+            idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
+            double px = verticalBoundaryPointsData[idx].x + 1.0;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
+            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
+            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
+            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
+        }
+        // top row including corners
+        for (; n <= cornerIndexTopLeft(); n++) {
+            idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y + 1.0;
+            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
+            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
+            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
+            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
+        }
+        // LHS upper half
+        for (; n < _nv; n++) {
+            idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
+            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
+            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
+            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
+            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
+        }
+
+        // store results in actual bound structures
+        pixelInnerBoundsData[k].setXMin(ibxmin);
+        pixelInnerBoundsData[k].setXMax(ibxmax);
+        pixelInnerBoundsData[k].setYMin(ibymin);
+        pixelInnerBoundsData[k].setYMax(ibymax);
+
+        pixelOuterBoundsData[k].setXMin(obxmin);
+        pixelOuterBoundsData[k].setXMax(obxmax);
+        pixelOuterBoundsData[k].setYMin(obymin);
+        pixelOuterBoundsData[k].setYMax(obymax);
+    }
+
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -1321,147 +1462,6 @@ namespace galsim {
         }
         
         return addedFlux;
-    }
-
-    void Silicon::updatePixelBounds(int nx, int ny, size_t k,
-                                    Bounds<double>* pixelInnerBoundsData,
-                                    Bounds<double>* pixelOuterBoundsData,
-                                    Position<float>* horizontalBoundaryPointsData,
-                                    Position<float>* verticalBoundaryPointsData)
-    {
-        // update the bounding rectangles for pixel k
-        // get pixel co-ordinates
-        int x = k / ny;
-        int y = k % ny;
-
-        // compute outer bounds first
-        // initialise outer bounds
-        double obxmin = 1000000.0, obxmax = -1000000.0;
-        double obymin = 1000000.0, obymax = -1000000.0;
-
-        // iterate over pixel boundary
-        int n, idx;
-        // LHS lower half
-        for (n = 0; n < cornerIndexBottomLeft(); n++) {
-            idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
-            double px = verticalBoundaryPointsData[idx].x;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px < obxmin) obxmin = px;
-            if (px > obxmax) obxmax = px;
-            if (py < obymin) obymin = py;
-            if (py > obymax) obymax = py;
-        }
-        // bottom row including corners
-        for (; n <= cornerIndexBottomRight(); n++) {
-            idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
-            double px = horizontalBoundaryPointsData[idx].x;
-            double py = horizontalBoundaryPointsData[idx].y;
-            if (px < obxmin) obxmin = px;
-            if (px > obxmax) obxmax = px;
-            if (py < obymin) obymin = py;
-            if (py > obymax) obymax = py;
-        }
-        // RHS
-        for (; n < cornerIndexTopRight(); n++) {
-            idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
-            double px = verticalBoundaryPointsData[idx].x + 1.0;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px < obxmin) obxmin = px;
-            if (px > obxmax) obxmax = px;
-            if (py < obymin) obymin = py;
-            if (py > obymax) obymax = py;
-        }            
-        // top row including corners
-        for (; n <= cornerIndexTopLeft(); n++) {
-            idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
-            double px = horizontalBoundaryPointsData[idx].x;
-            double py = horizontalBoundaryPointsData[idx].y + 1.0;
-            if (px < obxmin) obxmin = px;
-            if (px > obxmax) obxmax = px;
-            if (py < obymin) obymin = py;
-            if (py > obymax) obymax = py;
-        }
-        // LHS upper half
-        for (; n < _nv; n++) {
-            idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
-            double px = verticalBoundaryPointsData[idx].x;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px < obxmin) obxmin = px;
-            if (px > obxmax) obxmax = px;
-            if (py < obymin) obymin = py;
-            if (py > obymax) obymax = py;
-        }
-
-        // compute center
-        double centerx = (obxmin + obxmax) * 0.5;
-        double centery = (obymin + obymax) * 0.5;
-
-        // compute inner bounds
-        // initialize inner from outer
-        double ibxmin = obxmin, ibxmax = obxmax, ibymin = obymin, ibymax = obymax;
-        
-        // iterate over pixel boundary
-        // LHS lower half
-        for (n = 0; n < cornerIndexBottomLeft(); n++) {
-            idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
-            double px = verticalBoundaryPointsData[idx].x;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
-            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
-            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
-            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
-        }
-        // bottom row including corners
-        for (; n <= cornerIndexBottomRight(); n++) {
-            idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
-            double px = horizontalBoundaryPointsData[idx].x;
-            double py = horizontalBoundaryPointsData[idx].y;
-            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
-            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
-            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
-            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
-        }
-        // RHS
-        for (; n < cornerIndexTopRight(); n++) {
-            idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
-            double px = verticalBoundaryPointsData[idx].x + 1.0;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
-            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
-            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
-            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
-        }            
-        // top row including corners
-        for (; n <= cornerIndexTopLeft(); n++) {
-            idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
-            double px = horizontalBoundaryPointsData[idx].x;
-            double py = horizontalBoundaryPointsData[idx].y + 1.0;
-            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
-            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
-            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
-            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
-        }
-        // LHS upper half
-        for (; n < _nv; n++) {
-            idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
-            double px = verticalBoundaryPointsData[idx].x;
-            double py = verticalBoundaryPointsData[idx].y;
-            if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
-            if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
-            if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
-            if (py-centery <= -std::abs(px-centerx) && py > ibymin) ibymin = py;
-        }
-
-        // store results in actual bound structures
-        pixelInnerBoundsData[k].setXMin(ibxmin);
-        pixelInnerBoundsData[k].setXMax(ibxmax);
-        pixelInnerBoundsData[k].setYMin(ibymin);
-        pixelInnerBoundsData[k].setYMax(ibymax);
-
-        pixelOuterBoundsData[k].setXMin(obxmin);
-        pixelOuterBoundsData[k].setXMax(obxmax);
-        pixelOuterBoundsData[k].setYMin(obymin);
-        pixelOuterBoundsData[k].setYMax(obymax);
     }
 
     template <typename T>
