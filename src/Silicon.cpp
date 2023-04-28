@@ -208,6 +208,28 @@ namespace galsim {
                 }
             }
         }
+
+        // Process _abs_length_table and _emptypoly ready for GPU
+        // this will only be fully accurate for cases where the table uses linear
+        // interpolation, and the data points are evenly spaced. Currently this is
+        // always the case for _abs_length_table.
+        _abs_length_arg_min = _abs_length_table.argMin();
+        _abs_length_arg_max = _abs_length_table.argMax();
+        _abs_length_size = _abs_length_table.size();
+
+        _abs_length_table_GPU.resize(_abs_length_size);
+        _abs_length_increment = (_abs_length_arg_max - _abs_length_arg_min) /
+            (double)(_abs_length_size - 1);
+        for (int i = 0; i < _abs_length_size; i++) {
+            _abs_length_table_GPU[i] =
+                _abs_length_table.lookup(_abs_length_arg_min + (((double)i) * _abs_length_increment));
+        }
+
+        _emptypolyGPU.resize(_emptypoly.size());
+        for (int i = 0; i < _emptypoly.size(); i++) {
+            _emptypolyGPU[i].x = _emptypoly[i].x;
+            _emptypolyGPU[i].y = _emptypoly[i].y;
+        }
     }
 
     Silicon::~Silicon()
@@ -1066,7 +1088,7 @@ namespace galsim {
         _delta.setZero();
 
 
-        // convert and map data for GPU
+        // Map data to GPU
         double* deltaData = _delta.getData();
         int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
@@ -1080,29 +1102,9 @@ namespace galsim {
         int hdSize = _horizontalDistortions.size();
         int vdSize = _verticalDistortions.size();
         
-        // this will only be fully accurate for cases where the table uses linear
-        // interpolation, and the data points are evenly spaced. Currently this is
-        // always the case for _abs_length_table.
-        _abs_length_arg_min = _abs_length_table.argMin();
-        _abs_length_arg_max = _abs_length_table.argMax();
-        _abs_length_size = _abs_length_table.size();
-
-        _abs_length_table_GPU.resize(_abs_length_size);
-        _abs_length_increment = (_abs_length_arg_max - _abs_length_arg_min) /
-            (double)(_abs_length_size - 1);
-        for (int i = 0; i < _abs_length_size; i++) {
-            _abs_length_table_GPU[i] =
-                _abs_length_table.lookup(_abs_length_arg_min + (((double)i) * _abs_length_increment));
-        }
-
         double* abs_length_table_data = _abs_length_table_GPU.data();
         
         int emptypolySize = _emptypoly.size();
-        _emptypolyGPU.resize(emptypolySize);
-        for (int i = 0; i < emptypolySize; i++) {
-            _emptypolyGPU[i].x = _emptypoly[i].x;
-            _emptypolyGPU[i].y = _emptypoly[i].y;
-        }
         Position<double>* emptypolyData = _emptypolyGPU.data();
         
         int nxny = nx * ny;
@@ -1118,7 +1120,6 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-        // map all data to the GPU
 #ifdef GALSIM_USE_GPU
 #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
