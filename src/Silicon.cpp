@@ -114,14 +114,6 @@ namespace galsim {
         dbg<<"total memory = "<<nx*ny*_nv*sizeof(Position<float>)/(1024.*1024.)<<" MBytes"<<std::endl;
 
         buildEmptyPoly(_emptypoly, _numVertices);
-        // These are mutable Polygons we'll use as scratch space
-        int numThreads = 1;
-#ifdef _OPENMP
-        numThreads = omp_get_max_threads();
-#endif
-        for (int i=0; i < numThreads; i++) {
-            _testpoly.push_back(_emptypoly);
-        }
 
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         if (_transpose) std::swap(_nx,_ny);
@@ -677,8 +669,26 @@ namespace galsim {
             const double zfit = 12.0;
             const double zfactor = std::tanh(zconv / zfit);
 
-            // new version not using testpoly
-            // first compute first point of polygon (index 0)
+#if 0
+            // Old version that used a temporary polygon per thread (_testpoly)
+#ifdef _OPENMP
+            int t = omp_get_thread_num();
+#else
+            int t  = 0;
+#endif
+            // Scale the testpoly vertices by zfactor
+            scaleBoundsToPoly(ix - i1, iy - j1, nx, ny, _emptypoly, _testpoly[t],
+                              zfactor);
+
+            // Now test to see if the point is inside
+            Position<double> p(x, y);
+            inside = _testpoly[t].contains(p);
+#else
+            // New version that doesn't use a temporary polygon object
+            // This is required for GPU as due to the high number of threads,
+            // having a temporary polygon per thread is not practical
+
+            // compute first point of polygon (index 0)
             double x1, y1, xfirst, yfirst, xinters = 0.0;
             inside = false;
             for (int n = 0; n <= _nv; n++) {
@@ -758,6 +768,7 @@ namespace galsim {
                     y1 = y2;
                 }
             }
+#endif
         }
 
         // If the nominal pixel is on the edge of the image and the photon misses in the

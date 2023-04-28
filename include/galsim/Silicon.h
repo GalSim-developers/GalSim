@@ -267,7 +267,6 @@ namespace galsim
                                Position<float>* verticalBoundaryPointsData);
 
         Polygon _emptypoly;
-        mutable std::vector<Polygon> _testpoly;
 
         std::vector<Position<float> > _horizontalBoundaryPoints;
         std::vector<Position<float> > _verticalBoundaryPoints;
