@@ -50,6 +50,11 @@
 
 
 namespace galsim {
+    // std::min and std::max are not supported in GPU offloaded code, so define our own
+    // integer versions here. (C standard library provides floating point versions which do
+    // work on GPU).
+    int imin(int a, int b) { return a < b ? a : b; }
+    int imax(int a, int b) { return a > b ? a : b; }
 
     // Helper function used in a few places below.
     void buildEmptyPoly(Polygon& poly, int numVertices)
@@ -404,17 +409,11 @@ namespace galsim {
             int y = p / nx;
 
             // Loop over rectangle of pixels that could affect this row of points
-            // std::min and std::max are causing this loop to crash, even though
-            // the same functions run fine in the accumulate loop.
-            int polyi1 = x - _qDist;
-            if (polyi1 < 0) polyi1 = 0;
-            int polyi2 = x + _qDist;
-            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+	    int polyi1 = imax(x - _qDist, 0);
+	    int polyi2 = imin(x + _qDist, nx - 1);
             // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
-            int polyj1 = y - (_qDist + 1);
-            if (polyj1 < 0) polyj1 = 0;
-            int polyj2 = y + _qDist;
-            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+	    int polyj1 = imax(y - (_qDist + 1), 0);
+	    int polyj2 = imin(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -463,14 +462,10 @@ namespace galsim {
             int y = (ny - 1) - (p % ny); // remember vertical points run top-to-bottom
 
             // Loop over rectangle of pixels that could affect this column of points
-            int polyi1 = x - (_qDist + 1);
-            if (polyi1 < 0) polyi1 = 0;
-            int polyi2 = x + _qDist;
-            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
-            int polyj1 = y - _qDist;
-            if (polyj1 < 0) polyj1 = 0;
-            int polyj2 = y + _qDist;
-            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+	    int polyi1 = imax(x - (_qDist + 1), 0);
+	    int polyi2 = imin(x + _qDist, nx - 1);
+	    int polyj1 = imax(y - _qDist, 0);
+	    int polyj2 = imin(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -855,7 +850,7 @@ namespace galsim {
                 xdbg<<"dz = "<<dz<<std::endl;
             }
 #endif
-            return std::min(_sensorThickness - 1.0, dz);  // max 1 micron from bottom
+            return std::fmin(_sensorThickness - 1.0, dz);  // max 1 micron from bottom
         } else {
             return si_length;
         }
@@ -1094,7 +1089,7 @@ namespace galsim {
 
         T* targetData = target.getData();
         
-        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+        int pixelBoundsSize = _pixelInnerBounds.size();
 
         int hbpSize = _horizontalBoundaryPoints.size();
         int vbpSize = _verticalBoundaryPoints.size();
@@ -1121,7 +1116,7 @@ namespace galsim {
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
 #ifdef GALSIM_USE_GPU
-#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
 
         // Start with the correct distortions for the initial image as it is already
@@ -1147,7 +1142,7 @@ namespace galsim {
         const int ny = b.getYMax() - b.getYMin() + 1;
         int nxny = nx * ny;
 
-        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+        int pixelBoundsSize = _pixelInnerBounds.size();
 
         int hbpSize = _horizontalBoundaryPoints.size();
         int vbpSize = _verticalBoundaryPoints.size();
@@ -1165,11 +1160,11 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
 #endif
     }
@@ -1341,8 +1336,7 @@ namespace galsim {
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-                double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
-                if (diffStep < 0.0) diffStep = 0.0;
+                double diffStep = std::fmax(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
                 // use gaussian random numbers for diffStep from randomArray
                 // (1st and 2nd of 4 numbers for this photon)
                 x0 += diffStep * randomArray[(i-i1)*4];
