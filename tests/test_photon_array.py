@@ -1596,6 +1596,24 @@ def test_time_sampler():
     np.testing.assert_array_less(-pa.time, 10)
     do_pickle(sampler)
 
+def test_setFromImage_crash():
+    """Geri Braunlich ran into a seg fault where the photon array was not allocated to be
+    sufficiently large for the photons it got from an image.
+    This test reproduces the error for version 2.4.8 for the purpose of fixing it.
+    """
+    # These are (approximately) the specific values for one case where the code used to crash.
+    prof = galsim.Gaussian(sigma=0.13).withFlux(3972551)
+    wcs = galsim.JacobianWCS(-0.170, -0.106, 0.106, -0.170)
+    image = galsim.Image(1000, 1000, wcs=wcs)
+
+    # Start with a simple draw with no photons
+    im1 = prof.drawImage(image=image.copy())
+
+    # Now with photon_ops.
+    im2 = prof.drawImage(image=image.copy(), photon_ops=[], n_subsample=1)
+
+    assert im1 == im2
+
 
 if __name__ == '__main__':
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
