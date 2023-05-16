@@ -577,7 +577,7 @@ class PhotonArray:
         max_flux = float(max_flux)
         if (max_flux <= 0):
             raise GalSimRangeError("max_flux must be positive", max_flux, 0.)
-        total_flux = image.array.sum(dtype=float)
+        total_flux = np.abs(image.array).sum(dtype=float)
 
         # This goes a bit over what we actually need, but not by much.  Worth it to not have to
         # worry about array reallocations.
