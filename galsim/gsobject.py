@@ -1700,7 +1700,8 @@ class GSObject:
                     method=method, sensor=sensor, poisson_flux=poisson_flux)
 
         # If using photon ops with fft, then need a sensor.
-        if photon_ops is not None and method != 'phot' and sensor is None:
+        # Note: "if photon_ops" so photon_ops being [] or () is the same as None.
+        if photon_ops and method != 'phot' and sensor is None:
             sensor = Sensor()
         if photon_ops is None:
             # Easier to just make it an empty tuple, rather than deal with None below.
