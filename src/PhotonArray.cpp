@@ -81,7 +81,7 @@ namespace galsim {
         AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, rng);
         for_each_pixel_ij_ref(image, adder);
         dbg<<"Done: size = "<<adder.getCount()<<std::endl;
-        assert(adder.getCount() < _N);  // Else we've overrun the photon's arrays.
+        assert(adder.getCount() <= _N);  // Else we've overrun the photon's arrays.
         _N = adder.getCount();
         return _N;
     }
