@@ -77,9 +77,11 @@ namespace galsim {
     {
         dbg<<"bounds = "<<image.getBounds()<<std::endl;
         dbg<<"flux, maxflux = "<<_flux<<','<<maxFlux<<std::endl;
+        dbg<<"photon array size = "<<this->size()<<std::endl;
         AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, rng);
         for_each_pixel_ij_ref(image, adder);
         dbg<<"Done: size = "<<adder.getCount()<<std::endl;
+        assert(adder.getCount() < _N);  // Else we've overrun the photon's arrays.
         _N = adder.getCount();
         return _N;
     }
