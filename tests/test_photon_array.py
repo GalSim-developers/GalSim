@@ -1600,11 +1600,18 @@ def test_setFromImage_crash():
     """Geri Braunlich ran into a seg fault where the photon array was not allocated to be
     sufficiently large for the photons it got from an image.
     This test reproduces the error for version 2.4.8 for the purpose of fixing it.
+
+    The bug turned out to be that some pixel values were (slightly) negative from the FFT,
+    and the total flux was estimated as np.sum(image.array).  The negative pixels added
+    negatively to this sum, so the calculated total flux wasn't quite enough to hold all the
+    required photons.
+
+    The fix was to use the absolute value of the image for this calculation.
     """
     # These are (approximately) the specific values for one case where the code used to crash.
     prof = galsim.Gaussian(sigma=0.13).withFlux(3972551)
     wcs = galsim.JacobianWCS(-0.170, -0.106, 0.106, -0.170)
-    image = galsim.Image(1000, 1000, wcs=wcs)
+    image = galsim.Image(1000, 1000, wcs=wcs, dtype=float)
 
     # Start with a simple draw with no photons
     im1 = prof.drawImage(image=image.copy())
@@ -1612,7 +1619,13 @@ def test_setFromImage_crash():
     # Now with photon_ops.
     im2 = prof.drawImage(image=image.copy(), photon_ops=[], n_subsample=1)
 
-    assert im1 == im2
+    # They aren't quite identical because of numerical rounding issues from going through
+    # a sum of fluxes on individual photons.
+    # In particular, we want to make sure negative pixels stay negative through this process.
+    np.testing.assert_allclose(im1.array, im2.array, rtol=1.e-11)
+    w = np.where(im1.array != im2.array)
+    print('diff in ',len(w[0]),'pixels')
+    assert len(w[0]) < 100  # I find it to be different in only 39 photons on my machine.
 
 
 if __name__ == '__main__':

@@ -50,7 +50,7 @@ namespace galsim {
 
         void operator()(T flux, int i, int j)
         {
-            int N = (flux <= _maxFlux) ? 1 : int(std::ceil(flux / _maxFlux));
+            int N = (std::abs(flux) <= _maxFlux) ? 1 : int(std::ceil(std::abs(flux) / _maxFlux));
             double fluxPer = double(flux) / N;
             for (int k=0; k<N; ++k) {
                 double x = i + _ud() - 0.5;
@@ -76,7 +76,7 @@ namespace galsim {
     int PhotonArray::setFrom(const BaseImage<T>& image, double maxFlux, BaseDeviate rng)
     {
         dbg<<"bounds = "<<image.getBounds()<<std::endl;
-        dbg<<"flux, maxflux = "<<_flux<<','<<maxFlux<<std::endl;
+        dbg<<"maxflux = "<<maxFlux<<std::endl;
         dbg<<"photon array size = "<<this->size()<<std::endl;
         AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, rng);
         for_each_pixel_ij_ref(image, adder);
