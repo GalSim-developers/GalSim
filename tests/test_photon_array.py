@@ -1614,13 +1614,19 @@ def test_setFromImage_crash():
     im1 = prof.drawImage(image=image.copy())
 
     # Now with photon_ops.
+    # This had been sufficient to trigger the bug, but now photon_ops=[] is the same as None.
     im2 = prof.drawImage(image=image.copy(), photon_ops=[], n_subsample=1)
+    assert im1 == im2
+
+    # Repeat with a non-empty, but still trivial, photon_ops.
+    im3 = prof.drawImage(image=image.copy(), photon_ops=[galsim.FRatioAngles(1.2)], n_subsample=1)
 
     # They aren't quite identical because of numerical rounding issues from going through
     # a sum of fluxes on individual photons.
     # In particular, we want to make sure negative pixels stay negative through this process.
-    np.testing.assert_allclose(im1.array, im2.array, rtol=1.e-11)
-    w = np.where(im1.array != im2.array)
+    assert im1 != im3
+    np.testing.assert_allclose(im1.array, im3.array, rtol=1.e-11)
+    w = np.where(im1.array != im3.array)
     print('diff in ',len(w[0]),'pixels')
     assert len(w[0]) < 100  # I find it to be different in only 39 photons on my machine.
 
