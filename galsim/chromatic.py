@@ -444,7 +444,7 @@ class ChromaticObject:
 
         # If there are photon ops, they'll probably need valid wavelengths, so add
         # WavelengthSampler as the first op in the list.
-        if 'photon_ops' in kwargs:
+        if kwargs.get('photon_ops', None):
             wave_sampler = WavelengthSampler(self.SED, bandpass)
             kwargs['photon_ops'] = [wave_sampler] + kwargs['photon_ops']
 
