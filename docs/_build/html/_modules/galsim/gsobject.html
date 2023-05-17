@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsobject &mdash; GalSim 2.4.8 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.gsobject &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -1785,7 +1785,8 @@
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="n">poisson_flux</span><span class="p">)</span>
 
         <span class="c1"># If using photon ops with fft, then need a sensor.</span>
-        <span class="k">if</span> <span class="n">photon_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Note: &quot;if photon_ops&quot; so photon_ops being [] or () is the same as None.</span>
+        <span class="k">if</span> <span class="n">photon_ops</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">photon_ops</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Easier to just make it an empty tuple, rather than deal with None below.</span>

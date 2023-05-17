@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.photon_array &mdash; GalSim 2.4.8 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.photon_array &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -662,7 +662,7 @@
         <span class="n">max_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_flux</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">max_flux</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;max_flux must be positive&quot;</span><span class="p">,</span> <span class="n">max_flux</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
-        <span class="n">total_flux</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">total_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
         <span class="c1"># This goes a bit over what we actually need, but not by much.  Worth it to not have to</span>
         <span class="c1"># worry about array reallocations.</span>
