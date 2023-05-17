@@ -156,3 +156,9 @@ Changes from v2.4.7 to v2.4.8
 =============================
 
 - Fix a slow-down in multiprocessing especially when running very many (>10) processes. (#1213)
+
+Changes from v2.4.8 to v2.4.9
+=============================
+
+- Fix a potential segmentation fault that could happen when using photon_ops with FFT drawing.
+  (#1216)
