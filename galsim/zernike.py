@@ -499,6 +499,14 @@ class Zernike:
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
+    @staticmethod
+    def _from_coef_array_xy(coef_array_xy, R_outer=1.0, R_inner=0.0):
+        ret = Zernike.__new__(Zernike)
+        ret._coef_array_xy = coef_array_xy
+        ret.R_outer = R_outer
+        ret.R_inner = R_inner
+        return ret
+
     def __add__(self, rhs):
         """Add two Zernikes.
 
@@ -520,13 +528,14 @@ class Zernike:
             s1 = self._coef_array_xy.shape
             s2 = rhs._coef_array_xy.shape
             sout = max(s1[0], s2[0]), max(s1[1], s2[1])
-            ret = Zernike.__new__(Zernike)
-            ret._coef_array_xy = np.zeros(sout, dtype=float)
-            ret._coef_array_xy[:s1[0], :s1[1]] = self._coef_array_xy
-            ret._coef_array_xy[:s2[0], :s2[1]] += rhs._coef_array_xy
-            ret.R_outer = self.R_outer
-            ret.R_inner = self.R_inner
-            return ret
+            coef_array_xy = np.zeros(sout, dtype=float)
+            coef_array_xy[:s1[0], :s1[1]] = self._coef_array_xy
+            coef_array_xy[:s2[0], :s2[1]] += rhs._coef_array_xy
+            return Zernike._from_coef_array_xy(
+                coef_array_xy,
+                R_outer=self.R_outer,
+                R_inner=self.R_inner
+            )
 
     def __sub__(self, rhs):
         """Subtract two Zernikes.
@@ -551,11 +560,11 @@ class Zernike:
             if 'coef' in self.__dict__:
                 return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
             else:
-                ret = Zernike.__new__(Zernike)
-                ret._coef_array_xy = rhs*self._coef_array_xy
-                ret.R_outer = self.R_outer
-                ret.R_inner = self.R_inner
-                return ret
+                return Zernike._from_coef_array_xy(
+                    rhs*self._coef_array_xy,
+                    R_outer=self.R_outer,
+                    R_inner=self.R_inner
+                )
         elif isinstance(rhs, Zernike):
             if self.R_outer != rhs.R_outer:
                 raise ValueError("Cannot multiply Zernikes with inconsistent R_outer")
@@ -577,11 +586,11 @@ class Zernike:
             for (i, j), c in np.ndenumerate(sxy):
                 newXY[i:i+rxy.shape[0], j:j+rxy.shape[1]] += c*rxy
 
-            ret = Zernike.__new__(Zernike)
-            ret._coef_array_xy = newXY
-            ret.R_inner = self.R_inner
-            ret.R_outer = self.R_outer
-            return ret
+            return Zernike._from_coef_array_xy(
+                newXY,
+                R_outer=self.R_outer,
+                R_inner=self.R_inner
+            )
         else:
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
 
