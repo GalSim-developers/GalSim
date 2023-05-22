@@ -148,7 +148,7 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         # with the openmp flag and see if it works.
         if output:
             print('Compiler is Clang.  Checking if it is a version that supports OpenMP.')
-        if supports_gpu(compiler):
+        if supports_gpu(compiler, 'clang w/ GPU'):
             if output:
                 print("Yay! This version of clang supports GPU!")
             return 'clang w/ GPU'
@@ -203,21 +203,47 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         return 'unknown'
 
 # Check whether this build of Clang supports offloading to GPU via OpenMP
-def supports_gpu(compiler):
-    # Print out compiler's targets
-    cc = compiler.compiler_so[0]
-    if cc == 'ccache':
-        cc = compiler.compiler_so[1]
-    cmd = [cc,'-print-targets']
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    lines = p.stdout.readlines()
-    # Look for 'nvptx' in the output. May need a more general check in future to support
-    # other GPU architectures
-    for line in lines:
-        line = line.decode().strip()
-        if 'nvptx' in line:
-            return True
-    return False
+def supports_gpu(compiler, cc_type):
+    cpp_code = """
+#include <iostream>
+
+#define N 500
+int main() {
+    double arrA[N], arrB[N], arrC[N];
+
+    for (int i = 0; i < N; i++) {
+        arrA[i] = (double)i;
+        arrB[i] = 1.0;
+    }
+
+#ifdef _OPENMP
+#pragma omp target teams distribute parallel for
+#endif
+    for (int i = 0; i < N; i++) {
+        arrC[i] = arrA[i] * arrB[i];
+    }
+
+    double sum = 0.0;
+    for (int i = 0; i < N; i++) {
+        sum += arrC[i];
+    }
+    std::cout << "Sum=" << sum << std::endl;
+    return 0;
+}
+"""
+    extra_cflags = copt[cc_type]
+    extra_lflags = lopt[cc_type]
+    success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
+    if not success:
+        # In case libc++ doesn't work, try letting the system use the default stdlib
+        try:
+            extra_cflags.remove('-stdlib=libc++')
+            extra_lflags.remove('-stdlib=libc++')
+        except (AttributeError, ValueError):
+            pass
+        else:
+            success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
+    return success
     
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
