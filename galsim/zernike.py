@@ -244,6 +244,10 @@ def __noll_coef_array_xy(jmax, obscuration):
         2D array of coefficients in x and y.
     """
     maxn, _ = noll_to_zern(jmax)
+    j_full = (maxn+1)*(maxn+2)//2
+    if jmax < j_full:  # full row calculation may already be in cache
+        return _noll_coef_array_xy(j_full, obscuration)[..., :jmax]
+
     shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index)
 
     nca = _noll_coef_array(jmax, obscuration)
@@ -391,6 +395,58 @@ def __annular_zern_rho_coefs(n, m, eps):
         out[m::2] = norm * _Q(m, j, eps)
     return out
 _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
+
+
+_leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
+
+
+def _xy_to_noll(xy, R_outer=1.0, R_inner=0.0):
+    """Convert polynomial coefficients in x,y to Noll coefficients."""
+    # The strategy is to use the orthonormality of the Zernike polynomials and
+    # integrate over the annulus.  In particular,
+    # int_annulus xy(x,y) Zernike_j(x,y) dx dy = area_annulus a_j
+    # defines coefficients a_j in the expansion
+    # xy(x, y) = \sum_j a_j Zernike_j(x,y).
+
+    # We can use Gaussian Quadrature over an annulus to do the integration.
+
+    # First determine the number of quadrature points needed to integrate up to
+    # the maximum possible radial degree.
+    nTarget = max(*xy.shape)-1  # Maximum radial degree
+    jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
+
+    # Determine location and weights of GQ points.  See
+    #   G. W. Forbes,
+    #   "Optical system assessment for design: numerical ray tracing in the Gaussian pupil,"
+    #   J. Opt. Soc. Am. A 5, 1943-1956 (1988)
+    #
+    # and
+    #
+    #   Brian J. Bauman, Hong Xiao,
+    #   "Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,"
+    #   Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773
+
+    nRings = nTarget//2+1
+    nSpokes = 2*nTarget+1
+    Li, w = _leggauss(nRings)  # Use cached version of this
+    eps = R_inner/R_outer
+    area = np.pi*(1-eps**2)
+    rings = np.sqrt(eps**2 + (1+Li)*(1-eps**2)/2)*R_outer
+    spokes = np.linspace(0, 2*np.pi, nSpokes, endpoint=False)
+    weights = w*area/(2*nSpokes)
+    rings, spokes = np.meshgrid(rings, spokes)
+    weights = np.broadcast_to(weights, rings.shape)
+    rings = rings.ravel()
+    spokes = spokes.ravel()
+    weights = weights.ravel()
+    x = rings*np.cos(spokes)
+    y = rings*np.sin(spokes)
+    val = horner2d(x, y, xy, dtype=float)
+
+    basis = zernikeBasis(
+        jTarget, x, y, R_outer=R_outer, R_inner=R_inner
+    )
+    return np.dot(basis, (val*weights))/area
 
 
 def describe_zernike(j):
@@ -605,30 +661,7 @@ class Zernike:
         Note that coef[i] corresponds to Z_i under the Noll index convention, and coef[0] is
         ignored.  (I.e., coef[1] is 'piston', coef[4] is 'defocus', ...).
         """
-        # Given _coef_array_xy, we can solve for the Zernike coefficients using lstsq to project
-        # _coef_array_xy onto each individual Zernike term's xy contribution
-        # (from _noll_coef_array_xy).
-
-        # Start by adjusting xy array to account for R_outer != 1.
-        adjustedXY = np.array(self._coef_array_xy)
-        if self.R_outer != 1.0:
-            shape = self._coef_array_xy.shape
-            n = shape[0]
-            norm = np.power(self.R_outer, np.arange(1, n))
-            adjustedXY[0,1:] *= norm
-            for i in range(1, n):
-                adjustedXY[i,0:-i] *= norm[i-1:]
-        nTarget = max(*adjustedXY.shape)-1  # Maximum radial degree
-        jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
-        nca = np.linalg.lstsq(
-            _noll_coef_array_xy(jTarget, self.R_inner/self.R_outer).reshape(-1, jTarget),
-            adjustedXY.ravel(),
-            rcond=-1.
-        )[0]
-        coef = np.empty((len(nca)+1), dtype=float)
-        coef[0] = 0.0
-        coef[1:] = nca
-        return coef
+        return _xy_to_noll(self._coef_array_xy, R_outer=self.R_outer, R_inner=self.R_inner)
 
     @lazy_property
     def hessian(self):
