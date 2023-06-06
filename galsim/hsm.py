@@ -237,9 +237,10 @@ class ShapeData:
 
         .. note::
 
-            The corrected shapes (corrected_e1, corrected_e2, corrected_g1, corrected_g2) and
-            the psf_shape are not adjusted.  We would welcome a PR adding this feature if someone
-            wants it for their science case.
+            This currently only works for the measurements from `FindAdaptiveMom`.
+            If the input ShapeData instance has any values set from `EstimateShear`, they will
+            not be present in the return value.  We would welcome a PR adding the ability to
+            work on corrected shapes if someone wants it for their science case.
 
         Parameters:
             wcs:            The WCS to apply.
@@ -276,25 +277,10 @@ class ShapeData:
                          moments_amp=self.moments_amp,
                          moments_centroid=moments_centroid,
                          moments_rho4=moments_rho4,
-                         # (All the rest are unchanged.)
                          moments_n_iter=self.moments_n_iter,
-                         correction_status=self.correction_status,
-                         # TODO: I'm not sure exactly what to do for the corrected values.
-                         #       They don't have to be |e|<1, so my procedure above won't work.
-                         corrected_e1=self.corrected_e1,
-                         corrected_e2=self.corrected_e2,
-                         corrected_g1=self.corrected_g1,
-                         corrected_g2=self.corrected_g2,
-                         meas_type=self.meas_type,
-                         corrected_shape_err=self.corrected_shape_err,
-                         correction_method=self.correction_method,
-                         resolution_factor=self.resolution_factor,
-                         # The PSF values could be converted in the same way as the regular
-                         # moments sigma and shape, but since they are generally connected to
-                         # the corrected shapes, I didn't touch this.
-                         psf_sigma=self.psf_sigma,
-                         psf_shape=self.psf_shape,
                          error_message=self.error_message)
+                         # The other values are reset to the defaults, since they are
+                         # results from EstimateShear.
 
 
 class HSMParams:
