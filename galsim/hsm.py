@@ -220,6 +220,82 @@ class ShapeData:
     def __setstate__(self, state):
         self.__init__(*state)
 
+    def applyWCS(self, wcs, image_pos=None):
+        """Convert moments in pixel coordinates to moments in sky coordinates.
+
+        Natively, the HSM algorithm computes second moments in (x,y) coordinates in the
+        sensor coordinate system.  However, many applications of second moments for shape
+        measurements need the measurements in sky coordinates.  This method converts the
+        moments to (u,v) coordinates, where +v is towards North and +u is towards West.
+
+        The values that are different from the original are:
+
+        moments_sigma is changed to be in units of arcsec.
+        observed_shape is changed to be in (u,v) coordinates.
+        moments_centroid is changed to be in (u,v) coordinates in units of arcsec.
+        moments_rho4 is changed to be in units of arcsec^4.
+
+        .. note::
+
+            The corrected shapes (corrected_e1, corrected_e2, corrected_g1, corrected_g2) and
+            the psf_shape are not adjusted.  We would welcome a PR adding this feature if someone
+            wants it for their science case.
+
+        Parameters:
+            wcs:            The WCS to apply.
+            image_pos:      If wcs is not a UniformWCS, then this is required.  It should be the
+                            position in image coordinates (x,y) of the object whose moments have
+                            been measured. [default: None]
+        """
+        jac = wcs.jacobian(image_pos=image_pos)
+        scale, shear, theta, flip = jac.getDecomposition()
+
+        # Fix moments_sigma
+        moments_sigma = self.moments_sigma * scale
+
+        # Fix observed_shape
+        shape = self.observed_shape
+        # First the flip, if any.
+        if flip:
+            shape = Shear(g1 = -shape.g1, g2 = shape.g2)
+        # Next the rotation
+        shape = Shear(g = shape.g, beta = shape.beta + theta)
+        # Finally the shear
+        observed_shape = shear + shape
+
+        # Fix moments_centroid
+        moments_centroid = jac.toWorld(self.moments_centroid) - jac.toWorld(image_pos)
+
+        # Fix moments_rho4
+        moments_rho4 = self.moments_rho4 * scale**4
+
+        return ShapeData(image_bounds=self.image_bounds,
+                         moments_status=self.moments_status,
+                         observed_shape=observed_shape,
+                         moments_sigma=moments_sigma,
+                         moments_amp=self.moments_amp,
+                         moments_centroid=moments_centroid,
+                         moments_rho4=moments_rho4,
+                         # (All the rest are unchanged.)
+                         moments_n_iter=self.moments_n_iter,
+                         correction_status=self.correction_status,
+                         # TODO: I'm not sure exactly what to do for the corrected values.
+                         #       They don't have to be |e|<1, so my procedure above won't work.
+                         corrected_e1=self.corrected_e1,
+                         corrected_e2=self.corrected_e2,
+                         corrected_g1=self.corrected_g1,
+                         corrected_g2=self.corrected_g2,
+                         meas_type=self.meas_type,
+                         corrected_shape_err=self.corrected_shape_err,
+                         correction_method=self.correction_method,
+                         resolution_factor=self.resolution_factor,
+                         # The PSF values could be converted in the same way as the regular
+                         # moments sigma and shape, but since they are generally connected to
+                         # the corrected shapes, I didn't touch this.
+                         psf_sigma=self.psf_sigma,
+                         psf_shape=self.psf_shape,
+                         error_message=self.error_message)
+
 
 class HSMParams:
     """A collection of parameters that govern how the HSM functions operate.

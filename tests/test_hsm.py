@@ -185,6 +185,40 @@ def test_moments_basic():
                         distortion_2, err_msg = "- incorrect e2 (make_const=True)",
                         decimal = decimal_shape)
 
+@timer
+def test_moments_wcs():
+    """Test adaptive moments for Gaussians when the wcs is non-trivial."""
+
+    wcs_list = [
+        galsim.PixelScale(0.2),
+        galsim.JacobianWCS(0.2, 0.03, -0.03, 0.2),
+        galsim.JacobianWCS(0.23, 0.03, -0.06, 0.19),
+        galsim.AffineTransform(0.23, 0.03, 0.06, -0.19,
+                               origin=galsim.PositionD(75,105),
+                               world_origin=galsim.PositionD(3475,1005)),
+        galsim.TanWCS(galsim.AffineTransform(0.03, 0.23, 0.21, -0.01),
+                      galsim.CelestialCoord(74.2 * galsim.degrees, -32 * galsim.degrees)),
+    ]
+
+    for sig in gaussian_sig_values:
+        for g1 in shear_values:
+            for g2 in shear_values:
+                for wcs in wcs_list:
+                    total_shear = np.sqrt(g1**2 + g2**2)
+                    conversion_factor = np.tanh(2.0*math.atanh(total_shear))/total_shear
+                    distortion_1 = g1*conversion_factor
+                    distortion_2 = g2*conversion_factor
+                    gal = galsim.Gaussian(sigma=sig).shear(g1=g1, g2=g2)
+                    image = gal.drawImage(nx=200, ny=200, wcs=wcs, method='no_pixel')
+                    result = image.FindAdaptiveMom().applyWCS(wcs, image_pos=image.true_center)
+
+                    print(result.moments_sigma, sig,
+                          result.observed_shape.g1, g1,
+                          result.observed_shape.g2, g2)
+                    np.testing.assert_allclose(result.moments_sigma, sig, rtol=1.e-5)
+                    np.testing.assert_allclose(result.observed_shape.g1, g1, rtol=1.e-5)
+                    np.testing.assert_allclose(result.observed_shape.g2, g2, rtol=1.e-5)
+
 
 @timer
 def test_shearest_basic():
