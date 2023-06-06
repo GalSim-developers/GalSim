@@ -210,11 +210,19 @@ def test_moments_wcs():
                     distortion_2 = g2*conversion_factor
                     gal = galsim.Gaussian(sigma=sig).shear(g1=g1, g2=g2)
                     image = gal.drawImage(nx=200, ny=200, wcs=wcs, method='no_pixel')
-                    result = image.FindAdaptiveMom().applyWCS(wcs, image_pos=image.true_center)
+                    result = image.FindAdaptiveMom()
 
+                    # Convert to sky coords
+                    result = result.applyWCS(wcs, image_pos=image.true_center)
                     print(result.moments_sigma, sig,
                           result.observed_shape.g1, g1,
                           result.observed_shape.g2, g2)
+                    np.testing.assert_allclose(result.moments_sigma, sig, rtol=1.e-5)
+                    np.testing.assert_allclose(result.observed_shape.g1, g1, rtol=1.e-5)
+                    np.testing.assert_allclose(result.observed_shape.g2, g2, rtol=1.e-5)
+
+                    # Can also do this directly with FindAdaptiveMom(use_sky_coords=True)
+                    result = image.FindAdaptiveMom(use_sky_coords=True)
                     np.testing.assert_allclose(result.moments_sigma, sig, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g1, g1, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g2, g2, rtol=1.e-5)
