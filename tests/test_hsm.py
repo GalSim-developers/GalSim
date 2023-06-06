@@ -204,10 +204,6 @@ def test_moments_wcs():
         for g1 in shear_values:
             for g2 in shear_values:
                 for wcs in wcs_list:
-                    total_shear = np.sqrt(g1**2 + g2**2)
-                    conversion_factor = np.tanh(2.0*math.atanh(total_shear))/total_shear
-                    distortion_1 = g1*conversion_factor
-                    distortion_2 = g2*conversion_factor
                     gal = galsim.Gaussian(sigma=sig).shear(g1=g1, g2=g2)
                     image = gal.drawImage(nx=200, ny=200, wcs=wcs, method='no_pixel')
                     result = image.FindAdaptiveMom()
