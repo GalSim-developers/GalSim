@@ -23,7 +23,8 @@ Config Updates
 New Features
 ------------
 
-- Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.
+- Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.  Also added
+  the option ``use_sky_coords=True`` to `FindAdaptiveMom` to apply this automatically.
 
 
 Performance Improvements

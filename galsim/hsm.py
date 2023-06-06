@@ -687,7 +687,8 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
             return ShapeData(error_message = str(err))
 
 def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
-                    guess_centroid=None, strict=True, round_moments=False, hsmparams=None):
+                    guess_centroid=None, strict=True, round_moments=False, hsmparams=None,
+                    use_sky_coords=False):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -773,6 +774,10 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         hsmparams:          The hsmparams keyword can be used to change the settings used by
                             FindAdaptiveMom when estimating moments; see `HSMParams` documentation
                             for more information. [default: None]
+        use_sky_coords:     Whether to convert the measured moments to sky_coordinates.
+                            Setting this to true is equivalent to running
+                            ``applyWCS(object_image.wcs, image_pos=object_image.true_center)``
+                            on the result.  [default: False]
 
     Returns:
         a `ShapeData` object containing the results of moment measurement.
@@ -791,6 +796,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                                     object_image._image, weight._image,
                                     float(guess_sig), float(precision), guess_centroid._p,
                                     bool(round_moments), hsmparams._hsmp)
+
+        if use_sky_coords:
+            result = result.applyWCS(object_image.wcs, image_pos=object_image.true_center)
         return result
     except RuntimeError as err:
         if (strict == True):
