@@ -23,6 +23,7 @@ Config Updates
 New Features
 ------------
 
+- Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.
 
 
 Performance Improvements
