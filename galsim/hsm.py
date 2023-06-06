@@ -220,7 +220,7 @@ class ShapeData:
     def __setstate__(self, state):
         self.__init__(*state)
 
-    def applyWCS(self, wcs, image_pos=None):
+    def applyWCS(self, wcs, image_pos):
         """Convert moments in pixel coordinates to moments in sky coordinates.
 
         Natively, the HSM algorithm computes second moments in (x,y) coordinates in the
@@ -232,7 +232,7 @@ class ShapeData:
 
         moments_sigma is changed to be in units of arcsec.
         observed_shape is changed to be in (u,v) coordinates.
-        moments_centroid is changed to be in (u,v) coordinates in units of arcsec.
+        moments_centroid is changed to be in (u,v) coordinates relative to image_pos.
         moments_rho4 is changed to be in units of arcsec^4.
 
         .. note::
@@ -244,9 +244,8 @@ class ShapeData:
 
         Parameters:
             wcs:            The WCS to apply.
-            image_pos:      If wcs is not a UniformWCS, then this is required.  It should be the
-                            position in image coordinates (x,y) of the object whose moments have
-                            been measured. [default: None]
+            image_pos:      The position in image coordinates (x,y) of the object whose moments
+                            have been measured.
         """
         jac = wcs.jacobian(image_pos=image_pos)
         scale, shear, theta, flip = jac.getDecomposition()
