@@ -40,7 +40,8 @@ class ShapeData:
       moments.
 
     - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;
-      -1 if not measured.
+      -1 if not measured.  (If `FindAdaptiveMom` is called with ``use_sky_coords=True``, then
+      the units will be arcsec.)
 
     - ``moments_amp``: total image intensity for best-fit elliptical Gaussian from adaptive moments.
       Normally, this field is simply equal to the image flux (for objects that follow a Gaussian
@@ -52,7 +53,9 @@ class ShapeData:
       moments, in units of pixels.  The indexing convention is defined with respect to the `BoundsI`
       object defining the bounds of the input `Image`, i.e., the center of the lower left pixel is
       ``(image.xmin, image.ymin)``.  An object drawn at the center of the image should generally
-      have moments_centroid equal to ``image.true_center``.
+      have moments_centroid equal to ``image.true_center``.  (If `FindAdaptiveMom` is called with
+      ``use_sky_coords=True``, then the units will be arcsec, measured in sky coordinates with
+      respect to the image center.)
 
     - ``moments_rho4``: the weighted radial fourth moment of the image (dimensionless).
 
@@ -361,6 +364,11 @@ class HSMParams:
 
         failed_moments:         Value to report for ellipticities and resolution factor if shape
                                 measurement fails. [default: -1000.]
+
+    .. note::
+
+        Parameters that are given in units of pixels should still be in pixels, even if one is
+        calling `FindAdaptiveMom` with the option ``use_sky_coords=True``.
 
     After construction, all of the above are available as read-only attributes.
     """
@@ -680,8 +688,24 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     weight function.  `FindAdaptiveMom` can be used either as a free function, or as a method of the
     `Image` class.
 
-    This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
-    no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
+    By default, this routine computes moments in pixel coordinates, which generally use (x,y)
+    for the coordinate variables, so the underlying second moments are Ixx, Iyy, and Ixy.
+    If the WCS is (at least approximately) just a `PixelScale`, then this scale can be applied to
+    convert the moments' units from pixels to arcsec.  The derived shapes are unaffected by
+    the pixel scale.
+
+    However, there is also an option to apply a non-trivial WCS, which may potentially rotate
+    and/or shear the (x,y) moments to the local sky coordinates, which generally use (u,v)
+    for the coordinate variables. These coordinates are measured in arcsec and are oriented
+    such that +v is towards North and +u is towards West. In this case, the returned values are
+    all in arcsec, and are based instead on Iuu, Ivv, and Iuv.  To enable this feature, use
+    ``use_sky_coords=True`.  See also the method `ShapeData.applyWCS` for more details.
+
+    .. note::
+
+        The application of the WCS implicitly assumes that the WCS is locally uniform across the
+        size of the object being measured.  This is normally a very good approximation for most
+        applications of interest.
 
     Like `EstimateShear`, `FindAdaptiveMom` works on `Image` inputs, and fails if the object is
     small compared to the pixel scale.  For more details, see `EstimateShear`.
