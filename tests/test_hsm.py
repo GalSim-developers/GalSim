@@ -200,11 +200,15 @@ def test_moments_wcs():
                       galsim.CelestialCoord(74.2 * galsim.degrees, -32 * galsim.degrees)),
     ]
 
+    rng = galsim.BaseDeviate(1234)
+
     for sig in gaussian_sig_values:
         for g1 in shear_values:
             for g2 in shear_values:
                 for wcs in wcs_list:
-                    gal = galsim.Gaussian(sigma=sig).shear(g1=g1, g2=g2)
+                    du = rng.np.uniform(-2,2)
+                    dv = rng.np.uniform(-2,2)
+                    gal = galsim.Gaussian(sigma=sig).shear(g1=g1, g2=g2).shift(du,dv)
                     image = gal.drawImage(nx=200, ny=200, wcs=wcs, method='no_pixel')
                     result = image.FindAdaptiveMom()
 
@@ -212,16 +216,22 @@ def test_moments_wcs():
                     result = result.applyWCS(wcs, image_pos=image.true_center)
                     print(result.moments_sigma, sig,
                           result.observed_shape.g1, g1,
-                          result.observed_shape.g2, g2)
+                          result.observed_shape.g2, g2,
+                          result.moments_centroid.x, du,
+                          result.moments_centroid.y, dv)
                     np.testing.assert_allclose(result.moments_sigma, sig, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g1, g1, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g2, g2, rtol=1.e-5)
+                    np.testing.assert_allclose(result.moments_centroid.x, du, atol=1.e-7)
+                    np.testing.assert_allclose(result.moments_centroid.y, dv, atol=1.e-7)
 
                     # Can also do this directly with FindAdaptiveMom(use_sky_coords=True)
                     result = image.FindAdaptiveMom(use_sky_coords=True)
                     np.testing.assert_allclose(result.moments_sigma, sig, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g1, g1, rtol=1.e-5)
                     np.testing.assert_allclose(result.observed_shape.g2, g2, rtol=1.e-5)
+                    np.testing.assert_allclose(result.moments_centroid.x, du, atol=1.e-7)
+                    np.testing.assert_allclose(result.moments_centroid.y, dv, atol=1.e-7)
 
 
 @timer
