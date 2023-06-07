@@ -54,7 +54,7 @@ class ShapeData:
       ``(image.xmin, image.ymin)``.  An object drawn at the center of the image should generally
       have moments_centroid equal to ``image.true_center``.
 
-    - ``moments_rho4``: the weighted radial fourth moment of the image.
+    - ``moments_rho4``: the weighted radial fourth moment of the image (dimensionless).
 
     - ``moments_n_iter``: number of iterations needed to get adaptive moments, or 0 if not measured.
 
@@ -233,7 +233,6 @@ class ShapeData:
         moments_sigma is changed to be in units of arcsec.
         observed_shape is changed to be in (u,v) coordinates.
         moments_centroid is changed to be in (u,v) coordinates relative to image_pos.
-        moments_rho4 is changed to be in units of arcsec^4.
 
         .. note::
 
@@ -266,16 +265,13 @@ class ShapeData:
         # Fix moments_centroid
         moments_centroid = jac.toWorld(self.moments_centroid) - jac.toWorld(image_pos)
 
-        # Fix moments_rho4
-        moments_rho4 = self.moments_rho4 * scale**4
-
         return ShapeData(image_bounds=self.image_bounds,
                          moments_status=self.moments_status,
                          observed_shape=observed_shape,
                          moments_sigma=moments_sigma,
                          moments_amp=self.moments_amp,
                          moments_centroid=moments_centroid,
-                         moments_rho4=moments_rho4,
+                         moments_rho4=self.moments_rho4,
                          moments_n_iter=self.moments_n_iter,
                          error_message=self.error_message)
                          # The other values are reset to the defaults, since they are
