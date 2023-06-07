@@ -563,6 +563,11 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
     no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
 
+    .. note::
+
+        There is not currently an option to ``use_sky_coords`` as we have for `FindAdaptiveMom`.
+        We would welcome a PR adding this feature if someone wants it for their science case.
+
     Note that the method will fail if the PSF or galaxy are too point-like to easily fit an
     elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set
     ``strict=False`` and catch errors explicitly, as in the second example below.
