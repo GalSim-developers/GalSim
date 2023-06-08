@@ -158,7 +158,7 @@ that are defined by GalSim are:
     * ``sky_level`` = *float_value* (default = 0.0)  The sky level in ADU/arcsec^2 to use for the noise.  If both this and ``image.sky_level`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level``.
     * ``sky_level_pixel`` = *float_value* (default = 0.0)  The sky level in ADU/pixel to use for the noise.  If both this and ``image.sky_level_pixel`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level_pixel``.
 
-* 'CCDNoise' includes both Poisson noise for the flux value in each pixel (with an optional gain) and an optional Gaussian read noise.
+* 'CCD' includes both Poisson noise for the flux value in each pixel (with an optional gain) and an optional Gaussian read noise.
 
     * ``sky_level`` = *float_value* (default = 0.0)  The sky level in ADU/arcsec^2 to use for the noise.  If both this and ``image.sky_level`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level``.
     * ``sky_level_pixel`` = *float_value* (default = 0.0)  The sky level in ADU/pixel to use for the noise.  If both this and ``image.sky_level_pixel`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level_pixel``.
