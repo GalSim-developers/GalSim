@@ -194,4 +194,5 @@ def _GenerateFromEval(config, base, value_type):
 
 # Register this as a valid value type
 RegisterValueType('Eval', _GenerateFromEval,
-                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, None ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord,
+                    LookupTable, dict, list, None ])

@@ -1700,6 +1700,12 @@ def test_eval():
         'bad4' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * q**2)', 'fx' : 1.8 },
         'bad5' : { 'type' : 'Eval', 'eval_str' : 'np.exp(-0.5 * x**2)', 'fx' : 1.8 },
 
+        # Check that a list can be made using Eval
+        'list0' : [0,1,2,3,4,5],
+        'list1' : '$np.arange(6)',
+        'list2' : (0,1,2,3,4,5),
+        'list3' : '$(0,1,2,3,4,5)',
+
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),
         'world_pos' : galsim.PositionD(7.2,1.8),
@@ -1749,6 +1755,12 @@ def test_eval():
     del config['eval_variables']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'eval3',config, float)
+
+    # Check ways of making a list
+    for i in range(4):
+        test_list = galsim.config.ParseValue(config, 'list%d'%i, config, list)[0]
+        print(test_list)
+        np.testing.assert_array_equal(test_list, np.arange(6))
 
     # Test the evaluation in RandomDistribution
     # Example config taken directly from Issue #776:
