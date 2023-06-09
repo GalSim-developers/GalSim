@@ -35,3 +35,4 @@ Performance Improvements
 Bug Fixes
 ---------
 
+- Fixed a bug that prevented Eval types from generating lists in config files in some contexts.
