@@ -443,7 +443,7 @@ def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, rng_index_key=
 
     if key is None:
         for key, field in config.items():
-            if key[0] == '_': continue
+            if isinstance(key, str) and key[0] == '_': continue
             PropagateIndexKeyRNGNum(field, index_key, rng_num, rng_index_key)
     else:
         PropagateIndexKeyRNGNum(config[key], index_key, rng_num, rng_index_key)
@@ -1000,7 +1000,8 @@ def CleanConfig(config, keep_current=False):
     """
     if isinstance(config, dict):
         return { k : CleanConfig(config[k], keep_current) for k in config
-                 if k[0] != '_' and (keep_current or k != 'current') }
+                 if not (isinstance(k, str) and k[0] == '_')
+                 and (keep_current or k != 'current') }
     elif isinstance(config, list):
         return [ CleanConfig(item, keep_current) for item in config ]
     else:
