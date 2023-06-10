@@ -90,17 +90,8 @@ version = __version__
 # C++ layer directly.  (Basically copied from TreeCorr's __init__.py.)
 galsim_dir = os.path.dirname(__file__)
 include_dir = os.path.join(galsim_dir,'include')
-
-lib_file = os.path.join(galsim_dir,'_galsim.so')
-# Some installation (e.g. Travis with python 3.x) name this e.g. _galsim.cpython-34m.so,
-# so if the normal name doesn't exist, look for something else.
-if not os.path.exists(lib_file): # pragma: no cover
-    alt_files = glob.glob(os.path.join(os.path.dirname(__file__),'_galsim*.so'))
-    if len(alt_files) == 0:
-        raise OSError("No file '_galsim.so' found in %s"%galsim_dir)
-    if len(alt_files) > 1:
-        raise OSError("Multiple files '_galsim*.so' found in %s: %s"%(galsim_dir,alt_files))
-    lib_file = alt_files[0]
+from . import _galsim
+lib_file = os.path.abspath(_galsim.__file__)
 
 # Import things from other files we want to be in the galsim namespace
 
