@@ -1706,6 +1706,12 @@ def test_eval():
         'list2' : (0,1,2,3,4,5),
         'list3' : '$(0,1,2,3,4,5)',
 
+        # Check that a dict can be made using Eval
+        'dict0' : {0:'h', 1:'e', 2:'l', 3:'l', 4:'o'},
+        'dict1' : dict(enumerate("hello")),
+        'dict2' : '$dict(enumerate("hello"))',
+        'dict3' : '${ k:v for k,v in zip(np.arange(5), "hello") }',
+
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),
         'world_pos' : galsim.PositionD(7.2,1.8),
@@ -1761,6 +1767,12 @@ def test_eval():
         test_list = galsim.config.ParseValue(config, 'list%d'%i, config, list)[0]
         print(test_list)
         np.testing.assert_array_equal(test_list, np.arange(6))
+
+    # Check ways of making a dict
+    for i in range(4):
+        test_dict = galsim.config.ParseValue(config, 'dict%d'%i, config, dict)[0]
+        print(test_dict)
+        np.testing.assert_array_equal(test_dict, dict(enumerate('hello')))
 
     # Test the evaluation in RandomDistribution
     # Example config taken directly from Issue #776:
