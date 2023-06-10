@@ -76,7 +76,7 @@ software or any products related to or derived from the software, or for
 lost profits, business interruption, or indirect special or consequential
 damages of any kind.
 """
-import re, os, glob
+import os
 
 # The version is stored in _version.py as recommended here:
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
