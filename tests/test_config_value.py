@@ -1608,7 +1608,9 @@ def test_table_value():
                               ]
                   },
         'cur1' : { 'type' : 'Current', 'key' : 'file3' },
-        'cur2' : { 'type' : 'Current', 'key' : 'list1.items.1' }
+        'cur2' : { 'type' : 'Current', 'key' : 'list1.items.1' },
+        'eval1' : '$galsim.LookupTable([0,1,2,3], [0,10,10,0], interpolant="linear")',
+        'eval2' : '$galsim.LookupTable.from_file(@file1.file_name)',
     }
 
     # Test direct values
@@ -1643,6 +1645,12 @@ def test_table_value():
     assert cur1 == file3
     cur2 = galsim.config.ParseValue(config,'cur2',config, galsim.LookupTable)[0]
     assert cur2 == list1[1]
+
+    # Test Eval
+    eval1 = galsim.config.ParseValue(config,'eval1',config, galsim.LookupTable)[0]
+    assert eval1 == val1
+    eval2 = galsim.config.ParseValue(config,'eval2',config, galsim.LookupTable)[0]
+    assert eval2 == file1
 
 @timer
 def test_eval():
