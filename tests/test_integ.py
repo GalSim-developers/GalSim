@@ -319,6 +319,33 @@ def test_hankel():
     with assert_raises(galsim.GalSimValueError):
         galsim.integ.hankel(f1, k=0.3, nu=-0.5)
 
+
+def test_gq_annulus():
+    """Test the galsim.integ.gq_annulus function
+    """
+
+    # We can use the normalization of annular Zernikes to test.
+    # From the Zernike docs:
+    # \int_\mathrm{annulus} Z_i Z_j dA =
+    # \pi \left(R_\mathrm{outer}^2 - R_\mathrm{inner}^2\right) \delta_{i, j}
+    # I.e., the integral is the annulus area times Kronecker delta.
+
+    rng = galsim.BaseDeviate(1111).as_numpy_generator()
+    for j1 in range(1, 28):   # up to 6th order xy polynomials
+        r1 = rng.uniform(0.3, 0.6)
+        r2 = rng.uniform(0.9, 1.1)
+        area = np.pi*(r2**2 - r1**2)
+        Z1 = galsim.zernike.Zernike([0]*j1+[1], R_inner=r1, R_outer=r2)
+        for j2 in range(1, 28):
+            Z2 = galsim.zernike.Zernike([0]*j2+[1], R_inner=r1, R_outer=r2)
+            # Product of 2 6th order polynomials is 12th order, so we need 6 rings and 13 spokes.
+            np.testing.assert_allclose(
+                galsim.integ.gq_annulus(Z1*Z2, r1, r2, n_rings=6, n_spokes=13),
+                area if j1 == j2 else 0,
+                rtol=1.e-11, atol=1.e-11
+            )
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
