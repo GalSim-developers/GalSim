@@ -993,19 +993,9 @@ class DoubleZernike:
         sh = self.coef.shape
         self._jmax, self._kmax = sh[0]-1, sh[1]-1
 
-    def __call__(self, u, v, x=None, y=None):
-        # Cases:
-        # uv only:
-        #  if uv scalar, then return Zernike
-        #  if uv vector, then return list of Zernike
-        # uv and xy:
-        #  if uv scalar:
-        #    if xy scalar, then return scalar
-        #    if xy vector, then return vector
-        #  if uv vector:
-        #   if xy scalar, then return vector
-        #   if xy vector, then return vector, uv and xy must be congruent
-
+    def _call_old(self, u, v, x=None, y=None):
+        # Original implementation constructing "single" Zernike from
+        # coefficients directly.  Retained mostly for testing purposes.
         assert np.ndim(u) == np.ndim(v)
         assert np.shape(u) == np.shape(v)
         if (x is None) != (y is None):
@@ -1032,12 +1022,12 @@ class DoubleZernike:
             assert np.ndim(x) == np.ndim(y)
             assert np.shape(x) == np.shape(y)
             if np.ndim(u) == 0:  # uv scalar
-                return self.__call__(u, v)(x, y)  # defer to Zernike.__call__
+                return self._call_old(u, v)(x, y)  # defer to Zernike.__call__
             else:  # uv vector
                 # Note that we _don't_ defer to Zernike.__call__, as doing so
                 # would yield the outer product of uv and xy, which is not what
                 # we want.
-                zs = self.__call__(u, v)
+                zs = self._call_old(u, v)
                 if np.ndim(x) == 0:  # xy scalar
                     return np.array([z(x, y) for z in zs])
                 else:  # xy vector
@@ -1063,7 +1053,18 @@ class DoubleZernike:
             out[:sh[0], :sh[1], :sh[2], :sh[3]] += term
         return out
 
-    def call2(self, u, v, x=None, y=None):
+    def __call__(self, u, v, x=None, y=None):
+        # Cases:
+        # uv only:
+        #  if uv scalar, then return Zernike
+        #  if uv vector, then return list of Zernike
+        # uv and xy:
+        #  if uv scalar:
+        #    if xy scalar, then return scalar
+        #    if xy vector, then return vector
+        #  if uv vector:
+        #   if xy scalar, then return vector
+        #   if xy vector, then return vector, uv and xy must be congruent
         assert np.ndim(u) == np.ndim(v)
         assert np.shape(u) == np.shape(v)
         if (x is None) != (y is None):
@@ -1085,19 +1086,17 @@ class DoubleZernike:
                 )
             else:
                 return [
-                    self.call2(u_, v_) for u_, v_ in zip(u, v)
+                    self.__call__(u_, v_) for u_, v_ in zip(u, v)
                 ]
         else:
             assert np.ndim(x) == np.ndim(y)
             assert np.shape(x) == np.shape(y)
             if np.ndim(u) == 0:  # uv scalar
-                return self.call2(u, v)(x, y)
+                return self.__call__(u, v)(x, y)
             else:  # uv vector
-                zs = self.call2(u, v)
+                zs = self.__call__(u, v)
                 if np.ndim(x) == 0:  # xy scalar
                     return np.array([z(x, y) for z in zs])
                 else: # xy vector
                     assert np.shape(x) == np.shape(u)
                     return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
-
-        raise NotImplementedError("TODO")
