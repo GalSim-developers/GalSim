@@ -398,32 +398,6 @@ def __annular_zern_rho_coefs(n, m, eps):
 _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
-def _xy_to_noll(xy, R_outer=1.0, R_inner=0.0):
-    """Convert polynomial coefficients in x,y to Noll coefficients."""
-    # The strategy is to use the orthonormality of the Zernike polynomials and
-    # integrate over the annulus.  In particular,
-    # int_annulus xy(x,y) Zernike_j(x,y) dx dy = area_annulus a_j
-    # defines coefficients a_j in the expansion
-    # xy(x, y) = \sum_j a_j Zernike_j(x,y).
-
-    # We can use Gaussian Quadrature over an annulus to do the integration.
-
-    # First determine the number of quadrature points needed to integrate up to
-    # the maximum possible radial degree.
-    nTarget = max(*xy.shape)-1  # Maximum radial degree
-    jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
-
-    nRings = nTarget//2+1
-    nSpokes = 2*nTarget+1
-    x, y, weights = _gq_annulus_points(R_inner, R_outer, nRings, nSpokes)
-    val = horner2d(x, y, xy, dtype=float)
-    basis = zernikeBasis(
-        jTarget, x, y, R_outer=R_outer, R_inner=R_inner
-    )
-    area = np.pi*(R_outer**2 - R_inner**2)
-    return np.dot(basis, (val*weights/area))
-
-
 def describe_zernike(j):
     """Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate
     polynomial in x and y.
@@ -646,7 +620,30 @@ class Zernike:
         Note that coef[i] corresponds to Z_i under the Noll index convention, and coef[0] is
         ignored.  (I.e., coef[1] is 'piston', coef[4] is 'defocus', ...).
         """
-        return _xy_to_noll(self._coef_array_xy, R_outer=self.R_outer, R_inner=self.R_inner)
+
+        # The strategy is to use the orthonormality of the Zernike polynomials and
+        # integrate over the annulus.  In particular,
+        # int_annulus xy(x,y) Zernike_j(x,y) dx dy = area_annulus a_j
+        # defines coefficients a_j in the expansion
+        # xy(x, y) = \sum_j a_j Zernike_j(x,y).
+
+        # We can use Gaussian Quadrature over an annulus to do the integration.
+
+        # First determine the number of quadrature points needed to integrate up to
+        # the maximum possible radial degree.
+        xy = self._coef_array_xy
+        nTarget = max(*xy.shape)-1  # Maximum radial degree
+        jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
+
+        nRings = nTarget//2+1
+        nSpokes = 2*nTarget+1
+        x, y, weights = _gq_annulus_points(self.R_inner, self.R_outer, nRings, nSpokes)
+        val = horner2d(x, y, xy, dtype=float)
+        basis = zernikeBasis(
+            jTarget, x, y, R_outer=self.R_outer, R_inner=self.R_inner
+        )
+        area = np.pi*(self.R_outer**2 - self.R_inner**2)
+        return np.dot(basis, val*weights/area)
 
     @lazy_property
     def hessian(self):
