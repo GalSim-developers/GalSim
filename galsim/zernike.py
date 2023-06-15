@@ -1001,3 +1001,44 @@ class DoubleZernike:
                 else:  # xy vector
                     assert np.shape(x) == np.shape(u)
                     return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
+
+    @lazy_property
+    def _coef_array_xyuv(self):
+        xy_shape = Zernike([0]*self._jmax+[1])._coef_array_xy.shape
+        uv_shape = self._xy_series[0]._coef_array_xy.shape
+        out_shape = xy_shape + uv_shape
+        out = np.zeros(out_shape, dtype=float)
+        # Now accumulate one uv term at a time
+        for j, zk in enumerate(self._xy_series):
+            coef_array_uv = zk._coef_array_xy
+            coef_array_xy = Zernike(
+                [0]*j+[1],
+                R_outer=self.xy_outer,
+                R_inner=self.xy_inner,
+            )._coef_array_xy
+            term = np.multiply.outer(coef_array_xy, coef_array_uv)
+            sh = term.shape
+            out[:sh[0], :sh[1], :sh[2], :sh[3]] += term
+        return out
+
+    def call2(self, u, v, x=None, y=None):
+        assert np.ndim(u) == np.ndim(v)
+        assert np.shape(u) == np.shape(v)
+        if (x is None) != (y is None):
+            raise GalSimIncompatibleValuesError(
+                "Must provide both x and y, or neither.",
+                x=x, y=y
+            )
+        if x is None:
+            if np.ndim(u) == 0:
+                a_ij = np.zeros(self._coef_array_xyuv.shape[0:2])
+                for i, j in np.ndindex(a_ij.shape):
+                    a_ij[i, j] = horner2d(
+                        u, v, self._coef_array_xyuv[i, j]
+                    )
+                return Zernike._from_coef_array_xy(
+                    a_ij,
+                    R_outer=self.xy_outer,
+                    R_inner=self.xy_inner
+                )
+        raise NotImplementedError("TODO")
