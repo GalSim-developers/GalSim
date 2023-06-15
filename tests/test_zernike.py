@@ -883,6 +883,14 @@ def test_dz_coef_xyuv():
                 rtol=1e-11, atol=1e-11
             )
 
+        # All scalar/vector combinations
+        for uv in [uv_scalar, uv_vector]:
+            for xy in [xy_scalar, xy_vector]:
+                np.testing.assert_allclose(
+                    dz(*uv, *xy),
+                    dz.call2(*uv, *xy)
+                )
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

@@ -1087,5 +1087,17 @@ class DoubleZernike:
                 return [
                     self.call2(u_, v_) for u_, v_ in zip(u, v)
                 ]
+        else:
+            assert np.ndim(x) == np.ndim(y)
+            assert np.shape(x) == np.shape(y)
+            if np.ndim(u) == 0:  # uv scalar
+                return self.call2(u, v)(x, y)
+            else:  # uv vector
+                zs = self.call2(u, v)
+                if np.ndim(x) == 0:  # xy scalar
+                    return np.array([z(x, y) for z in zs])
+                else: # xy vector
+                    assert np.shape(x) == np.shape(u)
+                    return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
 
         raise NotImplementedError("TODO")
