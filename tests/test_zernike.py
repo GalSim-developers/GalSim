@@ -16,9 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
+import numbers
+
 import numpy as np
-import os
-import sys
 
 import galsim
 from galsim_test_helpers import *
@@ -718,6 +718,83 @@ def test_lazy_coef():
         np.testing.assert_allclose(zarr, Z.coef[:len(zarr)], rtol=0, atol=1e-12)
         # extra coefficients are all ~0
         np.testing.assert_allclose(Z.coef[len(zarr):], 0.0, rtol=0, atol=1e-12)
+
+
+@timer
+def test_dz_val():
+    rng = galsim.BaseDeviate(1234).as_numpy_generator()
+    for _ in range(10):
+        jmax = rng.integers(4, 12)
+        kmax = rng.integers(4, 12)
+        coef = rng.normal(size=(jmax+1, kmax+1))
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+        dz = galsim.zernike.DoubleZernike(
+            coef,
+            xy_inner=xy_inner,
+            xy_outer=xy_outer,
+            uv_inner=uv_inner,
+            uv_outer=uv_outer
+        )
+
+        xy_scalar = rng.normal(size=(2,))
+        uv_scalar = rng.normal(size=(2,))
+        xy_vector = rng.normal(size=(2, 10))
+        uv_vector = rng.normal(size=(2, 10))
+
+        # If you don't specify xy, then get (list of) Zernike out.
+        assert isinstance(dz(*uv_scalar), galsim.zernike.Zernike)
+        assert isinstance(dz(*uv_vector), list)
+        assert all(isinstance(z, galsim.zernike.Zernike) for z in dz(*uv_vector))
+
+        # If uv scalar and xy scalar, then get scalar out.
+        assert np.ndim(dz(*uv_scalar, *xy_scalar)) == 0
+        # If uv vector and xy scalar, then get vector out.
+        assert np.ndim(dz(*uv_vector, *xy_scalar)) == 1
+        # If uv scalar and xy vector, then get vector out.
+        assert np.ndim(dz(*uv_scalar, *xy_vector)) == 1
+        # If uv vector and xy vector, then get vector out.
+        assert np.ndim(dz(*uv_vector, *xy_vector)) == 1
+
+        # Check consistency of __call__ outputs
+        zk_list = dz(*uv_vector)
+        vals = dz(*uv_vector, *xy_vector)
+        np.testing.assert_equal(
+            np.array([zk(x, y) for x, y, zk in zip(*xy_vector, zk_list)]),
+            vals
+        )
+        for i, (x, y) in enumerate(xy_vector.T):
+            np.testing.assert_equal(
+                vals[i],
+                zk_list[i](x, y)
+            )
+        for i, (u, v, x, y) in enumerate(zip(*uv_vector, *xy_vector)):
+            np.testing.assert_equal(
+                vals[i],
+                dz(u, v, x, y)
+            )
+        for i, (u, v) in enumerate(zip(*uv_vector)):
+            np.testing.assert_equal(
+                vals[i],
+                dz(u, v)(*xy_vector[:, i])
+            )
+
+        # Check asserts
+        with assert_raises(AssertionError):
+            dz(0.0, [1.0])
+        with assert_raises(AssertionError):
+            dz([0.0], [1.0, 1.0])
+        with assert_raises(galsim.GalSimIncompatibleValuesError):
+            dz(0.0, 0.0, x=0.0, y=None)
+        with assert_raises(AssertionError):
+            dz(0.0, 0.0, x=[1.0], y=1.0)
+        with assert_raises(AssertionError):
+            dz(0.0, 0.0, x=[1.0], y=[1.0, 2.0])
+        with assert_raises(AssertionError):
+            dz([0.0, 1.0], [0.0, 1.0], x=[1.0], y=[1.0])
+
 
 
 if __name__ == "__main__":
