@@ -930,6 +930,48 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     return out
 
 
+def zernikeGradBases(jmax, x, y, R_outer=1.0, R_inner=0.0):
+    """Construct bases of Zernike polynomial series gradients up to Noll index ``jmax``, evaluated
+    at a specific set of points ``x`` and ``y``.
+
+    Note that since we follow the Noll indexing scheme for Zernike polynomials, which begins at 1,
+    but python sequences are indexed from 0, the length of the leading dimension in the result is
+    ``jmax+1`` instead of ``jmax``.  We somewhat arbitrarily fill the 0th slice along the first
+    dimension with 0s (result[0, ...] == 0).
+
+    Parameters:
+         jmax:      Maximum Noll index to use.
+         x:         x-coordinates (can be list-like, congruent to y)
+         y:         y-coordinates (can be list-like, congruent to x)
+         R_outer:   Outer radius.  [default: 1.0]
+         R_inner:   Inner radius.  [default: 0.0]
+
+    Returns:
+        [2, jmax+1, x.shape] array.  The first index selects the gradient in the x/y direction,
+        slicing over the second index gives basis vectors corresponding to individual Zernike
+        polynomials.
+    """
+
+    R_outer = float(R_outer)
+    R_inner = float(R_inner)
+    eps = R_inner / R_outer
+
+    noll_coef_x = _noll_coef_array_xy_gradx(jmax, eps)
+    dzkdx = np.zeros(tuple((jmax + 1,) + x.shape), dtype=float)
+    dzkdx[1:] = np.array([
+        horner2d(x/R_outer, y/R_outer, nc, dtype=float)/R_outer
+        for nc in noll_coef_x.transpose(2, 0, 1)
+    ])
+
+    noll_coef_y = _noll_coef_array_xy_grady(jmax, eps)
+    dzkdy = np.zeros(tuple((jmax + 1,) + x.shape), dtype=float)
+    dzkdy[1:] = np.array([
+        horner2d(x/R_outer, y/R_outer, nc, dtype=float)/R_outer
+        for nc in noll_coef_y.transpose(2, 0, 1)
+    ])
+    return np.array([dzkdx, dzkdy])
+
+
 class DoubleZernike:
     def __init__(
         self,
