@@ -426,6 +426,46 @@ def test_gradient():
 
 
 @timer
+def test_gradient_bases():
+    """Test the zernikeGradBases function"""
+    diam = 2.4
+    jmax = 36
+    R_outer = diam/2
+    R_inner = R_outer*0.2
+
+    u = galsim.UniformDeviate(1029384756)
+    for i in range(10):
+        # Test at some random points
+        x = np.empty((10000,), dtype=float)
+        y = np.empty((10000,), dtype=float)
+        u.generate(x)
+        u.generate(y)
+
+        dxBasis, dyBasis = galsim.zernike.zernikeGradBases(
+            jmax, x, y, R_outer=R_outer, R_inner=R_inner
+        )
+
+        # Compare to basis vectors generated one at a time
+        for j in range(1, jmax+1):
+            Z = Zernike([0]*j+[1], R_outer=R_outer, R_inner=R_inner)
+            ZX = Z.gradX
+            ZY = Z.gradY
+
+            dx = ZX.evalCartesian(x, y)
+            dy = ZY.evalCartesian(x, y)
+
+            np.testing.assert_allclose(
+                dx, dxBasis[j],
+                atol=1e-11, rtol=1e-11
+            )
+
+            np.testing.assert_allclose(
+                dy, dyBasis[j],
+                atol=1e-11, rtol=1e-11
+            )
+
+
+@timer
 def test_sum():
     """Test that __add__, __sub__, and __neg__ all work as expected.
     """
