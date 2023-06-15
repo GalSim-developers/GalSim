@@ -19,7 +19,7 @@
 import numpy as np
 
 from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
-from .errors import GalSimValueError, GalSimRangeError
+from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 
 # Some utilities for working with Zernike polynomials
 
@@ -918,3 +918,76 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc, dtype=float)
                         for nc in noll_coef.transpose(2,0,1)])
     return out
+
+
+class DoubleZernike:
+    def __init__(
+        self,
+        coef,
+        *,
+        xy_inner=0.0,  # "pupil"
+        xy_outer=1.0,
+        uv_inner=0.0,  # "field"
+        uv_outer=1.0
+    ):
+        self.coef = np.asarray(coef, dtype=float)
+        self.xy_inner = xy_inner
+        self.xy_outer = xy_outer
+        self.uv_inner = uv_inner
+        self.uv_outer = uv_outer
+        self._xy_series = [
+            Zernike(row, R_outer=uv_outer, R_inner=uv_inner) for row in coef
+        ]
+        sh = self.coef.shape
+        self._jmax, self._kmax = sh[0]-1, sh[1]-1
+
+    def __call__(self, u, v, x=None, y=None):
+        # Cases:
+        # uv only:
+        #  if uv scalar, then return Zernike
+        #  if uv vector, then return list of Zernike
+        # uv and xy:
+        #  if uv scalar:
+        #    if xy scalar, then return scalar
+        #    if xy vector, then return vector
+        #  if uv vector:
+        #   if xy scalar, then return vector
+        #   if xy vector, then return vector, uv and xy must be congruent
+
+        assert np.ndim(u) == np.ndim(v)
+        assert np.shape(u) == np.shape(v)
+        if (x is None) != (y is None):
+            raise GalSimIncompatibleValuesError(
+                "Must provide both x and y, or neither.",
+                x=x, y=y
+            )
+        if x is None:  # uv only
+            if np.ndim(u) == 0:  # uv scalar
+                return Zernike(
+                    [z(u, v) for z in self._xy_series],
+                    R_outer=self.xy_outer,
+                    R_inner=self.xy_inner
+                )
+            else:  # uv vector
+                return [
+                    Zernike(
+                        [z(u[i], v[i]) for z in self._xy_series],
+                        R_outer=self.xy_outer,
+                        R_inner=self.xy_inner
+                    ) for i in range(len(u))
+                ]
+        else:  # uv and xy
+            assert np.ndim(x) == np.ndim(y)
+            assert np.shape(x) == np.shape(y)
+            if np.ndim(u) == 0:  # uv scalar
+                return self.__call__(u, v)(x, y)  # defer to Zernike.__call__
+            else:  # uv vector
+                # Note that we _don't_ defer to Zernike.__call__, as doing so
+                # would yield the outer product of uv and xy, which is not what
+                # we want.
+                zs = self.__call__(u, v)
+                if np.ndim(x) == 0:  # xy scalar
+                    return np.array([z(x, y) for z in zs])
+                else:  # xy vector
+                    assert np.shape(x) == np.shape(u)
+                    return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
