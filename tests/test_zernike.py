@@ -797,6 +797,41 @@ def test_dz_val():
             dz([0.0, 1.0], [0.0, 1.0], x=[1.0], y=[1.0])
 
 
+def test_dz_coef_xyuv():
+    rng = galsim.BaseDeviate(4321).as_numpy_generator()
+    for _ in range(100):
+        jmax = rng.integers(4, 22)
+        kmax = rng.integers(4, 22)
+        coef = rng.normal(size=(jmax+1, kmax+1))
+        coef[0] = 0.0
+        coef[:, 0] = 0.0
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+        dz = DoubleZernike(
+            coef,
+            xy_inner=xy_inner,
+            xy_outer=xy_outer,
+            uv_inner=uv_inner,
+            uv_outer=uv_outer
+        )
+
+        xy_scalar = rng.normal(size=(2,))
+        uv_scalar = rng.normal(size=(2,))
+        xy_vector = rng.normal(size=(2, 10))
+        uv_vector = rng.normal(size=(2, 10))
+
+        zk1 = dz(*uv_scalar)
+        zk2 = dz.call2(*uv_scalar)
+        n = len(zk1.coef)
+        np.testing.assert_allclose(
+            zk1.coef[1:n],
+            zk2.coef[1:n],
+            rtol=1e-12, atol=1e-12
+        )
+
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
