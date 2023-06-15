@@ -20,6 +20,8 @@ import numpy as np
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, convert_cpp_errors
+from .utilities import LRU_Cache, horner2d
+
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -330,3 +332,56 @@ class ContinuousIntegrator(ImageIntegrator):
             return [bandpass.blue_limit + h * i for i in range(self.N+1)]
         else:
             return [bandpass.blue_limit + h * (i+0.5) for i in range(self.N)]
+
+
+_leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
+
+
+def _gq_annulus_points(r_inner, r_outer, n_rings, n_spokes):
+    Li, w = _leggauss(n_rings)
+    eps = r_inner/r_outer
+    area = np.pi*(r_outer**2 - r_inner**2)
+    rings = np.sqrt(eps**2 + (1+Li)*(1-eps**2)/2)*r_outer
+    spokes = np.linspace(0, 2*np.pi, n_spokes, endpoint=False)
+    weights = w*area/(2*n_spokes)
+    rings, spokes = np.meshgrid(rings, spokes)
+    weights = np.broadcast_to(weights, rings.shape)
+    rings = rings.ravel()
+    spokes = spokes.ravel()
+    weights = weights.ravel()
+    x = rings*np.cos(spokes)
+    y = rings*np.sin(spokes)
+    return x, y, weights
+
+
+def gq_annulus(f, r_inner, r_outer, n_rings, n_spokes):
+    """ Integrate a function over an annular region, using Gaussian quadrature
+    over an annulus.
+
+    References:
+      - G. W. Forbes,
+        "Optical system assessment for design: numerical ray tracing in the Gaussian pupil,"
+        J. Opt. Soc. Am. A 5, 1943-1956 (1988)
+
+      - Brian J. Bauman, Hong Xiao,
+        "Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,"
+        Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773
+
+    The annulus is sampled on a grid of rings and spokes.
+    To integrate a nth order 2d polynomial exactly, this technique requires
+        n_rings = n//2+1
+        n_spokes = n+1
+
+        Parameters:
+        f: Function to integrate
+        r_inner: Inner radius of annulus
+        r_outer: Outer radius of annulus
+        n_rings: Number of sample rings to use in the Gaussian quadrature
+        n_spokes: Number of sample spokes to use in the Gaussian quadrature
+
+    Returns:
+        The integral of f over the annulus
+    """
+    x, y, weights = _gq_annulus_points(r_inner, r_outer, n_rings, n_spokes)
+    val = np.array([f(x_, y_) for x_, y_ in zip(x, y)])
+    return np.sum(val*weights)

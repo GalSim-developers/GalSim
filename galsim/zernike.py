@@ -19,6 +19,7 @@
 import numpy as np
 
 from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
+from .integ import _gq_annulus_points
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 
 # Some utilities for working with Zernike polynomials
@@ -397,9 +398,6 @@ def __annular_zern_rho_coefs(n, m, eps):
 _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
-_leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
-
-
 def _xy_to_noll(xy, R_outer=1.0, R_inner=0.0):
     """Convert polynomial coefficients in x,y to Noll coefficients."""
     # The strategy is to use the orthonormality of the Zernike polynomials and
@@ -415,38 +413,15 @@ def _xy_to_noll(xy, R_outer=1.0, R_inner=0.0):
     nTarget = max(*xy.shape)-1  # Maximum radial degree
     jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
 
-    # Determine location and weights of GQ points.  See
-    #   G. W. Forbes,
-    #   "Optical system assessment for design: numerical ray tracing in the Gaussian pupil,"
-    #   J. Opt. Soc. Am. A 5, 1943-1956 (1988)
-    #
-    # and
-    #
-    #   Brian J. Bauman, Hong Xiao,
-    #   "Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,"
-    #   Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773
-
     nRings = nTarget//2+1
     nSpokes = 2*nTarget+1
-    Li, w = _leggauss(nRings)  # Use cached version of this
-    eps = R_inner/R_outer
-    area = np.pi*(1-eps**2)
-    rings = np.sqrt(eps**2 + (1+Li)*(1-eps**2)/2)*R_outer
-    spokes = np.linspace(0, 2*np.pi, nSpokes, endpoint=False)
-    weights = w*area/(2*nSpokes)
-    rings, spokes = np.meshgrid(rings, spokes)
-    weights = np.broadcast_to(weights, rings.shape)
-    rings = rings.ravel()
-    spokes = spokes.ravel()
-    weights = weights.ravel()
-    x = rings*np.cos(spokes)
-    y = rings*np.sin(spokes)
+    x, y, weights = _gq_annulus_points(R_inner, R_outer, nRings, nSpokes)
     val = horner2d(x, y, xy, dtype=float)
-
     basis = zernikeBasis(
         jTarget, x, y, R_outer=R_outer, R_inner=R_inner
     )
-    return np.dot(basis, (val*weights))/area
+    area = np.pi*(R_outer**2 - R_inner**2)
+    return np.dot(basis, (val*weights/area))
 
 
 def describe_zernike(j):
