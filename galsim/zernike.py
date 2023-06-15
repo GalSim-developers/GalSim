@@ -598,12 +598,22 @@ class Zernike:
 
         Requires that each operand's ``R_outer`` and ``R_inner`` attributes are the same.
         """
-        return self + -rhs
+        return self + (-rhs)
 
     def __neg__(self):
         """Negate a Zernike.
         """
-        return self * -1
+        if 'coef' in self.__dict__:
+            ret = Zernike(-self.coef, R_outer=self.R_outer, R_inner=self.R_inner)
+            if '_coef_array_xy' in self.__dict__:
+                ret._coef_array_xy = -self._coef_array_xy
+        else:
+            ret = Zernike._from_coef_array_xy(
+                -self._coef_array_xy,
+                R_outer=self.R_outer,
+                R_inner=self.R_inner
+            )
+        return ret
 
     def __mul__(self, rhs):
         """Multiply two Zernikes, or multiply a Zernike by a scalar.
