@@ -1083,4 +1083,9 @@ class DoubleZernike:
                     R_outer=self.xy_outer,
                     R_inner=self.xy_inner
                 )
+            else:
+                return [
+                    self.call2(u_, v_) for u_, v_ in zip(u, v)
+                ]
+
         raise NotImplementedError("TODO")
