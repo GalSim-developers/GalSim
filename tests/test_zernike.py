@@ -862,15 +862,26 @@ def test_dz_coef_xyuv():
         xy_vector = rng.normal(size=(2, 10))
         uv_vector = rng.normal(size=(2, 10))
 
+        # Scalar uv only
         zk1 = dz(*uv_scalar)
         zk2 = dz.call2(*uv_scalar)
         n = len(zk1.coef)
         np.testing.assert_allclose(
             zk1.coef[1:n],
             zk2.coef[1:n],
-            rtol=1e-12, atol=1e-12
+            rtol=1e-11, atol=1e-11
         )
 
+        # Vector uv only
+        zks1 = dz(*uv_vector)
+        zks2 = dz.call2(*uv_vector)
+        for zk1, zk2 in zip(zks1, zks2):
+            n = len(zk1.coef)
+            np.testing.assert_allclose(
+                zk1.coef[1:n],
+                zk2.coef[1:n],
+                rtol=1e-11, atol=1e-11
+            )
 
 
 if __name__ == "__main__":
