@@ -16,13 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numbers
-
 import numpy as np
 
 import galsim
 from galsim.zernike import Zernike, DoubleZernike
-from galsim_test_helpers import *
+from galsim_test_helpers import timer, do_pickle, assert_raises, all_obj_diff
 
 
 @timer
