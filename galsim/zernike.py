@@ -1210,6 +1210,32 @@ class DoubleZernike:
                     uv_outer=self.uv_outer, uv_inner=self.uv_inner
                 )
             return ret
+        elif isinstance(rhs, DoubleZernike):
+            if self.xy_outer != rhs.xy_outer:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_outer")
+            if self.xy_inner != rhs.xy_inner:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_inner")
+            if self.uv_outer != rhs.uv_outer:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent uv_outer")
+            if self.uv_inner != rhs.uv_inner:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent uv_inner")
+            # Multiplication is a 4d convolution of the Cartesian coefficients.
+            # Easiest to get it right just by hand...
+            xyuv1 = self._coef_array_xyuv
+            xyuv2 = rhs._coef_array_xyuv
+            sh1 = xyuv1.shape
+            sh2 = xyuv2.shape
+            outshape = tuple([d0+d1-1 for d0, d1 in zip(sh1, sh2)])
+            xyuv = np.zeros(outshape)
+            for (i, j, k, l), c in np.ndenumerate(xyuv1):
+                xyuv[i:i+sh2[0], j:j+sh2[1], k:k+sh2[2], l:l+sh2[3]] += c*xyuv2
+            return DoubleZernike._from_xyuv(
+                xyuv,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            )
+        else:
+            raise TypeError("Cannot multiply DoubleZernike by type {}".format(type(rhs)))
 
     def __rmul__(self, rhs):
         """Equivalent to obj * rhs.  See `__mul__` for details."""

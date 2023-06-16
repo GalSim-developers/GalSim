@@ -1004,6 +1004,86 @@ def test_dz_sum():
         assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
 
+def test_dz_product():
+    """Test that __mul__ and __rmul__ work as expected.
+    """
+    rng = galsim.BaseDeviate(31415).as_numpy_generator()
+    u = rng.uniform(-1.0, 1.0, size=100)
+    v = rng.uniform(-1.0, 1.0, size=100)
+    x = rng.uniform(-1.0, 1.0, size=100)
+    y = rng.uniform(-1.0, 1.0, size=100)
+
+    for _ in range(100):
+        j1 = rng.integers(1, 16)
+        k1 = rng.integers(1, 16)
+        j2 = rng.integers(1, 16)
+        k2 = rng.integers(1, 16)
+
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+
+        coef1 = rng.normal(size=(j1+1, k1+1))
+        coef1[0] = 0.0
+        coef1[:, 0] = 0.0
+        coef2 = rng.normal(size=(j2+1, k2+1))
+        coef2[0] = 0.0
+        coef2[:, 0] = 0.0
+
+        dz1 = DoubleZernike(
+            coef1,
+            xy_inner=xy_inner, xy_outer=xy_outer,
+            uv_inner=uv_inner, uv_outer=uv_outer
+        )
+        dz2 = DoubleZernike(
+            coef2,
+            xy_inner=xy_inner, xy_outer=xy_outer,
+            uv_inner=uv_inner, uv_outer=uv_outer
+        )
+
+        np.testing.assert_allclose(
+            dz1(u, v, x, y)*dz2(u, v, x, y),
+            (dz1 * dz2)(u, v, x, y)
+        )
+        np.testing.assert_allclose(
+            dz1(u, v, x, y)*dz2(u, v, x, y),
+            (dz2 * dz1)(u, v, x, y)
+        )
+        # Check scalar multiplication
+        np.testing.assert_allclose(
+            2*dz1(u, v, x, y),
+            (2 * dz1)(u, v, x, y)
+        )
+        np.testing.assert_allclose(
+            dz1(u, v, x, y)*3.3,
+            (dz1 * 3.3)(u, v, x, y)
+        )
+        # Check that domain is preserved
+        dzprod = dz1 * dz2
+        np.testing.assert_equal(
+            [dzprod.xy_inner, dzprod.xy_outer, dzprod.uv_inner, dzprod.uv_outer],
+            [xy_inner, xy_outer, uv_inner, uv_outer]
+        )
+
+    with np.testing.assert_raises(TypeError):
+        dz1 * galsim.Gaussian(sigma=1.0)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, xy_inner=2*xy_inner)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, xy_outer=2*xy_outer)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, uv_inner=2*uv_inner)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, uv_outer=2*uv_outer)
+
+    # Commutative with integer coefficients
+    dz1 = DoubleZernike(np.eye(3, dtype=int))
+    dz2 = DoubleZernike(np.ones((4, 4), dtype=int))
+    assert dz1 * dz2 == dz2 * dz1
+    assert (dz2 * 3) == (3 * dz2)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
