@@ -856,6 +856,15 @@ def test_dz_coef_xyuv():
             uv_inner=uv_inner,
             uv_outer=uv_outer
         )
+        # Test that we can recover coef from coef_array_xyuv
+        dz._coef_array_xyuv
+        del dz.coef
+        np.testing.assert_allclose(
+            dz.coef[:coef.shape[0], :coef.shape[1]],
+            coef,
+            rtol=0,
+            atol=1e-12
+        )
 
         xy_scalar = rng.normal(size=(2,))
         uv_scalar = rng.normal(size=(2,))

@@ -18,7 +18,7 @@
 
 import numpy as np
 
-from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
+from .utilities import LRU_Cache, binomial, horner2d, horner4d, nCr, lazy_property
 from .integ import _gq_annulus_points
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 
@@ -965,6 +965,23 @@ class DoubleZernike:
         sh = self.coef.shape
         self._jmax, self._kmax = sh[0]-1, sh[1]-1
 
+    @staticmethod
+    def _from_xyuv(
+        xyuv,
+        *,
+        xy_inner=0.0,  # "pupil"
+        xy_outer=1.0,
+        uv_inner=0.0,  # "field"
+        uv_outer=1.0
+    ):
+        ret = DoubleZernike.__new__(DoubleZernike)
+        ret._coef_array_xyuv = xyuv
+        ret.xy_inner = xy_inner
+        ret.xy_outer = xy_outer
+        ret.uv_inner = uv_inner
+        ret.uv_outer = uv_outer
+        return ret
+
     def _call_old(self, u, v, x=None, y=None):
         # Original implementation constructing "single" Zernike from
         # coefficients directly.  Retained mostly for testing purposes.
@@ -1005,6 +1022,42 @@ class DoubleZernike:
                 else:  # xy vector
                     assert np.shape(x) == np.shape(u)
                     return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
+
+    @lazy_property
+    def coef(self):
+        xyuv = self._coef_array_xyuv
+        sh = xyuv.shape
+        nxy = max(sh[0], sh[1])-1  # Max radial degree of xy
+        jmax = (nxy+1)*(nxy+2)//2
+        nuv = max(sh[2], sh[3])-1  # Max radial degree of uv
+        kmax = (nuv+1)*(nuv+2)//2
+
+        # Determine number of GQ points
+        xy_rings = nxy//2+1
+        xy_spokes = 2*nxy+1
+        uv_rings = nuv//2+1
+        uv_spokes = 2*nuv+1
+
+        # Compute GQ points and weights on double annulus
+        x, y, xy_w = _gq_annulus_points(self.xy_inner, self.xy_outer, xy_rings, xy_spokes)
+        u, v, uv_w = _gq_annulus_points(self.uv_inner, self.uv_outer, uv_rings, uv_spokes)
+        nx = len(x)
+        nu = len(u)
+        x = np.tile(x, nu)
+        y = np.tile(y, nu)
+        xy_w = np.tile(xy_w, nu)
+        u = np.repeat(u, nx)
+        v = np.repeat(v, nx)
+        uv_w = np.repeat(uv_w, nx)
+        weights = xy_w * uv_w
+
+        # Evaluate xyuv polynomial at GQ points
+        vals = horner4d(x, y, u, v, xyuv)
+
+        # Project into Zernike basis
+        basis = doubleZernikeBasis(jmax, kmax, x, y, u, v, self.xy_outer, self.xy_inner, self.uv_outer, self.uv_inner)
+        area = np.pi**2 * (self.xy_outer**2 - self.xy_inner**2) * (self.uv_outer**2 - self.uv_inner**2)
+        return np.dot(basis, vals*weights/area)
 
     @lazy_property
     def _coef_array_xyuv(self):
@@ -1072,3 +1125,18 @@ class DoubleZernike:
                 else: # xy vector
                     assert np.shape(x) == np.shape(u)
                     return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
+
+
+def doubleZernikeBasis(
+    jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0
+):
+    out = np.zeros((jmax+1, kmax+1)+x.shape, dtype=float)
+    for k in range(kmax+1):
+        coef_uv = [0]*k + [1]
+        zk_uv = Zernike(coef_uv, R_outer=uv_outer, R_inner=uv_inner)
+        tmp = zk_uv(u, v)
+        for j in range(jmax+1):
+            coef_xy = [0]*j + [1]
+            zk_xy = Zernike(coef_xy, R_outer=xy_outer, R_inner=xy_inner)
+            out[j, k] = zk_xy(x, y) * tmp
+    return out
