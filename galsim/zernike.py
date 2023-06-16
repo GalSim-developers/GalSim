@@ -1122,12 +1122,11 @@ class DoubleZernike:
             if np.ndim(u) == 0:  # uv scalar
                 return self.__call__(u, v)(x, y)
             else:  # uv vector
-                zs = self.__call__(u, v)
                 if np.ndim(x) == 0:  # xy scalar
-                    return np.array([z(x, y) for z in zs])
+                    return np.array([z(x, y) for z in self.__call__(u, v)])
                 else: # xy vector
                     assert np.shape(x) == np.shape(u)
-                    return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
+                    return horner4d(x, y, u, v, self._coef_array_xyuv)
 
 
 def doubleZernikeBasis(
