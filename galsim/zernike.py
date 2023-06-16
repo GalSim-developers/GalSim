@@ -573,13 +573,16 @@ class Zernike:
         from numbers import Real
         if isinstance(rhs, Real):
             if 'coef' in self.__dict__:
-                return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
+                ret = Zernike(rhs*self.coef, self.R_outer, self.R_inner)
+                if '_coef_array_xy' in self.__dict__:
+                    ret._coef_array_xy = rhs*self._coef_array_xy
             else:
-                return Zernike._from_coef_array_xy(
+                ret = Zernike._from_coef_array_xy(
                     rhs*self._coef_array_xy,
                     R_outer=self.R_outer,
                     R_inner=self.R_inner
                 )
+            return ret
         elif isinstance(rhs, Zernike):
             if self.R_outer != rhs.R_outer:
                 raise ValueError("Cannot multiply Zernikes with inconsistent R_outer")
