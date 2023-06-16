@@ -732,6 +732,22 @@ def _horner2d(x, y, coefs, result, temp, triangle=False):
                 result += temp
 
 
+def horner3d(x, y, u, coefs):
+    result = horner2d(y, u, coefs[-1])
+    for coef in coefs[-2::-1]:
+        result *= x
+        result += horner2d(y, u, coef)
+    return result
+
+
+def horner4d(x, y, u, v, coefs):
+    result = horner3d(y, u, v, coefs[-1])
+    for coef in coefs[-2::-1]:
+        result *= x
+        result += horner3d(y, u, v, coef)
+    return result
+
+
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     """
     The routine to do the opposite of what `interleaveImages` routine does. It generates a
