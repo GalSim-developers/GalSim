@@ -965,8 +965,32 @@ class DoubleZernike:
         self._xy_series = [
             Zernike(row, R_outer=uv_outer, R_inner=uv_inner) for row in coef
         ]
-        sh = self.coef.shape
-        self._jmax, self._kmax = sh[0]-1, sh[1]-1
+
+    @lazy_property
+    def _jmax(self):
+        if 'coef' in self.__dict__:
+            return self.coef.shape[0] - 1
+        else:
+            sh = self._coef_array_xyuv.shape
+            nxy = max(sh[0], sh[1]) - 1  # Max radial degree of xy
+            return (nxy+1)*(nxy+2)//2
+
+    @lazy_property
+    def _kmax(self):
+        if 'coef' in self.__dict__:
+            return self.coef.shape[1] - 1
+        else:
+            sh = self._coef_array_xyuv.shape
+            nuv = max(sh[2], sh[3]) - 1  # Max radial degree of uv
+            return (nuv+1)*(nuv+2)//2
+
+    @lazy_property
+    def _nxy(self):
+        return noll_to_zern(self._jmax)[0]
+
+    @lazy_property
+    def _nuv(self):
+        return noll_to_zern(self._kmax)[0]
 
     @staticmethod
     def _from_xyuv(
@@ -1028,18 +1052,11 @@ class DoubleZernike:
 
     @lazy_property
     def coef(self):
-        xyuv = self._coef_array_xyuv
-        sh = xyuv.shape
-        nxy = max(sh[0], sh[1])-1  # Max radial degree of xy
-        jmax = (nxy+1)*(nxy+2)//2
-        nuv = max(sh[2], sh[3])-1  # Max radial degree of uv
-        kmax = (nuv+1)*(nuv+2)//2
-
         # Determine number of GQ points
-        xy_rings = nxy//2+1
-        xy_spokes = 2*nxy+1
-        uv_rings = nuv//2+1
-        uv_spokes = 2*nuv+1
+        xy_rings = self._nxy//2+1
+        xy_spokes = 2*self._nxy+1
+        uv_rings = self._nuv//2+1
+        uv_spokes = 2*self._nuv+1
 
         # Compute GQ points and weights on double annulus
         x, y, xy_w = _gq_annulus_points(self.xy_inner, self.xy_outer, xy_rings, xy_spokes)
@@ -1055,10 +1072,10 @@ class DoubleZernike:
         weights = xy_w * uv_w
 
         # Evaluate xyuv polynomial at GQ points
-        vals = horner4d(x, y, u, v, xyuv)
+        vals = horner4d(x, y, u, v, self._coef_array_xyuv)
 
         # Project into Zernike basis
-        basis = doubleZernikeBasis(jmax, kmax, x, y, u, v, self.xy_outer, self.xy_inner, self.uv_outer, self.uv_inner)
+        basis = doubleZernikeBasis(self._jmax, self._kmax, x, y, u, v, self.xy_outer, self.xy_inner, self.uv_outer, self.uv_inner)
         area = np.pi**2 * (self.xy_outer**2 - self.xy_inner**2) * (self.uv_outer**2 - self.uv_inner**2)
         return np.dot(basis, vals*weights/area)
 
