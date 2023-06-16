@@ -1294,6 +1294,66 @@ class DoubleZernike:
         out += ")"
         return out
 
+    @lazy_property
+    def gradX(self):
+        """The gradient of the DoubleZernike in the x direction."""
+        xyuv = self._coef_array_xyuv
+        gradx = np.zeros_like(xyuv)
+        for (i, j, k, l), c in np.ndenumerate(xyuv):
+            if i > 0:
+                if c != 0:
+                    gradx[i-1, j, k, l] = c*i
+        return DoubleZernike._from_xyuv(
+            gradx,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+        )
+
+    @lazy_property
+    def gradY(self):
+        """The gradient of the DoubleZernike in the y direction."""
+        xyuv = self._coef_array_xyuv
+        grady = np.zeros_like(xyuv)
+        for (i, j, k, l), c in np.ndenumerate(xyuv):
+            if j > 0:
+                if c != 0:
+                    grady[i, j-1, k, l] = c*j
+        return DoubleZernike._from_xyuv(
+            grady,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+        )
+
+    @lazy_property
+    def gradU(self):
+        """The gradient of the DoubleZernike in the u direction."""
+        xyuv = self._coef_array_xyuv
+        gradu = np.zeros_like(xyuv)
+        for (i, j, k, l), c in np.ndenumerate(xyuv):
+            if k > 0:
+                if c != 0:
+                    gradu[i, j, k-1, l] = c*k
+        return DoubleZernike._from_xyuv(
+            gradu,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+        )
+
+    @lazy_property
+    def gradV(self):
+        """The gradient of the DoubleZernike in the v direction."""
+        xyuv = self._coef_array_xyuv
+        gradv = np.zeros_like(xyuv)
+        for (i, j, k, l), c in np.ndenumerate(xyuv):
+            if l > 0:
+                if c != 0:
+                    gradv[i, j, k, l-1] = c*l
+        return DoubleZernike._from_xyuv(
+            gradv,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+        )
+
 
 def doubleZernikeBasis(
     jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0

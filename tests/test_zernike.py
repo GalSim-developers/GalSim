@@ -1084,6 +1084,73 @@ def test_dz_product():
     assert (dz2 * 3) == (3 * dz2)
 
 
+def test_dz_grad():
+    """Test that DZ gradients work as expected.
+    """
+    rng = galsim.BaseDeviate(31415).as_numpy_generator()
+    u = rng.uniform(-1.0, 1.0, size=100)
+    v = rng.uniform(-1.0, 1.0, size=100)
+    x = rng.uniform(-1.0, 1.0, size=100)
+    y = rng.uniform(-1.0, 1.0, size=100)
+
+    for _ in range(10):
+        j1 = rng.integers(1, 16)
+        k1 = rng.integers(1, 16)
+
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+
+        coef = rng.normal(size=(j1+1, k1+1))
+        coef[0] = 0.0
+        coef[:, 0] = 0.0
+
+        dz = DoubleZernike(
+            coef,
+            xy_inner=xy_inner, xy_outer=xy_outer,
+            uv_inner=uv_inner, uv_outer=uv_outer
+        )
+
+        # X and Y are easy to check with single Zernike gradient functions.
+        np.testing.assert_allclose(
+            dz.gradX(u, v, x, y),
+            np.array([dz(u_, v_).gradX(x_, y_) for u_, v_, x_, y_ in zip(u, v, x, y)])
+        )
+        np.testing.assert_allclose(
+            dz.gradY(u, v, x, y),
+            np.array([dz(u_, v_).gradY(x_, y_) for u_, v_, x_, y_ in zip(u, v, x, y)])
+        )
+        # U and V are trickier, since we aren't including a way to turn a DZ evaluated
+        # at (x, y) into a single Zernike of (u, v).  We can mock that though up by
+        # transposing the DZ coefficients and swapping the domain parameters.
+        dz_xyuv = DoubleZernike(
+            np.transpose(coef, axes=(1, 0)),
+            xy_inner=uv_inner, xy_outer=uv_outer,
+            uv_inner=xy_inner, uv_outer=xy_outer
+        )
+        np.testing.assert_allclose(
+            dz.gradU(u, v, x, y),
+            np.array([dz_xyuv(x_, y_).gradX(u_, v_) for u_, v_, x_, y_ in zip(u, v, x, y)])
+        )
+        np.testing.assert_allclose(
+            dz.gradV(u, v, x, y),
+            np.array([dz_xyuv(x_, y_).gradY(u_, v_) for u_, v_, x_, y_ in zip(u, v, x, y)])
+        )
+
+        # Test Zernike coefficients themselves.
+        for u_, v_ in zip(u, v):
+            dzdx1 = dz(u_, v_).gradX.coef
+            dzdx2 = dz.gradX(u_, v_).coef
+            dzdx1 = np.concatenate([dzdx1, np.zeros(len(dzdx2) - len(dzdx1))])
+            np.testing.assert_allclose(dzdx1, dzdx2, atol=1e-12)
+
+            dzdy1 = dz(u_, v_).gradY.coef
+            dzdy2 = dz.gradY(u_, v_).coef
+            dzdy1 = np.concatenate([dzdy1, np.zeros(len(dzdy2) - len(dzdy1))])
+            np.testing.assert_allclose(dzdy1, dzdy2, atol=1e-12)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
