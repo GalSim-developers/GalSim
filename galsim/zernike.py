@@ -1128,6 +1128,93 @@ class DoubleZernike:
                     assert np.shape(x) == np.shape(u)
                     return horner4d(x, y, u, v, self._coef_array_xyuv)
 
+    def __neg__(self):
+        """Negate a DoubleZernike."""
+        if 'coef' in self.__dict__:
+            ret = DoubleZernike(
+                -self.coef,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            )
+            if '_coef_array_xyuv' in self.__dict__:
+                ret._coef_array_xyuv = -self._coef_array_xyuv
+        else:
+            ret = DoubleZernike._from_xyuv(
+                -self._coef_array_xyuv,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            )
+        return ret
+
+    def __add__(self, rhs):
+        """Add two DoubleZernikes.
+
+        Requires that each operand's xy and uv domains are the same.
+        """
+        if not isinstance(rhs, DoubleZernike):
+            raise TypeError("Cannot add DoubleZernike to type {}".format(type(rhs)))
+        if self.xy_outer != rhs.xy_outer:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_outer")
+        if self.xy_inner != rhs.xy_inner:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_inner")
+        if self.uv_outer != rhs.uv_outer:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent uv_outer")
+        if self.uv_inner != rhs.uv_inner:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent uv_inner")
+        if 'coef' in self.__dict__:
+            jmax = max(self._jmax, rhs._jmax)
+            kmax = max(self._kmax, rhs._kmax)
+            newCoef = np.zeros((jmax+1, kmax+1), dtype=float)
+            newCoef[:self._jmax+1, :self._kmax+1] = self.coef
+            newCoef[:rhs._jmax+1, :rhs._kmax+1] += rhs.coef
+            return DoubleZernike(
+                newCoef,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            )
+        else:
+            s1 = self._coef_array_xyuv.shape
+            s2 = rhs._coef_array_xyuv.shape
+            sh = [max(s1[i], s2[i]) for i in range(4)]
+            coef_array_xyuv = np.zeros(sh, dtype=float)
+            coef_array_xyuv[:s1[0], :s1[1], :s1[2], :s1[3]] = self._coef_array_xyuv
+            coef_array_xyuv[:s2[0], :s2[1], :s2[2], :s2[3]] += rhs._coef_array_xyuv
+            return DoubleZernike._from_xyuv(
+                coef_array_xyuv,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            )
+
+    def __sub__(self, rhs):
+        """Subtract two DoubleZernikes.
+
+        Requires that each operand's xy and uv domains are the same.
+        """
+        return self + (-rhs)
+
+    def __mul__(self, rhs):
+        from numbers import Real
+        if isinstance(rhs, Real):
+            if 'coef' in self.__dict__:
+                ret = DoubleZernike(
+                    rhs*self.coef,
+                    xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                    uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                )
+                if '_coef_array_xyuv' in self.__dict__:
+                    ret._coef_array_xyuv = rhs*self._coef_array_xyuv
+            else:
+                ret = DoubleZernike._from_xyuv(
+                    rhs*self._coef_array_xyuv,
+                    xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+                    uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                )
+            return ret
+
+    def __rmul__(self, rhs):
+        """Equivalent to obj * rhs.  See `__mul__` for details."""
+        return self*rhs
+
 
 def doubleZernikeBasis(
     jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0

@@ -899,6 +899,96 @@ def test_dz_coef_xyuv():
                 )
 
 
+def test_dz_sum():
+    """Test that DZ.__add__, __sub__, and __neg__ work as expected.
+    """
+    rng = galsim.BaseDeviate(57721).as_numpy_generator()
+    u = rng.uniform(-1.0, 1.0, size=100)
+    v = rng.uniform(-1.0, 1.0, size=100)
+    x = rng.uniform(-1.0, 1.0, size=100)
+    y = rng.uniform(-1.0, 1.0, size=100)
+
+    for _ in range(100):
+        j1 = rng.integers(1, 11)
+        k1 = rng.integers(1, 11)
+        j2 = rng.integers(1, 11)
+        k2 = rng.integers(1, 11)
+
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+
+        coef1 = rng.normal(size=(j1+1, k1+1))
+        coef1[0] = 0.0
+        coef1[:, 0] = 0.0
+        coef2 = rng.normal(size=(j2+1, k2+1))
+        coef2[0] = 0.0
+        coef2[:, 0] = 0.0
+
+        dz1 = DoubleZernike(
+            coef1,
+            xy_inner=xy_inner, xy_outer=xy_outer,
+            uv_inner=uv_inner, uv_outer=uv_outer
+        )
+        dz2 = DoubleZernike(
+            coef2,
+            xy_inner=xy_inner, xy_outer=xy_outer,
+            uv_inner=uv_inner, uv_outer=uv_outer
+        )
+        c1 = rng.uniform(-1.0, 1.0)
+        c2 = rng.uniform(-1.0, 1.0)
+
+        jmax = max(j1, j2)
+        kmax = max(k1, k2)
+
+        coefSum = np.zeros((jmax+1, kmax+1))
+        coefSum[:j1+1, :k1+1] = c1*coef1
+        coefSum[:j2+1, :k2+1] += c2*coef2
+
+        coefDiff = np.zeros((jmax+1, kmax+1))
+        coefDiff[:j1+1, :k1+1] = c1*coef1
+        coefDiff[:j2+1, :k2+1] -= c2*coef2
+
+        np.testing.assert_allclose(coefSum, (c1*dz1 + c2*dz2).coef)
+        np.testing.assert_allclose(coefDiff, (c1*dz1 - c2*dz2).coef)
+
+        np.testing.assert_allclose(
+            c1*dz1(u, v, x, y) + c2*dz2(u, v, x, y),
+            (c1*dz1 + c2*dz2)(u, v, x, y)
+        )
+        np.testing.assert_allclose(
+            c1*dz1(u, v, x, y) - c2*dz2(u, v, x, y),
+            (c1*dz1 - c2*dz2)(u, v, x, y)
+        )
+
+        # Check that domains are preserved
+        dzsum = dz1 + dz2
+        np.testing.assert_allclose(
+            dzsum.xy_inner,
+            xy_inner
+        )
+        np.testing.assert_allclose(
+            dzsum.xy_outer,
+            xy_outer
+        )
+        np.testing.assert_allclose(
+            dzsum.uv_inner,
+            uv_inner
+        )
+        np.testing.assert_allclose(
+            dzsum.uv_outer,
+            uv_outer
+        )
+
+        with np.testing.assert_raises(TypeError):
+            dz1 + 1
+        with np.testing.assert_raises(TypeError):
+            dz1 - 3
+        with np.testing.assert_raises(ValueError):
+            dz1 + DoubleZernike(coef1, xy_inner=2*xy_inner)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
