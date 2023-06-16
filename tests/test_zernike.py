@@ -236,6 +236,12 @@ def test_ne():
         Zernike([0, 1, 2, 3]),
         Zernike([0, 1, 2, 3], R_outer=0.2),
         Zernike([0, 1, 2, 3], R_outer=0.2, R_inner=0.1),
+        DoubleZernike(np.eye(3)),
+        DoubleZernike(np.ones((4, 4))),
+        DoubleZernike(np.ones((4, 4)), xy_outer=1.1),
+        DoubleZernike(np.ones((4, 4)), xy_outer=1.1, xy_inner=0.9),
+        DoubleZernike(np.ones((4, 4)), xy_outer=1.1, xy_inner=0.9, uv_outer=1.1),
+        DoubleZernike(np.ones((4, 4)), xy_outer=1.1, xy_inner=0.9, uv_outer=1.1, uv_inner=0.9)
     ]
     check_all_diff(objs)
 
@@ -783,6 +789,9 @@ def test_dz_val():
         xy_vector = rng.normal(size=(2, 10))
         uv_vector = rng.normal(size=(2, 10))
 
+        do_pickle(dz)
+        do_pickle(dz, lambda dz_: tuple(dz_(*uv_vector, *xy_vector)))
+
         # If you don't specify xy, then get (list of) Zernike out.
         assert isinstance(dz(*uv_scalar), Zernike)
         assert isinstance(dz(*uv_vector), list)
@@ -987,6 +996,12 @@ def test_dz_sum():
             dz1 - 3
         with np.testing.assert_raises(ValueError):
             dz1 + DoubleZernike(coef1, xy_inner=2*xy_inner)
+
+        # Commutative with integer coefficients
+        dz1 = DoubleZernike(np.eye(3, dtype=int))
+        dz2 = DoubleZernike(np.ones((4, 4), dtype=int))
+        assert dz1 + dz2 == dz2 + dz1
+        assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
 
 if __name__ == "__main__":

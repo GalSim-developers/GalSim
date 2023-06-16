@@ -1215,6 +1215,42 @@ class DoubleZernike:
         """Equivalent to obj * rhs.  See `__mul__` for details."""
         return self*rhs
 
+    def __eq__(self, rhs):
+        if not isinstance(rhs, DoubleZernike):
+            return False
+        return (
+            np.array_equal(self.coef, rhs.coef) and
+            self.xy_outer == rhs.xy_outer and
+            self.xy_inner == rhs.xy_inner and
+            self.uv_outer == rhs.uv_outer and
+            self.uv_inner == rhs.uv_inner
+        )
+
+    def __hash__(self):
+        return hash((
+            "galsim.DoubleZernike",
+            tuple(self.coef.ravel()),
+            self.coef.shape,
+            self.xy_outer,
+            self.xy_inner,
+            self.uv_outer,
+            self.uv_inner
+        ))
+
+    def __repr__(self):
+        out = "galsim.zernike.DoubleZernike("
+        out += repr(self.coef)
+        if self.xy_outer != 1.0:
+            out += ", xy_outer={}".format(self.xy_outer)
+        if self.xy_inner != 0.0:
+            out += ", xy_inner={}".format(self.xy_inner)
+        if self.uv_outer != 1.0:
+            out += ", uv_outer={}".format(self.uv_outer)
+        if self.uv_inner != 0.0:
+            out += ", uv_inner={}".format(self.uv_inner)
+        out += ")"
+        return out
+
 
 def doubleZernikeBasis(
     jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0
