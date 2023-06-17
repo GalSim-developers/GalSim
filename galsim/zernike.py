@@ -1354,6 +1354,35 @@ class DoubleZernike:
             uv_outer=self.uv_outer, uv_inner=self.uv_inner
         )
 
+    def rotate(self, *, theta_xy=0.0, theta_uv=0.0):
+        """Rotate the DoubleZernike by the given angle(s).
+
+        For example:
+
+            >>> DZrot = DZ.rotate(theta_xy=th)
+            >>> DZ(u, v, r*np.cos(ph), r*np.sin(ph)) == DZrot(u, v, r*np.cos(ph+th), r*np.sin(ph+th))
+
+        or:
+
+            >>> DZrot = DZ.rotate(theta_uv=th)
+            >>> DZ(r*np.cos(ph), r*np.sin(ph), x, y) == DZrot(r*np.cos(ph+th), r*np.sin(ph+th), x, y)
+
+        Parameters:
+            theta_xy:  Rotation angle (in radians) in the xy plane.
+            theta_uv:  Rotation angle (in radians) in the uv plane.
+
+        Returns:
+            the rotated DoubleZernike.
+        """
+        M_xy = zernikeRotMatrix(self._jmax, theta_xy)
+        M_uv = zernikeRotMatrix(self._kmax, theta_uv)
+        coef = M_xy @ self.coef @ M_uv.T
+        return DoubleZernike(
+            coef,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+        )
+
 
 def doubleZernikeBasis(
     jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0

@@ -1284,6 +1284,50 @@ def test_dz_to_T():
         # plt.show()
 
 
+def test_dz_rotate():
+    rng = galsim.BaseDeviate(12775).as_numpy_generator()
+
+    for _ in range(30):
+        j1 = rng.choice([1, 3, 10, 11, 13, 21, 22, 34])
+        k1 = rng.choice([1, 3, 10, 11, 13, 21, 22, 34])
+
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+
+        coef = rng.normal(size=(j1+1, k1+1))
+        coef[0] = 0.0
+        coef[:, 0] = 0.0
+
+        dz = DoubleZernike(
+            coef,
+            xy_inner=xy_inner, xy_outer=xy_outer,  # pupil
+            uv_inner=uv_inner, uv_outer=uv_outer   # field
+        )
+
+        # Test points
+        r = rng.uniform(0.0, 1.0, size=30)
+        th = rng.uniform(0.0, 2*np.pi, size=30)
+        rho = rng.uniform(0.0, 1.0, size=30)
+        ph = rng.uniform(0.0, 2*np.pi, size=30)
+
+        for theta_xy in [0.0, 0.1, 0.3]:
+            for theta_uv in [0.0, 0.2, 0.4]:
+                dz_rot = dz.rotate(theta_xy=theta_xy, theta_uv=theta_uv)
+                np.testing.assert_allclose(
+                    dz(
+                        rho*np.cos(ph), rho*np.sin(ph),
+                        r*np.cos(th), r*np.sin(th)
+                    ),
+                    dz_rot(
+                        rho*np.cos(ph+theta_uv), rho*np.sin(ph+theta_uv),
+                        r*np.cos(th+theta_xy), r*np.sin(th+theta_xy)
+                    ),
+                    atol=1e-11, rtol=0
+                )
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
