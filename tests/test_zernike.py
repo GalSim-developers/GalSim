@@ -1151,6 +1151,139 @@ def test_dz_grad():
             np.testing.assert_allclose(dzdy1, dzdy2, atol=1e-12)
 
 
+def test_dz_to_T():
+    """Test that DZs enable efficient computation of optical PSF sizes."""
+
+    # One of the reasons to build the DZ class was to see if we can quickly
+    # convert from coefficients that, say, come out of batoid or Piff or an
+    # active optics framework into a PSF size, both averaged and over the field
+    # of view.
+
+    # The idea is that x and y deflections of photons from their optimal paths
+    # are directly proportional to the wavefront gradient.  I.e.,
+    # delta_xfp \propto dW(u, v, x, y)/dx
+    # where delta_xfp is the focal plane deflection, and W is the double Zernike
+    # wavefront which is a function of field angle (u, v) and pupil position
+    # (x, y).
+
+    # We want, as a function of (u, v), the variance of delta_xfp.  This is
+    # Var[delta_xfp] \propto Var[dW/dx] = E[(dW/dx)^2] - (E[dW/dx])^2,  where E
+    # is the expectation value over the pupil.
+
+    # For any Zernike series, the expectation value is just the coefficient of
+    # the Z1 term.  All the other terms have zero expectation.  For the double
+    # Zernike series, the field dependence of the pupil expectation value is
+    # contained in the first row of the coefficient array.
+
+    # So to compute Var[delta_xfp], we need to compute the first row of the
+    # dW/dx double Zernike, and the first row of the (dW/dx)^2 double Zernike.
+
+    # First construct a DZ.
+    rng = galsim.BaseDeviate(51413).as_numpy_generator()
+
+    for _ in range(10):
+        j1 = rng.integers(4, 11)
+        k1 = rng.integers(1, 29)
+
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+
+        coef = rng.normal(size=(j1+1, k1+1))
+        coef[0] = 0.0
+        coef[:, 0] = 0.0
+
+        W = DoubleZernike(
+            coef,
+            xy_inner=xy_inner, xy_outer=xy_outer,  # pupil
+            uv_inner=uv_inner, uv_outer=uv_outer   # field
+        )
+
+        # Now the analytic map of optical PSF size T
+        dWdx = W.gradX
+        dWdy = W.gradY
+        dWdx2 = dWdx * dWdx
+        dWdy2 = dWdy * dWdy
+        # These are still double Zernikes.  Extract their expectation values
+        # over the pupil (which are functions of field angle), by taking the
+        # first row of their coefficient arrays.
+        dWdx_field = Zernike(dWdx.coef[1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdy_field = Zernike(dWdy.coef[1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdx2_field = Zernike(dWdx2.coef[1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdy2_field = Zernike(dWdy2.coef[1], R_outer=uv_outer, R_inner=uv_inner)
+        # Now construct the PSF size T
+        T = dWdx2_field + dWdy2_field - dWdx_field*dWdx_field - dWdy_field*dWdy_field
+
+        # Now compare to a quick Monte Carlo estimate of T.
+        us = []
+        vs = []
+        Ts = []
+        for _ in range(100):  # 100 positions
+            # Pick a random field angle:
+            uv = np.inf
+            while uv > uv_outer or uv < uv_inner:
+                u_ = rng.uniform(-uv_outer, uv_outer)
+                v_ = rng.uniform(-uv_outer, uv_outer)
+                uv = np.hypot(u_, v_)
+            us.append(u_)
+            vs.append(v_)
+            # Get the wavefront at that field angle
+            W_ = W(u_, v_)
+            # Pick random pupil positions
+            dxs = []
+            dys = []
+            for _ in range(50):  # 50 photons
+                xy = np.inf
+                while xy > xy_outer or xy < xy_inner:
+                    x_ = rng.uniform(-xy_outer, xy_outer)
+                    y_ = rng.uniform(-xy_outer, xy_outer)
+                    xy = np.hypot(x_, y_)
+                # Get the focal plane deflection
+                dxs.append(W_.gradX(x_, y_))
+                dys.append(W_.gradY(x_, y_))
+            # Compute the variance of the focal plane deflection
+            Ts.append(np.var(dxs) + np.var(dys))
+
+        # Assert that the median relative error is less than 5%,
+        # and the 90% worst case is less than 30%
+        np.testing.assert_array_less(
+            np.abs(np.quantile((T(us, vs) - Ts)/Ts, [0.5, 0.9])),
+            [0.05, 0.3]
+        )
+
+        # Uncomment below to look at the plots
+
+        # def colorbar(mappable):
+        #     from mpl_toolkits.axes_grid1 import make_axes_locatable
+        #     import matplotlib.pyplot as plt
+        #     last_axes = plt.gca()
+        #     ax = mappable.axes
+        #     fig = ax.figure
+        #     divider = make_axes_locatable(ax)
+        #     cax = divider.append_axes("right", size="5%", pad=0.05)
+        #     cbar = fig.colorbar(mappable, cax=cax)
+        #     plt.sca(last_axes)
+        #     return cbar
+
+        # ugrid = np.linspace(-uv_outer, uv_outer, 100)
+        # ugrid, vgrid = np.meshgrid(ugrid, ugrid)
+        # Tgrid = T(ugrid, vgrid)
+        # w = np.hypot(ugrid, vgrid) > uv_outer
+        # w |= np.hypot(ugrid, vgrid) < uv_inner
+        # Tgrid[w] = np.nan
+
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(ncols=2, nrows=1, figsize=(10, 5))
+        # vmin, vmax = np.nanquantile(Tgrid, [0.02, 0.98])
+        # colorbar(axes[0].scatter(us, vs, c=Ts, vmin=vmin, vmax=vmax))
+        # colorbar(axes[1].imshow(Tgrid, extent=(-uv_outer, uv_outer, -uv_outer, uv_outer), origin='lower', vmin=vmin, vmax=vmax))
+        # axes[1].scatter(us, vs, c=Ts, vmin=vmin, vmax=vmax)
+        # axes[0].set_aspect('equal')
+        # fig.tight_layout()
+        # plt.show()
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
