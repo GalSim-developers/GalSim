@@ -1078,8 +1078,8 @@ class DoubleZernike:
         basis = doubleZernikeBasis(
             self._kmax, self._jmax,
             u, v, x, y,
-            self.uv_outer, self.uv_inner,
-            self.xy_outer, self.xy_inner
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner
         )
         area = np.pi**2 * (self.uv_outer**2 - self.uv_inner**2) * (self.xy_outer**2 - self.xy_inner**2)
         return np.dot(basis, vals*weights/area)
@@ -1390,7 +1390,7 @@ class DoubleZernike:
 
 
 def doubleZernikeBasis(
-    kmax, jmax, u, v, x, y, uv_outer=1.0, uv_inner=0.0, xy_outer=1.0, xy_inner=0.0
+    kmax, jmax, u, v, x, y, *, uv_outer=1.0, uv_inner=0.0, xy_outer=1.0, xy_inner=0.0
 ):
     out = np.zeros((kmax+1, jmax+1)+x.shape, dtype=float)
     for k in range(kmax+1):
