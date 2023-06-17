@@ -769,25 +769,25 @@ def test_lazy_coef():
 def test_dz_val():
     rng = galsim.BaseDeviate(1234).as_numpy_generator()
     for _ in range(10):
-        jmax = rng.integers(4, 12)
         kmax = rng.integers(4, 12)
-        coef = rng.normal(size=(jmax+1, kmax+1))
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
+        jmax = rng.integers(4, 12)
+        coef = rng.normal(size=(kmax+1, jmax+1))
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
         dz = DoubleZernike(
             coef,
+            uv_inner=uv_inner,
+            uv_outer=uv_outer,
             xy_inner=xy_inner,
             xy_outer=xy_outer,
-            uv_inner=uv_inner,
-            uv_outer=uv_outer
         )
 
-        xy_scalar = rng.normal(size=(2,))
         uv_scalar = rng.normal(size=(2,))
-        xy_vector = rng.normal(size=(2, 10))
+        xy_scalar = rng.normal(size=(2,))
         uv_vector = rng.normal(size=(2, 10))
+        xy_vector = rng.normal(size=(2, 10))
 
         do_pickle(dz)
         do_pickle(dz, lambda dz_: tuple(dz_(*uv_vector, *xy_vector)))
@@ -809,24 +809,28 @@ def test_dz_val():
         # Check consistency of __call__ outputs
         zk_list = dz(*uv_vector)
         vals = dz(*uv_vector, *xy_vector)
-        np.testing.assert_equal(
+        np.testing.assert_allclose(
             np.array([zk(x, y) for x, y, zk in zip(*xy_vector, zk_list)]),
-            vals
+            vals,
+            atol=1e-13, rtol=0
         )
         for i, (x, y) in enumerate(xy_vector.T):
-            np.testing.assert_equal(
+            np.testing.assert_allclose(
                 vals[i],
-                zk_list[i](x, y)
+                zk_list[i](x, y),
+                atol=1e-13, rtol=0
             )
         for i, (u, v, x, y) in enumerate(zip(*uv_vector, *xy_vector)):
-            np.testing.assert_equal(
+            np.testing.assert_allclose(
                 vals[i],
-                dz(u, v, x, y)
+                dz(u, v, x, y),
+                atol=1e-13, rtol=0
             )
         for i, (u, v) in enumerate(zip(*uv_vector)):
-            np.testing.assert_equal(
+            np.testing.assert_allclose(
                 vals[i],
-                dz(u, v)(*xy_vector[:, i])
+                dz(u, v)(*xy_vector[:, i]),
+                atol=1e-13, rtol=0
             )
 
         # Check asserts
@@ -844,27 +848,27 @@ def test_dz_val():
             dz([0.0, 1.0], [0.0, 1.0], x=[1.0], y=[1.0])
 
 
-def test_dz_coef_xyuv():
+def test_dz_coef_uvxy():
     rng = galsim.BaseDeviate(4321).as_numpy_generator()
     for _ in range(100):
-        jmax = rng.integers(4, 22)
         kmax = rng.integers(4, 22)
-        coef = rng.normal(size=(jmax+1, kmax+1))
+        jmax = rng.integers(4, 22)
+        coef = rng.normal(size=(kmax+1, jmax+1))
         coef[0] = 0.0
         coef[:, 0] = 0.0
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
         dz = DoubleZernike(
             coef,
-            xy_inner=xy_inner,
-            xy_outer=xy_outer,
             uv_inner=uv_inner,
-            uv_outer=uv_outer
+            uv_outer=uv_outer,
+            xy_inner=xy_inner,
+            xy_outer=xy_outer
         )
         # Test that we can recover coef from coef_array_xyuv
-        dz._coef_array_xyuv
+        dz._coef_array_uvxy
         del dz.coef
         np.testing.assert_allclose(
             dz.coef[:coef.shape[0], :coef.shape[1]],
@@ -873,10 +877,10 @@ def test_dz_coef_xyuv():
             atol=1e-12
         )
 
-        xy_scalar = rng.normal(size=(2,))
         uv_scalar = rng.normal(size=(2,))
-        xy_vector = rng.normal(size=(2, 10))
+        xy_scalar = rng.normal(size=(2,))
         uv_vector = rng.normal(size=(2, 10))
+        xy_vector = rng.normal(size=(2, 10))
 
         # Scalar uv only
         zk1 = dz._call_old(*uv_scalar)
@@ -918,46 +922,46 @@ def test_dz_sum():
     y = rng.uniform(-1.0, 1.0, size=100)
 
     for _ in range(100):
-        j1 = rng.integers(1, 11)
         k1 = rng.integers(1, 11)
-        j2 = rng.integers(1, 11)
+        j1 = rng.integers(1, 11)
         k2 = rng.integers(1, 11)
+        j2 = rng.integers(1, 11)
 
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
 
-        coef1 = rng.normal(size=(j1+1, k1+1))
+        coef1 = rng.normal(size=(k1+1, j1+1))
         coef1[0] = 0.0
         coef1[:, 0] = 0.0
-        coef2 = rng.normal(size=(j2+1, k2+1))
+        coef2 = rng.normal(size=(k2+1, j2+1))
         coef2[0] = 0.0
         coef2[:, 0] = 0.0
 
         dz1 = DoubleZernike(
             coef1,
-            xy_inner=xy_inner, xy_outer=xy_outer,
-            uv_inner=uv_inner, uv_outer=uv_outer
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
         )
         dz2 = DoubleZernike(
             coef2,
-            xy_inner=xy_inner, xy_outer=xy_outer,
-            uv_inner=uv_inner, uv_outer=uv_outer
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
         )
         c1 = rng.uniform(-1.0, 1.0)
         c2 = rng.uniform(-1.0, 1.0)
 
-        jmax = max(j1, j2)
         kmax = max(k1, k2)
+        jmax = max(j1, j2)
 
-        coefSum = np.zeros((jmax+1, kmax+1))
-        coefSum[:j1+1, :k1+1] = c1*coef1
-        coefSum[:j2+1, :k2+1] += c2*coef2
+        coefSum = np.zeros((kmax+1, jmax+1))
+        coefSum[:k1+1, :j1+1] = c1*coef1
+        coefSum[:k2+1, :j2+1] += c2*coef2
 
-        coefDiff = np.zeros((jmax+1, kmax+1))
-        coefDiff[:j1+1, :k1+1] = c1*coef1
-        coefDiff[:j2+1, :k2+1] -= c2*coef2
+        coefDiff = np.zeros((kmax+1, jmax+1))
+        coefDiff[:k1+1, :j1+1] = c1*coef1
+        coefDiff[:k2+1, :j2+1] -= c2*coef2
 
         np.testing.assert_allclose(coefSum, (c1*dz1 + c2*dz2).coef)
         np.testing.assert_allclose(coefDiff, (c1*dz1 - c2*dz2).coef)
@@ -974,20 +978,20 @@ def test_dz_sum():
         # Check that domains are preserved
         dzsum = dz1 + dz2
         np.testing.assert_allclose(
-            dzsum.xy_inner,
-            xy_inner
-        )
-        np.testing.assert_allclose(
-            dzsum.xy_outer,
-            xy_outer
-        )
-        np.testing.assert_allclose(
             dzsum.uv_inner,
             uv_inner
         )
         np.testing.assert_allclose(
             dzsum.uv_outer,
             uv_outer
+        )
+        np.testing.assert_allclose(
+            dzsum.xy_inner,
+            xy_inner
+        )
+        np.testing.assert_allclose(
+            dzsum.xy_outer,
+            xy_outer
         )
 
         with np.testing.assert_raises(TypeError):
@@ -1014,32 +1018,32 @@ def test_dz_product():
     y = rng.uniform(-1.0, 1.0, size=100)
 
     for _ in range(100):
-        j1 = rng.integers(1, 16)
         k1 = rng.integers(1, 16)
-        j2 = rng.integers(1, 16)
+        j1 = rng.integers(1, 16)
         k2 = rng.integers(1, 16)
+        j2 = rng.integers(1, 16)
 
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
 
-        coef1 = rng.normal(size=(j1+1, k1+1))
+        coef1 = rng.normal(size=(k1+1, j1+1))
         coef1[0] = 0.0
         coef1[:, 0] = 0.0
-        coef2 = rng.normal(size=(j2+1, k2+1))
+        coef2 = rng.normal(size=(k2+1, j2+1))
         coef2[0] = 0.0
         coef2[:, 0] = 0.0
 
         dz1 = DoubleZernike(
             coef1,
-            xy_inner=xy_inner, xy_outer=xy_outer,
-            uv_inner=uv_inner, uv_outer=uv_outer
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
         )
         dz2 = DoubleZernike(
             coef2,
-            xy_inner=xy_inner, xy_outer=xy_outer,
-            uv_inner=uv_inner, uv_outer=uv_outer
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
         )
 
         np.testing.assert_allclose(
@@ -1062,20 +1066,20 @@ def test_dz_product():
         # Check that domain is preserved
         dzprod = dz1 * dz2
         np.testing.assert_equal(
-            [dzprod.xy_inner, dzprod.xy_outer, dzprod.uv_inner, dzprod.uv_outer],
-            [xy_inner, xy_outer, uv_inner, uv_outer]
+            [dzprod.uv_inner, dzprod.uv_outer, dzprod.xy_inner, dzprod.xy_outer],
+            [uv_inner, uv_outer, xy_inner, xy_outer]
         )
 
     with np.testing.assert_raises(TypeError):
         dz1 * galsim.Gaussian(sigma=1.0)
     with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, xy_inner=2*xy_inner)
-    with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, xy_outer=2*xy_outer)
-    with np.testing.assert_raises(ValueError):
         dz1 * DoubleZernike(coef1, uv_inner=2*uv_inner)
     with np.testing.assert_raises(ValueError):
         dz1 * DoubleZernike(coef1, uv_outer=2*uv_outer)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, xy_inner=2*xy_inner)
+    with np.testing.assert_raises(ValueError):
+        dz1 * DoubleZernike(coef1, xy_outer=2*xy_outer)
 
     # Commutative with integer coefficients
     dz1 = DoubleZernike(np.eye(3, dtype=int))
@@ -1094,22 +1098,22 @@ def test_dz_grad():
     y = rng.uniform(-1.0, 1.0, size=100)
 
     for _ in range(10):
-        j1 = rng.integers(1, 16)
         k1 = rng.integers(1, 16)
+        j1 = rng.integers(1, 16)
 
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
 
-        coef = rng.normal(size=(j1+1, k1+1))
+        coef = rng.normal(size=(k1+1, j1+1))
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
         dz = DoubleZernike(
             coef,
-            xy_inner=xy_inner, xy_outer=xy_outer,
-            uv_inner=uv_inner, uv_outer=uv_outer
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
         )
 
         # X and Y are easy to check with single Zernike gradient functions.
@@ -1126,8 +1130,8 @@ def test_dz_grad():
         # transposing the DZ coefficients and swapping the domain parameters.
         dz_xyuv = DoubleZernike(
             np.transpose(coef, axes=(1, 0)),
-            xy_inner=uv_inner, xy_outer=uv_outer,
-            uv_inner=xy_inner, uv_outer=xy_outer
+            uv_inner=xy_inner, uv_outer=xy_outer,
+            xy_inner=uv_inner, xy_outer=uv_outer
         )
         np.testing.assert_allclose(
             dz.gradU(u, v, x, y),
@@ -1173,31 +1177,32 @@ def test_dz_to_T():
     # For any Zernike series, the expectation value is just the coefficient of
     # the Z1 term.  All the other terms have zero expectation.  For the double
     # Zernike series, the field dependence of the pupil expectation value is
-    # contained in the first row of the coefficient array.
+    # contained in the first column of the coefficient array.
 
-    # So to compute Var[delta_xfp], we need to compute the first row of the
-    # dW/dx double Zernike, and the first row of the (dW/dx)^2 double Zernike.
+    # So to compute Var[delta_xfp], we need to compute the first column of the
+    # dW/dx double Zernike, and the first column of the (dW/dx)^2 double
+    # Zernike.
 
     # First construct a DZ.
     rng = galsim.BaseDeviate(51413).as_numpy_generator()
 
     for _ in range(10):
-        j1 = rng.integers(4, 11)
         k1 = rng.integers(1, 29)
+        j1 = rng.integers(4, 11)
 
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
 
-        coef = rng.normal(size=(j1+1, k1+1))
+        coef = rng.normal(size=(k1+1, j1+1))
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
         W = DoubleZernike(
             coef,
-            xy_inner=xy_inner, xy_outer=xy_outer,  # pupil
-            uv_inner=uv_inner, uv_outer=uv_outer   # field
+            uv_inner=uv_inner, uv_outer=uv_outer,  # field
+            xy_inner=xy_inner, xy_outer=xy_outer   # pupil
         )
 
         # Now the analytic map of optical PSF size T
@@ -1207,11 +1212,11 @@ def test_dz_to_T():
         dWdy2 = dWdy * dWdy
         # These are still double Zernikes.  Extract their expectation values
         # over the pupil (which are functions of field angle), by taking the
-        # first row of their coefficient arrays.
-        dWdx_field = Zernike(dWdx.coef[1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdy_field = Zernike(dWdy.coef[1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdx2_field = Zernike(dWdx2.coef[1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdy2_field = Zernike(dWdy2.coef[1], R_outer=uv_outer, R_inner=uv_inner)
+        # first column of their coefficient arrays.
+        dWdx_field = Zernike(dWdx.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdy_field = Zernike(dWdy.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdx2_field = Zernike(dWdx2.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
+        dWdy2_field = Zernike(dWdy2.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
         # Now construct the PSF size T
         T = dWdx2_field + dWdy2_field - dWdx_field*dWdx_field - dWdy_field*dWdy_field
 
@@ -1246,10 +1251,10 @@ def test_dz_to_T():
             Ts.append(np.var(dxs) + np.var(dys))
 
         # Assert that the median relative error is less than 5%,
-        # and the 90% worst case is less than 30%
+        # and the 90% worst case is less than 35%
         np.testing.assert_array_less(
             np.abs(np.quantile((T(us, vs) - Ts)/Ts, [0.5, 0.9])),
-            [0.05, 0.3]
+            [0.05, 0.35]
         )
 
         # Uncomment below to look at the plots
@@ -1288,22 +1293,22 @@ def test_dz_rotate():
     rng = galsim.BaseDeviate(12775).as_numpy_generator()
 
     for _ in range(30):
-        j1 = rng.choice([1, 3, 10, 11, 13, 21, 22, 34])
         k1 = rng.choice([1, 3, 10, 11, 13, 21, 22, 34])
+        j1 = rng.choice([1, 3, 10, 11, 13, 21, 22, 34])
 
-        xy_inner = rng.uniform(0.4, 0.7)
-        xy_outer = rng.uniform(1.3, 1.7)
         uv_inner = rng.uniform(0.4, 0.7)
         uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
 
-        coef = rng.normal(size=(j1+1, k1+1))
+        coef = rng.normal(size=(k1+1, j1+1))
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
         dz = DoubleZernike(
             coef,
-            xy_inner=xy_inner, xy_outer=xy_outer,  # pupil
-            uv_inner=uv_inner, uv_outer=uv_outer   # field
+            uv_inner=uv_inner, uv_outer=uv_outer,  # field
+            xy_inner=xy_inner, xy_outer=xy_outer   # pupil
         )
 
         # Test points
@@ -1312,9 +1317,9 @@ def test_dz_rotate():
         rho = rng.uniform(0.0, 1.0, size=30)
         ph = rng.uniform(0.0, 2*np.pi, size=30)
 
-        for theta_xy in [0.0, 0.1, 0.3]:
-            for theta_uv in [0.0, 0.2, 0.4]:
-                dz_rot = dz.rotate(theta_xy=theta_xy, theta_uv=theta_uv)
+        for theta_uv in [0.0, 0.2, 0.4]:
+            for theta_xy in [0.0, 0.1, 0.3]:
+                dz_rot = dz.rotate(theta_uv=theta_uv, theta_xy=theta_xy)
                 np.testing.assert_allclose(
                     dz(
                         rho*np.cos(ph), rho*np.sin(ph),

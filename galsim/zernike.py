@@ -952,36 +952,36 @@ class DoubleZernike:
         self,
         coef,
         *,
-        xy_inner=0.0,  # "pupil"
-        xy_outer=1.0,
         uv_inner=0.0,  # "field"
-        uv_outer=1.0
+        uv_outer=1.0,
+        xy_inner=0.0,  # "pupil"
+        xy_outer=1.0
     ):
         self.coef = np.asarray(coef, dtype=float)
-        self.xy_inner = xy_inner
-        self.xy_outer = xy_outer
         self.uv_inner = uv_inner
         self.uv_outer = uv_outer
+        self.xy_inner = xy_inner
+        self.xy_outer = xy_outer
         self._xy_series = [
-            Zernike(row, R_outer=uv_outer, R_inner=uv_inner) for row in coef
+            Zernike(col, R_outer=uv_outer, R_inner=uv_inner) for col in coef.T
         ]
 
     @lazy_property
     def _jmax(self):
         if 'coef' in self.__dict__:
-            return self.coef.shape[0] - 1
+            return self.coef.shape[1] - 1
         else:
-            sh = self._coef_array_xyuv.shape
-            nxy = max(sh[0], sh[1]) - 1  # Max radial degree of xy
+            sh = self._coef_array_uvxy.shape
+            nxy = max(sh[2], sh[3]) - 1  # Max radial degree of xy
             return (nxy+1)*(nxy+2)//2
 
     @lazy_property
     def _kmax(self):
         if 'coef' in self.__dict__:
-            return self.coef.shape[1] - 1
+            return self.coef.shape[0] - 1
         else:
-            sh = self._coef_array_xyuv.shape
-            nuv = max(sh[2], sh[3]) - 1  # Max radial degree of uv
+            sh = self._coef_array_uvxy.shape
+            nuv = max(sh[0], sh[1]) - 1  # Max radial degree of uv
             return (nuv+1)*(nuv+2)//2
 
     @lazy_property
@@ -993,20 +993,20 @@ class DoubleZernike:
         return noll_to_zern(self._kmax)[0]
 
     @staticmethod
-    def _from_xyuv(
-        xyuv,
+    def _from_uvxy(
+        uvxy,
         *,
-        xy_inner=0.0,  # "pupil"
-        xy_outer=1.0,
         uv_inner=0.0,  # "field"
-        uv_outer=1.0
+        uv_outer=1.0,
+        xy_inner=0.0,  # "pupil"
+        xy_outer=1.0
     ):
         ret = DoubleZernike.__new__(DoubleZernike)
-        ret._coef_array_xyuv = xyuv
-        ret.xy_inner = xy_inner
-        ret.xy_outer = xy_outer
+        ret._coef_array_uvxy = uvxy
         ret.uv_inner = uv_inner
         ret.uv_outer = uv_outer
+        ret.xy_inner = xy_inner
+        ret.xy_outer = xy_outer
         return ret
 
     def _call_old(self, u, v, x=None, y=None):
@@ -1053,37 +1053,42 @@ class DoubleZernike:
     @lazy_property
     def coef(self):
         # Determine number of GQ points
-        xy_rings = self._nxy//2+1
-        xy_spokes = 2*self._nxy+1
         uv_rings = self._nuv//2+1
         uv_spokes = 2*self._nuv+1
+        xy_rings = self._nxy//2+1
+        xy_spokes = 2*self._nxy+1
 
         # Compute GQ points and weights on double annulus
-        x, y, xy_w = _gq_annulus_points(self.xy_inner, self.xy_outer, xy_rings, xy_spokes)
         u, v, uv_w = _gq_annulus_points(self.uv_inner, self.uv_outer, uv_rings, uv_spokes)
-        nx = len(x)
+        x, y, xy_w = _gq_annulus_points(self.xy_inner, self.xy_outer, xy_rings, xy_spokes)
         nu = len(u)
-        x = np.tile(x, nu)
-        y = np.tile(y, nu)
-        xy_w = np.tile(xy_w, nu)
+        nx = len(x)
         u = np.repeat(u, nx)
         v = np.repeat(v, nx)
         uv_w = np.repeat(uv_w, nx)
-        weights = xy_w * uv_w
+        x = np.tile(x, nu)
+        y = np.tile(y, nu)
+        xy_w = np.tile(xy_w, nu)
+        weights = uv_w * xy_w
 
-        # Evaluate xyuv polynomial at GQ points
-        vals = horner4d(x, y, u, v, self._coef_array_xyuv)
+        # Evaluate uvxy polynomial at GQ points
+        vals = horner4d(u, v, x, y, self._coef_array_uvxy)
 
         # Project into Zernike basis
-        basis = doubleZernikeBasis(self._jmax, self._kmax, x, y, u, v, self.xy_outer, self.xy_inner, self.uv_outer, self.uv_inner)
-        area = np.pi**2 * (self.xy_outer**2 - self.xy_inner**2) * (self.uv_outer**2 - self.uv_inner**2)
+        basis = doubleZernikeBasis(
+            self._kmax, self._jmax,
+            u, v, x, y,
+            self.uv_outer, self.uv_inner,
+            self.xy_outer, self.xy_inner
+        )
+        area = np.pi**2 * (self.uv_outer**2 - self.uv_inner**2) * (self.xy_outer**2 - self.xy_inner**2)
         return np.dot(basis, vals*weights/area)
 
     @lazy_property
-    def _coef_array_xyuv(self):
-        xy_shape = Zernike([0]*self._jmax+[1])._coef_array_xy.shape
+    def _coef_array_uvxy(self):
         uv_shape = self._xy_series[0]._coef_array_xy.shape
-        out_shape = xy_shape + uv_shape
+        xy_shape = Zernike([0]*self._jmax+[1])._coef_array_xy.shape
+        out_shape = uv_shape + xy_shape
         out = np.zeros(out_shape, dtype=float)
         # Now accumulate one uv term at a time
         for j, zk in enumerate(self._xy_series):
@@ -1093,7 +1098,7 @@ class DoubleZernike:
                 R_outer=self.xy_outer,
                 R_inner=self.xy_inner,
             )._coef_array_xy
-            term = np.multiply.outer(coef_array_xy, coef_array_uv)
+            term = np.multiply.outer(coef_array_uv, coef_array_xy)
             sh = term.shape
             out[:sh[0], :sh[1], :sh[2], :sh[3]] += term
         return out
@@ -1119,10 +1124,10 @@ class DoubleZernike:
             )
         if x is None:
             if np.ndim(u) == 0:
-                a_ij = np.zeros(self._coef_array_xyuv.shape[0:2])
+                a_ij = np.zeros(self._coef_array_uvxy.shape[2:4])
                 for i, j in np.ndindex(a_ij.shape):
                     a_ij[i, j] = horner2d(
-                        u, v, self._coef_array_xyuv[i, j]
+                        u, v, self._coef_array_uvxy[..., i, j]
                     )
                 return Zernike._from_coef_array_xy(
                     a_ij,
@@ -1143,23 +1148,23 @@ class DoubleZernike:
                     return np.array([z(x, y) for z in self.__call__(u, v)])
                 else: # xy vector
                     assert np.shape(x) == np.shape(u)
-                    return horner4d(x, y, u, v, self._coef_array_xyuv)
+                    return horner4d(u, v, x, y, self._coef_array_uvxy)
 
     def __neg__(self):
         """Negate a DoubleZernike."""
         if 'coef' in self.__dict__:
             ret = DoubleZernike(
                 -self.coef,
-                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner
             )
-            if '_coef_array_xyuv' in self.__dict__:
-                ret._coef_array_xyuv = -self._coef_array_xyuv
+            if '_coef_array_uvxy' in self.__dict__:
+                ret._coef_array_uvxy = -self._coef_array_uvxy
         else:
-            ret = DoubleZernike._from_xyuv(
-                -self._coef_array_xyuv,
-                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            ret = DoubleZernike._from_uvxy(
+                -self._coef_array_uvxy,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner
             )
         return ret
 
@@ -1170,36 +1175,36 @@ class DoubleZernike:
         """
         if not isinstance(rhs, DoubleZernike):
             raise TypeError("Cannot add DoubleZernike to type {}".format(type(rhs)))
-        if self.xy_outer != rhs.xy_outer:
-            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_outer")
-        if self.xy_inner != rhs.xy_inner:
-            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_inner")
         if self.uv_outer != rhs.uv_outer:
             raise ValueError("Cannot add DoubleZernikes with inconsistent uv_outer")
         if self.uv_inner != rhs.uv_inner:
             raise ValueError("Cannot add DoubleZernikes with inconsistent uv_inner")
+        if self.xy_outer != rhs.xy_outer:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_outer")
+        if self.xy_inner != rhs.xy_inner:
+            raise ValueError("Cannot add DoubleZernikes with inconsistent xy_inner")
         if 'coef' in self.__dict__:
-            jmax = max(self._jmax, rhs._jmax)
             kmax = max(self._kmax, rhs._kmax)
-            newCoef = np.zeros((jmax+1, kmax+1), dtype=float)
-            newCoef[:self._jmax+1, :self._kmax+1] = self.coef
-            newCoef[:rhs._jmax+1, :rhs._kmax+1] += rhs.coef
+            jmax = max(self._jmax, rhs._jmax)
+            newCoef = np.zeros((kmax+1, jmax+1), dtype=float)
+            newCoef[:self._kmax+1, :self._jmax+1] = self.coef
+            newCoef[:rhs._kmax+1, :rhs._jmax+1] += rhs.coef
             return DoubleZernike(
                 newCoef,
-                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner
             )
         else:
-            s1 = self._coef_array_xyuv.shape
-            s2 = rhs._coef_array_xyuv.shape
+            s1 = self._coef_array_uvxy.shape
+            s2 = rhs._coef_array_uvxy.shape
             sh = [max(s1[i], s2[i]) for i in range(4)]
-            coef_array_xyuv = np.zeros(sh, dtype=float)
-            coef_array_xyuv[:s1[0], :s1[1], :s1[2], :s1[3]] = self._coef_array_xyuv
-            coef_array_xyuv[:s2[0], :s2[1], :s2[2], :s2[3]] += rhs._coef_array_xyuv
-            return DoubleZernike._from_xyuv(
-                coef_array_xyuv,
-                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            coef_array_uvxy = np.zeros(sh, dtype=float)
+            coef_array_uvxy[:s1[0], :s1[1], :s1[2], :s1[3]] = self._coef_array_uvxy
+            coef_array_uvxy[:s2[0], :s2[1], :s2[2], :s2[3]] += rhs._coef_array_uvxy
+            return DoubleZernike._from_uvxy(
+                coef_array_uvxy,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner
             )
 
     def __sub__(self, rhs):
@@ -1215,41 +1220,41 @@ class DoubleZernike:
             if 'coef' in self.__dict__:
                 ret = DoubleZernike(
                     rhs*self.coef,
-                    xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                    uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                    uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                    xy_outer=self.xy_outer, xy_inner=self.xy_inner
                 )
-                if '_coef_array_xyuv' in self.__dict__:
-                    ret._coef_array_xyuv = rhs*self._coef_array_xyuv
+                if '_coef_array_uvxy' in self.__dict__:
+                    ret._coef_array_uvxy = rhs*self._coef_array_uvxy
             else:
-                ret = DoubleZernike._from_xyuv(
-                    rhs*self._coef_array_xyuv,
-                    xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                    uv_outer=self.uv_outer, uv_inner=self.uv_inner
+                ret = DoubleZernike._from_uvxy(
+                    rhs*self._coef_array_uvxy,
+                    uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                    xy_outer=self.xy_outer, xy_inner=self.xy_inner
                 )
             return ret
         elif isinstance(rhs, DoubleZernike):
-            if self.xy_outer != rhs.xy_outer:
-                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_outer")
-            if self.xy_inner != rhs.xy_inner:
-                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_inner")
             if self.uv_outer != rhs.uv_outer:
                 raise ValueError("Cannot multiply DoubleZernikes with inconsistent uv_outer")
             if self.uv_inner != rhs.uv_inner:
                 raise ValueError("Cannot multiply DoubleZernikes with inconsistent uv_inner")
+            if self.xy_outer != rhs.xy_outer:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_outer")
+            if self.xy_inner != rhs.xy_inner:
+                raise ValueError("Cannot multiply DoubleZernikes with inconsistent xy_inner")
             # Multiplication is a 4d convolution of the Cartesian coefficients.
             # Easiest to get it right just by hand...
-            xyuv1 = self._coef_array_xyuv
-            xyuv2 = rhs._coef_array_xyuv
-            sh1 = xyuv1.shape
-            sh2 = xyuv2.shape
+            uvxy1 = self._coef_array_uvxy
+            uvxy2 = rhs._coef_array_uvxy
+            sh1 = uvxy1.shape
+            sh2 = uvxy2.shape
             outshape = tuple([d0+d1-1 for d0, d1 in zip(sh1, sh2)])
-            xyuv = np.zeros(outshape)
-            for (i, j, k, l), c in np.ndenumerate(xyuv1):
-                xyuv[i:i+sh2[0], j:j+sh2[1], k:k+sh2[2], l:l+sh2[3]] += c*xyuv2
-            return DoubleZernike._from_xyuv(
-                xyuv,
-                xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-                uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            uvxy = np.zeros(outshape)
+            for (i, j, k, l), c in np.ndenumerate(uvxy1):
+                uvxy[i:i+sh2[0], j:j+sh2[1], k:k+sh2[2], l:l+sh2[3]] += c*uvxy2
+            return DoubleZernike._from_uvxy(
+                uvxy,
+                uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+                xy_outer=self.xy_outer, xy_inner=self.xy_inner
             )
         else:
             raise TypeError("Cannot multiply DoubleZernike by type {}".format(type(rhs)))
@@ -1263,10 +1268,10 @@ class DoubleZernike:
             return False
         return (
             np.array_equal(self.coef, rhs.coef) and
-            self.xy_outer == rhs.xy_outer and
-            self.xy_inner == rhs.xy_inner and
             self.uv_outer == rhs.uv_outer and
-            self.uv_inner == rhs.uv_inner
+            self.uv_inner == rhs.uv_inner and
+            self.xy_outer == rhs.xy_outer and
+            self.xy_inner == rhs.xy_inner
         )
 
     def __hash__(self):
@@ -1274,51 +1279,51 @@ class DoubleZernike:
             "galsim.DoubleZernike",
             tuple(self.coef.ravel()),
             self.coef.shape,
-            self.xy_outer,
-            self.xy_inner,
             self.uv_outer,
-            self.uv_inner
+            self.uv_inner,
+            self.xy_outer,
+            self.xy_inner
         ))
 
     def __repr__(self):
         out = "galsim.zernike.DoubleZernike("
         out += repr(self.coef)
-        if self.xy_outer != 1.0:
-            out += ", xy_outer={}".format(self.xy_outer)
-        if self.xy_inner != 0.0:
-            out += ", xy_inner={}".format(self.xy_inner)
         if self.uv_outer != 1.0:
             out += ", uv_outer={}".format(self.uv_outer)
         if self.uv_inner != 0.0:
             out += ", uv_inner={}".format(self.uv_inner)
+        if self.xy_outer != 1.0:
+            out += ", xy_outer={}".format(self.xy_outer)
+        if self.xy_inner != 0.0:
+            out += ", xy_inner={}".format(self.xy_inner)
         out += ")"
         return out
 
     @lazy_property
     def gradX(self):
         """The gradient of the DoubleZernike in the x direction."""
-        xyuv = self._coef_array_xyuv
-        gradx = np.zeros_like(xyuv)
-        for (i, j, k, l), c in np.ndenumerate(xyuv):
-            if i > 0:
+        uvxy = self._coef_array_uvxy
+        gradx = np.zeros_like(uvxy)
+        for (i, j, k, l), c in np.ndenumerate(uvxy):
+            if k > 0:
                 if c != 0:
-                    gradx[i-1, j, k, l] = c*i
-        return DoubleZernike._from_xyuv(
+                    gradx[i, j, k-1, l] = c*k
+        return DoubleZernike._from_uvxy(
             gradx,
-            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner
         )
 
     @lazy_property
     def gradY(self):
         """The gradient of the DoubleZernike in the y direction."""
-        xyuv = self._coef_array_xyuv
-        grady = np.zeros_like(xyuv)
-        for (i, j, k, l), c in np.ndenumerate(xyuv):
-            if j > 0:
+        uvxy = self._coef_array_uvxy
+        grady = np.zeros_like(uvxy)
+        for (i, j, k, l), c in np.ndenumerate(uvxy):
+            if l > 0:
                 if c != 0:
-                    grady[i, j-1, k, l] = c*j
-        return DoubleZernike._from_xyuv(
+                    grady[i, j, k, l-1] = c*l
+        return DoubleZernike._from_uvxy(
             grady,
             xy_outer=self.xy_outer, xy_inner=self.xy_inner,
             uv_outer=self.uv_outer, uv_inner=self.uv_inner
@@ -1327,13 +1332,13 @@ class DoubleZernike:
     @lazy_property
     def gradU(self):
         """The gradient of the DoubleZernike in the u direction."""
-        xyuv = self._coef_array_xyuv
-        gradu = np.zeros_like(xyuv)
-        for (i, j, k, l), c in np.ndenumerate(xyuv):
-            if k > 0:
+        uvxy = self._coef_array_uvxy
+        gradu = np.zeros_like(uvxy)
+        for (i, j, k, l), c in np.ndenumerate(uvxy):
+            if i > 0:
                 if c != 0:
-                    gradu[i, j, k-1, l] = c*k
-        return DoubleZernike._from_xyuv(
+                    gradu[i-1, j, k, l] = c*i
+        return DoubleZernike._from_uvxy(
             gradu,
             xy_outer=self.xy_outer, xy_inner=self.xy_inner,
             uv_outer=self.uv_outer, uv_inner=self.uv_inner
@@ -1342,19 +1347,19 @@ class DoubleZernike:
     @lazy_property
     def gradV(self):
         """The gradient of the DoubleZernike in the v direction."""
-        xyuv = self._coef_array_xyuv
-        gradv = np.zeros_like(xyuv)
-        for (i, j, k, l), c in np.ndenumerate(xyuv):
-            if l > 0:
+        uvxy = self._coef_array_uvxy
+        gradv = np.zeros_like(uvxy)
+        for (i, j, k, l), c in np.ndenumerate(uvxy):
+            if j > 0:
                 if c != 0:
-                    gradv[i, j, k, l-1] = c*l
-        return DoubleZernike._from_xyuv(
+                    gradv[i, j-1, k, l] = c*j
+        return DoubleZernike._from_uvxy(
             gradv,
             xy_outer=self.xy_outer, xy_inner=self.xy_inner,
             uv_outer=self.uv_outer, uv_inner=self.uv_inner
         )
 
-    def rotate(self, *, theta_xy=0.0, theta_uv=0.0):
+    def rotate(self, *, theta_uv=0.0, theta_xy=0.0):
         """Rotate the DoubleZernike by the given angle(s).
 
         For example:
@@ -1368,26 +1373,26 @@ class DoubleZernike:
             >>> DZ(r*np.cos(ph), r*np.sin(ph), x, y) == DZrot(r*np.cos(ph+th), r*np.sin(ph+th), x, y)
 
         Parameters:
-            theta_xy:  Rotation angle (in radians) in the xy plane.
             theta_uv:  Rotation angle (in radians) in the uv plane.
+            theta_xy:  Rotation angle (in radians) in the xy plane.
 
         Returns:
-            the rotated DoubleZernike.
+            The rotated DoubleZernike.
         """
-        M_xy = zernikeRotMatrix(self._jmax, theta_xy)
         M_uv = zernikeRotMatrix(self._kmax, theta_uv)
-        coef = M_xy @ self.coef @ M_uv.T
+        M_xy = zernikeRotMatrix(self._jmax, theta_xy)
+        coef = M_uv @ self.coef @ M_xy.T
         return DoubleZernike(
             coef,
-            xy_outer=self.xy_outer, xy_inner=self.xy_inner,
-            uv_outer=self.uv_outer, uv_inner=self.uv_inner
+            uv_outer=self.uv_outer, uv_inner=self.uv_inner,
+            xy_outer=self.xy_outer, xy_inner=self.xy_inner
         )
 
 
 def doubleZernikeBasis(
-    jmax, kmax, x, y, u, v, xy_outer=1.0, xy_inner=0.0, uv_outer=1.0, uv_inner=0.0
+    kmax, jmax, u, v, x, y, uv_outer=1.0, uv_inner=0.0, xy_outer=1.0, xy_inner=0.0
 ):
-    out = np.zeros((jmax+1, kmax+1)+x.shape, dtype=float)
+    out = np.zeros((kmax+1, jmax+1)+x.shape, dtype=float)
     for k in range(kmax+1):
         coef_uv = [0]*k + [1]
         zk_uv = Zernike(coef_uv, R_outer=uv_outer, R_inner=uv_inner)
@@ -1395,5 +1400,5 @@ def doubleZernikeBasis(
         for j in range(jmax+1):
             coef_xy = [0]*j + [1]
             zk_xy = Zernike(coef_xy, R_outer=xy_outer, R_inner=xy_inner)
-            out[j, k] = zk_xy(x, y) * tmp
+            out[k, j] = zk_xy(x, y) * tmp
     return out
