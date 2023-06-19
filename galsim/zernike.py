@@ -1052,11 +1052,6 @@ class DoubleZernike:
         # coefficients directly.  Retained mostly for testing purposes.
         assert np.ndim(u) == np.ndim(v)
         assert np.shape(u) == np.shape(v)
-        if (x is None) != (y is None):
-            raise GalSimIncompatibleValuesError(
-                "Must provide both x and y, or neither.",
-                x=x, y=y
-            )
         if x is None:  # uv only
             if np.ndim(u) == 0:  # uv scalar
                 return Zernike(
