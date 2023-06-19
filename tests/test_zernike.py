@@ -790,6 +790,13 @@ def test_dz_val():
         xy_vector = rng.normal(size=(2, 10))
 
         do_pickle(dz)
+        do_pickle(dz, lambda dz_: dz_.coef.shape)
+        do_pickle(dz, lambda dz_: tuple(dz_.coef.ravel()))
+        do_pickle(dz, lambda dz_: dz_._coef_array_uvxy.shape)
+        do_pickle(dz, lambda dz_: tuple(dz_._coef_array_uvxy.ravel()))
+        do_pickle(dz, lambda dz_: dz_(*uv_scalar))
+        do_pickle(dz, lambda dz_: tuple(dz_(*uv_vector)))
+        do_pickle(dz, lambda dz_: dz_(*uv_scalar, *xy_scalar))
         do_pickle(dz, lambda dz_: tuple(dz_(*uv_vector, *xy_vector)))
 
         # If you don't specify xy, then get (list of) Zernike out.
