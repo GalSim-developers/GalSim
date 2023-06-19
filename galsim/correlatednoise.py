@@ -1298,7 +1298,7 @@ class CorrelatedNoise(BaseCorrelatedNoise):
 
         # Need to normalize ps due to one-directional 1/N^2 in FFT conventions and the fact that
         # we *squared* the ft_array to get ps_array:
-        ps_array /= np.product(image.array.shape)
+        ps_array /= np.prod(image.array.shape)
 
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
