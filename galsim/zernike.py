@@ -643,7 +643,7 @@ class Zernike:
 
         nRings = nTarget//2+1
         nSpokes = 2*nTarget+1
-        x, y, weights = _gq_annulus_points(self.R_inner, self.R_outer, nRings, nSpokes)
+        x, y, weights = _gq_annulus_points(self.R_outer, self.R_inner, nRings, nSpokes)
         val = horner2d(x, y, xy, dtype=float)
         basis = zernikeBasis(
             jTarget, x, y, R_outer=self.R_outer, R_inner=self.R_inner
@@ -951,7 +951,7 @@ def zernikeGradBases(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
 
 class DoubleZernike:
-    """The Cartesian product of two (annular) Zernike polynomial series.  Each
+    r"""The Cartesian product of two (annular) Zernike polynomial series.  Each
     double Zernike term is the product of two single Zernike polynomials over
     separate annuli:
 
@@ -974,25 +974,25 @@ class DoubleZernike:
         coef:       [kmax, jmax] array of double Zernike coefficients.  Like the
                     single Zernike class, the 0th index of either axis is
                     ignored.
-        uv_inner:   Inner radius of the first annulus.  [default: 0.0]
         uv_outer:   Outer radius of the first annulus.  [default: 1.0]
-        xy_inner:   Inner radius of the second annulus.  [default: 0.0]
+        uv_inner:   Inner radius of the first annulus.  [default: 0.0]
         xy_outer:   Outer radius of the second annulus.  [default: 1.0]
+        xy_inner:   Inner radius of the second annulus.  [default: 0.0]
     """
     def __init__(
         self,
         coef,
         *,
-        uv_inner=0.0,  # "field"
-        uv_outer=1.0,
-        xy_inner=0.0,  # "pupil"
-        xy_outer=1.0
+        uv_outer=1.0,  # "field"
+        uv_inner=0.0,
+        xy_outer=1.0,  # "pupil"
+        xy_inner=0.0
     ):
         self.coef = np.asarray(coef, dtype=float)
-        self.uv_inner = uv_inner
         self.uv_outer = uv_outer
-        self.xy_inner = xy_inner
+        self.uv_inner = uv_inner
         self.xy_outer = xy_outer
+        self.xy_inner = xy_inner
         self._xy_series = [
             Zernike(col, R_outer=uv_outer, R_inner=uv_inner) for col in coef.T
         ]
@@ -1031,20 +1031,20 @@ class DoubleZernike:
     def _from_uvxy(
         uvxy,
         *,
-        uv_inner=0.0,  # "field"
-        uv_outer=1.0,
-        xy_inner=0.0,  # "pupil"
-        xy_outer=1.0
+        uv_outer=1.0,  # "field"
+        uv_inner=0.0,
+        xy_outer=1.0,  # "pupil"
+        xy_inner=0.0
     ):
         """Construct a DoubleZernike from a 4D array of Cartesian polynomial
         coefficients.
         """
         ret = DoubleZernike.__new__(DoubleZernike)
         ret._coef_array_uvxy = uvxy
-        ret.uv_inner = uv_inner
         ret.uv_outer = uv_outer
-        ret.xy_inner = xy_inner
+        ret.uv_inner = uv_inner
         ret.xy_outer = xy_outer
+        ret.xy_inner = xy_inner
         return ret
 
     def _call_old(self, u, v, x=None, y=None):
@@ -1109,8 +1109,8 @@ class DoubleZernike:
         xy_spokes = 2*self._nxy+1
 
         # Compute GQ points and weights on double annulus
-        u, v, uv_w = _gq_annulus_points(self.uv_inner, self.uv_outer, uv_rings, uv_spokes)
-        x, y, xy_w = _gq_annulus_points(self.xy_inner, self.xy_outer, xy_rings, xy_spokes)
+        u, v, uv_w = _gq_annulus_points(self.uv_outer, self.uv_inner, uv_rings, uv_spokes)
+        x, y, xy_w = _gq_annulus_points(self.xy_outer, self.xy_inner, xy_rings, xy_spokes)
         nu = len(u)
         nx = len(x)
         u = np.repeat(u, nx)

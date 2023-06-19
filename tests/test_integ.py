@@ -340,7 +340,7 @@ def test_gq_annulus():
             Z2 = galsim.zernike.Zernike([0]*j2+[1], R_inner=r1, R_outer=r2)
             # Product of 2 6th order polynomials is 12th order, so we need 6 rings and 13 spokes.
             np.testing.assert_allclose(
-                galsim.integ.gq_annulus(Z1*Z2, r1, r2, n_rings=6, n_spokes=13),
+                galsim.integ.gq_annulus(Z1*Z2, r2, r1, n_rings=6, n_spokes=13),
                 area if j1 == j2 else 0,
                 rtol=1.e-11, atol=1.e-11
             )

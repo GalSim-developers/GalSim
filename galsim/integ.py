@@ -337,7 +337,7 @@ class ContinuousIntegrator(ImageIntegrator):
 _leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
 
 
-def _gq_annulus_points(r_inner, r_outer, n_rings, n_spokes):
+def _gq_annulus_points(r_outer, r_inner, n_rings, n_spokes):
     Li, w = _leggauss(n_rings)
     eps = r_inner/r_outer
     area = np.pi*(r_outer**2 - r_inner**2)
@@ -354,7 +354,7 @@ def _gq_annulus_points(r_inner, r_outer, n_rings, n_spokes):
     return x, y, weights
 
 
-def gq_annulus(f, r_inner, r_outer, n_rings, n_spokes):
+def gq_annulus(f, r_outer, r_inner, n_rings, n_spokes):
     """ Integrate a function over an annular region, using Gaussian quadrature
     over an annulus.
 
@@ -382,6 +382,6 @@ def gq_annulus(f, r_inner, r_outer, n_rings, n_spokes):
     Returns:
         The integral of f over the annulus
     """
-    x, y, weights = _gq_annulus_points(r_inner, r_outer, n_rings, n_spokes)
+    x, y, weights = _gq_annulus_points(r_outer, r_inner, n_rings, n_spokes)
     val = np.array([f(x_, y_) for x_, y_ in zip(x, y)])
     return np.sum(val*weights)
