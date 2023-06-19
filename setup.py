@@ -72,6 +72,7 @@ shared_data = all_files_from('share')
 
 copt =  {
     'gcc' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp'],
+    'gcc w/ GPU' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp','-foffload=nvptx-none'],
     'icc' : ['-O2','-vec-report0','-std=c++11','-openmp'],
     'clang' : ['-O2','-std=c++11',
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
@@ -88,6 +89,7 @@ copt =  {
 }
 lopt =  {
     'gcc' : ['-fopenmp'],
+    'gcc w/ GPU' : ['-fopenmp','-foffload=nvptx-none'],
     'icc' : ['-openmp'],
     'clang' : ['-stdlib=libc++'],
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
@@ -172,9 +174,11 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
                 print("You might need to add something to your C_INCLUDE_PATH or LIBRARY_PATH")
                 print("(and probabaly LD_LIBRARY_PATH) to get it to work.\n")
             return 'clang'
-    elif 'gcc' in line:
-        return 'gcc'
-    elif 'GCC' in line:
+    elif 'gcc' in line or 'GCC' in line:
+        if supports_gpu(compiler, 'gcc w/ GPU'):
+            if output:
+                print("Yay! This version of gcc supports GPU!")
+            return 'gcc w/ GPU'
         return 'gcc'
     elif 'clang' in cc:
         return 'clang'
@@ -233,17 +237,7 @@ int main() {
 """
     extra_cflags = copt[cc_type]
     extra_lflags = lopt[cc_type]
-    success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
-    if not success:
-        # In case libc++ doesn't work, try letting the system use the default stdlib
-        try:
-            extra_cflags.remove('-stdlib=libc++')
-            extra_lflags.remove('-stdlib=libc++')
-        except (AttributeError, ValueError):
-            pass
-        else:
-            success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
-    return success
+    return try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
     
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
