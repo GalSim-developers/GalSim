@@ -580,6 +580,13 @@ def test_product():
             3.3*(z1(x, y)),
             rtol=1e-6, atol=1e-6
         )
+        # Check when .coef is missing
+        del z1.coef
+        np.testing.assert_allclose(
+            (z1*3.5)(x, y),
+            3.5*(z1(x, y)),
+            rtol=1e-6, atol=1e-6
+        )
         # Check that R_outer and R_inner are preserved
         np.testing.assert_allclose(
             (z1*z2).R_outer,
@@ -854,6 +861,10 @@ def test_dz_val():
         with assert_raises(AssertionError):
             dz([0.0, 1.0], [0.0, 1.0], x=[1.0], y=[1.0])
 
+    # Try pickle/repr with default domain
+    dz = DoubleZernike(coef)
+    do_pickle(dz)
+
 
 def test_dz_coef_uvxy():
     rng = galsim.BaseDeviate(4321).as_numpy_generator()
@@ -1006,11 +1017,31 @@ def test_dz_sum():
         with np.testing.assert_raises(TypeError):
             dz1 - 3
         with np.testing.assert_raises(ValueError):
-            dz1 + DoubleZernike(coef1, xy_inner=2*xy_inner)
+            dz1 + DoubleZernike(
+                coef1, uv_outer=2*uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
+            )
+        with np.testing.assert_raises(ValueError):
+            dz1 + DoubleZernike(
+                coef1, uv_outer=uv_outer, uv_inner=2*uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
+            )
+        with np.testing.assert_raises(ValueError):
+            dz1 + DoubleZernike(
+                coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=2*xy_outer, xy_inner=xy_inner
+            )
+        with np.testing.assert_raises(ValueError):
+            dz1 + DoubleZernike(
+                coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=2*xy_inner
+            )
 
         # Commutative with integer coefficients
         dz1 = DoubleZernike(np.eye(3, dtype=int))
         dz2 = DoubleZernike(np.ones((4, 4), dtype=int))
+        assert dz1 + dz2 == dz2 + dz1
+        assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
+
+        # Check again with missing .coef
+        del dz1.coef
+        del dz2.coef
         assert dz1 + dz2 == dz2 + dz1
         assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
@@ -1070,6 +1101,12 @@ def test_dz_product():
             dz1(u, v, x, y)*3.3,
             (dz1 * 3.3)(u, v, x, y)
         )
+        # Try when .coef is missing
+        del dz1.coef
+        np.testing.assert_allclose(
+            dz1(u, v, x, y)*3.5,
+            (dz1 * 3.5)(u, v, x, y)
+        )
         # Check that domain is preserved
         dzprod = dz1 * dz2
         np.testing.assert_equal(
@@ -1080,13 +1117,21 @@ def test_dz_product():
     with np.testing.assert_raises(TypeError):
         dz1 * galsim.Gaussian(sigma=1.0)
     with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, uv_inner=2*uv_inner)
+        dz1 * DoubleZernike(
+            coef1, uv_outer=2*uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
+        )
     with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, uv_outer=2*uv_outer)
+        dz1 * DoubleZernike(
+            coef1, uv_outer=uv_outer, uv_inner=2*uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
+        )
     with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, xy_inner=2*xy_inner)
+        dz1 * DoubleZernike(
+            coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=2*xy_outer, xy_inner=xy_inner
+        )
     with np.testing.assert_raises(ValueError):
-        dz1 * DoubleZernike(coef1, xy_outer=2*xy_outer)
+        dz1 * DoubleZernike(
+            coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=2*xy_inner
+        )
 
     # Commutative with integer coefficients
     dz1 = DoubleZernike(np.eye(3, dtype=int))
