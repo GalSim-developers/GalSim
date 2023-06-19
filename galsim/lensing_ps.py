@@ -578,7 +578,7 @@ class PowerSpectrum:
             raise GalSimError("BuildGrid has not been called yet.")
         ntot = 0
         # cf. PowerSpectrumRealizer._generate_power_array
-        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot//2 +1 ) )
+        temp = 2 * np.prod( (self.ngrid_tot, self.ngrid_tot//2 +1 ) )
         if self.e_power_function is not None:
             ntot += temp
         if self.b_power_function is not None:
