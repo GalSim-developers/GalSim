@@ -506,6 +506,9 @@ class Zernike:
 
     @staticmethod
     def _from_coef_array_xy(coef_array_xy, R_outer=1.0, R_inner=0.0):
+        """Construct a Zernike from a 2D array of Cartesian polynomial
+        coefficients.
+        """
         ret = Zernike.__new__(Zernike)
         ret._coef_array_xy = coef_array_xy
         ret.R_outer = R_outer
@@ -948,6 +951,34 @@ def zernikeGradBases(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
 
 class DoubleZernike:
+    """The Cartesian product of two (annular) Zernike polynomial series.  Each
+    double Zernike term is the product of two single Zernike polynomials over
+    separate annuli:
+
+    .. math::
+        DZ_{k, j}(u, v, x, y) = Z_k(u, v) Z_j(x, y)
+
+    The double Zernike's therefore satisfy the orthonormality condition:
+
+    .. math::
+        \int_{annuli} DZ_(k, j) DZ_(k', j') = A1 A2 \delta_{k, k'} \delta_{j, j'}
+
+    where A1 and A2 are the areas of the two annuli.
+
+    Double Zernikes series are useful for representing the field and pupil
+    dependent wavefronts of a telescope.  Typically, the first index (the `k`
+    index) corresponds to the field-dependence, while the second index (the
+    `j` index) corresponds to the pupil-dependence.
+
+    Parameters:
+        coef:       [kmax, jmax] array of double Zernike coefficients.  Like the
+                    single Zernike class, the 0th index of either axis is
+                    ignored.
+        uv_inner:   Inner radius of the first annulus.  [default: 0.0]
+        uv_outer:   Outer radius of the first annulus.  [default: 1.0]
+        xy_inner:   Inner radius of the second annulus.  [default: 0.0]
+        xy_outer:   Outer radius of the second annulus.  [default: 1.0]
+    """
     def __init__(
         self,
         coef,
@@ -967,16 +998,8 @@ class DoubleZernike:
         ]
 
     @lazy_property
-    def _jmax(self):
-        if 'coef' in self.__dict__:
-            return self.coef.shape[1] - 1
-        else:
-            sh = self._coef_array_uvxy.shape
-            nxy = max(sh[2], sh[3]) - 1  # Max radial degree of xy
-            return (nxy+1)*(nxy+2)//2
-
-    @lazy_property
     def _kmax(self):
+        """Maximum Noll index of the field dependence."""
         if 'coef' in self.__dict__:
             return self.coef.shape[0] - 1
         else:
@@ -985,12 +1008,24 @@ class DoubleZernike:
             return (nuv+1)*(nuv+2)//2
 
     @lazy_property
-    def _nxy(self):
-        return noll_to_zern(self._jmax)[0]
+    def _jmax(self):
+        """Maximum Noll index of the pupil dependence."""
+        if 'coef' in self.__dict__:
+            return self.coef.shape[1] - 1
+        else:
+            sh = self._coef_array_uvxy.shape
+            nxy = max(sh[2], sh[3]) - 1  # Max radial degree of xy
+            return (nxy+1)*(nxy+2)//2
 
     @lazy_property
     def _nuv(self):
+        """Maximum radial degree of the field dependence."""
         return noll_to_zern(self._kmax)[0]
+
+    @lazy_property
+    def _nxy(self):
+        """Maximum radial degree of the pupil dependence."""
+        return noll_to_zern(self._jmax)[0]
 
     @staticmethod
     def _from_uvxy(
@@ -1001,6 +1036,9 @@ class DoubleZernike:
         xy_inner=0.0,  # "pupil"
         xy_outer=1.0
     ):
+        """Construct a DoubleZernike from a 4D array of Cartesian polynomial
+        coefficients.
+        """
         ret = DoubleZernike.__new__(DoubleZernike)
         ret._coef_array_uvxy = uvxy
         ret.uv_inner = uv_inner
@@ -1052,6 +1090,18 @@ class DoubleZernike:
 
     @lazy_property
     def coef(self):
+        """DoubleZernike coefficients.
+
+        The coefficients are stored in a 2D array, where the first index
+        corresponds to the `uv` dependence and the second index corresponds to
+        the `xy` dependence.  The indices are Noll indices.  As an example, when
+        describing a telescope wavefront the (1, 4) tuple corresponds to a
+        constant (over the field) pupil defocus.  The (2, 5) term is a linear
+        (over the field) astigmatism, etc.
+        """
+        # Same strategy as Zernike; take advantage of orthonormality to
+        # determine Noll coefficients from Cartesian coefficients.
+
         # Determine number of GQ points
         uv_rings = self._nuv//2+1
         uv_spokes = 2*self._nuv+1
@@ -1104,6 +1154,16 @@ class DoubleZernike:
         return out
 
     def __call__(self, u, v, x=None, y=None):
+        """Evaluate this DoubleZernike polynomial series at Cartesian
+        coordinates u, v, x, y.
+
+        Parameters:
+            u, v: float or array-like.  Coordinates on first annulus.
+            x, y: float or array-like.  Coordinates on second annulus.
+
+        Returns:
+            float or array-like.  Value of the DoubleZernike polynomial series.
+        """
         # Cases:
         # uv only:
         #  if uv scalar, then return Zernike
@@ -1215,6 +1275,11 @@ class DoubleZernike:
         return self + (-rhs)
 
     def __mul__(self, rhs):
+        """Multiply two DoubleZernikes, or multiply a DoubleZernike by a scalar.
+
+        If both operands are DoubleZernikes, then the domains for both annuli
+        must be the same.
+        """
         from numbers import Real
         if isinstance(rhs, Real):
             if 'coef' in self.__dict__:
@@ -1392,6 +1457,24 @@ class DoubleZernike:
 def doubleZernikeBasis(
     kmax, jmax, u, v, x, y, *, uv_outer=1.0, uv_inner=0.0, xy_outer=1.0, xy_inner=0.0
 ):
+    """Construct basis of DoubleZernike polynomial series up to Noll indices
+    (kmax, jmax), evaluated at (u, v, x, y).
+
+    Parameters:
+        kmax:  Maximum Noll index for first annulus.
+        jmax:  Maximum Noll index for second annulus.
+        u, v: Coordinates in the first annulus.
+        x, y: Coordinates in the second annulus.
+        uv_outer:  Outer radius of the first annulus.
+        uv_inner:  Inner radius of the first annulus.
+        xy_outer:  Outer radius of the second annulus.
+        xy_inner:  Inner radius of the second annulus.
+
+    Returns:
+        [kmax+1, jmax+1, u.shape] array.  Slicing over the first two dimensions
+        gives the basis vectors corresponding to individual DoubleZernike terms.
+
+    """
     out = np.zeros((kmax+1, jmax+1)+x.shape, dtype=float)
     for k in range(kmax+1):
         coef_uv = [0]*k + [1]
