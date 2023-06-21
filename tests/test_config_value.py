@@ -94,6 +94,8 @@ def test_float_value():
         'list2' : { 'type' : 'List_float',
                     'items' : [ 0.6, 1.8, 2.1, 3.7, 4.3, 5.5, 6.1, 7.0, 8.6, 9.3, 10.8, 11.2 ],
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
+        'list3' : { 'type' : 'List',
+                    'items' : '$[i for i in range(7) if i not in [3, 5]]' },
         'dict1' : { 'type' : 'Dict', 'key' : 'f' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
@@ -101,6 +103,8 @@ def test_float_value():
         'fits1' : { 'type' : 'FitsHeader', 'key' : 'AIRMASS' },
         'fits2' : { 'type' : 'FitsHeader', 'key' : 'MJD-OBS' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
+        'sum2' : { 'type' : 'Sum',
+                   'items' : '$[i for i in range(7) if i not in [3, 5]]' },
         'nfw' : { 'type' : 'NFWHaloMagnification' },
         'ps' : { 'type' : 'PowerSpectrumMagnification' },
         'bad1' : { 'value' : 34. },
@@ -326,14 +330,17 @@ def test_float_value():
     # Test values taken from a List
     list1 = []
     list2 = []
+    list3 = []
     config['index_key'] = 'obj_num'
     for k in range(5):
         config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, float)[0])
         list2.append(galsim.config.ParseValue(config,'list2',config, float)[0])
+        list3.append(galsim.config.ParseValue(config,'list3',config, float)[0])
 
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
     np.testing.assert_array_almost_equal(list2, [ 10.8, 7.0, 4.3, 1.8, 10.8 ])
+    np.testing.assert_array_almost_equal(list3, [ 0, 1, 2, 4, 6 ])
 
     # Test values read from a Dict
     dict = []
@@ -347,7 +354,9 @@ def test_float_value():
     assert galsim.config.ParseValue(config,'fits2',config, float)[0] == 54384.18627436
 
     sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
+    sum2 = galsim.config.ParseValue(config,'sum2',config, float)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
+    np.testing.assert_almost_equal(sum2, sum([ 0, 1, 2, 4, 6]))
 
     # Test NFWHaloMagnification
     galsim.config.SetupInputsForImage(config, None)
