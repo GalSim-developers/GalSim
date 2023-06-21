@@ -189,6 +189,10 @@ def ParseValue(config, key, base, value_type):
             return ParseValue(config, key, base, value_type)
 
         # The rest of these are special processing options for specific value_types:
+        if value_type is list:
+            # Just don't turn a string into a list of characters.
+            if isinstance(param, basestring):
+                raise GalSimConfigError("Could not parse %s as a list."%param)
         if value_type is Angle:
             # Angle is a special case.  Angles are specified with a final string to
             # declare what unit to use.
@@ -714,7 +718,7 @@ def _GenerateFromList(config, base, value_type):
     opt = { 'index' : int }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
     CheckAllParams(config, req=req, opt=opt)
-    items = config['items']
+    items, safe = ParseValue(config,'items',base,list)
 
     # Any iterable except string.
     if isinstance(items,str) or not hasattr(items, '__iter__'):
@@ -722,7 +726,8 @@ def _GenerateFromList(config, base, value_type):
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
     SetDefaultIndex(config, len(items))
-    index, safe = ParseValue(config, 'index', base, int)
+    index, safe1 = ParseValue(config, 'index', base, int)
+    safe = safe and safe1
 
     if index < 0 or index >= len(items):
         raise GalSimConfigError("index %d out of bounds for type=List"%index)
@@ -737,11 +742,13 @@ def _GenerateFromSum(config, base, value_type):
     req = { 'items' : list }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
     CheckAllParams(config, req=req)
-    items = config['items']
+    items, safe = ParseValue(config,'items',base,list)
+
     if not isinstance(items,list):
         raise GalSimConfigError("items entry for type=List is not a list.")
 
-    sum, safe = ParseValue(items, 0, base, value_type)
+    sum, safe1 = ParseValue(items, 0, base, value_type)
+    safe = safe and safe1
 
     for k in range(1,len(items)):
         val, safe1 = ParseValue(items, k, base, value_type)
