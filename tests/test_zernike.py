@@ -596,6 +596,11 @@ def test_product():
             (z1*z2).R_inner,
             R_inner
         )
+        # Check div
+        np.testing.assert_allclose(
+            (z1/5.6)(x, y),
+            z1(x, y)/5.6,
+        )
 
     with np.testing.assert_raises(TypeError):
         z1 * galsim.Gaussian(fwhm=1)
@@ -603,6 +608,8 @@ def test_product():
         z1 * Zernike([0,1], R_outer=z1.R_outer*2)
     with np.testing.assert_raises(ValueError):
         z1 * Zernike([0,1], R_outer=z1.R_outer, R_inner=z1.R_inner*2)
+    with np.testing.assert_raises(TypeError):
+        z1 / z2
 
     # Commutative with integer coefficients
     z1 = Zernike([0,1,2,3,4,5])
@@ -1113,6 +1120,12 @@ def test_dz_product():
             [dzprod.uv_inner, dzprod.uv_outer, dzprod.xy_inner, dzprod.xy_outer],
             [uv_inner, uv_outer, xy_inner, xy_outer]
         )
+        # Check div
+        np.testing.assert_allclose(
+            (dz1 / 5.6)(u, v, x, y),
+            dz1(u, v, x, y)/5.6,
+        )
+
 
     with np.testing.assert_raises(TypeError):
         dz1 * galsim.Gaussian(sigma=1.0)
@@ -1132,6 +1145,8 @@ def test_dz_product():
         dz1 * DoubleZernike(
             coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=2*xy_inner
         )
+    with np.testing.assert_raises(TypeError):
+        dz1 / dz2
 
     # Commutative with integer coefficients
     dz1 = DoubleZernike(np.eye(3, dtype=int))
