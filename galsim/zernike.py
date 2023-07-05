@@ -619,6 +619,12 @@ class Zernike:
         """Equivalent to obj * rhs.  See `__mul__` for details."""
         return self*rhs
 
+    def __truediv__(self, rhs):
+        from numbers import Real
+        if not isinstance(rhs, Real):
+            raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
+        return self*(1./rhs)
+
     @lazy_property
     def coef(self):
         """Zernike series coefficients.
@@ -1322,6 +1328,12 @@ class DoubleZernike:
     def __rmul__(self, rhs):
         """Equivalent to obj * rhs.  See `__mul__` for details."""
         return self*rhs
+
+    def __truediv__(self, rhs):
+        from numbers import Real
+        if not isinstance(rhs, Real):
+            raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
+        return self*(1./rhs)
 
     def __eq__(self, rhs):
         if not isinstance(rhs, DoubleZernike):
