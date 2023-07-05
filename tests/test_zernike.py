@@ -267,10 +267,10 @@ def test_Zernike_basis():
 
         # Compare to basis vectors generated one at a time
         for j in range(1, jmax):
-            Z = Zernike([0]*(j-1)+[1], R_outer=R_outer, R_inner=R_inner)
+            Z = Zernike([0]*j+[1], R_outer=R_outer, R_inner=R_inner)
             zBasis = Z.evalCartesian(x, y)
             np.testing.assert_allclose(
-                    zBases[j-1],
+                    zBases[j],
                     zBasis,
                     atol=1e-12, rtol=0)
 
