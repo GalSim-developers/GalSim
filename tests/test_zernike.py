@@ -562,30 +562,25 @@ def test_product():
         np.testing.assert_allclose(
             z1(x, y) * z2(x, y),
             (z1 * z2)(x, y),
-            rtol=1e-6, atol=1e-6
         )
         np.testing.assert_allclose(
             z1(x, y) * z2(x, y),
             (z2 * z1)(x, y),
-            rtol=1e-6, atol=1e-6
         )
         # Check scalar multiplication
         np.testing.assert_allclose(
             (2*z1)(x, y),
             2*(z1(x, y)),
-            rtol=1e-6, atol=1e-6
         )
         np.testing.assert_allclose(
             (z1*3.3)(x, y),
             3.3*(z1(x, y)),
-            rtol=1e-6, atol=1e-6
         )
         # Check when .coef is missing
         del z1.coef
         np.testing.assert_allclose(
             (z1*3.5)(x, y),
             3.5*(z1(x, y)),
-            rtol=1e-6, atol=1e-6
         )
         # Check that R_outer and R_inner are preserved
         np.testing.assert_allclose(
