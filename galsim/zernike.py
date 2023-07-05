@@ -1482,13 +1482,8 @@ def doubleZernikeBasis(
         gives the basis vectors corresponding to individual DoubleZernike terms.
 
     """
-    out = np.zeros((kmax+1, jmax+1)+x.shape, dtype=float)
-    for k in range(kmax+1):
-        coef_uv = [0]*k + [1]
-        zk_uv = Zernike(coef_uv, R_outer=uv_outer, R_inner=uv_inner)
-        tmp = zk_uv(u, v)
-        for j in range(jmax+1):
-            coef_xy = [0]*j + [1]
-            zk_xy = Zernike(coef_xy, R_outer=xy_outer, R_inner=xy_inner)
-            out[k, j] = zk_xy(x, y) * tmp
-    return out
+    return np.einsum(
+        'k...,j...->kj...',
+        zernikeBasis(kmax, u, v, R_outer=uv_outer, R_inner=uv_inner),
+        zernikeBasis(jmax, x, y, R_outer=xy_outer, R_inner=xy_inner)
+    )

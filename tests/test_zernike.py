@@ -1395,6 +1395,47 @@ def test_dz_rotate():
                 )
 
 
+def test_dz_basis():
+    """Test the doubleZernikeBasis function"""
+
+    rng = galsim.BaseDeviate(12775).as_numpy_generator()
+
+    for _ in range(10):
+        k1 = rng.choice([3, 7, 10, 15])
+        j1 = rng.choice([3, 5, 7])
+
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+
+        for _ in range(10):
+            # Test at some random points
+            x, y, u, v = rng.uniform(-0.5, 0.5, size=(4, 1000))
+
+            # dzBases will generate all basis vectors at once
+            dzBases = galsim.zernike.doubleZernikeBasis(
+                k1, j1, x, y, u, v,
+                uv_inner=uv_inner, uv_outer=uv_outer,
+                xy_inner=xy_inner, xy_outer=xy_outer,
+            )
+
+            for j in range(1, j1):
+                for k in range(1, k1):
+                    coef = np.zeros((k1, j1))
+                    coef[k, j] = 1.0
+                    DZ = DoubleZernike(
+                        coef,
+                        uv_inner=uv_inner, uv_outer=uv_outer,
+                        xy_inner=xy_inner, xy_outer=xy_outer
+                    )
+                    DZbasis = DZ(x, y, u, v)
+                    np.testing.assert_allclose(
+                        DZbasis, dzBases[k, j],
+                        atol=1e-11, rtol=0
+                    )
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
