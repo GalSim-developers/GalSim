@@ -1089,17 +1089,7 @@ class DoubleZernike:
                     assert np.shape(x) == np.shape(u)
                     return np.array([z(x[i], y[i]) for i, z in enumerate(zs)])
 
-    @lazy_property
-    def coef(self):
-        """DoubleZernike coefficients.
-
-        The coefficients are stored in a 2D array, where the first index
-        corresponds to the `uv` dependence and the second index corresponds to
-        the `xy` dependence.  The indices are Noll indices.  As an example, when
-        describing a telescope wavefront the (1, 4) tuple corresponds to a
-        constant (over the field) pupil defocus.  The (2, 5) term is a linear
-        (over the field) astigmatism, etc.
-        """
+    def _compute_coef(self, kmax, jmax):
         # Same strategy as Zernike; take advantage of orthonormality to
         # determine Noll coefficients from Cartesian coefficients.
 
@@ -1127,13 +1117,27 @@ class DoubleZernike:
 
         # Project into Zernike basis
         basis = doubleZernikeBasis(
-            self._kmax, self._jmax,
+            kmax, jmax,
             u, v, x, y,
             uv_outer=self.uv_outer, uv_inner=self.uv_inner,
             xy_outer=self.xy_outer, xy_inner=self.xy_inner
         )
         area = np.pi**2 * (self.uv_outer**2 - self.uv_inner**2) * (self.xy_outer**2 - self.xy_inner**2)
         return np.dot(basis, vals*weights/area)
+
+
+    @lazy_property
+    def coef(self):
+        """DoubleZernike coefficients.
+
+        The coefficients are stored in a 2D array, where the first index
+        corresponds to the `uv` dependence and the second index corresponds to
+        the `xy` dependence.  The indices are Noll indices.  As an example, when
+        describing a telescope wavefront the (1, 4) tuple corresponds to a
+        constant (over the field) pupil defocus.  The (2, 5) term is a linear
+        (over the field) astigmatism, etc.
+        """
+        return self._compute_coef(self._kmax, self._jmax)
 
     @lazy_property
     def _coef_array_uvxy(self):
@@ -1430,6 +1434,35 @@ class DoubleZernike:
             xy_outer=self.xy_outer, xy_inner=self.xy_inner,
             uv_outer=self.uv_outer, uv_inner=self.uv_inner
         )
+
+    @lazy_property
+    def mean_xy(self):
+        """Mean value over the xy annulus, returned as a Zernike in the uv
+        domain."""
+
+        # For any Zernike series, the expectation value is just the coefficient
+        # of the Z1 term.  All the other terms have zero expectation.  For the
+        # double Zernike series, the uv dependence of the xy expectation
+        # value is contained in the first column of the coefficient array.
+
+        if 'coef' in self.__dict__:
+            c = self.coef[:, 1]
+        else:
+            c = self._compute_coef(self._kmax, 1)[:, 1]
+        return Zernike(c, R_outer=self.uv_outer, R_inner=self.uv_inner)
+
+    @lazy_property
+    def mean_uv(self):
+        """Mean value over the uv annulus, returned as a Zernike in the xy
+        domain."""
+
+        # See comment in mean_xy.
+
+        if 'coef' in self.__dict__:
+            c = self.coef[1]
+        else:
+            c = self._compute_coef(1, self._jmax)[1]
+        return Zernike(c, R_outer=self.xy_outer, R_inner=self.xy_inner)
 
     def rotate(self, *, theta_uv=0.0, theta_xy=0.0):
         """Rotate the DoubleZernike by the given angle(s).
