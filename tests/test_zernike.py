@@ -1236,15 +1236,6 @@ def test_dz_to_T():
     # Var[delta_xfp] \propto Var[dW/dx] = E[(dW/dx)^2] - (E[dW/dx])^2,  where E
     # is the expectation value over the pupil.
 
-    # For any Zernike series, the expectation value is just the coefficient of
-    # the Z1 term.  All the other terms have zero expectation.  For the double
-    # Zernike series, the field dependence of the pupil expectation value is
-    # contained in the first column of the coefficient array.
-
-    # So to compute Var[delta_xfp], we need to compute the first column of the
-    # dW/dx double Zernike, and the first column of the (dW/dx)^2 double
-    # Zernike.
-
     # First construct a DZ.
     rng = galsim.BaseDeviate(51413).as_numpy_generator()
 
@@ -1272,13 +1263,13 @@ def test_dz_to_T():
         dWdy = W.gradY
         dWdx2 = dWdx * dWdx
         dWdy2 = dWdy * dWdy
+
         # These are still double Zernikes.  Extract their expectation values
-        # over the pupil (which are functions of field angle), by taking the
-        # first column of their coefficient arrays.
-        dWdx_field = Zernike(dWdx.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdy_field = Zernike(dWdy.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdx2_field = Zernike(dWdx2.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
-        dWdy2_field = Zernike(dWdy2.coef[:, 1], R_outer=uv_outer, R_inner=uv_inner)
+        # over the pupil (which are functions of field angle).
+        dWdx_field = dWdx.mean_xy
+        dWdy_field = dWdy.mean_xy
+        dWdx2_field = dWdx2.mean_xy
+        dWdy2_field = dWdy2.mean_xy
         # Now construct the PSF size T
         T = dWdx2_field + dWdy2_field - dWdx_field*dWdx_field - dWdy_field*dWdy_field
 
@@ -1398,7 +1389,7 @@ def test_dz_rotate():
 def test_dz_basis():
     """Test the doubleZernikeBasis function"""
 
-    rng = galsim.BaseDeviate(12775).as_numpy_generator()
+    rng = galsim.BaseDeviate(127750).as_numpy_generator()
 
     for _ in range(10):
         k1 = rng.choice([3, 7, 10, 15])
@@ -1434,6 +1425,97 @@ def test_dz_basis():
                         DZbasis, dzBases[k, j],
                         atol=1e-11, rtol=0
                     )
+
+
+def test_dz_mean():
+    """Test the dz.mean_xy and .mean_uv properties"""
+    rng = galsim.BaseDeviate(51413).as_numpy_generator()
+
+    for _ in range(10):
+        k1 = rng.choice([3, 7, 10, 15])
+        j1 = rng.choice([3, 5, 7])
+
+        uv_inner = rng.uniform(0.4, 0.7)
+        uv_outer = rng.uniform(1.3, 1.7)
+        xy_inner = rng.uniform(0.4, 0.7)
+        xy_outer = rng.uniform(1.3, 1.7)
+
+        coef = rng.normal(size=(k1+1, j1+1))
+        coef[0] = 0.0
+        coef[:, 0] = 0.0
+
+        dz = DoubleZernike(
+            coef,
+            uv_inner=uv_inner, uv_outer=uv_outer,
+            xy_inner=xy_inner, xy_outer=xy_outer
+        )
+        # We don't have a function that returns a Zernike over uv at a given xy
+        # point, but we can mimic that by transposing xy an uv in a new
+        # DoubleZernike object.
+        dzT = DoubleZernike(
+            coef.T,
+            uv_inner=xy_inner, uv_outer=xy_outer,
+            xy_inner=uv_inner, xy_outer=uv_outer
+        )
+
+        mean_xy = dz.mean_xy
+        mean_uv = dz.mean_uv
+
+        for _ in range(10):
+            # Pick a random uv point
+            uv = np.inf
+            while uv > uv_outer or uv < uv_inner:
+                u = rng.uniform(-uv_outer, uv_outer)
+                v = rng.uniform(-uv_outer, uv_outer)
+                uv = np.hypot(u, v)
+            # Evaluate at that point
+            zk = dz(u, v)
+            np.testing.assert_allclose(
+                zk.coef[1],
+                mean_xy(u, v),
+            )
+
+        for _ in range(10):
+            # Pick a random xy point
+            xy = np.inf
+            while xy > xy_outer or xy < xy_inner:
+                x = rng.uniform(-xy_outer, xy_outer)
+                y = rng.uniform(-xy_outer, xy_outer)
+                xy = np.hypot(x, y)
+            # Evaluate at that point
+            zk = dzT(x, y)
+            np.testing.assert_allclose(
+                zk.coef[1],
+                mean_uv(x, y),
+            )
+
+        # Make sure we can construct from ._coef_array_uvxy when .coef is
+        # unavailable too.
+        dz._coef_array_uvxy  # Ensure _coef_array_uvxy exists
+        del dz.coef, dz.mean_uv, dz.mean_xy  # Clear out lazy_properties
+        mean_xy2 = dz.mean_xy
+        mean_uv2 = dz.mean_uv
+
+        sh = min(len(mean_xy.coef), len(mean_xy2.coef))
+        np.testing.assert_allclose(
+            mean_xy.coef[:sh], mean_xy2.coef[:sh],
+            atol=1e-14, rtol=0
+        )
+        np.testing.assert_equal(
+            (mean_xy.R_inner, mean_xy.R_outer),
+            (mean_xy2.R_inner, mean_xy2.R_outer),
+        )
+
+
+        sh = min(len(mean_uv.coef), len(mean_uv2.coef))
+        np.testing.assert_allclose(
+            mean_uv.coef[:sh], mean_uv2.coef[:sh],
+            atol=1e-14, rtol=0
+        )
+        np.testing.assert_equal(
+            (mean_uv.R_inner, mean_uv.R_outer),
+            (mean_uv2.R_inner, mean_uv2.R_outer),
+        )
 
 
 if __name__ == "__main__":
