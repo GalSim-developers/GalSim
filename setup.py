@@ -85,6 +85,7 @@ copt =  {
     'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
                       '-Wno-shorten-64-to-32','-fvisibility=hidden', '-DGALSIM_USE_GPU'],
+    'nvc++' : ['-O2','-std=c++11','-mp=gpu'],
     'unknown' : [],
 }
 lopt =  {
@@ -97,6 +98,7 @@ lopt =  {
     'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
     'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version'],
+    'nvc++' : ['-mp=gpu'],
     'unknown' : [],
 }
 
@@ -143,6 +145,9 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
     line = lines[0].decode(encoding='UTF-8')
     if line.startswith('Configured'):
         line = lines[1].decode(encoding='UTF-8')
+    # nvc++ version info starts with a blank line
+    if line.strip() == "":
+        line = lines[1].decode(encoding='UTF-8')
 
     if 'clang' in line:
         # clang 3.7 is the first with openmp support.  But Apple lies about the version
@@ -180,6 +185,8 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
                 print("Yay! This version of gcc supports GPU!")
             return 'gcc w/ GPU'
         return 'gcc'
+    elif 'nvc++' in line or 'nvcc' in line or 'NVIDIA' in line:
+        return 'nvc++'
     elif 'clang' in cc:
         return 'clang'
     elif 'gcc' in cc or 'g++' in cc:
@@ -759,6 +766,12 @@ def fix_compiler(compiler, njobs):
     # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
     try:
         compiler.compiler_so.remove("-Wstrict-prototypes")
+    except (AttributeError, ValueError):
+        pass
+
+    # nvc++ doesn't support -Wno-unused-result
+    try:
+        compiler.compiler_so.remove("-Wno-unused-result")
     except (AttributeError, ValueError):
         pass
 
