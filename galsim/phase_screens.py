@@ -221,6 +221,11 @@ class AtmosphericScreen:
                             significantly faster than computing PSFs with non-frozen-flow
                             atmospheres.  If ``alpha`` != 1.0, then it is required that a
                             ``time_step`` is also specified.  [default: 1.0]
+        seeing_exp:         Power law index for wavelength dependent seeing when using geometric
+                            photon shooting.  For pure Kolmogorov turbulence, the correct value is
+                            -0.2, but values in the range [-0.2, -0.4] are expected for Von Karman
+                            turbulence with finite outer scales.  This value is ignored if drawing
+                            in FFT mode.  [default: 0.0].
         time_step:          Time interval between phase boiling updates.  Note that this is distinct
                             from the time interval used to integrate the PSF over time, which is set
                             by the ``time_step`` keyword argument to `PhaseScreenPSF` or
@@ -246,8 +251,8 @@ class AtmosphericScreen:
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
-                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False,
-                 mp_context=None):
+                 vx=0.0, vy=0.0, alpha=1.0, seeing_exp=0.0, time_step=None, rng=None,
+                 suppress_warning=False, mp_context=None):
         if (alpha != 1.0 and time_step is None):
             raise GalSimIncompatibleValuesError(
                 "No time_step provided when alpha != 1.0", alpha=alpha, time_step=time_step)
@@ -274,6 +279,7 @@ class AtmosphericScreen:
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
+        self.seeing_exp = seeing_exp
 
         if rng is None:
             rng = BaseDeviate()
@@ -689,7 +695,7 @@ class AtmosphericScreen:
             v += self._altitude*theta[1].tan()
         return self._tab2d._call_wrap(u.ravel(), v.ravel()).reshape(u.shape)
 
-    def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
+    def wavefront_gradient(self, u, v, t=None, w=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
 
         Parameters:
@@ -702,6 +708,10 @@ class AtmosphericScreen:
                     will be used for all u, v.  If scalar, then the size will be broadcast up to
                     match that of u and v.  If iterable, then the shape must match the shapes of
                     u and v.  [default: None]
+            w:      Wavelength in nanometers to use to compute gradient.  This is a bit of a
+                    hack to implement chromatic seeing in photon-shooting mode.  Returned gradients
+                    are multiplied by (wavelength/500)^(self.seeing_exp).  If not present, then
+                    no chromatic seeing correction is applied.  [default: None]
             theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
                     instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single
                     theta is permitted.
@@ -728,7 +738,7 @@ class AtmosphericScreen:
         self.instantiate()  # noop if already instantiated
 
         if self.reversible:
-            return self._wavefront_gradient(u, v, t, theta)
+            return self._wavefront_gradient(u, v, t, w, theta)
         else:
             dwdu = np.empty_like(u, dtype=np.float64)
             dwdv = np.empty_like(u, dtype=np.float64)
@@ -738,12 +748,15 @@ class AtmosphericScreen:
             while tt <= tmax:
                 self._seek(tt)
                 here = ((tt <= t) & (t < tt+self.time_step))
-                dwdu[here], dwdv[here] = self._wavefront_gradient(u[here], v[here], t[here], theta)
+                w_here = None if w is None else w[here]
+                dwdu[here], dwdv[here] = self._wavefront_gradient(
+                    u[here], v[here], t[here], w_here, theta
+                )
                 tt += self.time_step
             return dwdu, dwdv
 
-    def _wavefront_gradient(self, u, v, t, theta):
-        # Same as wavefront(), but no argument checking and no boiling updates.
+    def _wavefront_gradient(self, u, v, t, w, theta):
+        # Same as wavefront_gradient(), but no argument checking and no boiling updates.
         u = u - t*self.vx
         if theta[0].rad != 0:
             u += self._altitude*theta[0].tan()
@@ -751,6 +764,9 @@ class AtmosphericScreen:
         if theta[1].rad != 0:
             v += self._altitude*theta[1].tan()
         dfdx, dfdy = self._tab2d._gradient_wrap(u.ravel(), v.ravel())
+        if w is not None:
+            dfdx *= (w/500.)**self.seeing_exp
+            dfdy *= (w/500.)**self.seeing_exp
         return dfdx.reshape(u.shape), dfdy.reshape(u.shape)
 
 
@@ -1087,7 +1103,7 @@ class OpticalScreen:
         # Note, this phase screen is actually independent of time and theta.
         return self._zernike.evalCartesian(u, v) * self.lam_0
 
-    def wavefront_gradient(self, u, v, t=None, theta=None):
+    def wavefront_gradient(self, u, v, t=None, w=None, theta=None):
         """ Compute gradient of wavefront due to optical phase screen.
 
         Parameters:
@@ -1096,6 +1112,7 @@ class OpticalScreen:
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
             t:      Ignored for `OpticalScreen`.
+            w:      Ignored for `OpticalScreen`.
             theta:  Ignored for `OpticalScreen`.
 
         Returns:
@@ -1105,10 +1122,10 @@ class OpticalScreen:
         v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
-        return self._wavefront_gradient(u, v, t, theta)
+        return self._wavefront_gradient(u, v, t, w, theta)
 
 
-    def _wavefront_gradient(self, u, v, t, theta):
+    def _wavefront_gradient(self, u, v, t, w, theta):
         # Same as wavefront(), but no argument checking.
         # Note, this phase screen is actually independent of time and theta.
         gradx, grady = self._zernike.evalCartesianGrad(u, v)
@@ -1213,7 +1230,7 @@ class UserScreen:
     def _wavefront(self, u, v, t, theta):
         return self.table(u, v)
 
-    def wavefront_gradient(self, u, v, t=None, theta=None):
+    def wavefront_gradient(self, u, v, t=None, w=None, theta=None):
         """ Evaluate gradient of wavefront from lookup table.
 
         Parameters:
@@ -1222,6 +1239,7 @@ class UserScreen:
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
             t:      Ignored for `UserScreen`.
+            w:      Ignored for `UserScreen`.
             theta:  Ignored for `UserScreen`.
 
         Returns:
@@ -1229,5 +1247,5 @@ class UserScreen:
         """
         return self.table.gradient(u, v)
 
-    def _wavefront_gradient(self, u, v, t, theta):
+    def _wavefront_gradient(self, u, v, t, w, theta):
         return self.table.gradient(u, v)

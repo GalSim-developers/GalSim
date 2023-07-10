@@ -914,7 +914,7 @@ class PhaseScreenList:
         else:
             return self._layers[0].wavefront(u, v, t, theta)
 
-    def wavefront_gradient(self, u, v, t, theta=(0.0*radians, 0.0*radians)):
+    def wavefront_gradient(self, u, v, t, w=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.
 
         Parameters:
@@ -927,6 +927,7 @@ class PhaseScreenList:
                     will be used for all u, v.  If scalar, then the size will be broadcast up to
                     match that of u and v.  If iterable, then the shape must match the shapes of
                     u and v.
+            w:      Wavelengths (in nanometers) at which to evaluate wavefront gradient.
             theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
                     instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
                     Only a single theta is permitted.
@@ -935,9 +936,9 @@ class PhaseScreenList:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
         if len(self._layers) > 1:
-            return np.sum([layer.wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
+            return np.sum([layer.wavefront_gradient(u, v, t, w, theta) for layer in self], axis=0)
         else:
-            return self._layers[0].wavefront_gradient(u, v, t, theta)
+            return self._layers[0].wavefront_gradient(u, v, t, w, theta)
 
     def _wavefront(self, u, v, t, theta):
         if len(self._layers) > 1:
@@ -945,10 +946,10 @@ class PhaseScreenList:
         else:
             return self._layers[0]._wavefront(u, v, t, theta)
 
-    def _wavefront_gradient(self, u, v, t, theta):
-        gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, theta)
+    def _wavefront_gradient(self, u, v, t, w, theta):
+        gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, w, theta)
         for layer in self._layers[1:]:
-            gx, gy = layer._wavefront_gradient(u, v, t, theta)
+            gx, gy = layer._wavefront_gradient(u, v, t, w, theta)
             gradx += gx
             grady += gy
         return gradx, grady
@@ -1579,6 +1580,10 @@ class PhaseScreenPSF(GSObject):
         u = photons.pupil_u
         v = photons.pupil_v
         t = photons.time
+        if photons.hasAllocatedWavelengths():
+            w = photons.wavelength
+        else:
+            w = None
 
         n_photons = len(photons)
 
@@ -1588,7 +1593,7 @@ class PhaseScreenPSF(GSObject):
         nm_to_arcsec = 1.e-9 * radians / arcsec
         if self._fft_sign == '+':
             nm_to_arcsec *= -1
-        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
+        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, w, self.theta)
         photons.x *= nm_to_arcsec
         photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
