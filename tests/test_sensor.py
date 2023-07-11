@@ -135,12 +135,17 @@ def test_silicon():
     im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon
     im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
     im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
-    im4 = galsim.ImageD(4, 4, scale=0.3)  # Smaller image, some flux will be missing.
+    im4 = galsim.ImageD(4, 4, scale=0.3)    # Smaller image, some flux will be missing.
+    im5 = im1.copy()[galsim.BoundsI(17,20,33,36)]  # Same size as im4, but not contiguous.
+    im6 = im1.copy()[im5.bounds].rot_180()         # Not unit step in either direction.
+    im6.scale = 0.3
 
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
     rng4 = galsim.BaseDeviate(5678)
+    rng5 = galsim.BaseDeviate(5678)
+    rng6 = galsim.BaseDeviate(5678)
 
     silicon = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
@@ -150,6 +155,8 @@ def test_silicon():
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
     obj.drawImage(im4, method='phot', poisson_flux=False, sensor=silicon, rng=rng4)
+    obj.drawImage(im5, method='phot', poisson_flux=False, sensor=silicon, rng=rng5)
+    obj.drawImage(im6, method='phot', poisson_flux=False, sensor=silicon, rng=rng6)
 
     # First, im2 and im3 should be exactly equal.
     np.testing.assert_array_equal(im2.array, im3.array)
@@ -159,6 +166,10 @@ def test_silicon():
 
     # im4 should match im1 where they overlap
     np.testing.assert_array_equal(im1.array[30:34,30:34], im4.array)
+
+    # im5 and im6 should exactly match im4.
+    np.testing.assert_array_equal(im5.array, im4.array)
+    np.testing.assert_array_equal(im6.array, im4.array)
 
     # Fluxes on im1,im2 should equal obj.flux
     print('added_flux = ',im1.added_flux, im2.added_flux, im4.added_flux)
@@ -573,27 +584,39 @@ def test_sensor_wavelengths_and_angles():
 
     for band in bands:
         bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_%s.dat'%band), 'nm').thin()
-        rng3 = galsim.BaseDeviate(1234)
         sampler = galsim.WavelengthSampler(sed, bandpass)
-        rng4 = galsim.BaseDeviate(5678)
-        silicon = galsim.SiliconSensor(rng=rng4, diffusion_factor=0.0)
+        rng = galsim.BaseDeviate(5678)
+        silicon = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
 
         # We'll draw the same object using SiliconSensor
-        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths
-        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths
-        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with angles
-        im4 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths, angles
+        im1 = galsim.ImageF(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths
+        im2 = galsim.ImageF(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths
+        im3 = galsim.ImageF(64, 64, scale=0.3)  # Will use sensor=silicon, with angles
+        im4 = galsim.ImageF(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths, angles
+        big_im = galsim.ImageF(164, 164, scale=0.3)
+        im5 = big_im[galsim.BoundsI(30,93,100,163)] # Non-contiguous
+        im6 = big_im.copy()[im5.bounds].rot_180()   # Non-unit steps
+        im6.scale = 0.3
 
         rng1 = galsim.BaseDeviate(5678)
         rng2 = galsim.BaseDeviate(5678)
         rng3 = galsim.BaseDeviate(5678)
         rng4 = galsim.BaseDeviate(5678)
+        rng5 = galsim.BaseDeviate(5678)
+        rng6 = galsim.BaseDeviate(5678)
 
         # Use photon shooting first
         obj.drawImage(im1, method='phot', sensor=silicon, rng=rng1)
         obj.drawImage(im2, method='phot', sensor=silicon, photon_ops=[sampler], rng=rng2)
         obj.drawImage(im3, method='phot', sensor=silicon, photon_ops=[assigner], rng=rng3)
+        silicon.updateRNG(rng4)
         obj.drawImage(im4, method='phot', sensor=silicon, photon_ops=[sampler, assigner], rng=rng4)
+        silicon.updateRNG(rng5)
+        obj.drawImage(im5, method='phot', sensor=silicon, photon_ops=[sampler, assigner], rng=rng5)
+        silicon.updateRNG(rng6)
+        obj.drawImage(im6, method='phot', sensor=silicon, photon_ops=[sampler, assigner], rng=rng6)
+        np.testing.assert_array_equal(im5.array, im4.array)
+        np.testing.assert_array_equal(im6.array, im4.array)
 
         r1 = im1.calculateMomentRadius(flux=obj.flux)
         r2 = im2.calculateMomentRadius(flux=obj.flux)
