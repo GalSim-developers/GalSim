@@ -1085,6 +1085,7 @@ namespace galsim {
         // Map data to GPU
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
+        const int nmem = target.getMaxPtr() - target.getData();
 
         int pixelBoundsSize = _pixelInnerBounds.size();
 
@@ -1107,7 +1108,8 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
+        // FIXME: this is wrong for targetData if step or skip < 0.
+#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:nmem], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
 #endif
 
         // Start with the correct distortions for the initial image as it is already
@@ -1149,6 +1151,7 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
+            // FIXME: this is wrong for targetData if target is not contiguous!
 #pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
         }
         else {
@@ -1232,8 +1235,10 @@ namespace galsim {
         _addDelta<true, false>(target, _delta);
 
         // And if doing this on the GPU, we need to copy back to the CPU now.
+        // FIXME: This is wrong if either step or stride < 0.
 #ifdef GALSIM_USE_GPU
-#pragma omp target update from(targetData[0:npix])
+        const int nmem = target.getMaxPtr() - target.getData();
+#pragma omp target update from(targetData[0:nmem])
 #endif
     }
 
