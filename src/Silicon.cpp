@@ -371,18 +371,13 @@ namespace galsim {
         int nyCenter = (_ny - 1) / 2;
 
         // Now add in the displacements
-        const int i1 = target.getXMin();
-        const int i2 = target.getXMax();
-        const int j1 = target.getYMin();
-        const int j2 = target.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
+        const int nx = target.getNCol();
+        const int ny = target.getNRow();
         const int step = target.getStep();
         const int stride = target.getStride();
 
-        int nxny = nx * ny;
-
         T* targetData = target.getData();
+        const int npix = nx * ny;
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
@@ -402,7 +397,7 @@ namespace galsim {
 #pragma omp target teams distribute parallel for
 #endif
 #endif
-        for (int p=0; p < nxny; p++) {
+        for (int p=0; p < npix; p++) {
             // Calculate which pixel we are currently below
             int x = p % nx;
             int y = p / nx;
@@ -508,7 +503,7 @@ namespace galsim {
 #pragma omp target teams distribute parallel for
 #endif
 #endif
-        for (int k=0; k<nxny; ++k) {
+        for (int k=0; k<npix; ++k) {
             if (changedData[k]) {
                 updatePixelBounds(nx, ny, k, pixelInnerBoundsData,
                                   pixelOuterBoundsData,
@@ -598,8 +593,8 @@ namespace galsim {
         const int i2 = b.getXMax();
         const int j1 = b.getYMin();
         const int j2 = b.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
+        const int nx = target.getNCol();
+        const int ny = target.getNRow();
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
         std::vector<bool> changed(nx * ny, false);
@@ -937,14 +932,14 @@ namespace galsim {
         const int i2 = b.getXMax();
         const int j1 = b.getYMin();
         const int j2 = b.getYMax();
-        const int nx = i2-i1+1;
-        const int ny = j2-j1+1;
-        const int nxny = nx * ny;
+        const int nx = target.getNCol();
+        const int ny = target.getNRow();
+        const int npix = nx * ny;
 
         if (use_flux) {
             dbg<<"Start full pixel area calculation\n";
             dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-            dbg<<"total memory = "<<nxny*_nv*sizeof(Position<float>)/(1024.*1024.)<<" MBytes"<<std::endl;
+            dbg<<"total memory = "<<npix*_nv*sizeof(Position<float>)/(1024.*1024.)<<" MBytes"<<std::endl;
 
             // This will add distortions according to the current flux in the image, on the
             // GPU where appropriate.
@@ -1066,8 +1061,8 @@ namespace galsim {
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
 
-        const int nx = b.getXMax() - b.getXMin() + 1;
-        const int ny = b.getYMax() - b.getYMin() + 1;
+        const int nx = target.getNCol();
+        const int ny = target.getNRow();
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
 
         initializeBoundaryPoints(nx, ny);
@@ -1081,10 +1076,10 @@ namespace galsim {
         _delta.resize(b);
         _delta.setZero();
 
-        int nxny = nx * ny;
-        _changed.reset(new bool[nxny]);
+        int npix = nx * ny;
+        _changed.reset(new bool[npix]);
         bool* changedData = _changed.get();
-        for (int i = 0; i < nxny; i++) changedData[i] = false;
+        for (int i=0; i<npix; i++) changedData[i] = false;
 
 #ifdef GALSIM_USE_GPU
         // Map data to GPU
@@ -1112,7 +1107,7 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
 #endif
 
         // Start with the correct distortions for the initial image as it is already
@@ -1133,10 +1128,9 @@ namespace galsim {
 
         double* abs_length_table_data = _abs_length_table_GPU.data();
 
-        Bounds<int> b = _delta.getBounds();
-        const int nx = b.getXMax() - b.getXMin() + 1;
-        const int ny = b.getYMax() - b.getYMin() + 1;
-        int nxny = nx * ny;
+        const int nx = _delta.getNCol();
+        const int ny = _delta,.getNRow();
+        int npix = nx * ny;
 
         int pixelBoundsSize = _pixelInnerBounds.size();
 
@@ -1155,11 +1149,11 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:nxny], targetData[0:nxny], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:nxny], targetData[0:nxny], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
         }
 #endif
     }
