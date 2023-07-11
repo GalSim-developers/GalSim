@@ -381,7 +381,7 @@ namespace galsim {
         const int stride = target.getStride();
 
         int nxny = nx * ny;
-        
+
         T* targetData = target.getData();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
@@ -1060,7 +1060,7 @@ namespace galsim {
         // and store target image pointer and type for later
         _targetData = static_cast<void*>(target.getData());
         _targetIsDouble = (sizeof(T) == 8);
-        
+
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -1089,8 +1089,6 @@ namespace galsim {
 #ifdef GALSIM_USE_GPU
         // Map data to GPU
         double* deltaData = _delta.getData();
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
-
         T* targetData = target.getData();
 
         int pixelBoundsSize = _pixelInnerBounds.size();
@@ -1105,7 +1103,7 @@ namespace galsim {
 
         int emptypolySize = _emptypoly.size();
         Position<double>* emptypolyData = _emptypolyGPU.data();
-        
+
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
 
@@ -1114,7 +1112,7 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
 
         // Start with the correct distortions for the initial image as it is already
@@ -1147,36 +1145,45 @@ namespace galsim {
 
         int hdSize = _horizontalDistortions.size();
         int vdSize = _verticalDistortions.size();
-        
+
         int emptypolySize = _emptypoly.size();
         Position<double>* emptypolyData = _emptypolyGPU.data();
 
         bool* changedData = _changed.get();
-        
+
         double* deltaData = _delta.getData();
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:nxny], targetData[0:nxny], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:nxny], targetData[0:nxny], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         }
 #endif
     }
-    
-    template <typename T>
-    void Silicon::subtractDelta(ImageView<T> target)
+
+    // The adDelta and subtractDelta functions are slightly complicated, so rather than
+    // repeat the code twice, we do all the looping logic once, and use templates to
+    // let the compiler turn this into 3 different functions with slight differences.
+    // I.e. plus, zero_delta = (true, true), (true, false), and (false, false).
+    template <bool plus, bool zero_delta, typename T>
+    void _addDelta(ImageView<T> target, ImageAlloc<double>& _delta)
     {
-        // perform update on GPU
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
+        assert(_delta.isContiguous());
 
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
+        const int skip = target.getNSkip();
+        const int step = target.getStep();
+        const int nrow = target.getNRow();
+        const int ncol = target.getNCol();
+        const int npix = ncol*nrow;
 
-        assert(targetData + imageDataSize <= target.getMaxPtr());
+        assert(targetData + (nrow-1)*skip + ncol*step <= target.getMaxPtr() || step<0 || skip<0);
+        assert(deltaData + nrow*ncol <= _delta.getMaxPtr());
+        if (step == 1) {
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
@@ -1184,39 +1191,64 @@ namespace galsim {
 #pragma omp target teams distribute parallel for
 #endif
 #endif
-        for (int i = 0; i < imageDataSize; i++) {
-            targetData[i] -= deltaData[i];
-        }
-
-#ifdef GALSIM_USE_GPU
-#pragma omp target update from(targetData[0:imageDataSize])
+            for (int p=0; p<npix; p++) {
+                // If step == 1, then for the first row, k = p.
+                // After the first row, there may be additional skips of j*skip.
+                int k = p + (p/ncol)*skip;
+                // NB. The compiler will optimize these branches away,
+                //     since plus and zero_delta are compile-time constants.
+                if (plus)
+                    targetData[k] += deltaData[p];
+                else
+                    targetData[k] -= deltaData[p];
+                if (zero_delta) deltaData[p] = 0.0;
+            }
+        } else {
+#ifdef _OPENMP
+#ifndef GALSIM_USE_GPU
+#pragma omp parallel for
+#else
+#pragma omp target teams distribute parallel for
 #endif
+#endif
+            for (int p=0; p<npix; p++) {
+                // If step != 1, then for the first row, k = p * step.
+                // After the first row, there may be additional skips of j * skip.
+                int k = p*step + (p/ncol)*skip;
+                if (plus)
+                    targetData[k] += deltaData[p];
+                else
+                    targetData[k] -= deltaData[p];
+                if (zero_delta) deltaData[p] = 0.0;
+            }
+        }
     }
 
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
-        // perform update on GPU
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
-        
-        double* deltaData = _delta.getData();
-        T* targetData = target.getData();
+        // This would be (and was before v2.5) simply:
+        //   target += _delta;
+        // But this doesn't port to the GPU.  To make this work on the GPU,
+        // we need to unroll that function and work with the arrays directly.
 
-        assert(targetData + imageDataSize <= target.getMaxPtr());
-#ifdef _OPENMP
-#ifndef GALSIM_USE_GPU
-#pragma omp parallel for
-#else
-#pragma omp target teams distribute parallel for
-#endif
-#endif
-        for (int i = 0; i < imageDataSize; i++) {
-            targetData[i] += deltaData[i];
-        }
+        // When calling this from python, we don't want to zero the current delta values.
+        // Hence subtract_delta=false.
+        // (The first true means add, not subtract.)
+        _addDelta<true, false>(target, _delta);
 
+        // And if doing this on the GPU, we need to copy back to the CPU now.
 #ifdef GALSIM_USE_GPU
-#pragma omp target update from(targetData[0:imageDataSize])
+#pragma omp target update from(targetData[0:npix])
 #endif
+    }
+
+    template <typename T>
+    void Silicon::subtractDelta(ImageView<T> target)
+    {
+        // add=false
+        // subtract_delta=false
+        _addDelta<false, false>(target, _delta);
     }
 
     template <typename T>
@@ -1398,16 +1430,16 @@ namespace galsim {
                 dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
                 set_verbose(2);
                 bool off_edge;
-                insidePixel(ix, iy, x, y, zconv, target, &off_edge,
+                insidePixel(ix, iy, x, y, zconv, b, &off_edge,
                             emptypolySize, pixelInnerBoundsData,
                             pixelOuterBoundsData,
                             horizontalBoundaryPointsData,
                             verticalBoundaryPointsData,
                             emptypolyData);
-                searchNeighbors(*this, ix, iy, x, y, zconv, b, step, emptyPolySize,
+                searchNeighbors(*this, ix, iy, x, y, zconv, b, step, emptypolySize,
                                 pixelInnerBoundsData, pixelOuterBoundsData,
                                 horizontalBoundaryPointsData,
-                                verticalBoundaryPointsData, emptyPolyData);
+                                verticalBoundaryPointsData, emptypolyData);
                 set_verbose(1);
 #endif
                 const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
@@ -1438,28 +1470,11 @@ namespace galsim {
     void Silicon::update(ImageView<T> target)
     {
         updatePixelDistortions(_delta.view());
-        
-        // update target from delta and zero delta on GPU
-        // CPU delta is not zeroed but that shouldn't matter
-        // addDelta is not used here because 1. we want to zero _delta at the same
-        // time, and 2. we don't want to copy data back to the CPU
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
-        
-        double* deltaData = _delta.getData();
-        T* targetData = target.getData();
-        
-        assert(targetData + imageDataSize <= target.getMaxPtr());
-#ifdef _OPENMP
-#ifndef GALSIM_USE_GPU
-#pragma omp parallel for
-#else
-#pragma omp target teams distribute parallel for
-#endif
-#endif
-        for (int i = 0; i < imageDataSize; i++) {
-            targetData[i] += deltaData[i];
-            deltaData[i] = 0.0;
-        }
+
+        // The second true here indicates that we want to zero out the current _delta values
+        // for the next round of photons (if any)
+        // (The first true means add, not subtract.)
+        _addDelta<true, true>(target, _delta);
     }
 
     int SetOMPThreads(int num_threads)
