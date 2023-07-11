@@ -274,7 +274,7 @@ namespace galsim {
         void setCorrelated(bool is_corr=true) { _is_correlated = is_corr; }
 
     private:
-        size_t _N;              // The length of the arrays
+        int _N;                 // The length of the arrays
         double* _x;             // Array holding x coords of photons
         double* _y;             // Array holding y coords of photons
         double* _flux;          // Array holding flux of photons

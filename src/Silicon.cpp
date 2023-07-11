@@ -231,7 +231,7 @@ namespace galsim {
         }
 
         _emptypolyGPU.resize(_emptypoly.size());
-        for (int i = 0; i < _emptypoly.size(); i++) {
+        for (int i=0; i<int(_emptypoly.size()); i++) {
             _emptypolyGPU[i].x = _emptypoly[i].x;
             _emptypolyGPU[i].y = _emptypoly[i].y;
         }
@@ -243,7 +243,7 @@ namespace galsim {
             finalize();
         }
     }
-    
+
     void Silicon::updatePixelBounds(int nx, int ny, size_t k,
                                     Bounds<double>* pixelInnerBoundsData,
                                     Bounds<double>* pixelOuterBoundsData,
@@ -382,7 +382,6 @@ namespace galsim {
 
         int nxny = nx * ny;
         
-        int imageDataSize = target.getMaxPtr() - target.getData();
         T* targetData = target.getData();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
@@ -391,7 +390,7 @@ namespace galsim {
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
         bool* changedData = _changed.get();
-        
+
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
         // map image data and changed array throughout all GPU loops
@@ -409,11 +408,11 @@ namespace galsim {
             int y = p / nx;
 
             // Loop over rectangle of pixels that could affect this row of points
-	    int polyi1 = imax(x - _qDist, 0);
-	    int polyi2 = imin(x + _qDist, nx - 1);
+            int polyi1 = imax(x - _qDist, 0);
+            int polyi2 = imin(x + _qDist, nx - 1);
             // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
-	    int polyj1 = imax(y - (_qDist + 1), 0);
-	    int polyj2 = imin(y + _qDist, ny - 1);
+            int polyj1 = imax(y - (_qDist + 1), 0);
+            int polyj2 = imin(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -440,7 +439,7 @@ namespace galsim {
                     }
                 }
             }
-            
+
             // update changed array
             if (change) {
                 if (y < ny) changedData[(x * ny) + y] = true; // pixel above
@@ -462,10 +461,10 @@ namespace galsim {
             int y = (ny - 1) - (p % ny); // remember vertical points run top-to-bottom
 
             // Loop over rectangle of pixels that could affect this column of points
-	    int polyi1 = imax(x - (_qDist + 1), 0);
-	    int polyi2 = imin(x + _qDist, nx - 1);
-	    int polyj1 = imax(y - _qDist, 0);
-	    int polyj2 = imin(y + _qDist, ny - 1);
+            int polyi1 = imax(x - (_qDist + 1), 0);
+            int polyi2 = imin(x + _qDist, nx - 1);
+            int polyj1 = imax(y - _qDist, 0);
+            int polyj2 = imin(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -509,7 +508,7 @@ namespace galsim {
 #pragma omp target teams distribute parallel for
 #endif
 #endif
-        for (size_t k=0; k<nxny; ++k) {
+        for (int k=0; k<nxny; ++k) {
             if (changedData[k]) {
                 updatePixelBounds(nx, ny, k, pixelInnerBoundsData,
                                   pixelOuterBoundsData,
@@ -1082,13 +1081,18 @@ namespace galsim {
         _delta.resize(b);
         _delta.setZero();
 
+        int nxny = nx * ny;
+        _changed.reset(new bool[nxny]);
+        bool* changedData = _changed.get();
+        for (int i = 0; i < nxny; i++) changedData[i] = false;
 
+#ifdef GALSIM_USE_GPU
         // Map data to GPU
         double* deltaData = _delta.getData();
         int imageDataSize = _delta.getMaxPtr() - _delta.getData();
 
         T* targetData = target.getData();
-        
+
         int pixelBoundsSize = _pixelInnerBounds.size();
 
         int hbpSize = _horizontalBoundaryPoints.size();
@@ -1096,17 +1100,12 @@ namespace galsim {
 
         int hdSize = _horizontalDistortions.size();
         int vdSize = _verticalDistortions.size();
-        
+
         double* abs_length_table_data = _abs_length_table_GPU.data();
-        
+
         int emptypolySize = _emptypoly.size();
         Position<double>* emptypolyData = _emptypolyGPU.data();
         
-        int nxny = nx * ny;
-	_changed.reset(new bool[nxny]);
-        bool* changedData = _changed.get();
-        for (int i = 0; i < nxny; i++) changedData[i] = false;
-
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
 
@@ -1115,7 +1114,6 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-#ifdef GALSIM_USE_GPU
 #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
 #endif
 
@@ -1136,7 +1134,7 @@ namespace galsim {
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
         double* abs_length_table_data = _abs_length_table_GPU.data();
-        
+
         Bounds<int> b = _delta.getBounds();
         const int nx = b.getXMax() - b.getXMin() + 1;
         const int ny = b.getYMax() - b.getYMin() + 1;
@@ -1225,8 +1223,6 @@ namespace galsim {
     {
         const int nphotons = i2 - i1;
 
-        int imageDataSize = _delta.getMaxPtr() - _delta.getData();
-
         // Generate random numbers in advance for reproducibility across CPU, GPU,
         // different numbers of threads
         // we store four random numbers for each photon in a single array.
@@ -1274,15 +1270,13 @@ namespace galsim {
             photonsDXDZ = photonsX;
             photonsDYDZ = photonsY;
         }
-        
+
         // random array
         double* randomArray = randomValues.data();
-        
+
         // delta image
         int deltaXMin = _delta.getXMin();
         int deltaYMin = _delta.getYMin();
-        int deltaXMax = _delta.getXMax();
-        int deltaYMax = _delta.getYMax();
         int deltaStep = _delta.getStep();
         int deltaStride = _delta.getStride();
 
@@ -1295,7 +1289,7 @@ namespace galsim {
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
 
         double* abs_length_table_data = _abs_length_table_GPU.data();
-        
+
         Position<double>* emptypolyData = _emptypolyGPU.data();
 
 #ifdef _OPENMP
@@ -1357,11 +1351,6 @@ namespace galsim {
             // Now we find the undistorted pixel
             int ix = int(std::floor(x0 + 0.5));
             int iy = int(std::floor(y0 + 0.5));
-
-#ifdef DEBUGLOGGING
-            int ix0 = ix;
-            int iy0 = iy;
-#endif
 
             double x = x0 - ix + 0.5;
             double y = y0 - iy + 0.5;
@@ -1439,7 +1428,7 @@ namespace galsim {
                 addedFlux += flux;
             }
         }
-        
+
         return addedFlux;
     }
 
@@ -1469,7 +1458,7 @@ namespace galsim {
             deltaData[i] = 0.0;
         }
     }
-  
+
     int SetOMPThreads(int num_threads)
     {
 #ifdef _OPENMP
