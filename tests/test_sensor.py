@@ -1171,6 +1171,36 @@ def test_omp():
         assert "Unable to use multiple threads" in cl.output
 
 
+@timer
+def test_big_then_small():
+    # After the initial implementation of the GPU version of Silicon, it was possible to get
+    # a segmentation fault if drawing onto a large image followed by a small image.
+    # The problem was that delta is resized downwards, but the allocated memory is not
+    # deallocated.  And rather than use a correct calculation for the number of pixels,
+    # the number of pixels to copy to the target was incorrectly set from the maxPtr-Data
+    # of the allocated memory in _delta.  This would write past the end of the target image and
+    # potentially cause a seg fault.
+
+    obj = galsim.Gaussian(flux=100000, sigma=20)
+
+    im1 = galsim.ImageD(512, 512, scale=0.3)
+    im1.setCenter(0,0)
+    im2 = galsim.ImageD(32, 32, scale=0.3)
+    im2.setCenter(0,0)
+
+    rng1 = galsim.BaseDeviate(1234)
+    rng2 = galsim.BaseDeviate(1234)
+    silicon = galsim.SiliconSensor(diffusion_factor=0.0)
+
+    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon, rng=rng2)
+
+    # The main test is that it didn't seg fault.
+    # But to make sure it did something reasonable, the two images should match where
+    # they overlap.
+    np.testing.assert_array_equal(im1[im2.bounds].array, im2.array)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:

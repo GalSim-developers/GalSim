@@ -1176,6 +1176,7 @@ namespace galsim {
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
 
+        assert(targetData + imageDataSize <= target.getMaxPtr());
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
@@ -1201,6 +1202,7 @@ namespace galsim {
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
 
+        assert(targetData + imageDataSize <= target.getMaxPtr());
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
@@ -1446,6 +1448,7 @@ namespace galsim {
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
         
+        assert(targetData + imageDataSize <= target.getMaxPtr());
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
