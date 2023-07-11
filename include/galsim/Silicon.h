@@ -42,8 +42,8 @@ namespace galsim
                 const Table& tr_radial_table, Position<double> treeRingCenter,
                 const Table& abs_length_table, bool transpose);
         ~Silicon();
-    
-	bool insidePixel(int ix, int iy, double x, double y, double zconv,
+
+        bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          Bounds<int>& targetBounds, bool* off_edge,
                          int emptypolySize,
                          Bounds<double>* pixelInnerBoundsData,
@@ -52,7 +52,7 @@ namespace galsim
                          Position<float>* verticalBoundaryPointsData,
                          Position<double>* emptypolyData) const;
 
-	void scaleBoundsToPoly(int i, int j, int nx, int ny,
+        void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
                                double factor) const;
 
@@ -84,7 +84,7 @@ namespace galsim
         void initialize(ImageView<T> target, Position<int> orig_center);
 
         void finalize();
-    
+
         template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);
@@ -283,7 +283,7 @@ namespace galsim
         ImageAlloc<double> _delta;
         std::unique_ptr<bool[]> _changed;
 
-	// GPU data
+        // GPU data
         std::vector<double> _abs_length_table_GPU;
         std::vector<Position<double> > _emptypolyGPU;
         double _abs_length_arg_min, _abs_length_arg_max;
