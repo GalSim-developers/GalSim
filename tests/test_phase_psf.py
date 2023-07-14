@@ -1569,6 +1569,24 @@ def test_seeing_exp():
     np.testing.assert_allclose(photons1.x, photons2.x*(700/500)**-0.3, rtol=0, atol=1e-15)
     np.testing.assert_allclose(photons1.y, photons2.y*(700/500)**-0.3, rtol=0, atol=1e-15)
 
+    # Also try when using a range of wavelengths
+    sed = galsim.SED('vega.txt', 'nm', 'flambda')
+    op1 = galsim.WavelengthSampler(sed)
+    op2 = galsim.WavelengthSampler(sed)
+
+    photons1 = psf1.drawImage(
+        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate(),
+        photon_ops=[op1]
+    ).photons
+    photons2 = psf2.drawImage(
+        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate(),
+        photon_ops=[op2]
+    ).photons
+    np.testing.assert_equal(photons1.wavelength, photons2.wavelength)
+    assert np.std(photons1.wavelength) > 0
+    np.testing.assert_allclose(photons1.x, photons2.x*(700/500)**-0.3, rtol=0, atol=1e-15)
+    np.testing.assert_allclose(photons1.y, photons2.y*(700/500)**-0.3, rtol=0, atol=1e-15)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
