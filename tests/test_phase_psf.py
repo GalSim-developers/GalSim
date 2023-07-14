@@ -1532,6 +1532,44 @@ def test_t_persistence():
     assert np.max(photons.time) < 25.0
 
 
+def test_seeing_exp():
+    rng = galsim.BaseDeviate(10)
+    atm1 = galsim.Atmosphere(
+        screen_size=10.0,
+        altitude=[0,1,2,3],
+        r0_500=0.2,
+        seeing_exp=-0.3,
+        rng=rng.duplicate()
+    )
+    atm2 = galsim.Atmosphere(
+        screen_size=10.0,
+        altitude=[0,1,2,3],
+        r0_500=0.2,
+        seeing_exp=None,
+        rng=rng.duplicate()
+    )
+    # When all photons are 500nm, seeing_exp has no effect.
+    psf1 = atm1.makePSF(exptime=15.0, lam=500.0, diam=1.0)
+    psf2 = atm2.makePSF(exptime=15.0, lam=500.0, diam=1.0)
+    nphot = 100_000
+    photons1 = psf1.drawImage(save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+    photons2 = psf2.drawImage(save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+    np.testing.assert_allclose(photons1.x, photons2.x, rtol=0, atol=1e-15)
+    np.testing.assert_allclose(photons1.y, photons2.y, rtol=0, atol=1e-15)
+
+    # But if lam != 500, we should see a scaling
+    psf1 = atm1.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)  # second kick is achromatic
+    psf2 = atm2.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)  # so turn it off
+    nphot = 100_000
+
+    img = galsim.Image(11, 11, scale=0.2)  # odd makes center at (0,0)
+    photons1 = psf1.drawImage(image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+    photons2 = psf2.drawImage(image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+
+    np.testing.assert_allclose(photons1.x, photons2.x*(700/500)**-0.3, rtol=0, atol=1e-15)
+    np.testing.assert_allclose(photons1.y, photons2.y*(700/500)**-0.3, rtol=0, atol=1e-15)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:

@@ -764,7 +764,7 @@ class AtmosphericScreen:
         if theta[1].rad != 0:
             v += self._altitude*theta[1].tan()
         dfdx, dfdy = self._tab2d._gradient_wrap(u.ravel(), v.ravel())
-        if w is not None:
+        if w is not None and self.seeing_exp is not None:
             dfdx *= (w/500.)**self.seeing_exp
             dfdy *= (w/500.)**self.seeing_exp
         return dfdx.reshape(u.shape), dfdy.reshape(u.shape)

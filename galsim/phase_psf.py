@@ -1583,7 +1583,7 @@ class PhaseScreenPSF(GSObject):
         if photons.hasAllocatedWavelengths():
             w = photons.wavelength
         else:
-            w = None
+            w = self.lam
 
         n_photons = len(photons)
 
