@@ -596,7 +596,15 @@ namespace galsim {
         if (photons.hasAllocatedWavelengths()) {
             double lambda = photons.getWavelength(i); // in nm
             // Lookup the absorption length in the imported table
-            double abs_length = _abs_length_table.lookup(lambda); // in microns
+            double abs_length;
+            try {
+                abs_length = _abs_length_table.lookup(lambda); // in microns
+            } catch (std::runtime_error) {
+                if (lambda <= _abs_length_table.argMin())
+                    abs_length = _abs_length_table.lookup(_abs_length_table.argMin());
+                else
+                    abs_length = _abs_length_table.lookup(_abs_length_table.argMax());
+            }
             si_length = -abs_length * log(1.0 - randomNumber); // in microns
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
