@@ -181,6 +181,8 @@ jobs:
                 cd tests
                 coverage run -m pytest -v
                 pytest -v run_examples.py
+                coverage combine
+                coverage xml
                 cd ..  # N.B. This seems to happen automatically if omitted.
                        # Less confusing to include it explicitly.
 
@@ -209,18 +211,12 @@ jobs:
 
             - name: Upload coverage to codecov
               if: matrix.py != 'pypy-3.7'
-              run: |
-                cd tests
-                pwd -P
-                ls -la
-                coverage combine || true  # (Not necessary I think, but just in case.)
-                coverage report
-                ls -la
-                #codecov  # This didn't work.
-                # cf. https://community.codecov.io/t/github-not-getting-codecov-report-after-switching-from-travis-to-github-actions-for-ci/
-                # The solution was to switch to the bash uploader line instead.
-                bash <(curl -s https://codecov.io/bash)
-                cd ..
+              uses: codecov/codecov-action@v3
+              with:
+                token: ${{ secrets.CODECOV_TOKEN }}
+                files: tests/coverage.xml
+                fail_ci_if_error: false
+                verbose: true
 
             - name: Pre-cache cleanup
               continue-on-error: true
