@@ -667,6 +667,44 @@ def test_sensor_wavelengths_and_angles():
         assert r4 > r1
 
 @timer
+def test_bad_wavelengths():
+    """If a wavelength is outside the valid range of our tabulated absorption length table,
+    make sure it does something reasonable, rather than abort.
+    """
+    rng = galsim.BaseDeviate(1234)
+
+    nphot = 7
+    x = rng.np.uniform(10,20, size=nphot)
+    y = rng.np.uniform(10,20, size=nphot)
+    flux = np.ones(nphot)
+    dxdz = rng.np.uniform(0,0.5, size=nphot)
+    dydz = rng.np.uniform(0,0.5, size=nphot)
+
+    # The original bug that triggered this test involved photons with wavelength=0.
+    # That's not physically possible, but now this works, using the min or max wavelength
+    # in the lookup table for any photons that are too blue or too red respectively.
+    # Note: the valid range is [255, 1450]
+    wave = [0.0, 55, 255., 800., 1450., 4000., np.inf]
+    photons = galsim.PhotonArray(nphot, x=x, y=y, flux=flux, dxdz=dxdz, dydz=dydz, wavelength=wave)
+
+    image = galsim.Image(32,32)
+    sensor = galsim.SiliconSensor(name='lsst_itl_50_8', rng=rng)
+    sensor.accumulate(photons, image)
+
+    # The real test is just that that didn't throw an exception.
+    # But check that all the photons were put somewhere.
+    assert np.sum(image.array) == nphot
+
+    # The original code that triggered this was actually putting flux=0 for the bad wavelengths,
+    # so let's do that too.
+    flux = [0, 0, 1, 1, 1, 0, 0]
+    photons = galsim.PhotonArray(nphot, x=x, y=y, flux=flux, dxdz=dxdz, dydz=dydz, wavelength=wave)
+    image.setZero()
+    sensor.accumulate(photons, image)
+    assert np.sum(image.array) == np.sum(flux)
+
+
+@timer
 def test_bf_slopes():
     """Test the brighter-fatter slopes
     with both the B-F effect and diffusion turned on and off.
