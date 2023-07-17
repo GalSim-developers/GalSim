@@ -22,10 +22,11 @@ For all releases:
 - Make sure the current code is installed:
     python setup.py install
 - Generate current docs
-    update_docs
+    ./update_docs
 - Commit and push new docs.
     git add docs/_build
     git commit -m "update docs"
+    git push
 - Make a release
   - On GitHub page, go to Code - Tags - Releases
       (https://github.com/GalSim-developers/GalSim/releases)
@@ -33,7 +34,7 @@ For all releases:
   - Set tag version vM.m.r
   - Set target releases/M.m
   - Set title Version M.m.r
-  - For text, probably links to CHANGELOG and full docs
+  - For text, links to CHANGELOG and full docs
   - Publish Release
 - Check the twine upload
   - On GitHub page, go to Actions
