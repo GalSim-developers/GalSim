@@ -290,9 +290,10 @@ namespace galsim
         double _abs_length_increment;
         int _abs_length_size;
 
-        // need to keep a pointer to the last target image's data and its data type
-        // so we can release it on the GPU later
+        // need to keep a pointer to the last target image's data, its length and
+        // its data type so we can release it on the GPU later
         void* _targetData;
+        int _targetDataLength;
         bool _targetIsDouble;
     };
 
