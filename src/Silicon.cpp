@@ -1052,8 +1052,42 @@ namespace galsim {
             finalize();
         }
 
+        // work out minimum and maximum addresses of image data in memory
+        T *targetDataStart, *targetDataEnd;
+        int step = target.getStep();
+        int stride = target.getStride();
+        T *data = target.getData();
+        int ncol = target.getNCol();
+        int nrow = target.getNRow();
+
+        if (stride >= 0) {
+            if (step >= 0) {
+                // positive step and stride
+                targetDataStart = data;
+                targetDataEnd = data + (ncol - 1) * step + (nrow - 1) * stride + 1;
+            }
+            else {
+                // negative step, positive stride
+                targetDataStart = data + (ncol - 1) * step;
+                targetDataEnd = data + (nrow - 1) * stride + 1;
+            }
+        }
+        else {
+            if (step >= 0) {
+                // positive step, negative stride
+                targetDataStart = data + (nrow - 1) * stride;
+                targetDataEnd = data + (ncol - 1) * step + 1;
+            }
+            else {
+                // negative step and stride
+                targetDataStart = data + (ncol - 1) * step + (nrow - 1) * stride;
+                targetDataEnd = data + 1;
+            }
+        }
+        _targetDataLength = targetDataEnd - targetDataStart;
+
         // and store target image pointer and type for later
-        _targetData = static_cast<void*>(target.getData());
+        _targetData = static_cast<void*>(targetDataStart);
         _targetIsDouble = (sizeof(T) == 8);
 
         Bounds<int> b = target.getBounds();
@@ -1084,8 +1118,6 @@ namespace galsim {
 #ifdef GALSIM_USE_GPU
         // Map data to GPU
         double* deltaData = _delta.getData();
-        T* targetData = target.getData();
-        const int nmem = target.getMaxPtr() - target.getData();
 
         int pixelBoundsSize = _pixelInnerBounds.size();
 
@@ -1108,8 +1140,7 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
-        // FIXME: this is wrong for targetData if step or skip < 0.
-#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetData[0:nmem], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
+#pragma omp target enter data map(to: this[:1], deltaData[0:npix], targetDataStart[0:_targetDataLength], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
 #endif
 
         // Start with the correct distortions for the initial image as it is already
@@ -1131,7 +1162,7 @@ namespace galsim {
         double* abs_length_table_data = _abs_length_table_GPU.data();
 
         const int nx = _delta.getNCol();
-        const int ny = _delta,.getNRow();
+        const int ny = _delta.getNRow();
         int npix = nx * ny;
 
         int pixelBoundsSize = _pixelInnerBounds.size();
@@ -1151,12 +1182,11 @@ namespace galsim {
 
         if (_targetIsDouble) {
             double* targetData = static_cast<double*>(_targetData);
-            // FIXME: this is wrong for targetData if target is not contiguous!
-#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
+#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:_targetDataLength], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
         }
         else {
             float* targetData = static_cast<float*>(_targetData);
-#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:npix], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
+#pragma omp target exit data map(release: this[:1], deltaData[0:npix], targetData[0:_targetDataLength], pixelInnerBoundsData[0:pixelBoundsSize], pixelOuterBoundsData[0:pixelBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:_abs_length_size], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:npix])
         }
 #endif
     }
@@ -1235,10 +1265,9 @@ namespace galsim {
         _addDelta<true, false>(target, _delta);
 
         // And if doing this on the GPU, we need to copy back to the CPU now.
-        // FIXME: This is wrong if either step or stride < 0.
 #ifdef GALSIM_USE_GPU
-        const int nmem = target.getMaxPtr() - target.getData();
-#pragma omp target update from(targetData[0:nmem])
+        T* targetData = static_cast<T*>(_targetData);
+#pragma omp target update from(targetData[0:_targetDataLength])
 #endif
     }
 
