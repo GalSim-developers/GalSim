@@ -1552,40 +1552,68 @@ def test_seeing_exp():
     psf1 = atm1.makePSF(exptime=15.0, lam=500.0, diam=1.0)
     psf2 = atm2.makePSF(exptime=15.0, lam=500.0, diam=1.0)
     nphot = 100_000
-    photons1 = psf1.drawImage(save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
-    photons2 = psf2.drawImage(save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+    photons1 = psf1.drawImage(
+        save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()
+    ).photons
+    photons2 = psf2.drawImage(
+        save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()
+    ).photons
     np.testing.assert_allclose(photons1.x, photons2.x, rtol=0, atol=1e-15)
     np.testing.assert_allclose(photons1.y, photons2.y, rtol=0, atol=1e-15)
 
     # But if lam != 500, we should see a scaling
-    psf1 = atm1.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)  # second kick is achromatic
-    psf2 = atm2.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)  # so turn it off
+    # also, second kick is achromatic, so turn it off
+    psf1 = atm1.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)
+    psf2 = atm2.makePSF(exptime=15.0, lam=700.0, diam=1.0, second_kick=False)
     nphot = 100_000
 
     img = galsim.Image(11, 11, scale=0.2)  # odd makes center at (0,0)
-    photons1 = psf1.drawImage(image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
-    photons2 = psf2.drawImage(image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()).photons
+    photons1 = psf1.drawImage(
+        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()
+    ).photons
+    photons2 = psf2.drawImage(
+        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate()
+    ).photons
 
     np.testing.assert_allclose(photons1.x, photons2.x*(700/500)**-0.3, rtol=0, atol=1e-15)
     np.testing.assert_allclose(photons1.y, photons2.y*(700/500)**-0.3, rtol=0, atol=1e-15)
 
     # Also try when using a range of wavelengths
     sed = galsim.SED('vega.txt', 'nm', 'flambda')
-    op1 = galsim.WavelengthSampler(sed)
-    op2 = galsim.WavelengthSampler(sed)
+    bandpass = galsim.Bandpass('LSST_r.dat', 'nm')
+    star = (galsim.DeltaFunction()*sed).withFlux(nphot, bandpass)
 
-    photons1 = psf1.drawImage(
-        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate(),
-        photon_ops=[op1]
+    photons1 = star.drawImage(
+        bandpass,
+        image=img,
+        method='phot',
+        n_photons=nphot,
+        rng=rng.duplicate(),
+        save_photons=True,
+        photon_ops=[psf1]
     ).photons
-    photons2 = psf2.drawImage(
-        image=img, save_photons=True, method='phot', n_photons=nphot, rng=rng.duplicate(),
-        photon_ops=[op2]
+    photons2 = star.drawImage(
+        bandpass,
+        image=img,
+        method='phot',
+        n_photons=nphot,
+        rng=rng.duplicate(),
+        save_photons=True,
+        photon_ops=[psf2]
     ).photons
+
     np.testing.assert_equal(photons1.wavelength, photons2.wavelength)
     assert np.std(photons1.wavelength) > 0
-    np.testing.assert_allclose(photons1.x, photons2.x*(700/500)**-0.3, rtol=0, atol=1e-15)
-    np.testing.assert_allclose(photons1.y, photons2.y*(700/500)**-0.3, rtol=0, atol=1e-15)
+    np.testing.assert_allclose(
+        photons1.x,
+        photons2.x*(photons2.wavelength/500)**-0.3,
+        rtol=0, atol=1e-15
+    )
+    np.testing.assert_allclose(
+        photons1.y,
+        photons2.y*(photons2.wavelength/500)**-0.3,
+        rtol=0, atol=1e-15
+    )
 
 
 if __name__ == "__main__":
