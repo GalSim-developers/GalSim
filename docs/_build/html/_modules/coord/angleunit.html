@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coord.angleunit &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>coord.angleunit &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -107,7 +107,7 @@
 <span class="kn">import</span> <span class="nn">math</span>
 
 <div class="viewcode-block" id="AngleUnit"><a class="viewcode-back" href="../../units.html#galsim.AngleUnit">[docs]</a><span class="k">class</span> <span class="nc">AngleUnit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for defining angular units used by Angle objects.</span>
 
 <span class="sd">    **Initialization:**</span>
@@ -140,23 +140,23 @@
     <span class="n">valid_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rad&#39;</span><span class="p">,</span> <span class="s1">&#39;deg&#39;</span><span class="p">,</span> <span class="s1">&#39;hr&#39;</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span> <span class="s1">&#39;arcmin&#39;</span><span class="p">,</span> <span class="s1">&#39;arcsec&#39;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param value:   The measure of the unit in radians.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A read-only attribute giving the measure of the AngleUnit in radians.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A read-only attribute giving the measure of the AngleUnit in radians.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 
     <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;float * AngleUnit returns an Angle&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;float * AngleUnit returns an Angle&quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span>  <span class="c1"># Can&#39;t do this at the top, since circular reference.</span>
         <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;AngleUnit / AngleUnit returns a float giving the relative scaling.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;AngleUnit / AngleUnit returns a float giving the relative scaling.</span>
 
 <span class="sd">        Note: At least to within machine precision, it is the case that</span>
 
@@ -170,7 +170,7 @@
 
 <div class="viewcode-block" id="AngleUnit.from_name"><a class="viewcode-back" href="../../units.html#galsim.AngleUnit.from_name">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert a string into the corresponding AngleUnit.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a string into the corresponding AngleUnit.</span>
 
 <span class="sd">        Only the start of the string is checked, so for instance &#39;radian&#39; or &#39;radians&#39; is</span>
 <span class="sd">        equivalent to &#39;rad&#39;.</span>

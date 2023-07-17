@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.sum &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.sum &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -110,7 +110,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 
 <div class="viewcode-block" id="Add"><a class="viewcode-back" href="../../composite.html#galsim.Add">[docs]</a><span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for adding 2 or more `GSObject` or `ChromaticObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for adding 2 or more `GSObject` or `ChromaticObject` instances.</span>
 
 <span class="sd">    This function will inspect its input arguments to decide if a `Sum` object or a</span>
 <span class="sd">    `ChromaticSum` object is required to represent the sum of surface brightness profiles.</span>
@@ -158,7 +158,7 @@
 
 
 <div class="viewcode-block" id="Sum"><a class="viewcode-back" href="../../composite.html#galsim.Sum">[docs]</a><span class="k">class</span> <span class="nc">Sum</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for adding 2 or more `GSObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for adding 2 or more `GSObject` instances.</span>
 
 <span class="sd">    The Sum class is used to represent the sum of multiple `GSObject` instances.  For example, it</span>
 <span class="sd">    might be used to represent a multiple-component galaxy as the sum of an Exponential and a</span>
@@ -253,7 +253,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The list of objects being added.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of objects being added.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span>
 
@@ -282,7 +282,7 @@
         <span class="k">return</span> <span class="n">_noise</span>
 
 <div class="viewcode-block" id="Sum.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.Sum.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Output Field &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Output Field &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -408,8 +408,8 @@ cases where it would be useful for custom output types.</p>
 name of the module to load at the start of processing.  e.g. if this function is defined in the
 file <code class="docutils literal notranslate"><span class="pre">my_custom_output.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
 in the config file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
@@ -417,9 +417,9 @@ Then before processing anything, the code will execute the command <code class="
 which will read your file and execute the registration command to add the builder to the list
 of valid output types.</p>
 <p>Then you can use this as a valid output type:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomOutput</span><span class="w"></span>
-<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomOutput</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
 <p>For an example of a custom output type, see <a class="reference internal" href="des.html#galsim.des.MEDSBuilder" title="galsim.des.MEDSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MEDSBuilder</span></code></a> in <a class="reference internal" href="des.html#the-des-module"><span class="std std-ref">The DES Module</span></a>,
@@ -744,8 +744,8 @@ cases where it would be useful for custom output types.</p>
 name of the module to load at the start of processing.  e.g. if this function is defined in the
 file <code class="docutils literal notranslate"><span class="pre">my_custom_output.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
 in the config file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
@@ -753,9 +753,9 @@ Then before processing anything, the code will execute the command <code class="
 which will read your file and execute the registration command to add the builder to the list
 of valid output types.</p>
 <p>Then you can use this as a valid extra output directive:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">custom_extra_output</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_extra_output</span><span class="p">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
 <p>For examples of custom extra outputs, see</p>

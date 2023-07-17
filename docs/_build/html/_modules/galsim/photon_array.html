@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.photon_array &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.photon_array &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -116,7 +116,7 @@
 <span class="c1"># Add on more methods in the python layer</span>
 
 <div class="viewcode-block" id="PhotonArray"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray">[docs]</a><span class="k">class</span> <span class="nc">PhotonArray</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;The PhotonArray class encapsulates the concept of a collection of photons incident on</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The PhotonArray class encapsulates the concept of a collection of photons incident on</span>
 <span class="sd">    a detector.</span>
 
 <span class="sd">    A PhotonArray object is not typically constructed directly by the user.  Rather, it is</span>
@@ -223,7 +223,7 @@
         <span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">dxdz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dydz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a PhotonArray from pre-allocated numpy arrays without any copying.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a PhotonArray from pre-allocated numpy arrays without any copying.</span>
 
 <span class="sd">        The normal PhotonArray constructor always allocates new arrays and copies any provided</span>
 <span class="sd">        initial values into those new arrays.  This class method, by constrast, constructs a</span>
@@ -274,7 +274,7 @@
         <span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">dxdz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dydz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Same as `fromArrays`, but no sanity checking of inputs.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Same as `fromArrays`, but no sanity checking of inputs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">PhotonArray</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
@@ -290,7 +290,7 @@
         <span class="k">return</span> <span class="n">ret</span>
 
 <div class="viewcode-block" id="PhotonArray.size"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the size of the photon array.  Equivalent to ``len(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the size of the photon array.  Equivalent to ``len(self)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span></div>
 
@@ -299,7 +299,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The incidence x position in image coordinates (pixels), typically at the top of</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The incidence x position in image coordinates (pixels), typically at the top of</span>
 <span class="sd">        the detector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
@@ -309,7 +309,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The incidence y position in image coordinates (pixels), typically at the top of</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The incidence y position in image coordinates (pixels), typically at the top of</span>
 <span class="sd">        the detector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span>
@@ -319,7 +319,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The flux of the photons.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The flux of the photons.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
     <span class="nd">@flux</span><span class="o">.</span><span class="n">setter</span>
@@ -328,7 +328,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dxdz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The tangent of the inclination angles in the x direction: dx/dz.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The tangent of the inclination angles in the x direction: dx/dz.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocateAngles</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span>
@@ -339,7 +339,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dydz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The tangent of the inclination angles in the y direction: dy/dz.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The tangent of the inclination angles in the y direction: dy/dz.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocateAngles</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dydz</span>
@@ -350,7 +350,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The wavelength of the photons (in nm).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The wavelength of the photons (in nm).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocateWavelengths</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span>
@@ -361,7 +361,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pupil_u</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Horizontal location of photon as it intersected the entrance pupil plane.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Horizontal location of photon as it intersected the entrance pupil plane.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocatePupil</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_u</span>
@@ -372,7 +372,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pupil_v</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Vertical location of photon as it intersected the entrance pupil plane.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Vertical location of photon as it intersected the entrance pupil plane.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocatePupil</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_v</span>
@@ -383,7 +383,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Time stamp of when photon encounters the pupil plane.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Time stamp of when photon encounters the pupil plane.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allocateTimes</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time</span>
@@ -393,13 +393,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_time</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">value</span>
 
 <div class="viewcode-block" id="PhotonArray.hasAllocatedAngles"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.hasAllocatedAngles">[docs]</a>    <span class="k">def</span> <span class="nf">hasAllocatedAngles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether the arrays for the incidence angles `dxdz` and `dydz` have been</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the arrays for the incidence angles `dxdz` and `dydz` have been</span>
 <span class="sd">        allocated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dydz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="PhotonArray.allocateAngles"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.allocateAngles">[docs]</a>    <span class="k">def</span> <span class="nf">allocateAngles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allocate memory for the incidence angles, `dxdz` and `dydz`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocate memory for the incidence angles, `dxdz` and `dydz`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
@@ -407,59 +407,59 @@
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_pa&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.hasAllocatedWavelengths"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.hasAllocatedWavelengths">[docs]</a>    <span class="k">def</span> <span class="nf">hasAllocatedWavelengths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether the `wavelength` array has been allocated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the `wavelength` array has been allocated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="PhotonArray.allocateWavelengths"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.allocateWavelengths">[docs]</a>    <span class="k">def</span> <span class="nf">allocateWavelengths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allocate the memory for the `wavelength` array.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocate the memory for the `wavelength` array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_pa&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.hasAllocatedPupil"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.hasAllocatedPupil">[docs]</a>    <span class="k">def</span> <span class="nf">hasAllocatedPupil</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether the arrays for the pupil coordinates `pupil_u` and `pupil_v` have been</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the arrays for the pupil coordinates `pupil_u` and `pupil_v` have been</span>
 <span class="sd">        allocated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="PhotonArray.allocatePupil"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.allocatePupil">[docs]</a>    <span class="k">def</span> <span class="nf">allocatePupil</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allocate the memory for the pupil coordinates, `pupil_u` and `pupil_v`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocate the memory for the pupil coordinates, `pupil_u` and `pupil_v`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_u</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.hasAllocatedTimes"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.hasAllocatedTimes">[docs]</a>    <span class="k">def</span> <span class="nf">hasAllocatedTimes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether the array for the time stamps `time` has been allocated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the array for the time stamps `time` has been allocated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="PhotonArray.allocateTimes"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.allocateTimes">[docs]</a>    <span class="k">def</span> <span class="nf">allocateTimes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Allocate the memory for the time stamps, `time`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocate the memory for the time stamps, `time`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.isCorrelated"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.isCorrelated">[docs]</a>    <span class="k">def</span> <span class="nf">isCorrelated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether the photons are correlated</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the photons are correlated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span></div>
 
 <div class="viewcode-block" id="PhotonArray.setCorrelated"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.setCorrelated">[docs]</a>    <span class="k">def</span> <span class="nf">setCorrelated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set whether the photons are correlated</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set whether the photons are correlated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_pa&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.getTotalFlux"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.getTotalFlux">[docs]</a>    <span class="k">def</span> <span class="nf">getTotalFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the total flux of all the photons.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the total flux of all the photons.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="PhotonArray.setTotalFlux"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.setTotalFlux">[docs]</a>    <span class="k">def</span> <span class="nf">setTotalFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Rescale the photon fluxes to achieve the given total flux.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rescale the photon fluxes to achieve the given total flux.</span>
 
 <span class="sd">        Parameter:</span>
 <span class="sd">            flux:       The target flux</span>
@@ -467,7 +467,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">scaleFlux</span><span class="p">(</span><span class="n">flux</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTotalFlux</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="PhotonArray.scaleFlux"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.scaleFlux">[docs]</a>    <span class="k">def</span> <span class="nf">scaleFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Rescale the photon fluxes by the given factor.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rescale the photon fluxes by the given factor.</span>
 
 <span class="sd">        Parameter:</span>
 <span class="sd">            scale:      The factor by which to scale the fluxes.</span>
@@ -475,7 +475,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">*=</span> <span class="n">scale</span></div>
 
 <div class="viewcode-block" id="PhotonArray.scaleXY"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.scaleXY">[docs]</a>    <span class="k">def</span> <span class="nf">scaleXY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Scale the photon positions (`x` and `y`) by the given factor.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale the photon positions (`x` and `y`) by the given factor.</span>
 
 <span class="sd">        Parameter:</span>
 <span class="sd">            scale:      The factor by which to scale the positions.</span>
@@ -484,7 +484,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">*=</span> <span class="n">scale</span></div>
 
 <div class="viewcode-block" id="PhotonArray.assignAt"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.assignAt">[docs]</a>    <span class="k">def</span> <span class="nf">assignAt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">istart</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign the contents of another `PhotonArray` to this one starting at istart.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign the contents of another `PhotonArray` to this one starting at istart.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">istart</span> <span class="o">+</span> <span class="n">rhs</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
@@ -505,7 +505,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">time</span></div>
 
 <div class="viewcode-block" id="PhotonArray.convolve"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.convolve">[docs]</a>    <span class="k">def</span> <span class="nf">convolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convolve this `PhotonArray` with another.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convolve this `PhotonArray` with another.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;PhotonArray.convolve with unequal size arrays&quot;</span><span class="p">,</span>
@@ -621,7 +621,7 @@
                                    <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PhotonArray.addTo"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.addTo">[docs]</a>    <span class="k">def</span> <span class="nf">addTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add flux of photons to an image by binning into pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add flux of photons to an image by binning into pixels.</span>
 
 <span class="sd">        Photons in this `PhotonArray` are binned into the pixels of the input</span>
 <span class="sd">        `Image` and their flux summed into the pixels.  The `Image` is assumed to represent</span>
@@ -641,7 +641,7 @@
 
 <div class="viewcode-block" id="PhotonArray.makeFromImage"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.makeFromImage">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">makeFromImage</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">max_flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Turn an existing `Image` into a `PhotonArray` that would accumulate into this image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn an existing `Image` into a `PhotonArray` that would accumulate into this image.</span>
 
 <span class="sd">        The flux in each non-zero pixel will be turned into 1 or more photons with random positions</span>
 <span class="sd">        within the pixel bounds.  The ``max_flux`` parameter (which defaults to 1) sets an upper</span>
@@ -680,7 +680,7 @@
         <span class="k">return</span> <span class="n">photons</span></div>
 
 <div class="viewcode-block" id="PhotonArray.write"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write a `PhotonArray` to a FITS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a `PhotonArray` to a FITS file.</span>
 
 <span class="sd">        The output file will be a FITS binary table with a row for each photon in the `PhotonArray`.</span>
 <span class="sd">        Columns will include &#39;id&#39; (sequential from 1 to nphotons), &#39;x&#39;, &#39;y&#39;, and &#39;flux&#39;.</span>
@@ -724,7 +724,7 @@
 
 <div class="viewcode-block" id="PhotonArray.read"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.read">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `PhotonArray`, reading the photon data from a FITS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `PhotonArray`, reading the photon data from a FITS file.</span>
 
 <span class="sd">        The file being read in is not arbitrary.  It is expected to be a file that was written</span>
 <span class="sd">        out with the `PhotonArray.write` method.::</span>
@@ -756,7 +756,7 @@
 
 
 <div class="viewcode-block" id="PhotonOp"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonOp">[docs]</a><span class="k">class</span> <span class="nc">PhotonOp</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for photon operators, which just defines the interface.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for photon operators, which just defines the interface.</span>
 
 <span class="sd">    Photon operators are designed to apply some physical effect to a bundle of photons.  They</span>
 <span class="sd">    may adjust the fluxes in some way, or the positions, maybe in a wavelength-dependent way, etc.</span>
@@ -764,7 +764,7 @@
 <span class="sd">    The order typically matters, so the operators are applied in the order they appear in the list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="PhotonOp.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonOp.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the photon operator to a PhotonArray.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the photon operator to a PhotonArray.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -783,7 +783,7 @@
 
 
 <div class="viewcode-block" id="WavelengthSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.WavelengthSampler">[docs]</a><span class="k">class</span> <span class="nc">WavelengthSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that uses sed.sampleWavelength to set the wavelengths array of a</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that uses sed.sampleWavelength to set the wavelengths array of a</span>
 <span class="sd">    `PhotonArray`.</span>
 
 <span class="sd">    Parameters:</span>
@@ -809,7 +809,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">npoints</span> <span class="o">=</span> <span class="n">npoints</span>
 
 <div class="viewcode-block" id="WavelengthSampler.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.WavelengthSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign wavelengths to the photons sampled from the SED * Bandpass.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign wavelengths to the photons sampled from the SED * Bandpass.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -834,7 +834,7 @@
 
 
 <div class="viewcode-block" id="FRatioAngles"><a class="viewcode-back" href="../../photon_ops.html#galsim.FRatioAngles">[docs]</a><span class="k">class</span> <span class="nc">FRatioAngles</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that assigns photon directions based on the f/ratio and obscuration.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that assigns photon directions based on the f/ratio and obscuration.</span>
 
 <span class="sd">    Assigns arrival directions at the focal plane for photons, drawing from a uniform</span>
 <span class="sd">    brightness distribution between the obscuration angle and the edge of the pupil defined</span>
@@ -867,7 +867,7 @@
 
 
 <div class="viewcode-block" id="FRatioAngles.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.FRatioAngles.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign directions to the photons in photon_array.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign directions to the photons in photon_array.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -911,7 +911,7 @@
 
 
 <div class="viewcode-block" id="PhotonDCR"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonDCR">[docs]</a><span class="k">class</span> <span class="nc">PhotonDCR</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A photon operator that applies the effect of differential chromatic refraction (DCR)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A photon operator that applies the effect of differential chromatic refraction (DCR)</span>
 <span class="sd">    and optionally the chromatic dilation due to atmospheric seeing.</span>
 
 <span class="sd">    Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence</span>
@@ -996,7 +996,7 @@
                                                   <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PhotonDCR.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonDCR.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the DCR effect to the photons</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the DCR effect to the photons</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -1045,7 +1045,7 @@
 
 
 <div class="viewcode-block" id="Refraction"><a class="viewcode-back" href="../../photon_ops.html#galsim.Refraction">[docs]</a><span class="k">class</span> <span class="nc">Refraction</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that refracts photons (manipulating their dxdz and dydz values) at an</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that refracts photons (manipulating their dxdz and dydz values) at an</span>
 <span class="sd">    interface, commonly the interface between vacuum and silicon at the surface of a CCD.</span>
 
 <span class="sd">    Assumes that the surface normal is along the z-axis.  If the refraction would result in total</span>
@@ -1064,7 +1064,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span> <span class="o">=</span> <span class="n">index_ratio</span>
 
 <div class="viewcode-block" id="Refraction.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.Refraction.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Refract photons</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refract photons</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -1116,7 +1116,7 @@
 
 
 <div class="viewcode-block" id="FocusDepth"><a class="viewcode-back" href="../../photon_ops.html#galsim.FocusDepth">[docs]</a><span class="k">class</span> <span class="nc">FocusDepth</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that focuses/defocuses photons by changing the height of the focal</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that focuses/defocuses photons by changing the height of the focal</span>
 <span class="sd">    surface with respect to the conical beam.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1132,7 +1132,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
 
 <div class="viewcode-block" id="FocusDepth.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.FocusDepth.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjust a photon bundle to account for the change in focal depth.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjust a photon bundle to account for the change in focal depth.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -1150,7 +1150,7 @@
 
 
 <div class="viewcode-block" id="PupilImageSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.PupilImageSampler">[docs]</a><span class="k">class</span> <span class="nc">PupilImageSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that samples the pupil-plane positions given a pupil-plane image.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that samples the pupil-plane positions given a pupil-plane image.</span>
 <span class="sd">    Samples are drawn discretely from pupil plane image pixels marked as illuminated.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1215,7 +1215,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
 <div class="viewcode-block" id="PupilImageSampler.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PupilImageSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sample the pupil plane u,v positions for each photon.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample the pupil plane u,v positions for each photon.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -1234,7 +1234,7 @@
 
 
 <div class="viewcode-block" id="PupilAnnulusSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.PupilAnnulusSampler">[docs]</a><span class="k">class</span> <span class="nc">PupilAnnulusSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that uniformly samples an annular entrance pupil.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that uniformly samples an annular entrance pupil.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        R_outer:  Annulus outer radius in meters.</span>
@@ -1251,7 +1251,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="n">R_inner</span>
 
 <div class="viewcode-block" id="PupilAnnulusSampler.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PupilAnnulusSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sample the pupil plane u,v positions for each photon.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample the pupil plane u,v positions for each photon.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
@@ -1275,7 +1275,7 @@
 
 
 <div class="viewcode-block" id="TimeSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.TimeSampler">[docs]</a><span class="k">class</span> <span class="nc">TimeSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A photon operator that uniformly samples photon time stamps within some interval.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A photon operator that uniformly samples photon time stamps within some interval.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        t0:         The nominal start time of the observation in seconds. [default: 0]</span>
@@ -1290,7 +1290,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span> <span class="o">=</span> <span class="n">exptime</span>
 
 <div class="viewcode-block" id="TimeSampler.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.TimeSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add time stamps to photons.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add time stamps to photons.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>

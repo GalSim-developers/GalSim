@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.galaxy_sample &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.galaxy_sample &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -117,7 +117,7 @@
 <span class="n">cosmos_pix_scale</span> <span class="o">=</span> <span class="mf">0.03</span>
 
 <div class="viewcode-block" id="GalaxySample"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample">[docs]</a><span class="k">class</span> <span class="nc">GalaxySample</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing a random subsample of galaxies from an arbitrary deep survey.</span>
 
 <span class="sd">    Depending on the keyword arguments, particularly ``use_real``, a `GalaxySample` may be able to</span>
@@ -392,7 +392,7 @@
 
 <div class="viewcode-block" id="GalaxySample.makeGalaxy"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.makeGalaxy">[docs]</a>    <span class="k">def</span> <span class="nf">makeGalaxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chromatic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                    <span class="n">deep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sersic_prec</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_random</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Routine to construct one or more `GSObject` instances corresponding to the catalog entry</span>
 <span class="sd">        with a particular index or indices.</span>
 
@@ -577,7 +577,7 @@
             <span class="k">return</span> <span class="n">gal_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="GalaxySample.selectRandomIndex"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.selectRandomIndex">[docs]</a>    <span class="k">def</span> <span class="nf">selectRandomIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_random</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_n_rng_calls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Routine to select random indices out of the catalog.  This routine does a weighted random</span>
 <span class="sd">        selection with replacement (i.e., there is no guarantee of uniqueness of the selected</span>
 <span class="sd">        indices).  Weighting uses the weight factors available in the catalog, if any; these weights</span>
@@ -780,7 +780,7 @@
         <span class="k">return</span> <span class="n">gal</span>
 
 <div class="viewcode-block" id="GalaxySample.getRealParams"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.getRealParams">[docs]</a>    <span class="k">def</span> <span class="nf">getRealParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the parameters needed to make a `RealGalaxy` for a given index.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the parameters needed to make a `RealGalaxy` for a given index.&quot;&quot;&quot;</span>
         <span class="c1"># Used by COSMOSGalaxy to circumvent making the RealGalaxy here and potentially having</span>
         <span class="c1"># to pickle the result.  These raw materials should be smaller, so quicker to pickle.</span>
         <span class="n">orig_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
@@ -790,7 +790,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">psf_image</span><span class="p">,</span> <span class="n">noise_image</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GalaxySample.getParametricRecord"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.getParametricRecord">[docs]</a>    <span class="k">def</span> <span class="nf">getParametricRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the parametric record for a given index&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the parametric record for a given index&quot;&quot;&quot;</span>
         <span class="c1"># Used by _makeGalaxy to circumvent pickling the result.</span>
         <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
         <span class="c1"># Convert to a dict, since on some systems, the numpy record doesn&#39;t seem to</span>
@@ -799,13 +799,13 @@
         <span class="k">return</span> <span class="n">record_dict</span></div>
 
 <div class="viewcode-block" id="GalaxySample.getValue"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.getValue">[docs]</a>    <span class="k">def</span> <span class="nf">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the value in the parametric catalog at the given key and index&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the value in the parametric catalog at the given key and index&quot;&quot;&quot;</span>
         <span class="c1"># Used by _makeGalaxy to circumvent pickling the result.</span>
         <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">record</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="GalaxySample.canMakeReal"><a class="viewcode-back" href="../../real_gal.html#galsim.GalaxySample.canMakeReal">[docs]</a>    <span class="k">def</span> <span class="nf">canMakeReal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Is it permissible to call makeGalaxy with gal_type=&#39;real&#39;?&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Is it permissible to call makeGalaxy with gal_type=&#39;real&#39;?&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span></div>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -817,7 +817,7 @@
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_index</span><span class="p">)))</span></div>
 
 <div class="viewcode-block" id="COSMOSCatalog"><a class="viewcode-back" href="../../real_gal.html#galsim.COSMOSCatalog">[docs]</a><span class="k">class</span> <span class="nc">COSMOSCatalog</span><span class="p">(</span><span class="n">GalaxySample</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing a random subsample of galaxies from the COSMOS sample with F814W&lt;25.2</span>
 <span class="sd">    (default), or alternatively the entire sample with F814W&lt;23.5.</span>
 

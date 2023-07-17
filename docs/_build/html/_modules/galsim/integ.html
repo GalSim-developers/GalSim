@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.integ &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.integ &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -107,7 +107,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="int1d"><a class="viewcode-back" href="../../integ.html#galsim.integ.int1d">[docs]</a><span class="k">def</span> <span class="nf">int1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">abs_err</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Integrate a 1-dimensional function from min to max.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate a 1-dimensional function from min to max.</span>
 
 <span class="sd">    Example usage::</span>
 
@@ -152,7 +152,7 @@
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="hankel"><a class="viewcode-back" href="../../integ.html#galsim.integ.hankel">[docs]</a><span class="k">def</span> <span class="nf">hankel</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">abs_err</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Perform an order nu Hankel transform of the given function f(r) at a specific k value.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Perform an order nu Hankel transform of the given function f(r) at a specific k value.</span>
 
 <span class="sd">    .. math::</span>
 
@@ -199,7 +199,7 @@
     <span class="k">return</span> <span class="n">res</span></div>
 
 <div class="viewcode-block" id="IntegrationRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.IntegrationRule">[docs]</a><span class="k">class</span> <span class="nc">IntegrationRule</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class that can be used to integrate something more complicated than a normal</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that can be used to integrate something more complicated than a normal</span>
 <span class="sd">    scalar function.</span>
 
 <span class="sd">    In GalSim, we use it to do the integration of chromatic images over a bandpass.</span>
@@ -215,7 +215,7 @@
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the integral int(f(x) w(x) dx) using the appropriate Rule.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the integral int(f(x) w(x) dx) using the appropriate Rule.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            f:      Function to integrate.</span>
@@ -229,10 +229,10 @@
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span> <span class="n">xs</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="MidptRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.MidptRule">[docs]</a><span class="k">class</span> <span class="nc">MidptRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Midpoint rule for integration.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Midpoint rule for integration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="MidptRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.MidptRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the midpoint rule integration</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the midpoint rule integration</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            xs:     Locations at which to evaluate f.</span>
@@ -253,10 +253,10 @@
         <span class="k">return</span> <span class="n">gs</span></div></div>
 
 <div class="viewcode-block" id="TrapzRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.TrapzRule">[docs]</a><span class="k">class</span> <span class="nc">TrapzRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Trapezoidal rule for integration.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Trapezoidal rule for integration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="TrapzRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.TrapzRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the trapezoidal rule integration</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the trapezoidal rule integration</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            xs:     Locations at which to evaluate f.</span>
@@ -277,13 +277,13 @@
         <span class="k">return</span> <span class="n">gs</span></div></div>
 
 <div class="viewcode-block" id="QuadRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.QuadRule">[docs]</a><span class="k">class</span> <span class="nc">QuadRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Quadratic rule for integration</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quadratic rule for integration</span>
 
 <span class="sd">    This models both f and w as linear between the evaluation points, so the product is</span>
 <span class="sd">    quadratic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="QuadRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.QuadRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the quadratic rule integration</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the quadratic rule integration</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            xs:     Locations at which to evaluate f.</span>
@@ -313,7 +313,7 @@
 
 
 <div class="viewcode-block" id="ImageIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ImageIntegrator</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for integrators used by `ChromaticObject` to integrate the drawn images</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for integrators used by `ChromaticObject` to integrate the drawn images</span>
 <span class="sd">    over wavelengthh using a `Bandpass` as a weight function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -326,7 +326,7 @@
     <span class="c1">#    an approximation to the integral.  (E.g., the function midptRule above)</span>
 
 <div class="viewcode-block" id="ImageIntegrator.__call__"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluateAtWavelength</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">drawImageKwargs</span><span class="p">,</span> <span class="n">doK</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters:</span>
 <span class="sd">            evaluateAtWavelength:   Function that returns a monochromatic surface brightness</span>
 <span class="sd">                                    profile as a function of wavelength.</span>
@@ -354,7 +354,7 @@
 
 
 <div class="viewcode-block" id="SampleIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.SampleIntegrator">[docs]</a><span class="k">class</span> <span class="nc">SampleIntegrator</span><span class="p">(</span><span class="n">ImageIntegrator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
 <span class="sd">    wavelength using a `Bandpass` as a weight function.</span>
 
 <span class="sd">    This integrator will evaluate the integrand only at the wavelengths in ``bandpass.wave_list``.</span>
@@ -378,7 +378,7 @@
 
 
 <div class="viewcode-block" id="ContinuousIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.ContinuousIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ContinuousIntegrator</span><span class="p">(</span><span class="n">ImageIntegrator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
 <span class="sd">    wavelength using a `Bandpass` as a weight function.</span>
 
 <span class="sd">    This integrator will evaluate the integrand at a given number ``N`` of equally spaced</span>

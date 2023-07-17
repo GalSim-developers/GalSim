@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Special Fields &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Special Fields &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -169,14 +169,14 @@ e.g. <code class="docutils literal notranslate"><span class="pre">image.noise.sk
 <p>For example, if you have a simulation defined in <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code>, and you want to make another
 simulation that is identical, except you want Sersic galaxies instead of Exponential galaxies say,
 you could write a new file that looks something like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml</span><span class="w"></span>
-<span class="nt">gal</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sersic</span><span class="w"></span>
-<span class="w">    </span><span class="nt">n </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min </span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">    </span><span class="nt">half_light_radius </span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml:gal.half_light_radius</span><span class="w"></span>
-<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
-<span class="nt">output.dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sersic_sim</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml</span>
+<span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sersic</span>
+<span class="w">    </span><span class="nt">n </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min </span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">half_light_radius </span><span class="p">:</span>
+<span class="w">        </span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml:gal.half_light_radius</span>
+<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="nt">output.dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sersic_sim</span>
 </pre></div>
 </div>
 <p>This will load in the file <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code> first, then replace the whole <code class="docutils literal notranslate"><span class="pre">config['gal']</span></code> field
@@ -186,12 +186,12 @@ the other file (which might be some complicated random variate that you did not 
 duplicate here).</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">template</span></code> field is not at the top level of the config dict, the adjustments should be
 made relative to that level of the dictionary:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">psf </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cgc.yaml:psf</span><span class="w"></span>
-<span class="w">    </span><span class="nt">index_key </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">obj_num</span><span class="w"></span>
-<span class="w">    </span><span class="nt">items.0.ellip.e.max </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span><span class="w"></span>
-<span class="w">    </span><span class="nt">items.1.nstruts </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="w">    </span><span class="nt">items.1.strut_angle </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">psf </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cgc.yaml:psf</span>
+<span class="w">    </span><span class="nt">index_key </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">obj_num</span>
+<span class="w">    </span><span class="nt">items.0.ellip.e.max </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">    </span><span class="nt">items.1.nstruts </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">items.1.strut_angle </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Note that the modifications do not start with <code class="docutils literal notranslate"><span class="pre">psf.</span></code>, since the template processing is being done
@@ -199,20 +199,20 @@ within the <code class="docutils literal notranslate"><span class="pre">psf</spa
 <p>Finally, if you want to use a different field from the current config dict as a template, you can
 use the colon notation without the file.
 E.g. To have a bulge plus disk that have the same kinds of parameters, except that the overall type is a DeVaucouleurs and Exponential respectively, you could do:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sum</span><span class="w"></span>
-<span class="w">    </span><span class="nt">items</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"></span>
-<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DeVaucouleurs</span><span class="w"></span>
-<span class="w">            </span><span class="nt">half_light_radius</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">0.8</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">            </span><span class="nt">flux</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">            </span><span class="nt">ellip</span><span class="p">:</span><span class="w"></span>
-<span class="w">                </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eta1Eta2</span><span class="w"></span>
-<span class="w">                </span><span class="nt">eta1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">                </span><span class="nt">eta2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"></span>
-<span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">:gal.items.0</span><span class="w"></span>
-<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exponential</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sum</span>
+<span class="w">    </span><span class="nt">items</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DeVaucouleurs</span>
+<span class="w">            </span><span class="nt">half_light_radius</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">0.8</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">            </span><span class="nt">flux</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">            </span><span class="nt">ellip</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eta1Eta2</span>
+<span class="w">                </span><span class="nt">eta1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">                </span><span class="nt">eta2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="p p-Indicator">-</span>
+<span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">:gal.items.0</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exponential</span>
 </pre></div>
 </div>
 <p>This would generate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.</p>
@@ -222,14 +222,14 @@ installed with the python code, it will typically be in an obscure location in a
 site-packages directory somewhere.  But the installed module would be able to know this location
 and register it by name.  E.g. “my_default_sim”.  Then users who want to
 start with that canonical config file and maybe modify a few things can write:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_module</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_module</span>
 
-<span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_default_sim</span><span class="w"></span>
+<span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_default_sim</span>
 
-<span class="nt">image.random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12345</span><span class="w"></span>
-<span class="nt">image.nobjects</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span><span class="w"></span>
-<span class="nt">output.file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">objs_500.fits</span><span class="w"></span>
+<span class="nt">image.random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12345</span>
+<span class="nt">image.nobjects</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span>
+<span class="nt">output.file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">objs_500.fits</span>
 </pre></div>
 </div>
 <p>To use this feature, the module (i.e. my_module in the example here) should register the name to the correct file name using the <a class="reference internal" href="#galsim.config.RegisterTemplate" title="galsim.config.RegisterTemplate"><code class="xref any py py-func docutils literal notranslate"><span class="pre">RegisterTemplate</span></code></a> function:</p>

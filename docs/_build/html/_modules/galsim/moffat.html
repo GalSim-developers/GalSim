@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.moffat &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.moffat &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="Moffat"><a class="viewcode-back" href="../../psf.html#galsim.Moffat">[docs]</a><span class="k">class</span> <span class="nc">Moffat</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Moffat surface brightness profile.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Moffat surface brightness profile.</span>
 
 <span class="sd">    The Moffat surface brightness profile is</span>
 
@@ -210,23 +210,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">beta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The beta parameter of this `Moffat` profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The beta parameter of this `Moffat` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beta</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale radius of this `Moffat` profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale radius of this `Moffat` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">trunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The truncation radius (if any) of this `Moffat` profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The truncation radius (if any) of this `Moffat` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trunc</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius of this `Moffat` profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius of this `Moffat` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getHalfLightRadius</span><span class="p">()</span>
@@ -234,7 +234,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The FWHM of this `Moffat` profle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The FWHM of this `Moffat` profle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fwhm</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fwhm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="o">**</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">))</span>

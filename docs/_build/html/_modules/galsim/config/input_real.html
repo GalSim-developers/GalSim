@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input_real &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input_real &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -118,7 +118,7 @@
 <span class="c1"># There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.</span>
 
 <div class="viewcode-block" id="_BuildRealGalaxy"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_real._BuildRealGalaxy">[docs]</a><span class="k">def</span> <span class="nf">_BuildRealGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">param_name</span><span class="o">=</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a RealGalaxy from the real_catalog input item.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a RealGalaxy from the real_catalog input item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">real_cat</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">param_name</span><span class="p">)</span>
 
@@ -155,14 +155,14 @@
 
 
 <div class="viewcode-block" id="_BuildRealGalaxyOriginal"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_real._BuildRealGalaxyOriginal">[docs]</a><span class="k">def</span> <span class="nf">_BuildRealGalaxyOriginal</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the original image from a RealGalaxy using the real_catalog input item.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the original image from a RealGalaxy using the real_catalog input item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">gal</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">_BuildRealGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span>
                                    <span class="n">param_name</span><span class="o">=</span><span class="s1">&#39;RealGalaxyOriginal&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">gal</span><span class="o">.</span><span class="n">original_gal</span><span class="p">,</span> <span class="n">safe</span></div>
 
 <span class="k">def</span> <span class="nf">_BuildChromaticRealGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a ChromaticRealGalaxy from several real_catalog input items.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a ChromaticRealGalaxy from several real_catalog input items.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">param_name</span> <span class="o">=</span> <span class="s1">&#39;ChromaticRealGalaxy&#39;</span>
     <span class="n">ncats</span> <span class="o">=</span> <span class="n">GetNumInputObj</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>

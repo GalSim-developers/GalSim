@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.interpolatedimage &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.interpolatedimage &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -118,7 +118,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified using an `Image`, which can be</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified using an `Image`, which can be</span>
 <span class="sd">    interpolated for the purpose of carrying out transformations.</span>
 
 <span class="sd">    The InterpolatedImage class is useful if you have a non-parametric description of an object as</span>
@@ -510,19 +510,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The real-space `Interpolant` for this profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The real-space `Interpolant` for this profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">k_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span>
 
@@ -601,7 +601,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span> <span class="o">=</span> <span class="n">pad_factor</span>
 
     <span class="k">def</span> <span class="nf">_buildNoisePadImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="p">,</span> <span class="n">noise_pad</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">use_cache</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A helper function that builds the ``pad_image`` from the given ``noise_pad``</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A helper function that builds the ``pad_image`` from the given ``noise_pad``</span>
 <span class="sd">        specification.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
@@ -823,7 +823,7 @@
 <div class="viewcode-block" id="_InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span>
                        <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedImage`, but with fewer options and no sanity checks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedImage`, but with fewer options and no sanity checks.</span>
 
 <span class="sd">    Some notable reductions in functionality relative to `InterpolatedImage`:</span>
 
@@ -898,7 +898,7 @@
 
 
 <div class="viewcode-block" id="InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedKImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified by samples of their complex Fourier</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified by samples of their complex Fourier</span>
 <span class="sd">    transform.</span>
 
 <span class="sd">    The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier</span>
@@ -1064,13 +1064,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">kimage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">k_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
@@ -1176,7 +1176,7 @@
 
 
 <div class="viewcode-block" id="_InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedKImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedKImage`, but with fewer options and no sanity</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedKImage`, but with fewer options and no sanity</span>
 <span class="sd">    checks.</span>
 
 <span class="sd">    Parameters:</span>

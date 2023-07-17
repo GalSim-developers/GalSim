@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.photon_ops &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.photon_ops &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -123,7 +123,7 @@
 
 
 <span class="k">def</span> <span class="nf">BuildPhotonOps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the parameters from config[key] (which should be a list) and return a constructed</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the parameters from config[key] (which should be a list) and return a constructed</span>
 <span class="sd">    photon_ops as a list.</span>
 
 <span class="sd">    Parameters:</span>
@@ -147,7 +147,7 @@
     <span class="k">return</span> <span class="n">ops</span>
 
 <span class="k">def</span> <span class="nf">BuildPhotonOp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the parameters from config[key] and return a single constructed photon_op object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the parameters from config[key] and return a single constructed photon_op object.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     A list with the configuration information for the photon ops.</span>
@@ -206,12 +206,12 @@
 
 
 <div class="viewcode-block" id="PhotonOpBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.PhotonOpBuilder">[docs]</a><span class="k">class</span> <span class="nc">PhotonOpBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building PhotonOp objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building PhotonOp objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="PhotonOpBuilder.buildPhotonOp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.PhotonOpBuilder.buildPhotonOp">[docs]</a>    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
 
 <span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
 
@@ -227,7 +227,7 @@
 
 
 <span class="k">class</span> <span class="nc">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for building simple PhotonOp objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building simple PhotonOp objects.</span>
 
 <span class="sd">    The initializer takes an init_func, which is the class or function to call to build the</span>
 <span class="sd">    PhotonOp.  For the kwargs, it calls getKwargs, which does the normal parsing of the req_params</span>
@@ -237,7 +237,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
 
     <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
 <span class="sd">        init_func:</span>
 
 <span class="sd">        _req_params</span>
@@ -267,7 +267,7 @@
         <span class="k">return</span> <span class="n">kwargs</span>
 
     <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the photon_op type.</span>
@@ -281,7 +281,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">WavelengthSamplerBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a WavelengthSampler</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a WavelengthSampler</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># This one needs special handling for sed and bandpass</span>
     <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -297,7 +297,7 @@
         <span class="k">return</span> <span class="n">WavelengthSampler</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">PhotonDCRBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a PhotonDCR</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a PhotonDCR</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># This one needs special handling for obj_coord</span>
     <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -308,7 +308,7 @@
         <span class="k">return</span> <span class="n">PhotonDCR</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">ListPhotonOpBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Select a photon_op from a list</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select a photon_op from a list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
@@ -328,7 +328,7 @@
         <span class="k">return</span> <span class="n">BuildPhotonOp</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RegisterPhotonOpType"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.RegisterPhotonOpType">[docs]</a><span class="k">def</span> <span class="nf">RegisterPhotonOpType</span><span class="p">(</span><span class="n">photon_op_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a photon_op type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a photon_op type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        photon_op_type: The name of the config type to register</span>

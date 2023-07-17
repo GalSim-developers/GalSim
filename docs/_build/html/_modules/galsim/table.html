@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.table &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.table &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -124,7 +124,7 @@
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LookupTable"><a class="viewcode-back" href="../../table.html#galsim.LookupTable">[docs]</a><span class="k">class</span> <span class="nc">LookupTable</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LookupTable represents a lookup table to store function values that may be slow to calculate,</span>
 <span class="sd">    for which interpolating from a lookup table is sufficiently accurate.</span>
 
@@ -266,20 +266,20 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The minimum x value in the lookup table.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The minimum x value in the lookup table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_min</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The maximum x value in the lookup table.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The maximum x value in the lookup table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_max</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LookupTable.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Interpolate the `LookupTable` to get ``f(x)`` at some ``x`` value(s).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Interpolate the `LookupTable` to get ``f(x)`` at some ``x`` value(s).</span>
 
 <span class="sd">        When the `LookupTable` object is called with a single argument, it returns the value at that</span>
 <span class="sd">        argument.  An exception will be thrown automatically if the ``x`` value is outside the</span>
@@ -333,7 +333,7 @@
         <span class="k">return</span> <span class="n">f</span></div>
 
 <div class="viewcode-block" id="LookupTable.integrate"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.integrate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function from x_min to x_max:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function from x_min to x_max:</span>
 
 <span class="sd">        .. math::</span>
 
@@ -392,7 +392,7 @@
             <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">x_max</span><span class="p">,</span> <span class="n">x_min</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LookupTable.integrate_product"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.integrate_product">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_factor</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function multiplied by a second</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function multiplied by a second</span>
 <span class="sd">        function from x_min to x_max:</span>
 
 <span class="sd">        .. math::</span>
@@ -525,7 +525,7 @@
 
 <div class="viewcode-block" id="LookupTable.from_file"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.from_file">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a file of x, f values.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a file of x, f values.</span>
 
 <span class="sd">        This reads in a file, which should contain two columns with the x and f values.</span>
 
@@ -562,7 +562,7 @@
 <div class="viewcode-block" id="LookupTable.from_func"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.from_func">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_func</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span>
                   <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a callable function</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a callable function</span>
 
 <span class="sd">        This constructs a `LookupTable` over the given range from x_min and x_max, calculating the</span>
 <span class="sd">        corresponding f values from the given function (technically any callable object).</span>
@@ -596,7 +596,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span></div>
 
 <span class="k">def</span> <span class="nf">_LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Make a `LookupTable` but without using any of the sanity checks or array manipulation used</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a `LookupTable` but without using any of the sanity checks or array manipulation used</span>
 <span class="sd">    in the normal initializer.</span>
 
 <span class="sd">    The input x values must be already sorted.</span>
@@ -630,7 +630,7 @@
 
 
 <div class="viewcode-block" id="trapz"><a class="viewcode-back" href="../../table.html#galsim.trapz">[docs]</a><span class="k">def</span> <span class="nf">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Integrate f(x) using the trapezoidal rule.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate f(x) using the trapezoidal rule.</span>
 
 <span class="sd">    Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,</span>
 <span class="sd">    which is usually faster.</span>
@@ -649,7 +649,7 @@
 
 
 <div class="viewcode-block" id="LookupTable2D"><a class="viewcode-back" href="../../table.html#galsim.LookupTable2D">[docs]</a><span class="k">class</span> <span class="nc">LookupTable2D</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow</span>
 <span class="sd">    to calculate, for which interpolating from a lookup table is sufficiently accurate.  A</span>
 <span class="sd">    LookupTable2D is also useful for evaluating periodic 2-d functions given samples from a single</span>
@@ -923,14 +923,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
 
     <span class="k">def</span> <span class="nf">_inbounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return whether or not *all* coords specified by x and y are in bounds of the original</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether or not *all* coords specified by x and y are in bounds of the original</span>
 <span class="sd">        interpolated array.&quot;&quot;&quot;</span>
         <span class="c1"># Only used if edge_mode != &#39;wrap&#39;, so original x/y arrays are unmodified.</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_wrap_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Wrap points back into the fundamental period.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap points back into the fundamental period.&quot;&quot;&quot;</span>
         <span class="c1"># Original x and y may have been modified, so need to use x0 and xperiod attributes here.</span>
         <span class="c1">#x = (x-self.x0) % self.xperiod + self.x0</span>
         <span class="c1">#y = (y-self.y0) % self.yperiod + self.y0</span>
@@ -1011,7 +1011,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_inbounds</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LookupTable2D.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable2D.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Interpolate at an arbitrary point or points.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Interpolate at an arbitrary point or points.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            x:      Either a single x value or an array of x values at which to interpolate.</span>
@@ -1121,7 +1121,7 @@
             <span class="k">return</span> <span class="n">dfdx</span><span class="p">,</span> <span class="n">dfdy</span>
 
 <div class="viewcode-block" id="LookupTable2D.gradient"><a class="viewcode-back" href="../../table.html#galsim.LookupTable2D.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the gradient of the function at an arbitrary point or points.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the gradient of the function at an arbitrary point or points.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            x:      Either a single x value or an array of x values at which to compute</span>
@@ -1212,7 +1212,7 @@
 <div class="viewcode-block" id="_LookupTable2D"><a class="viewcode-back" href="../../table.html#galsim._LookupTable2D">[docs]</a><span class="k">def</span> <span class="nf">_LookupTable2D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="p">,</span> <span class="n">edge_mode</span><span class="p">,</span> <span class="n">constant</span><span class="p">,</span>
                    <span class="n">dfdx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dfdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d2fdxdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xperiod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yperiod</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Make a `LookupTable2D` but without using any of the sanity checks or array manipulation used</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a `LookupTable2D` but without using any of the sanity checks or array manipulation used</span>
 <span class="sd">    in the normal initializer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">LookupTable2D</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LookupTable2D</span><span class="p">)</span>

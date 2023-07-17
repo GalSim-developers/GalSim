@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Values &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Values &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -1142,19 +1142,19 @@ the name of your variable.</p>
 <p>For example, we do not have a specific type for drawing from a Log-Normal distribution.
 If you want the flux, say, to be log-normally distributed, you can write something like
 the following:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">flux </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span><span class="w"></span>
-<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1.e5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">math.exp(normal)&#39;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">fnormal </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> sigma </span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">flux </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span>
+<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1.e5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">math.exp(normal)&#39;</span>
+<span class="w">    </span><span class="nt">fnormal </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> sigma </span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">f</span></code> at the start of <code class="docutils literal notranslate"><span class="pre">fnormal</span></code> indicates that the variable <code class="docutils literal notranslate"><span class="pre">normal</span></code> should be
 evaluated as a <em>float_value</em>.  In this case using <code class="docutils literal notranslate"><span class="pre">type</span></code> = ‘RandomGaussian’.</p>
 <p>Another example appears in demo10.yaml.  There, we define the magnitude of the ellipticity as:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">e</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span><span class="w"></span>
-<span class="w">    </span><span class="nt">fr </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;(world_pos.x**2</span><span class="nv"> </span><span class="s">+</span><span class="nv"> </span><span class="s">world_pos.y**2)**0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.4</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">(r/100)**1.5&#39;</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">e</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span>
+<span class="w">    </span><span class="nt">fr </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;(world_pos.x**2</span><span class="nv"> </span><span class="s">+</span><span class="nv"> </span><span class="s">world_pos.y**2)**0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.4</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">(r/100)**1.5&#39;</span>
 </pre></div>
 </div>
 <p>So this declares a float variable <code class="docutils literal notranslate"><span class="pre">r</span></code> that evaluates as the radial distance from the center.  Then the ellipticity is defined in terms of <code class="docutils literal notranslate"><span class="pre">r</span></code> directly rather than via <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>.</p>
@@ -1177,23 +1177,23 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 <p>Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code>.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.</p>
 <p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.</p>
 <p>It can be convenient to combine the YAML naming scheme with our <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code> setup in the following way:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">eval_variables </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">fpixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;pixel_scale</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">istamp_size </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stamp_size</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
-<span class="w">    </span><span class="nt">infiles </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;nfiles</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">eval_variables </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fpixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;pixel_scale</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+<span class="w">    </span><span class="nt">istamp_size </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stamp_size</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">infiles </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;nfiles</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">    </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>This can be put near the top of the YAML file to put the important values all in one place with appropriate names.  Then in the rest of the file, the variables can be used with the YAML <code class="docutils literal notranslate"><span class="pre">*</span></code> notation:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">pixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nv">*pixel_scale</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">pixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nv">*pixel_scale</span>
 </pre></div>
 </div>
 <p>or as part of an <code class="docutils literal notranslate"><span class="pre">Eval</span></code> item:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span><span class="w"></span>
-<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pixel_scale</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span>
+<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pixel_scale</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </div>
@@ -1231,10 +1231,10 @@ being used as the <code class="docutils literal notranslate"><span class="pre">k
 <p>Furthermore, you may use ‘&#64;’ style Current specifications within an Eval string, where the
 text after the ‘&#64;’ up to the next white space is used for the key.
 So for the above example of a half pixel shift in some random direction, you could write:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span><span class="w"></span>
-<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$0.5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">@image.pixel_scale&#39;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span>
+<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$0.5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">@image.pixel_scale&#39;</span>
+<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>In many situations, this shorthand notation aids readability.  However, because there is
@@ -1250,7 +1250,7 @@ be something you have installed in your Python distro) with a function that will
 to generate the value you want from the parameters in the config dict.</p>
 <p>The generator function should have the following functional form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">GenerateCustomValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate some kind of custom value given some configuration parameters</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate some kind of custom value given some configuration parameters</span>
 
 <span class="sd">    @param config       The configuration dict of the value being generated.</span>
 <span class="sd">    @param base         The base configuration dict.</span>
@@ -1344,8 +1344,8 @@ but it should typically be the name of the value type being built.</p>
 name of the module to load at the start of processing.  e.g. if this function is defined in the
 file <code class="docutils literal notranslate"><span class="pre">my_custom_value.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
 in the config file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_value</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_value</span>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
@@ -1353,10 +1353,10 @@ Then before processing anything, the code will execute the command <code class="
 which will read your file and execute the registration command to add your type to the list
 of valid value types.</p>
 <p>Then you can use this as a valid value type:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">flux</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomValue</span><span class="w"></span>
-<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">flux</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomValue</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
 <p>For examples of custom values, see:</p>

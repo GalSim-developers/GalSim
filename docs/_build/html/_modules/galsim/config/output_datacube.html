@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.output_datacube &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.output_datacube &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -113,11 +113,11 @@
 <span class="kn">from</span> <span class="nn">..fits</span> <span class="kn">import</span> <span class="n">writeCube</span>
 
 <div class="viewcode-block" id="DataCubeBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.output_datacube.DataCubeBuilder">[docs]</a><span class="k">class</span> <span class="nc">DataCubeBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Builder class for constructing and writing DataCube output types.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builder class for constructing and writing DataCube output types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the images</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the images</span>
 
 <span class="sd">        A point of attention for DataCubes is that they must all be the same size.</span>
 <span class="sd">        This function builds the first image alone, finds out its size and then forces</span>
@@ -172,7 +172,7 @@
         <span class="k">return</span> <span class="n">images</span>
 
     <span class="k">def</span> <span class="nf">getNImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the number of images to be built.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of images to be built.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:         The configuration dict for the output field.</span>
@@ -196,7 +196,7 @@
         <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nimages&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write the data to a file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            data:           The data to write.  Usually a list of images returned by</span>
@@ -210,7 +210,7 @@
         <span class="n">writeCube</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">canAddHdus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether it is permissible to add extra HDUs to the end of the data list.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether it is permissible to add extra HDUs to the end of the data list.</span>
 
 <span class="sd">        False for DataCube.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

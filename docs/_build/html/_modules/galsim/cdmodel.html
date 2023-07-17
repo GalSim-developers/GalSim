@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.cdmodel &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.cdmodel &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -108,12 +108,12 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
 
 <div class="viewcode-block" id="BaseCDModel"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.BaseCDModel">[docs]</a><span class="k">class</span> <span class="nc">BaseCDModel</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Base class for the most generic, i.e. no with symmetries or distance scaling relationships</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the most generic, i.e. no with symmetries or distance scaling relationships</span>
 <span class="sd">    assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BaseCDModel.__init__"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.BaseCDModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_l</span><span class="p">,</span> <span class="n">a_r</span><span class="p">,</span> <span class="n">a_b</span><span class="p">,</span> <span class="n">a_t</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a generic CDModel (charge deflection model).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a generic CDModel (charge deflection model).</span>
 
 <span class="sd">        Usually this class will not be instantiated directly, but there is nothing to prevent you</span>
 <span class="sd">        from doing so.  Each of the input a_l, a_r, a_b &amp; a_t matrices must have the same shape and</span>
@@ -163,7 +163,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">a_t</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">a_t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">make_const</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseCDModel.applyForward"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.BaseCDModel.applyForward">[docs]</a>    <span class="k">def</span> <span class="nf">applyForward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the charge deflection model in the forward direction.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the charge deflection model in the forward direction.</span>
 
 <span class="sd">        Returns an image with the forward charge deflection transformation applied.  The input image</span>
 <span class="sd">        is not modified, but its WCS is included in the returned image.</span>
@@ -180,7 +180,7 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="BaseCDModel.applyBackward"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.BaseCDModel.applyBackward">[docs]</a>    <span class="k">def</span> <span class="nf">applyBackward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the charge deflection model in the backward direction (accurate to linear order).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the charge deflection model in the backward direction (accurate to linear order).</span>
 
 <span class="sd">        Returns an image with the backward charge deflection transformation applied.  The input</span>
 <span class="sd">        image is not modified, but its WCS is included in the returned image.</span>
@@ -205,7 +205,7 @@
 
 <span class="c1"># The _modelShiftCoeffX functions are used by the PowerLawCD class</span>
 <span class="k">def</span> <span class="nf">_modelShiftCoeffR</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of right pixel border as a function of int pixel position</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of right pixel border as a function of int pixel position</span>
 <span class="sd">    (x, y).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Invoke symmetry</span>
@@ -222,7 +222,7 @@
     <span class="k">return</span> <span class="n">cc</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">rr</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_modelShiftCoeffL</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of left pixel border as a function of int pixel</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of left pixel border as a function of int pixel</span>
 <span class="sd">    position (x, y).</span>
 
 <span class="sd">    Equivalent to ``-_modelShiftCoeffR(x+1, y, *args)``.</span>
@@ -230,7 +230,7 @@
     <span class="k">return</span> <span class="o">-</span><span class="n">_modelShiftCoeffR</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_modelShiftCoeffT</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of top pixel border as a function of int pixel</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of top pixel border as a function of int pixel</span>
 <span class="sd">    position (x, y).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Invoke symmetry</span>
@@ -247,7 +247,7 @@
     <span class="k">return</span> <span class="n">cc</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">rr</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_modelShiftCoeffB</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of bottom pixel border as a function of int pixel</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the model shift coeff of bottom pixel border as a function of int pixel</span>
 <span class="sd">    position (x, y)</span>
 
 <span class="sd">    Equivalent to ``-_modelShiftCoeffT(x, y+1, *args)``.</span>
@@ -255,12 +255,12 @@
     <span class="k">return</span> <span class="o">-</span><span class="n">_modelShiftCoeffT</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PowerLawCD"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.PowerLawCD">[docs]</a><span class="k">class</span> <span class="nc">PowerLawCD</span><span class="p">(</span><span class="n">BaseCDModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class for parametrizing charge deflection coefficient strengths as a power law in distance</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for parametrizing charge deflection coefficient strengths as a power law in distance</span>
 <span class="sd">    from affected pixel border.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="PowerLawCD.__init__"><a class="viewcode-back" href="../../cd.html#galsim.cdmodel.PowerLawCD.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a power-law charge deflection model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a power-law charge deflection model.</span>
 
 <span class="sd">        The deflections from charges in the six pixels directly neighbouring a pixel border are</span>
 <span class="sd">        modelled independently by the parameters ``r0``, ``t0`` (directly adjacent to borders</span>

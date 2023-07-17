@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.des.des_shapelet &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.des.des_shapelet &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 <span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">SkipThisObject</span>
 
 <div class="viewcode-block" id="DES_Shapelet"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet">[docs]</a><span class="k">class</span> <span class="nc">DES_Shapelet</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated polar shapelet decompositions.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated polar shapelet decompositions.</span>
 <span class="sd">    These are stored as ``*_fitpsf.fits`` files.  They are not used in DES anymore, so this</span>
 <span class="sd">    class is at best of historical interest</span>
 
@@ -163,7 +163,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">read_fits</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DES_Shapelet.read_fits"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.read_fits">[docs]</a>    <span class="k">def</span> <span class="nf">read_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Read in a DES_Shapelet stored in FITS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in a DES_Shapelet stored in FITS file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
@@ -201,7 +201,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span>
 
 <div class="viewcode-block" id="DES_Shapelet.getPSF"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the PSF at position image_pos</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at position image_pos</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            image_pos:  The position in pixel units for which to build the PSF.</span>
@@ -221,7 +221,7 @@
         <span class="k">return</span> <span class="n">psf</span></div>
 
 <div class="viewcode-block" id="DES_Shapelet.getB"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.getB">[docs]</a>    <span class="k">def</span> <span class="nf">getB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the B vector as a numpy array at position pos</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the B vector as a numpy array at position pos</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">includes</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimBoundsError</span><span class="p">(</span><span class="s2">&quot;position in DES_Shapelet.getPSF is out of bounds&quot;</span><span class="p">,</span>
@@ -267,7 +267,7 @@
 <span class="c1"># base is the top level config dictionary where some global variables are stored.</span>
 <span class="c1"># ignore is a list of key words that might be in the config dictionary that you should ignore.</span>
 <span class="k">def</span> <span class="nf">BuildDES_Shapelet</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a GSObject representing the shapelet model at the correct location in the image in a</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a GSObject representing the shapelet model at the correct location in the image in a</span>
 <span class="sd">    config-processing context.</span>
 
 <span class="sd">    This is used as object type ``DES_Shapelet`` in a config file.</span>

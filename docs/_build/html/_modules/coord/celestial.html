@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coord.celestial &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>coord.celestial &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -114,7 +114,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
 
 <div class="viewcode-block" id="CelestialCoord"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord">[docs]</a><span class="k">class</span> <span class="nc">CelestialCoord</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class defines a position on the celestial sphere, normally given by two angles,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class defines a position on the celestial sphere, normally given by two angles,</span>
 <span class="sd">    ``ra`` and ``dec``.</span>
 
 <span class="sd">    This class can be used to perform various calculations in spherical coordinates, such</span>
@@ -199,7 +199,7 @@
 <span class="sd">        where u and v are Angles and center and sky_coord are CelestialCoords.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param ra:       The right ascension.  Must be an Angle instance.</span>
 <span class="sd">        :param dec:      The declination.  Must be an Angle instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -224,17 +224,17 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Right Ascension as an Angle&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Right Ascension as an Angle&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Declination as an Angle&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Declination as an Angle&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A convenience property, giving a tuple (ra.rad, dec.rad)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A convenience property, giving a tuple (ra.rad, dec.rad)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
 
@@ -247,7 +247,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
 
 <div class="viewcode-block" id="CelestialCoord.get_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.get_xyz">[docs]</a>    <span class="k">def</span> <span class="nf">get_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).</span>
 
 <span class="sd">        .. math::</span>
 
@@ -262,7 +262,7 @@
 
 <div class="viewcode-block" id="CelestialCoord.from_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_xyz">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_xyz</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Construct a CelestialCoord from a given (x,y,z) position in three dimensions.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a CelestialCoord from a given (x,y,z) position in three dimensions.</span>
 
 <span class="sd">        The 3D (x,y,z) position does not need to fall on the unit sphere.  The RA, Dec will</span>
 <span class="sd">        be inferred from the relations:</span>
@@ -302,7 +302,7 @@
 
 <div class="viewcode-block" id="CelestialCoord.radec_to_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.radec_to_xyz">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">radec_to_xyz</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert ra, dec (in radians) to 3D x,y,z coordinates on the unit sphere.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert ra, dec (in radians) to 3D x,y,z coordinates on the unit sphere.</span>
 
 <span class="sd">        The connection between (ra,dec) and (x,y,z) are given by the following formulae:</span>
 <span class="sd">        .. math::</span>
@@ -339,7 +339,7 @@
 
 <div class="viewcode-block" id="CelestialCoord.xyz_to_radec"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.xyz_to_radec">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">xyz_to_radec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">return_r</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert 3D x,y,z coordinates to ra, dec (in radians).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert 3D x,y,z coordinates to ra, dec (in radians).</span>
 
 <span class="sd">        The connection between (ra,dec) and (x,y,z) are given by the following formulae:</span>
 <span class="sd">        .. math::</span>
@@ -386,7 +386,7 @@
             <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.normal"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.normal">[docs]</a>    <span class="k">def</span> <span class="nf">normal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the coordinate in the &quot;normal&quot; convention of having 0 &lt;= ra &lt; 24 hours.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the coordinate in the &quot;normal&quot; convention of having 0 &lt;= ra &lt; 24 hours.</span>
 
 <span class="sd">        This convention is not enforced on construction, so this function exists to make it</span>
 <span class="sd">        easy to convert if desired.</span>
@@ -410,7 +410,7 @@
                 <span class="n">c1</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">c2</span><span class="o">.</span><span class="n">_y</span> <span class="o">-</span> <span class="n">c2</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">c1</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CelestialCoord.distanceTo"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.distanceTo">[docs]</a>    <span class="k">def</span> <span class="nf">distanceTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the great circle distance between this coord and another one.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the great circle distance between this coord and another one.</span>
 <span class="sd">        The return value is an Angle object</span>
 
 <span class="sd">        :param coord2:      The CelestialCoord to calculate the distance to.</span>
@@ -450,7 +450,7 @@
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.greatCirclePoint"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.greatCirclePoint">[docs]</a>    <span class="k">def</span> <span class="nf">greatCirclePoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a point on the great circle connecting self and coord2.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a point on the great circle connecting self and coord2.</span>
 
 <span class="sd">        Two points, c1 and c2, on the unit sphere define a great circle (so long as the two points</span>
 <span class="sd">        are not either coincident or antipodal).  We can define points on this great circle by</span>
@@ -513,7 +513,7 @@
 
 
     <span class="k">def</span> <span class="nf">_triple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute the scalar triple product of the three vectors:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the scalar triple product of the three vectors:</span>
 
 <span class="sd">                (A x C). B = sina sinb sinC</span>
 
@@ -532,7 +532,7 @@
 
 
     <span class="k">def</span> <span class="nf">_alt_triple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute a different triple product of the three vectors:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute a different triple product of the three vectors:</span>
 
 <span class="sd">                (A x C). (B x C) = sina sinb cosC</span>
 
@@ -554,7 +554,7 @@
 
 
 <div class="viewcode-block" id="CelestialCoord.angleBetween"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.angleBetween">[docs]</a>    <span class="k">def</span> <span class="nf">angleBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find the open angle at the location of the current coord between ``coord2`` and ``coord3``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the open angle at the location of the current coord between ``coord2`` and ``coord3``.</span>
 
 <span class="sd">        The current coordinate along with the two other coordinates form a spherical triangle</span>
 <span class="sd">        on the sky.  This function calculates the angle between the two sides at the location of</span>
@@ -593,7 +593,7 @@
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">C</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.area"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.area">[docs]</a>    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find the area of a spherical triangle in steradians.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the area of a spherical triangle in steradians.</span>
 
 <span class="sd">        The current coordinate along with the two other coordinates form a spherical triangle</span>
 <span class="sd">        on the sky.  This function calculates the area of that spherical triangle, which is</span>
@@ -647,7 +647,7 @@
     <span class="n">_valid_projections</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;gnomonic&#39;</span><span class="p">,</span> <span class="s1">&#39;stereographic&#39;</span><span class="p">,</span> <span class="s1">&#39;lambert&#39;</span><span class="p">,</span> <span class="s1">&#39;postel&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="CelestialCoord.project"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Use the currect coord as the center point of a tangent plane projection to project</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use the currect coord as the center point of a tangent plane projection to project</span>
 <span class="sd">        the ``coord2`` coordinate onto that plane.</span>
 
 <span class="sd">        This function return a tuple (u,v) in the Euclidean coordinate system defined by</span>
@@ -693,7 +693,7 @@
         <span class="k">return</span> <span class="n">u</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">radians</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.project_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.project_rad">[docs]</a>    <span class="k">def</span> <span class="nf">project_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This is basically identical to the project() function except that the input ``ra``, ``dec``</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is basically identical to the project() function except that the input ``ra``, ``dec``</span>
 <span class="sd">        are given in radians rather than packaged as a CelestialCoord object and the returned</span>
 <span class="sd">        u,v are given in radians.</span>
 
@@ -777,7 +777,7 @@
         <span class="k">return</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
 
 <div class="viewcode-block" id="CelestialCoord.deproject"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.deproject">[docs]</a>    <span class="k">def</span> <span class="nf">deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Do the reverse process from the project() function.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the reverse process from the project() function.</span>
 
 <span class="sd">        i.e. This takes in a position (u,v) and returns the corresponding celestial</span>
 <span class="sd">        coordinate, using the current coordinate as the center point of the tangent plane</span>
@@ -801,7 +801,7 @@
         <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">ra</span><span class="p">),</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.deproject_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.deproject_rad">[docs]</a>    <span class="k">def</span> <span class="nf">deproject_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This is basically identical to the deproject() function except that the output ``ra``,</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is basically identical to the deproject() function except that the output ``ra``,</span>
 <span class="sd">        ``dec`` are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord</span>
 <span class="sd">        object and ``u`` and ``v`` are in radians rather than Angle instances.</span>
 
@@ -889,7 +889,7 @@
         <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span>
 
 <div class="viewcode-block" id="CelestialCoord.jac_deproject"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.jac_deproject">[docs]</a>    <span class="k">def</span> <span class="nf">jac_deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the jacobian of the deprojection.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the jacobian of the deprojection.</span>
 
 <span class="sd">        i.e. if the input position is (u,v) then the return matrix is</span>
 
@@ -913,7 +913,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_deproject</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.jac_deproject_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.jac_deproject_rad">[docs]</a>    <span class="k">def</span> <span class="nf">jac_deproject_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to ``jac_deproject``, but the inputs are in radians and may be numpy</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to ``jac_deproject``, but the inputs are in radians and may be numpy</span>
 <span class="sd">        arrays.</span>
 
 <span class="sd">        :param u:           The u position (in radians) on the tangent plane</span>
@@ -998,7 +998,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">drdu</span><span class="p">,</span> <span class="n">drdv</span><span class="p">],</span> <span class="p">[</span><span class="n">dddu</span><span class="p">,</span> <span class="n">dddv</span><span class="p">]])</span>
 
 <div class="viewcode-block" id="CelestialCoord.precess"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.precess">[docs]</a>    <span class="k">def</span> <span class="nf">precess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_epoch</span><span class="p">,</span> <span class="n">to_epoch</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This function precesses equatorial ra and dec from one epoch to another.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This function precesses equatorial ra and dec from one epoch to another.</span>
 <span class="sd">           It is adapted from a set of fortran subroutines based on (a) pages 30-34 of</span>
 <span class="sd">           the Explanatory Supplement to the AE, (b) Lieske, et al. (1977) A&amp;A 58, 1-16,</span>
 <span class="sd">           and (c) Lieske (1979) A&amp;A 73, 282-284.</span>
@@ -1048,7 +1048,7 @@
         <span class="k">return</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="CelestialCoord.galactic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.galactic">[docs]</a>    <span class="k">def</span> <span class="nf">galactic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the longitude and latitude in galactic coordinates corresponding to this position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the longitude and latitude in galactic coordinates corresponding to this position.</span>
 
 <span class="sd">        :param epoch:       The epoch of the current coordinate. [default: 2000.]</span>
 
@@ -1081,7 +1081,7 @@
 
 <div class="viewcode-block" id="CelestialCoord.from_galactic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_galactic">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_galactic</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given galactic coordinates</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given galactic coordinates</span>
 
 <span class="sd">        :param el:          The longitude in galactic coordinates (an Angle instance)</span>
 <span class="sd">        :param b:           The latitude in galactic coordinates (an Angle instance)</span>
@@ -1109,7 +1109,7 @@
 
 
 <div class="viewcode-block" id="CelestialCoord.ecliptic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.ecliptic">[docs]</a>    <span class="k">def</span> <span class="nf">ecliptic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the longitude and latitude in ecliptic coordinates corresponding to this position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the longitude and latitude in ecliptic coordinates corresponding to this position.</span>
 
 <span class="sd">        The ``epoch`` parameter is used to get an accurate value for the (time-varying) obliquity of</span>
 <span class="sd">        the ecliptic.  The formulae for this are quite straightforward.  It requires just a single</span>
@@ -1154,7 +1154,7 @@
 
 <div class="viewcode-block" id="CelestialCoord.from_ecliptic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_ecliptic">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_ecliptic</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given ecliptic coordinates</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given ecliptic coordinates</span>
 
 <span class="sd">        :param lam:         The longitude in ecliptic coordinates (an Angle instance)</span>
 <span class="sd">        :param beta:        The latitude in ecliptic coordinates (an Angle instance)</span>
@@ -1202,7 +1202,7 @@
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">_CelestialCoord</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Equivalent to CeletialCoord(ra,dec), but without the normal sanity checks.</span>
 
 <span class="sd">    :param ra:       The right ascension.  Must be an Angle instance.</span>

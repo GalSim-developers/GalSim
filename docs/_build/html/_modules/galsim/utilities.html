@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.utilities &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.utilities &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -116,7 +116,7 @@
 
 
 <div class="viewcode-block" id="isinteger"><a class="viewcode-back" href="../../misc.html#galsim.utilities.isinteger">[docs]</a><span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if a value is an integer type (including np.int64, long, etc.)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a value is an integer type (including np.int64, long, etc.)</span>
 
 <span class="sd">    Specifically, it checks whether value == int(value).</span>
 
@@ -132,7 +132,7 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="roll2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities.roll2d">[docs]</a><span class="k">def</span> <span class="nf">roll2d</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        image:      The NumPy array to be circular shifted.</span>
@@ -147,7 +147,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jroll</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">iroll</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="kxky"><a class="viewcode-back" href="../../misc.html#galsim.utilities.kxky">[docs]</a><span class="k">def</span> <span class="nf">kxky</span><span class="p">(</span><span class="n">array_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)):</span>
-    <span class="sd">&quot;&quot;&quot;Return the tuple (kx, ky) corresponding to the DFT of a unit integer-sampled array of</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the tuple (kx, ky) corresponding to the DFT of a unit integer-sampled array of</span>
 <span class="sd">    input shape.</span>
 
 <span class="sd">    Uses the FFTW conventions for Fourier space, so k varies in approximate range (-pi, pi],</span>
@@ -172,7 +172,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">k_xaxis</span><span class="p">,</span> <span class="n">k_yaxis</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="g1g2_to_e1e2"><a class="viewcode-back" href="../../misc.html#galsim.utilities.g1g2_to_e1e2">[docs]</a><span class="k">def</span> <span class="nf">g1g2_to_e1e2</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convenience function for going from (g1, g2) -&gt; (e1, e2).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience function for going from (g1, g2) -&gt; (e1, e2).</span>
 
 <span class="sd">    Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see `Shear`</span>
 <span class="sd">    for definitions of reduced shear and distortion in terms of axis ratios or other ways of</span>
@@ -202,7 +202,7 @@
         <span class="k">return</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span></div>
 
 <div class="viewcode-block" id="rotate_xy"><a class="viewcode-back" href="../../misc.html#galsim.utilities.rotate_xy">[docs]</a><span class="k">def</span> <span class="nf">rotate_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Rotates points in the xy-Cartesian plane counter-clockwise through an angle ``theta`` about</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rotates points in the xy-Cartesian plane counter-clockwise through an angle ``theta`` about</span>
 <span class="sd">    the origin of the Cartesian coordinate system.</span>
 
 <span class="sd">    Parameters:</span>
@@ -219,7 +219,7 @@
     <span class="k">return</span> <span class="n">x_rot</span><span class="p">,</span> <span class="n">y_rot</span></div>
 
 <div class="viewcode-block" id="parse_pos_args"><a class="viewcode-back" href="../../misc.html#galsim.utilities.parse_pos_args">[docs]</a><span class="k">def</span> <span class="nf">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">name1</span><span class="p">,</span> <span class="n">name2</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">others</span><span class="o">=</span><span class="p">[]):</span>
-    <span class="sd">&quot;&quot;&quot;Parse the args and kwargs of a function call to be some kind of position.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the args and kwargs of a function call to be some kind of position.</span>
 
 <span class="sd">    We allow four options:</span>
 
@@ -304,7 +304,7 @@
 
 
 <div class="viewcode-block" id="SimpleGenerator"><a class="viewcode-back" href="../../misc.html#galsim.utilities.SimpleGenerator">[docs]</a><span class="k">class</span> <span class="nc">SimpleGenerator</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A simple class that is constructed with an arbitrary object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple class that is constructed with an arbitrary object.</span>
 <span class="sd">    Then generator() will return that object.</span>
 
 <span class="sd">    This is useful as a way to use an already existing object in a multiprocessing Proxy,</span>
@@ -316,7 +316,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span></div>
 
 <div class="viewcode-block" id="rand_arr"><a class="viewcode-back" href="../../misc.html#galsim.utilities.rand_arr">[docs]</a><span class="k">def</span> <span class="nf">rand_arr</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">deviate</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Function to make a 2d array of random deviates (of any sort).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to make a 2d array of random deviates (of any sort).</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        shape:      A list of length 2, indicating the desired 2d array dimensions</span>
@@ -332,7 +332,7 @@
     <span class="k">return</span> <span class="n">tmp</span></div>
 
 <div class="viewcode-block" id="convert_interpolant"><a class="viewcode-back" href="../../misc.html#galsim.utilities.convert_interpolant">[docs]</a><span class="k">def</span> <span class="nf">convert_interpolant</span><span class="p">(</span><span class="n">interpolant</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert a given interpolant to an `Interpolant` if it is given as a string.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a given interpolant to an `Interpolant` if it is given as a string.</span>
 
 <span class="sd">    Parameter:</span>
 <span class="sd">        interpolant:    Either an `Interpolant` or a string to convert.</span>
@@ -349,7 +349,7 @@
 
 <span class="c1"># A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:</span>
 <span class="k">def</span> <span class="nf">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert ``pos`` from the valid ways to input positions to two NumPy arrays</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert ``pos`` from the valid ways to input positions to two NumPy arrays</span>
 
 <span class="sd">    This is used by the functions getShear(), getConvergence(), getMagnification(), and</span>
 <span class="sd">    getLensing() for both PowerSpectrum and NFWHalo.</span>
@@ -402,7 +402,7 @@
     <span class="k">return</span> <span class="n">pos</span>
 
 <span class="k">def</span> <span class="nf">_lin_approx_err</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear</span>
 <span class="sd">    approximation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">trapz</span>
@@ -416,7 +416,7 @@
     <span class="k">return</span> <span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fleft</span><span class="o">-</span><span class="n">f2left</span><span class="p">),</span> <span class="n">xleft</span><span class="p">),</span> <span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fright</span><span class="o">-</span><span class="n">f2right</span><span class="p">),</span> <span class="n">xright</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_exact_lin_approx_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Split a tabulated function into a two-part piecewise linear approximation by exactly</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Split a tabulated function into a two-part piecewise linear approximation by exactly</span>
 <span class="sd">    minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">_lin_approx_err</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
@@ -424,7 +424,7 @@
     <span class="k">return</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">errs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">_lin_approx_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Split a tabulated function into a two-part piecewise linear approximation by approximately</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Split a tabulated function into a two-part piecewise linear approximation by approximately</span>
 <span class="sd">    minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing</span>
 <span class="sd">    \int (f(x) - approx(x))^2 dx in O(N) time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -452,7 +452,7 @@
 
 <div class="viewcode-block" id="thin_tabulated_values"><a class="viewcode-back" href="../../misc.html#galsim.utilities.thin_tabulated_values">[docs]</a><span class="k">def</span> <span class="nf">thin_tabulated_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                           <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove items from a set of tabulated f(x) values so that the error in the integral is still</span>
 <span class="sd">    accurate to a given relative accuracy.</span>
 
@@ -561,7 +561,7 @@
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">splitpoints</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">splitpoints</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="old_thin_tabulated_values"><a class="viewcode-back" href="../../misc.html#galsim.utilities.old_thin_tabulated_values">[docs]</a><span class="k">def</span> <span class="nf">old_thin_tabulated_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove items from a set of tabulated f(x) values so that the error in the integral is still</span>
 <span class="sd">    accurate to a given relative accuracy.</span>
 
@@ -680,7 +680,7 @@
 
 
 <div class="viewcode-block" id="horner"><a class="viewcode-back" href="../../misc.html#galsim.utilities.horner">[docs]</a><span class="k">def</span> <span class="nf">horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate univariate polynomial using Horner&#39;s method.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate univariate polynomial using Horner&#39;s method.</span>
 
 <span class="sd">    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as</span>
 <span class="sd">    A + x(B + x(C + x(D)))</span>
@@ -709,7 +709,7 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="_horner"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner">[docs]</a><span class="k">def</span> <span class="nf">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner`, but ``x``, ``coef``, and ``result`` must be contiguous arrays.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `horner`, but ``x``, ``coef``, and ``result`` must be contiguous arrays.</span>
 
 <span class="sd">    In particular, ``result`` must be already allocated as an array in which to put the answer.</span>
 <span class="sd">    This is the thing that is returned from the regular `horner`.</span>
@@ -735,7 +735,7 @@
             <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="n">result</span> <span class="o">+=</span> <span class="n">c</span></div>
 
 <div class="viewcode-block" id="horner2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities.horner2d">[docs]</a><span class="k">def</span> <span class="nf">horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate bivariate polynomial using nested Horner&#39;s method.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate bivariate polynomial using nested Horner&#39;s method.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        x:          A numpy array of the x values at which to evaluate the polynomial.</span>
@@ -775,7 +775,7 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="_horner2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner2d">[docs]</a><span class="k">def</span> <span class="nf">_horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner2d`, but ``x``, ``y``, ``coefs``, ``result``, and ``temp``</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `horner2d`, but ``x``, ``y``, ``coefs``, ``result``, and ``temp``</span>
 <span class="sd">    must be contiguous arrays.</span>
 
 <span class="sd">    In particular, ``result`` must be already allocated as an array in which to put the answer.</span>
@@ -818,7 +818,7 @@
 
 
 <div class="viewcode-block" id="deInterleaveImage"><a class="viewcode-back" href="../../misc.html#galsim.utilities.deInterleaveImage">[docs]</a><span class="k">def</span> <span class="nf">deInterleaveImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">conserve_flux</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The routine to do the opposite of what `interleaveImages` routine does. It generates a</span>
 <span class="sd">    (uniform) dither sequence of low resolution images from a high resolution image.</span>
 
@@ -926,7 +926,7 @@
 
 <div class="viewcode-block" id="interleaveImages"><a class="viewcode-back" href="../../misc.html#galsim.utilities.interleaveImages">[docs]</a><span class="k">def</span> <span class="nf">interleaveImages</span><span class="p">(</span><span class="n">im_list</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">offsets</span><span class="p">,</span> <span class="n">add_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">catch_offset_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Interleaves the pixel values from two or more images and into a single larger image.</span>
 
 <span class="sd">    This routine converts a list of images taken at a series of (uniform) dither offsets into a</span>
@@ -1109,7 +1109,7 @@
     <span class="k">return</span> <span class="n">img</span></div>
 
 <div class="viewcode-block" id="LRU_Cache"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache">[docs]</a><span class="k">class</span> <span class="nc">LRU_Cache</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Simplified Least Recently Used Cache.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplified Least Recently Used Cache.</span>
 
 <span class="sd">    Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,</span>
 <span class="sd">    but added a method for dynamic resizing.  The least recently used cached item is</span>
@@ -1179,7 +1179,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
 <div class="viewcode-block" id="LRU_Cache.resize"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache.resize">[docs]</a>    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Resize the cache.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the cache.</span>
 
 <span class="sd">        Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain</span>
 <span class="sd">        in the cache.  Decreasing the size of the cache will necessarily remove items from the</span>
@@ -1215,7 +1215,7 @@
 
 <div class="viewcode-block" id="printoptions"><a class="viewcode-back" href="../../misc.html#galsim.utilities.printoptions">[docs]</a><span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">printoptions</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A context manager for using different numpy printoptions temporarily</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A context manager for using different numpy printoptions temporarily</span>
 
 <span class="sd">    From http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array</span>
 
@@ -1243,7 +1243,7 @@
 
 <div class="viewcode-block" id="pickle_shared"><a class="viewcode-back" href="../../misc.html#galsim.utilities.pickle_shared">[docs]</a><span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">pickle_shared</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;A context manager to flag that one wishes to include object state from shared memory in</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A context manager to flag that one wishes to include object state from shared memory in</span>
 <span class="sd">    pickle objects.</span>
 
 <span class="sd">    Example::</span>
@@ -1271,7 +1271,7 @@
 
 
 <div class="viewcode-block" id="listify"><a class="viewcode-back" href="../../misc.html#galsim.utilities.listify">[docs]</a><span class="k">def</span> <span class="nf">listify</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn argument into a list if not already iterable.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn argument into a list if not already iterable.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        arg:        An argument that may be a lit or a single item</span>
@@ -1283,7 +1283,7 @@
 
 
 <div class="viewcode-block" id="dol_to_lod"><a class="viewcode-back" href="../../misc.html#galsim.utilities.dol_to_lod">[docs]</a><span class="k">def</span> <span class="nf">dol_to_lod</span><span class="p">(</span><span class="n">dol</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scalar_string</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate list of dicts from dict of lists (with broadcasting).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate list of dicts from dict of lists (with broadcasting).</span>
 <span class="sd">    Specifically, generate &quot;scalar-valued&quot; kwargs dictionaries from a kwarg dictionary with values</span>
 <span class="sd">    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to</span>
 <span class="sd">    length-N lists.</span>
@@ -1330,7 +1330,7 @@
         <span class="k">yield</span> <span class="n">out</span></div>
 
 <div class="viewcode-block" id="structure_function"><a class="viewcode-back" href="../../misc.html#galsim.utilities.structure_function">[docs]</a><span class="k">def</span> <span class="nf">structure_function</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Estimate the angularly-averaged structure function of a 2D random field.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Estimate the angularly-averaged structure function of a 2D random field.</span>
 
 <span class="sd">    The angularly-averaged structure function D(r) of the 2D field phi is defined as:</span>
 
@@ -1372,7 +1372,7 @@
     <span class="k">return</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">tab</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tab</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">thetas</span><span class="p">),</span> <span class="n">r</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">thetas</span><span class="p">))))</span></div>
 
 <div class="viewcode-block" id="combine_wave_list"><a class="viewcode-back" href="../../misc.html#galsim.utilities.combine_wave_list">[docs]</a><span class="k">def</span> <span class="nf">combine_wave_list</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Combine wave_list attributes of all objects in obj_list while respecting blue_limit and</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Combine wave_list attributes of all objects in obj_list while respecting blue_limit and</span>
 <span class="sd">    red_limit attributes.  Should work with any combination of `SED`, `Bandpass`, and</span>
 <span class="sd">    `ChromaticObject` instances.</span>
 
@@ -1415,7 +1415,7 @@
     <span class="k">return</span> <span class="n">wave_list</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span></div>
 
 <div class="viewcode-block" id="functionize"><a class="viewcode-back" href="../../misc.html#galsim.utilities.functionize">[docs]</a><span class="k">def</span> <span class="nf">functionize</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Decorate a function ``f`` which accepts scalar positional or keyword arguments, to accept</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorate a function ``f`` which accepts scalar positional or keyword arguments, to accept</span>
 <span class="sd">    arguments that can be either scalars or _functions_.  If the arguments include univariate</span>
 <span class="sd">    (N-variate) functions, then the output will be a univariate (N-variate) function.  While it&#39;s</span>
 <span class="sd">    okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and</span>
@@ -1476,7 +1476,7 @@
     <span class="k">return</span> <span class="n">ff</span></div>
 
 <div class="viewcode-block" id="math_eval"><a class="viewcode-back" href="../../misc.html#galsim.utilities.math_eval">[docs]</a><span class="k">def</span> <span class="nf">math_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">other_modules</span><span class="o">=</span><span class="p">()):</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate a string that may include numpy, np, or math commands.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate a string that may include numpy, np, or math commands.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        str:            The string to evaluate</span>
@@ -1504,7 +1504,7 @@
     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../misc.html#galsim.utilities.binomial">[docs]</a><span class="k">def</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return xy coefficients of (ax + by)^n ordered by descending powers of a.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return xy coefficients of (ax + by)^n ordered by descending powers of a.</span>
 
 <span class="sd">    Example::</span>
 
@@ -1535,7 +1535,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">generate</span><span class="p">(),</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="unweighted_moments"><a class="viewcode-back" href="../../misc.html#galsim.utilities.unweighted_moments">[docs]</a><span class="k">def</span> <span class="nf">unweighted_moments</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,</span>
 <span class="sd">    but ignores any scale or wcs.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1562,7 +1562,7 @@
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">M0</span><span class="o">=</span><span class="n">M0</span><span class="p">,</span> <span class="n">Mx</span><span class="o">=</span><span class="n">Mx</span><span class="p">,</span> <span class="n">My</span><span class="o">=</span><span class="n">My</span><span class="p">,</span> <span class="n">Mxx</span><span class="o">=</span><span class="n">Mxx</span><span class="p">,</span> <span class="n">Myy</span><span class="o">=</span><span class="n">Myy</span><span class="p">,</span> <span class="n">Mxy</span><span class="o">=</span><span class="n">Mxy</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="unweighted_shape"><a class="viewcode-back" href="../../misc.html#galsim.utilities.unweighted_shape">[docs]</a><span class="k">def</span> <span class="nf">unweighted_shape</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Computes unweighted second moment size and ellipticity given either an image or a dict of</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes unweighted second moment size and ellipticity given either an image or a dict of</span>
 <span class="sd">    unweighted moments.</span>
 
 <span class="sd">    The size is:</span>
@@ -1584,7 +1584,7 @@
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">rsqr</span><span class="o">=</span><span class="n">rsqr</span><span class="p">,</span> <span class="n">e1</span><span class="o">=</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;Mxx&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;Myy&#39;</span><span class="p">])</span><span class="o">/</span><span class="n">rsqr</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;Mxy&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">rsqr</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="rand_with_replacement"><a class="viewcode-back" href="../../misc.html#galsim.utilities.rand_with_replacement">[docs]</a><span class="k">def</span> <span class="nf">rand_with_replacement</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n_choices</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_n_rng_calls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Select some number of random choices from a list, with replacement, using a supplied RNG.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select some number of random choices from a list, with replacement, using a supplied RNG.</span>
 
 <span class="sd">    ``n`` random choices with replacement are made assuming that those choices should range from 0</span>
 <span class="sd">    to ``n_choices-1``, so they can be used as indices in a list/array.  If ``weight`` is supplied,</span>
@@ -1670,7 +1670,7 @@
 
 
 <div class="viewcode-block" id="check_share_file"><a class="viewcode-back" href="../../misc.html#galsim.utilities.check_share_file">[docs]</a><span class="k">def</span> <span class="nf">check_share_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subdir</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Find `SED` or `Bandpass` file, possibly adding share_dir/subdir.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find `SED` or `Bandpass` file, possibly adding share_dir/subdir.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        filename:       The file name to look for</span>
@@ -1694,7 +1694,7 @@
 
 
 <div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../misc.html#galsim.utilities.lazy_property">[docs]</a><span class="k">class</span> <span class="nc">lazy_property</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This decorator will act similarly to @property, but will be efficient for multiple access</span>
 <span class="sd">    to values that require some significant calculation.</span>
 
@@ -1725,7 +1725,7 @@
         <span class="k">return</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="doc_inherit"><a class="viewcode-back" href="../../misc.html#galsim.utilities.doc_inherit">[docs]</a><span class="k">class</span> <span class="nc">doc_inherit</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    This decorator will grab a doc string from a base class version of a method.</span>
 <span class="sd">    Useful if the subclass doesn&#39;t change anything about the method API, but just has</span>
 <span class="sd">    a specialized implementation.  This lets the documentation live only in one place.</span>
@@ -1786,14 +1786,14 @@
         <span class="k">return</span> <span class="n">func</span></div>
 
 <div class="viewcode-block" id="OrderedWeakRef"><a class="viewcode-back" href="../../misc.html#galsim.utilities.OrderedWeakRef">[docs]</a><span class="k">class</span> <span class="nc">OrderedWeakRef</span><span class="p">(</span><span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">id</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="nCr"><a class="viewcode-back" href="../../misc.html#galsim.utilities.nCr">[docs]</a><span class="k">def</span> <span class="nf">nCr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Combinations.  I.e., the number of ways to choose ``r`` distiguishable things from ``n``</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Combinations.  I.e., the number of ways to choose ``r`` distiguishable things from ``n``</span>
 <span class="sd">    distinguishable things.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1817,7 +1817,7 @@
         <span class="k">return</span> <span class="mi">0</span></div>
 
 <div class="viewcode-block" id="WeakMethod"><a class="viewcode-back" href="../../misc.html#galsim.utilities.WeakMethod">[docs]</a><span class="k">class</span> <span class="nc">WeakMethod</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Wrap a method in a weakref.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a method in a weakref.</span>
 
 <span class="sd">    This is useful if you want to specialize a function if certain conditions hold.</span>
 <span class="sd">    You can check those conditions and return one of several possible implementations as</span>
@@ -1840,7 +1840,7 @@
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s1">&#39;Method called on dead object&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ensure_dir"><a class="viewcode-back" href="../../misc.html#galsim.utilities.ensure_dir">[docs]</a><span class="k">def</span> <span class="nf">ensure_dir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Make sure the directory for the target location exists, watching for a race condition</span>
 
 <span class="sd">    In particular check if the OS reported that the directory already exists when running</span>
@@ -1871,7 +1871,7 @@
 
 
 <div class="viewcode-block" id="find_out_of_bounds_position"><a class="viewcode-back" href="../../misc.html#galsim.utilities.find_out_of_bounds_position">[docs]</a><span class="k">def</span> <span class="nf">find_out_of_bounds_position</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given arrays of x and y values that are known to contain at least one</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Given arrays of x and y values that are known to contain at least one</span>
 <span class="sd">    position that is out-of-bounds of the given bounds instance, return one</span>
 <span class="sd">    such PositionD.</span>
 
@@ -1903,7 +1903,7 @@
     <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;No out-of-bounds position&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="set_omp_threads"><a class="viewcode-back" href="../../misc.html#galsim.utilities.set_omp_threads">[docs]</a><span class="k">def</span> <span class="nf">set_omp_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Set the number of OpenMP threads to use in the C++ layer.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the number of OpenMP threads to use in the C++ layer.</span>
 
 <span class="sd">    :param num_threads: The target number of threads to use (If None or &lt;=0, then try to use the</span>
 <span class="sd">                        numer of cpus.)</span>
@@ -1941,14 +1941,14 @@
     <span class="k">return</span> <span class="n">num_threads</span></div>
 
 <div class="viewcode-block" id="get_omp_threads"><a class="viewcode-back" href="../../misc.html#galsim.utilities.get_omp_threads">[docs]</a><span class="k">def</span> <span class="nf">get_omp_threads</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Get the current number of OpenMP threads to be used in the C++ layer.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current number of OpenMP threads to be used in the C++ layer.</span>
 
 <span class="sd">    :returns: num_threads</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GetOMPThreads</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="single_threaded"><a class="viewcode-back" href="../../misc.html#galsim.utilities.single_threaded">[docs]</a><span class="k">class</span> <span class="nc">single_threaded</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.</span>
 
 <span class="sd">    Usage:</span>
 

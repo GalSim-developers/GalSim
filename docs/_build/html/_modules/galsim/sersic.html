@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.sersic &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.sersic &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="Sersic"><a class="viewcode-back" href="../../gal.html#galsim.Sersic">[docs]</a><span class="k">class</span> <span class="nc">Sersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Sersic profile.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Sersic profile.</span>
 
 <span class="sd">    The Sersic surface brightness profile is characterized by three properties: its Sersic index</span>
 <span class="sd">    ``n``, its ``flux``, and either the ``half_light_radius`` or ``scale_radius``.  Given these</span>
@@ -334,12 +334,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span>
 
 <div class="viewcode-block" id="Sersic.calculateIntegratedFlux"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateIntegratedFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the fraction of the total flux enclosed within a given radius, r&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the fraction of the total flux enclosed within a given radius, r&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SersicIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Sersic.calculateHLRFactor"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateHLRFactor">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLRFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the half-light-radius in units of the scale radius.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the half-light-radius in units of the scale radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SersicHLR</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span><span class="p">)</span></div>
@@ -351,25 +351,25 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">n</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Sersic parameter n.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Sersic parameter n.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale radius.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">trunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The truncation radius (if any).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The truncation radius (if any).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trunc</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateHLRFactor</span><span class="p">()</span>
@@ -452,7 +452,7 @@
                       <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="DeVaucouleurs"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs">[docs]</a><span class="k">class</span> <span class="nc">DeVaucouleurs</span><span class="p">(</span><span class="n">Sersic</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing DeVaucouleurs profile objects.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing DeVaucouleurs profile objects.</span>
 
 <span class="sd">    Surface brightness profile with</span>
 

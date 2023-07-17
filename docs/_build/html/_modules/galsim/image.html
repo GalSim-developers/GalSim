@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.image &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.image &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -123,7 +123,7 @@
 
 
 <div class="viewcode-block" id="Image"><a class="viewcode-back" href="../../image_class.html#galsim.Image">[docs]</a><span class="k">class</span> <span class="nc">Image</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class for storing image data along with the pixel scale or WCS information</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for storing image data along with the pixel scale or WCS information</span>
 
 <span class="sd">    The Image class encapsulates all the relevant information about an image including a NumPy array</span>
 <span class="sd">    for the pixel values, a bounding box, and some kind of WCS that converts between pixel</span>
@@ -443,7 +443,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_xmin_ymin</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A helper function for parsing xmin, ymin, bounds options with a given array</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A helper function for parsing xmin, ymin, bounds options with a given array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;array must be a numpy.ndarray instance&quot;</span><span class="p">)</span>
@@ -512,49 +512,49 @@
     <span class="c1"># Read-only attributes:</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The dtype of the underlying numpy array.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The dtype of the underlying numpy array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The bounds of the `Image`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The bounds of the `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The underlying numpy array.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying numpy array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nrow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of rows in the image</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of rows in the image</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ncol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of columns in the image</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of columns in the image</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">isconst</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether the `Image` is constant.  I.e. modifying its values is an error.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the `Image` is constant.  I.e. modifying its values is an error.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">==</span> <span class="kc">False</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">iscomplex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether the `Image` values are complex.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the `Image` values are complex.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether the `Image` values are integral.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the `Image` values are integral.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span><span class="s1">&#39;u&#39;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">iscontiguous</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Indicates whether each row of the image is contiguous in memory.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indicates whether each row of the image is contiguous in memory.</span>
 
 <span class="sd">        Note: it is ok for the end of one row to not be contiguous with the start of the</span>
 <span class="sd">        next row.  This just checks that each individual row has a stride of 1.</span>
@@ -573,7 +573,7 @@
     <span class="c1"># Allow scale to work as a PixelScale wcs.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The pixel scale of the `Image`.  Only valid if the wcs is a `PixelScale`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The pixel scale of the `Image`.  Only valid if the wcs is a `PixelScale`.</span>
 
 <span class="sd">        If the WCS is either not set (i.e. it is ``None``) or it is a `PixelScale`, then</span>
 <span class="sd">        it is permissible to change the scale with::</span>
@@ -599,24 +599,24 @@
     <span class="c1"># Convenience functions</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">xmin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alias for self.bounds.xmin.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for self.bounds.xmin.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">xmin</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">xmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alias for self.bounds.xmax.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for self.bounds.xmax.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">xmax</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ymin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alias for self.bounds.ymin.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for self.bounds.ymin.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">ymin</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ymax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alias for self.bounds.ymax.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for self.bounds.ymax.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">ymax</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">outer_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The bounds of the outer edge of the pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The bounds of the outer edge of the pixels.</span>
 
 <span class="sd">        Equivalent to galsim.BoundsD(im.xmin-0.5, im.xmax+0.5, im.ymin-0.5, im.ymax+0.5)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -625,7 +625,7 @@
     <span class="c1"># real, imag for everything, even real images.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the real part of an image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the real part of an image.</span>
 
 <span class="sd">        This is a property, not a function.  So write ``im.real``, not ``im.real()``.</span>
 
@@ -635,7 +635,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">imag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the imaginary part of an image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the imaginary part of an image.</span>
 
 <span class="sd">        This is a property, not a function.  So write ``im.imag``, not ``im.imag()``.</span>
 
@@ -646,7 +646,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the complex conjugate of an image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the complex conjugate of an image.</span>
 
 <span class="sd">        This works for real or complex.  For real images, it acts the same as `view`.</span>
 
@@ -656,12 +656,12 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Image.copy"><a class="viewcode-back" href="../../image_class.html#galsim.Image.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Make a copy of the `Image`</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a copy of the `Image`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.get_pixel_centers"><a class="viewcode-back" href="../../image_class.html#galsim.Image.get_pixel_centers">[docs]</a>    <span class="k">def</span> <span class="nf">get_pixel_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A convenience function to get the x and y values at the centers of the image pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A convenience function to get the x and y values at the centers of the image pixels.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            (x, y), each of which is a numpy array the same shape as ``self.array``</span>
@@ -673,7 +673,7 @@
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
 
     <span class="k">def</span> <span class="nf">_make_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Helper function to make an empty numpy array of the given shape, making sure that</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to make an empty numpy array of the given shape, making sure that</span>
 <span class="sd">        the array is 16-btye aligned so it is usable by FFTW.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># cf. http://stackoverflow.com/questions/9895787/memory-alignment-for-fast-fft-in-python-using-shared-arrrays</span>
@@ -688,7 +688,7 @@
         <span class="k">return</span> <span class="n">a</span>
 
 <div class="viewcode-block" id="Image.resize"><a class="viewcode-back" href="../../image_class.html#galsim.Image.resize">[docs]</a>    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Resize the image to have a new bounds (must be a `BoundsI` instance)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the image to have a new bounds (must be a `BoundsI` instance)</span>
 
 <span class="sd">        Note that the resized image will have uninitialized data.  If you want to preserve</span>
 <span class="sd">        the existing data values, you should either use `subImage` (if you want a smaller</span>
@@ -710,7 +710,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span></div>
 
 <div class="viewcode-block" id="Image.subImage"><a class="viewcode-back" href="../../image_class.html#galsim.Image.subImage">[docs]</a>    <span class="k">def</span> <span class="nf">subImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a view of a portion of the full image</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a view of a portion of the full image</span>
 
 <span class="sd">        This is equivalent to self[bounds]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -732,7 +732,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="n">subarray</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.setSubImage"><a class="viewcode-back" href="../../image_class.html#galsim.Image.setSubImage">[docs]</a>    <span class="k">def</span> <span class="nf">setSubImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set a portion of the full image to the values in another image</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set a portion of the full image to the values in another image</span>
 
 <span class="sd">        This is equivalent to self[bounds] = rhs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -741,7 +741,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">subImage</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span><span class="o">.</span><span class="n">copyFrom</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.__getitem__"><a class="viewcode-back" href="../../image_class.html#galsim.Image.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return either a subimage or a single pixel value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return either a subimage or a single pixel value.</span>
 
 <span class="sd">        For example,::</span>
 
@@ -764,7 +764,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;image[..] requires either 1 or 2 args&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.__setitem__"><a class="viewcode-back" href="../../image_class.html#galsim.Image.__setitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set either a subimage or a single pixel to new values.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set either a subimage or a single pixel to new values.</span>
 
 <span class="sd">        For example,::</span>
 
@@ -787,7 +787,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;image[..] requires either 1 or 2 args&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.wrap"><a class="viewcode-back" href="../../image_class.html#galsim.Image.wrap">[docs]</a>    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">hermitian</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Wrap the values in a image onto a given subimage and return the subimage.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap the values in a image onto a given subimage and return the subimage.</span>
 
 <span class="sd">        This would typically be used on a k-space image where you initially draw a larger image</span>
 <span class="sd">        than you want for the FFT and then wrap it onto a smaller subset.  This will cause</span>
@@ -865,7 +865,7 @@
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid value for hermitian&quot;</span><span class="p">,</span> <span class="n">hermitian</span><span class="p">,</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Image._wrap"><a class="viewcode-back" href="../../image_class.html#galsim.Image._wrap">[docs]</a>    <span class="k">def</span> <span class="nf">_wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">hermx</span><span class="p">,</span> <span class="n">hermy</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A version of `wrap` without the sanity checks.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A version of `wrap` without the sanity checks.</span>
 
 <span class="sd">        Equivalent to ``image.wrap(bounds, hermitian==&#39;x&#39;, hermitian==&#39;y&#39;)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -874,7 +874,7 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="Image.bin"><a class="viewcode-back" href="../../image_class.html#galsim.Image.bin">[docs]</a>    <span class="k">def</span> <span class="nf">bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Bin the image pixels in blocks of nx x ny pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bin the image pixels in blocks of nx x ny pixels.</span>
 
 <span class="sd">        This returns a new image that is a binned version of the current image.</span>
 <span class="sd">        Adjacent pixel values in nx x ny blocks are added together to produce the flux in each</span>
@@ -938,7 +938,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="n">target_ar</span><span class="p">,</span> <span class="n">target_bounds</span><span class="p">,</span> <span class="n">target_wcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.subsample"><a class="viewcode-back" href="../../image_class.html#galsim.Image.subsample">[docs]</a>    <span class="k">def</span> <span class="nf">subsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Subdivide the image pixels into nx x ny sub-pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Subdivide the image pixels into nx x ny sub-pixels.</span>
 
 <span class="sd">        This returns a new image that is a subsampled version of the current image.</span>
 <span class="sd">        Each pixel&#39;s flux is split (uniformly) into nx x ny smaller pixels.</span>
@@ -992,7 +992,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="n">target_ar</span><span class="p">,</span> <span class="n">target_bounds</span><span class="p">,</span> <span class="n">target_wcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.calculate_fft"><a class="viewcode-back" href="../../image_class.html#galsim.Image.calculate_fft">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_fft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Performs an FFT of an `Image` in real space to produce a k-space `Image`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs an FFT of an `Image` in real space to produce a k-space `Image`.</span>
 
 <span class="sd">        Note: the image will be padded with zeros as needed to make an image with bounds that</span>
 <span class="sd">        look like ``BoundsI(-N/2, N/2-1, -N/2, N/2-1)``.</span>
@@ -1035,7 +1035,7 @@
         <span class="k">return</span> <span class="n">out</span></div>
 
 <div class="viewcode-block" id="Image.calculate_inverse_fft"><a class="viewcode-back" href="../../image_class.html#galsim.Image.calculate_inverse_fft">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_inverse_fft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Performs an inverse FFT of an `Image` in k-space to produce a real-space `Image`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs an inverse FFT of an `Image` in k-space to produce a real-space `Image`.</span>
 
 <span class="sd">        The starting image is typically an `ImageCD`, although if the Fourier function is real</span>
 <span class="sd">        valued, then you could get away with using an `ImageD` or `ImageF`.</span>
@@ -1095,7 +1095,7 @@
 
 <div class="viewcode-block" id="Image.good_fft_size"><a class="viewcode-back" href="../../image_class.html#galsim.Image.good_fft_size">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">good_fft_size</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Round the given input size up to the next higher power of 2 or 3 times a power of 2.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Round the given input size up to the next higher power of 2 or 3 times a power of 2.</span>
 
 <span class="sd">        This rounds up to the next higher value that is either 2^k or 3*2^k.  If you are</span>
 <span class="sd">        going to be performing FFTs on an image, these will tend to be faster at performing</span>
@@ -1104,7 +1104,7 @@
         <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">goodFFTSize</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">input_size</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Image.copyFrom"><a class="viewcode-back" href="../../image_class.html#galsim.Image.copyFrom">[docs]</a>    <span class="k">def</span> <span class="nf">copyFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Copy the contents of another image</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy the contents of another image</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isconst</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimImmutableError</span><span class="p">(</span><span class="s2">&quot;Cannot modify the values of an immutable Image&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -1116,13 +1116,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_copyFrom</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_copyFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Same as copyFrom, but no sanity checks.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Same as copyFrom, but no sanity checks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_cast</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Image.view"><a class="viewcode-back" href="../../image_class.html#galsim.Image.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">make_const</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Make a view of this image, which lets you change the scale, wcs, origin, etc.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a view of this image, which lets you change the scale, wcs, origin, etc.</span>
 <span class="sd">        but view the same underlying data as the original image.</span>
 
 <span class="sd">        If you do not provide either ``scale`` or ``wcs``, the view will keep the same wcs</span>
@@ -1187,12 +1187,12 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="Image._view"><a class="viewcode-back" href="../../image_class.html#galsim.Image._view">[docs]</a>    <span class="k">def</span> <span class="nf">_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `view`, but without some of the sanity checks and extra options.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `view`, but without some of the sanity checks and extra options.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">view</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.shift"><a class="viewcode-back" href="../../image_class.html#galsim.Image.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shift the pixel coordinates by some (integral) dx,dy.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shift the pixel coordinates by some (integral) dx,dy.</span>
 
 <span class="sd">        The arguments here may be either (dx, dy) or a PositionI instance.</span>
 <span class="sd">        Or you can provide dx, dy as named kwargs.</span>
@@ -1210,7 +1210,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image._shift"><a class="viewcode-back" href="../../image_class.html#galsim.Image._shift">[docs]</a>    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `shift`, but without some of the sanity checks and ``delta`` must</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `shift`, but without some of the sanity checks and ``delta`` must</span>
 <span class="sd">        be a `PositionI` instance.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1224,7 +1224,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">shiftOrigin</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.setCenter"><a class="viewcode-back" href="../../image_class.html#galsim.Image.setCenter">[docs]</a>    <span class="k">def</span> <span class="nf">setCenter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the center of the image to the given (integral) (xcen, ycen)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the center of the image to the given (integral) (xcen, ycen)</span>
 
 <span class="sd">        The arguments here may be either (xcen, ycen) or a PositionI instance.</span>
 <span class="sd">        Or you can provide xcen, ycen as named kwargs.</span>
@@ -1261,7 +1261,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="n">cen</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.setOrigin"><a class="viewcode-back" href="../../image_class.html#galsim.Image.setOrigin">[docs]</a>    <span class="k">def</span> <span class="nf">setOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the origin of the image to the given (integral) (x0, y0)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the origin of the image to the given (integral) (x0, y0)</span>
 
 <span class="sd">        The arguments here may be either (x0, y0) or a PositionI instance.</span>
 <span class="sd">        Or you can provide x0, y0 as named kwargs.</span>
@@ -1298,7 +1298,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The current nominal center (xcen,ycen) of the image as a PositionI instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The current nominal center (xcen,ycen) of the image as a PositionI instance.</span>
 
 <span class="sd">        In terms of the rows and columns, xcen is the x value for the central column, and ycen</span>
 <span class="sd">        is the y value of the central row.  For even-sized arrays, there is no central column</span>
@@ -1319,7 +1319,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">true_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The current true center of the image as a PositionD instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The current true center of the image as a PositionD instance.</span>
 
 <span class="sd">        Unline the nominal center returned by im.center, this value may be half-way between</span>
 <span class="sd">        two pixels if the image has an even number of rows or columns.  It gives the position</span>
@@ -1344,7 +1344,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.</span>
 
 <span class="sd">        In terms of the rows and columns, this is the (x,y) coordinate of the first column, and</span>
 <span class="sd">        first row of the array.  For example::</span>
@@ -1367,7 +1367,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">origin</span>
 
 <div class="viewcode-block" id="Image.__call__"><a class="viewcode-back" href="../../image_class.html#galsim.Image.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the pixel value at given position</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the pixel value at given position</span>
 
 <span class="sd">        The arguments here may be either (x, y) or a PositionI instance.</span>
 <span class="sd">        Or you can provide x, y as named kwargs.</span>
@@ -1376,7 +1376,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.getValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image.getValue">[docs]</a>    <span class="k">def</span> <span class="nf">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim</span>
 <span class="sd">        does not have to parse the different options available for __call__.  (i.e. im(x,y) or</span>
 <span class="sd">        im(pos) or im(x=x,y=y))</span>
 
@@ -1392,13 +1392,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getValue</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image._getValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image._getValue">[docs]</a>    <span class="k">def</span> <span class="nf">_getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getValue`, except there are no checks that the values fall</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getValue`, except there are no checks that the values fall</span>
 <span class="sd">        within the bounds of the image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Image.setValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image.setValue">[docs]</a>    <span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the pixel value at given (x,y) position</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the pixel value at given (x,y) position</span>
 
 <span class="sd">        The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.</span>
 <span class="sd">        Or you can provide x, y, value as named kwargs.</span>
@@ -1416,7 +1416,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_setValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image._setValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image._setValue">[docs]</a>    <span class="k">def</span> <span class="nf">_setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `setValue` except that there are no checks that the values</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `setValue` except that there are no checks that the values</span>
 <span class="sd">        fall within the bounds of the image, and the coordinates must be given as ``x``, ``y``.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1427,7 +1427,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="Image.addValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image.addValue">[docs]</a>    <span class="k">def</span> <span class="nf">addValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add some amount to the pixel value at given (x,y) position</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add some amount to the pixel value at given (x,y) position</span>
 
 <span class="sd">        The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.</span>
 <span class="sd">        Or you can provide x, y, value as named kwargs.</span>
@@ -1445,7 +1445,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_addValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image._addValue"><a class="viewcode-back" href="../../image_class.html#galsim.Image._addValue">[docs]</a>    <span class="k">def</span> <span class="nf">_addValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `addValue` except that there are no checks that the values</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `addValue` except that there are no checks that the values</span>
 <span class="sd">        fall within the bounds of the image, and the coordinates must be given as ``x``, ``y``.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1456,7 +1456,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="Image.fill"><a class="viewcode-back" href="../../image_class.html#galsim.Image.fill">[docs]</a>    <span class="k">def</span> <span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set all pixel values to the given ``value``</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set all pixel values to the given ``value``</span>
 
 <span class="sd">        Parameter:</span>
 <span class="sd">            value:  The value to set all the pixels to.</span>
@@ -1468,19 +1468,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image._fill"><a class="viewcode-back" href="../../image_class.html#galsim.Image._fill">[docs]</a>    <span class="k">def</span> <span class="nf">_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `fill`, except that there are no checks that the bounds are defined.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `fill`, except that there are no checks that the bounds are defined.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="Image.setZero"><a class="viewcode-back" href="../../image_class.html#galsim.Image.setZero">[docs]</a>    <span class="k">def</span> <span class="nf">setZero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set all pixel values to zero.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set all pixel values to zero.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isconst</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimImmutableError</span><span class="p">(</span><span class="s2">&quot;Cannot modify the values of an immutable Image&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># This might be made faster with a C++ call to use memset</span></div>
 
 <div class="viewcode-block" id="Image.invertSelf"><a class="viewcode-back" href="../../image_class.html#galsim.Image.invertSelf">[docs]</a>    <span class="k">def</span> <span class="nf">invertSelf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set all pixel values to their inverse: x -&gt; 1/x.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set all pixel values to their inverse: x -&gt; 1/x.</span>
 
 <span class="sd">        Note: any pixels whose value is 0 originally are ignored.  They remain equal to 0</span>
 <span class="sd">        on the output, rather than turning into inf.</span>
@@ -1492,13 +1492,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_invertSelf</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Image._invertSelf"><a class="viewcode-back" href="../../image_class.html#galsim.Image._invertSelf">[docs]</a>    <span class="k">def</span> <span class="nf">_invertSelf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `invertSelf`, except that there are no checks that the bounds are defined.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `invertSelf`, except that there are no checks that the bounds are defined.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># C++ version skips 0&#39;s to 1/0 -&gt; 0 instead of inf.</span>
         <span class="n">_galsim</span><span class="o">.</span><span class="n">invertImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.replaceNegative"><a class="viewcode-back" href="../../image_class.html#galsim.Image.replaceNegative">[docs]</a>    <span class="k">def</span> <span class="nf">replaceNegative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">replace_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Replace any negative values currently in the image with 0 (or some other value).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace any negative values currently in the image with 0 (or some other value).</span>
 
 <span class="sd">        Sometimes FFT drawing can result in tiny negative values, which may be undesirable for</span>
 <span class="sd">        some purposes.  This method replaces those values with 0 or some other value if desired.</span>
@@ -1509,7 +1509,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace_value</span></div>
 
 <div class="viewcode-block" id="Image.calculateHLR"><a class="viewcode-back" href="../../image_class.html#galsim.Image.calculateHLR">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux_frac</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the half-light radius of a drawn object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the half-light radius of a drawn object.</span>
 
 <span class="sd">        This method is equivalent to `GSObject.calculateHLR` when the object has already been</span>
 <span class="sd">        been drawn onto an image.  Note that the profile should be drawn using a method that</span>
@@ -1566,7 +1566,7 @@
 
 
 <div class="viewcode-block" id="Image.calculateMomentRadius"><a class="viewcode-back" href="../../image_class.html#galsim.Image.calculateMomentRadius">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMomentRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rtype</span><span class="o">=</span><span class="s1">&#39;det&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns an estimate of the radius based on unweighted second moments of a drawn object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an estimate of the radius based on unweighted second moments of a drawn object.</span>
 
 <span class="sd">        This method is equivalent to `GSObject.calculateMomentRadius` when the object has already</span>
 <span class="sd">        been drawn onto an image.  Note that the profile should be drawn using a method that</span>
@@ -1630,7 +1630,7 @@
 
 
 <div class="viewcode-block" id="Image.calculateFWHM"><a class="viewcode-back" href="../../image_class.html#galsim.Image.calculateFWHM">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFWHM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Imax</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the full-width half-maximum (FWHM) of a drawn object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the full-width half-maximum (FWHM) of a drawn object.</span>
 
 <span class="sd">        This method is equivalent to `GSObject.calculateFWHM` when the object has already</span>
 <span class="sd">        been drawn onto an image.  Note that the profile should be drawn using a method that</span>
@@ -1932,7 +1932,7 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 <div class="viewcode-block" id="Image.transpose"><a class="viewcode-back" href="../../image_class.html#galsim.Image.transpose">[docs]</a>    <span class="k">def</span> <span class="nf">transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the tranpose of the image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the tranpose of the image.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1941,7 +1941,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">bT</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.flip_lr"><a class="viewcode-back" href="../../image_class.html#galsim.Image.flip_lr">[docs]</a>    <span class="k">def</span> <span class="nf">flip_lr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a version of the image flipped left to right.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a version of the image flipped left to right.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1949,7 +1949,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[:,::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.flip_ud"><a class="viewcode-back" href="../../image_class.html#galsim.Image.flip_ud">[docs]</a>    <span class="k">def</span> <span class="nf">flip_ud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a version of the image flipped top to bottom.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a version of the image flipped top to bottom.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1957,7 +1957,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.rot_cw"><a class="viewcode-back" href="../../image_class.html#galsim.Image.rot_cw">[docs]</a>    <span class="k">def</span> <span class="nf">rot_cw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a version of the image rotated 90 degrees clockwise.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a version of the image rotated 90 degrees clockwise.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1966,7 +1966,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,:],</span> <span class="n">bT</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.rot_ccw"><a class="viewcode-back" href="../../image_class.html#galsim.Image.rot_ccw">[docs]</a>    <span class="k">def</span> <span class="nf">rot_ccw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a version of the image rotated 90 degrees counter-clockwise.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a version of the image rotated 90 degrees counter-clockwise.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1975,7 +1975,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">[:,::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">bT</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.rot_180"><a class="viewcode-back" href="../../image_class.html#galsim.Image.rot_180">[docs]</a>    <span class="k">def</span> <span class="nf">rot_180</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a version of the image rotated 180 degrees.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a version of the image rotated 180 degrees.</span>
 
 <span class="sd">        Note: The returned image will have an undefined wcs.</span>
 <span class="sd">        If you care about the wcs, you will need to set it yourself.</span>
@@ -1983,7 +1983,7 @@
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Image.depixelize"><a class="viewcode-back" href="../../image_class.html#galsim.Image.depixelize">[docs]</a>    <span class="k">def</span> <span class="nf">depixelize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a depixelized version of the image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a depixelized version of the image.</span>
 
 <span class="sd">        Specifically, this function creates an image that could be used with `InterpolatedImage`</span>
 <span class="sd">        with the given x_interpolant, which when drawn with method=auto would produce the</span>
@@ -2031,7 +2031,7 @@
 
 <div class="viewcode-block" id="Image.clear_depixelize_cache"><a class="viewcode-back" href="../../image_class.html#galsim.Image.clear_depixelize_cache">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">clear_depixelize_cache</span><span class="p">():</span>
-        <span class="sd">&quot;&quot;&quot;Release the cached solver used by depixelize to make repeated calls more efficient.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Release the cached solver used by depixelize to make repeated calls more efficient.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_galsim</span><span class="o">.</span><span class="n">ClearDepixelizeCache</span><span class="p">()</span></div>
 
@@ -2057,7 +2057,7 @@
     <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="_Image"><a class="viewcode-back" href="../../image_class.html#galsim._Image">[docs]</a><span class="k">def</span> <span class="nf">_Image</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to ``Image(array, bounds, wcs)``, but without the overhead of sanity checks,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to ``Image(array, bounds, wcs)``, but without the overhead of sanity checks,</span>
 <span class="sd">    and the other options for how to provide the arguments.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
@@ -2072,49 +2072,49 @@
 
 <span class="c1"># These are essentially aliases for the regular Image with the correct dtype</span>
 <div class="viewcode-block" id="ImageUS"><a class="viewcode-back" href="../../image_class.html#galsim.ImageUS">[docs]</a><span class="k">def</span> <span class="nf">ImageUS</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.uint16)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.uint16)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageUI"><a class="viewcode-back" href="../../image_class.html#galsim.ImageUI">[docs]</a><span class="k">def</span> <span class="nf">ImageUI</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.uint32)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.uint32)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageS"><a class="viewcode-back" href="../../image_class.html#galsim.ImageS">[docs]</a><span class="k">def</span> <span class="nf">ImageS</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.int16)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.int16)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageI"><a class="viewcode-back" href="../../image_class.html#galsim.ImageI">[docs]</a><span class="k">def</span> <span class="nf">ImageI</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.int32)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.int32)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageF"><a class="viewcode-back" href="../../image_class.html#galsim.ImageF">[docs]</a><span class="k">def</span> <span class="nf">ImageF</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.float32)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.float32)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageD"><a class="viewcode-back" href="../../image_class.html#galsim.ImageD">[docs]</a><span class="k">def</span> <span class="nf">ImageD</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.float64)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.float64)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageCF"><a class="viewcode-back" href="../../image_class.html#galsim.ImageCF">[docs]</a><span class="k">def</span> <span class="nf">ImageCF</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.complex64)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.complex64)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageCD"><a class="viewcode-back" href="../../image_class.html#galsim.ImageCD">[docs]</a><span class="k">def</span> <span class="nf">ImageCD</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.complex128)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for galsim.Image(..., dtype=numpy.complex128)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span>
     <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>

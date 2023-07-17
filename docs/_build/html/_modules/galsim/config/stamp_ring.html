@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.stamp_ring &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.stamp_ring &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -112,14 +112,14 @@
 <span class="c1"># rotates it in a ring for the other n-1 times per per group.</span>
 
 <div class="viewcode-block" id="RingBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.stamp_ring.RingBuilder">[docs]</a><span class="k">class</span> <span class="nc">RingBuilder</span><span class="p">(</span><span class="n">StampBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This performs the tasks necessary for building a Ring stamp type.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This performs the tasks necessary for building a Ring stamp type.</span>
 
 <span class="sd">    It uses the regular Basic functions for most things.</span>
 <span class="sd">    It specializes the setup, buildProfile, reject, and makeTasks functions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Do the initialization and setup for the Ring type.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the initialization and setup for the Ring type.</span>
 
 <span class="sd">        Most of the work is done by SetupBasic, but we do need to check that the required parameters</span>
 <span class="sd">        are present, and also that no additional parameters are present.</span>
@@ -162,7 +162,7 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RingBuilder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">buildProfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build the object to be drawn.</span>
 
 <span class="sd">        For the first item in the ring, this is the same as Basic. It stores the galaxy object</span>
@@ -213,7 +213,7 @@
             <span class="k">return</span> <span class="n">gal</span>
 
     <span class="k">def</span> <span class="nf">reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
 
 <span class="sd">        This is the same as base class reject for the first item in the ring.  Later items are not</span>
 <span class="sd">        checked though, since rejecting them would mess up the ring.</span>
@@ -236,7 +236,7 @@
             <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
 
 <span class="sd">        For the Ring stamp type, we group jobs into sets of num.  If there are extra jobs that</span>
 <span class="sd">        don&#39;t fit into a full ring, the last task will be a partial ring.</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.shear &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.shear &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -107,7 +107,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="Shear"><a class="viewcode-back" href="../../shear.html#galsim.Shear">[docs]</a><span class="k">class</span> <span class="nc">Shear</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class to represent shears in a variety of ways.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class to represent shears in a variety of ways.</span>
 
 <span class="sd">    The Shear object can be initialized in a variety of ways to represent shape distortions.</span>
 <span class="sd">    A shear is an operation that transforms a circle into an ellipse with minor-to-major axis ratio</span>
@@ -322,80 +322,80 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">g1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;reduced shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">real</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">g2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;reduced shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">imag</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;reduced shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">beta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The position angle as an `Angle` instance</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The position angle as an `Angle` instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The reduced shear as a complex number g1 + 1j * g2.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The reduced shear as a complex number g1 + 1j * g2.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">e1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;distortion&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;distortion&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">e2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;distortion&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;distortion&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">e</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;distortion&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;distortion&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">esq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The square of the magnitude of the shear in the &quot;distortion&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The square of the magnitude of the shear in the &quot;distortion&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">eta1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The first component of the shear in the &quot;conformal shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2eta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">eta2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The second component of the shear in the &quot;conformal shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2eta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">eta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The magnitude of the shear in the &quot;conformal shear&quot; definition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2eta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The minor-to-major axis ratio</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The minor-to-major axis ratio</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
 
@@ -446,7 +446,7 @@
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Shear.getMatrix"><a class="viewcode-back" href="../../shear.html#galsim.Shear.getMatrix">[docs]</a>    <span class="k">def</span> <span class="nf">getMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the matrix that tells how this shear acts on a position vector:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the matrix that tells how this shear acts on a position vector:</span>
 
 <span class="sd">        If a field is sheared by some shear, s, then the position (x,y) -&gt; (x&#39;,y&#39;)</span>
 <span class="sd">        according to:</span>
@@ -470,7 +470,7 @@
                          <span class="p">[</span>  <span class="bp">self</span><span class="o">.</span><span class="n">g2</span>  <span class="p">,</span> <span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g1</span> <span class="p">]])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Shear.rotationWith"><a class="viewcode-back" href="../../shear.html#galsim.Shear.rotationWith">[docs]</a>    <span class="k">def</span> <span class="nf">rotationWith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the rotation angle associated with the addition of two shears.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the rotation angle associated with the addition of two shears.</span>
 
 <span class="sd">        The effect of two shears is not just a single net shear.  There is also a rotation</span>
 <span class="sd">        associated with it.  This is easiest to understand in terms of the matrix representations:</span>
@@ -502,7 +502,7 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="_Shear"><a class="viewcode-back" href="../../shear.html#galsim._Shear">[docs]</a><span class="k">def</span> <span class="nf">_Shear</span><span class="p">(</span><span class="n">shear</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to ``galsim.Shear(shear)``, but without the overhead of the normal sanity checks</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to ``galsim.Shear(shear)``, but without the overhead of the normal sanity checks</span>
 <span class="sd">    and other options for how to specify the shear.</span>
 
 <span class="sd">    Parameters:</span>

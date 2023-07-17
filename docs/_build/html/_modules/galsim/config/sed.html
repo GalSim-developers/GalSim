@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.sed &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.sed &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -118,7 +118,7 @@
 <span class="n">valid_sed_types</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="k">def</span> <span class="nf">BuildSED</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the SED parameters from config[key] and return a constructed SED object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the SED parameters from config[key] and return a constructed SED object.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     A dict with the configuration information.</span>
@@ -171,12 +171,12 @@
 
 
 <div class="viewcode-block" id="SEDBuilder"><a class="viewcode-back" href="../../../config_objects.html#galsim.config.SEDBuilder">[docs]</a><span class="k">class</span> <span class="nc">SEDBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building SED objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building SED objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="SEDBuilder.buildSED"><a class="viewcode-back" href="../../../config_objects.html#galsim.config.SEDBuilder.buildSED">[docs]</a>    <span class="k">def</span> <span class="nf">buildSED</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the SED based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the SED based on the specifications in the config dict.</span>
 
 <span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
 
@@ -196,7 +196,7 @@
 <span class="n">read_sed_file</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">_read_sed_file</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">FileSEDBuilder</span><span class="p">(</span><span class="n">SEDBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for loading an SED from a file</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for loading an SED from a file</span>
 
 <span class="sd">    FileSED expected the following parameters:</span>
 
@@ -206,7 +206,7 @@
 <span class="sd">                                Allowed values: flambda, fnu, fphotons, 1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">buildSED</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the SED based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the SED based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the SED type.</span>
@@ -248,7 +248,7 @@
         <span class="k">return</span> <span class="n">sed</span><span class="p">,</span> <span class="n">safe</span>
 
 <div class="viewcode-block" id="RegisterSEDType"><a class="viewcode-back" href="../../../config_objects.html#galsim.config.RegisterSEDType">[docs]</a><span class="k">def</span> <span class="nf">RegisterSEDType</span><span class="p">(</span><span class="n">sed_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a SED type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a SED type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        sed_type:       The name of the type in the config dict.</span>

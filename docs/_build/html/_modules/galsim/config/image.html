@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.image &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.image &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -133,7 +133,7 @@
 
 
 <div class="viewcode-block" id="BuildImages"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildImages">[docs]</a><span class="k">def</span> <span class="nf">BuildImages</span><span class="p">(</span><span class="n">nimages</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build a number of postage stamp images as specified by the config dict.</span>
 
 <span class="sd">    Parameters:</span>
@@ -207,7 +207,7 @@
     <span class="k">return</span> <span class="n">images</span></div>
 
 <div class="viewcode-block" id="SetupConfigImageNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigImageNum">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigImageNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the image processing level.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the image processing level.</span>
 
 <span class="sd">    Includes:</span>
 <span class="sd">    - Set config[&#39;image_num&#39;] = image_num</span>
@@ -255,7 +255,7 @@
 
 
 <div class="viewcode-block" id="SetupConfigImageSize"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigImageSize">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigImageSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Do some further setup of the config dict at the image processing level based on</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do some further setup of the config dict at the image processing level based on</span>
 <span class="sd">    the provided image size.</span>
 
 <span class="sd">    - Set config[&#39;image_xsize&#39;], config[&#39;image_ysize&#39;] to the size of the image</span>
@@ -319,7 +319,7 @@
                <span class="p">]</span> <span class="o">+</span> <span class="n">stamp_image_keys</span>
 
 <div class="viewcode-block" id="BuildImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildImage">[docs]</a><span class="k">def</span> <span class="nf">BuildImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build an Image according to the information in config.</span>
 
 <span class="sd">    Parameters:</span>
@@ -400,7 +400,7 @@
 
 
 <div class="viewcode-block" id="GetNObjForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNObjForImage">[docs]</a><span class="k">def</span> <span class="nf">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of objects that will be made for the image number image_num based on</span>
 <span class="sd">    the information in the config dict.</span>
 
@@ -423,7 +423,7 @@
 
 
 <div class="viewcode-block" id="FlattenNoiseVariance"><a class="viewcode-back" href="../../../config_process.html#galsim.config.FlattenNoiseVariance">[docs]</a><span class="k">def</span> <span class="nf">FlattenNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This is a helper function to bring the noise level up to a constant value</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This is a helper function to bring the noise level up to a constant value</span>
 <span class="sd">    across the image.  If some of the galaxies are RealGalaxy objects and noise whitening</span>
 <span class="sd">    (or symmetrizing) is turned on, then there will already be some noise in the</span>
 <span class="sd">    stamps that get built.  This function goes through and figures out what the maximum</span>
@@ -469,7 +469,7 @@
 
 
 <div class="viewcode-block" id="MakeImageTasks"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MakeImageTasks">[docs]</a><span class="k">def</span> <span class="nf">MakeImageTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
 
 <span class="sd">    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.</span>
 
@@ -495,14 +495,14 @@
 
 
 <div class="viewcode-block" id="ImageBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder">[docs]</a><span class="k">class</span> <span class="nc">ImageBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building full images.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building full images.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    It also includes the implementation of the default image type: Single.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ImageBuilder.setup"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Do the initialization and setup for building the image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the initialization and setup for building the image.</span>
 
 <span class="sd">        This figures out the size that the image will be, but doesn&#39;t actually build it yet.</span>
 
@@ -541,7 +541,7 @@
         <span class="k">return</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.buildBandpass"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">buildBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If thre is a &#39;bandpass&#39; field in config[&#39;image&#39;], load it.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If thre is a &#39;bandpass&#39; field in config[&#39;image&#39;], load it.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the image field.</span>
@@ -559,7 +559,7 @@
             <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.buildSensor"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildSensor">[docs]</a>    <span class="k">def</span> <span class="nf">buildSensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the sensor if given in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the sensor if given in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the image field.</span>
@@ -577,7 +577,7 @@
             <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.buildImage"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildImage">[docs]</a>    <span class="k">def</span> <span class="nf">buildImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build an Image based on the parameters in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an Image based on the parameters in the config dict.</span>
 
 <span class="sd">        For Single, this is just an image consisting of a single postage stamp.</span>
 
@@ -606,7 +606,7 @@
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.makeTasks"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.makeTasks">[docs]</a>    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
 
 <span class="sd">        Each task is performed separately in multi-processing runs, so this provides a mechanism</span>
 <span class="sd">        to have multiple jobs depend on each other without being messed up by multi-processing.</span>
@@ -638,7 +638,7 @@
         <span class="k">return</span> <span class="n">MakeStampTasks</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.addNoise"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add the final noise to the image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the final noise to the image.</span>
 
 <span class="sd">        In the base class, this is a no op, since it directs the BuildStamp function to build</span>
 <span class="sd">        the noise at that level.  But some image types need to do extra work at the end to</span>
@@ -656,7 +656,7 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="ImageBuilder.getNObj"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.getNObj">[docs]</a>    <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the number of objects that will be built for this image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of objects that will be built for this image.</span>
 
 <span class="sd">        For Single, this is just 1, but other image types would figure this out from the</span>
 <span class="sd">        configuration parameters.</span>
@@ -674,7 +674,7 @@
         <span class="k">return</span> <span class="mi">1</span></div></div>
 
 <div class="viewcode-block" id="RegisterImageType"><a class="viewcode-back" href="../../../config_image.html#galsim.config.RegisterImageType">[docs]</a><span class="k">def</span> <span class="nf">RegisterImageType</span><span class="p">(</span><span class="n">image_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register an image type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an image type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        image_type:     The name of the type in config[&#39;image&#39;]</span>

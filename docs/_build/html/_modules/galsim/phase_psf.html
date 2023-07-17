@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_psf &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.phase_psf &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -118,7 +118,7 @@
 
 
 <div class="viewcode-block" id="Aperture"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a><span class="k">class</span> <span class="nc">Aperture</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
 <span class="sd">    with the `PhaseScreenPSF` class to create PSFs via Fourier or geometric optics.</span>
 
 <span class="sd">    The pupil plane array is completely specified by its size, sampling interval, and pattern of</span>
@@ -300,26 +300,26 @@
     <span class="c1"># array, so access that (lazy) property first.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pupil_plane_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale_size of the pupil-plane image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale_size of the pupil-plane image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illuminated</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_scale</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pupil_plane_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The size of the pupil-plane image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The size of the pupil-plane image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illuminated</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_size</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">npix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of pixels in each direction of the pupil-plane image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of pixels in each direction of the pupil-plane image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illuminated</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">good_pupil_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;An estimate of a good pupil-plane image size.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An estimate of a good pupil-plane image size.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Although the user can set the pupil plane size and scale directly if desired, in most</span>
         <span class="c1"># cases it&#39;s nicer to have GalSim try to pick good values for these.</span>
@@ -336,7 +336,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">good_pupil_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;An estimate of a good pupil-plane image scale.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An estimate of a good pupil-plane image scale.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
         <span class="c1"># For the pupil plane sampling interval, details like the obscuration and GSParams *are*</span>
@@ -396,7 +396,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_pupil_plane</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_generate_pupil_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Create an array of illuminated pixels parameterically.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Create an array of illuminated pixels parameterically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_size</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_scale</span>
         <span class="c1"># Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.</span>
@@ -434,7 +434,7 @@
         <span class="k">return</span> <span class="n">illuminated</span>
 
     <span class="k">def</span> <span class="nf">_load_pupil_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Create an array of illuminated pixels with appropriate size and scale from an input</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Create an array of illuminated pixels with appropriate size and scale from an input</span>
 <span class="sd">        image of the pupil.  The basic strategy is:</span>
 
 <span class="sd">        1.  Read in array.</span>
@@ -529,12 +529,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` of this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` of this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
 <div class="viewcode-block" id="Aperture.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current aperture with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current aperture with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
@@ -633,13 +633,13 @@
     <span class="c1"># So we make a thin wrapper here.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">illuminated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A boolean array indicating which positions in the pupil plane are exposed to the sky.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A boolean array indicating which positions in the pupil plane are exposed to the sky.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_illuminated</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">rho</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Unit-disk normalized pupil plane coordinate as a complex number:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unit-disk normalized pupil plane coordinate as a complex number:</span>
 <span class="sd">        (x, y) =&gt; x + 1j * y.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illuminated</span>
@@ -659,39 +659,39 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">u</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Pupil horizontal coordinate array in meters.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pupil horizontal coordinate array in meters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">v</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Pupil vertical coordinate array in meters.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pupil vertical coordinate array in meters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">u_illuminated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The u values for only the `illuminated` pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The u values for only the `illuminated` pixels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">illuminated</span><span class="p">]</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">v_illuminated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The v values for only the `illuminated` pixels.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The v values for only the `illuminated` pixels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">illuminated</span><span class="p">]</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">rsqr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Pupil radius squared array in meters squared.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pupil radius squared array in meters squared.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="o">**</span><span class="mi">2</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">diam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Aperture diameter in meters&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Aperture diameter in meters&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diam</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obscuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Fraction linear obscuration of pupil.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fraction linear obscuration of pupil.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -707,7 +707,7 @@
         <span class="k">return</span> <span class="n">d</span>
 
 <div class="viewcode-block" id="Aperture.samplePupil"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.samplePupil">[docs]</a>    <span class="k">def</span> <span class="nf">samplePupil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the pupil_u and pupil_v values in the PhotonArray by sampling the current aperture.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the pupil_u and pupil_v values in the PhotonArray by sampling the current aperture.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
 
@@ -741,7 +741,7 @@
     <span class="c1"># MJ: Of these four, only _sky_scale is still used.  The rest are left here for informational</span>
     <span class="c1"># purposes, but nothing actually calls them.</span>
     <span class="k">def</span> <span class="nf">_getStepK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the Fourier grid spacing for this aperture at given wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Fourier grid spacing for this aperture at given wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:        Wavelength in nanometers.</span>
@@ -753,7 +753,7 @@
         <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_scale</span><span class="o">/</span><span class="p">(</span><span class="n">lam</span><span class="o">*</span><span class="mf">1e-9</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_unit</span><span class="o">/</span><span class="n">radians</span>
 
     <span class="k">def</span> <span class="nf">_getMaxK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the Fourier grid half-size for this aperture at given wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Fourier grid half-size for this aperture at given wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:        Wavelength in nanometers.</span>
@@ -765,7 +765,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_size</span><span class="o">/</span><span class="p">(</span><span class="n">lam</span><span class="o">*</span><span class="mf">1e-9</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_unit</span><span class="o">/</span><span class="n">radians</span>
 
     <span class="k">def</span> <span class="nf">_sky_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the image scale for this aperture at given wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the image scale for this aperture at given wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:        Wavelength in nanometers.</span>
@@ -777,7 +777,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">lam</span><span class="o">*</span><span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_size</span> <span class="o">*</span> <span class="n">radians</span><span class="o">/</span><span class="n">scale_unit</span>
 
     <span class="k">def</span> <span class="nf">_sky_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the image size for this aperture at given wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the image size for this aperture at given wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:        Wavelength in nanometers.</span>
@@ -790,7 +790,7 @@
 
 
 <div class="viewcode-block" id="PhaseScreenList"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList">[docs]</a><span class="k">class</span> <span class="nc">PhaseScreenList</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;List of phase screens that can be turned into a PSF.  Screens can be either atmospheric</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;List of phase screens that can be turned into a PSF.  Screens can be either atmospheric</span>
 <span class="sd">    layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using</span>
 <span class="sd">    the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can</span>
 <span class="sd">    be manipulated in a python list.  For example::</span>
@@ -886,7 +886,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;r0_500_effective&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set all layers&#39; internal clocks to time t.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set all layers&#39; internal clocks to time t.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">_seek</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
@@ -896,7 +896,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reset phase screens back to time=0.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset phase screens back to time=0.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
@@ -906,7 +906,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
 <div class="viewcode-block" id="PhaseScreenList.instantiate"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.instantiate">[docs]</a>    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Instantiate the screens in this `PhaseScreenList`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the screens in this `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pool:       A multiprocessing.Pool object to use to instantiate screens in parallel.</span>
@@ -932,11 +932,11 @@
                 <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_delayCalculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add psf to delayed calculation list.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add psf to delayed calculation list.&quot;&quot;&quot;</span>
         <span class="n">heappush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">,</span> <span class="p">(</span><span class="n">psf</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">(</span><span class="n">psf</span><span class="p">)))</span>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate previously delayed PSFs.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate previously delayed PSFs.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="c1"># See if we have any dynamic screens.  If not, then we can immediately compute each PSF</span>
@@ -973,7 +973,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="PhaseScreenList.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
-        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront due to all phase screens in `PhaseScreenList`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute cumulative wavefront due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
 <span class="sd">        ideal plane wave (pre-optics) or spherical wave (post-optics).</span>
@@ -1000,7 +1000,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wavefront</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhaseScreenList.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
-        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
@@ -1039,7 +1039,7 @@
         <span class="k">return</span> <span class="n">gradx</span><span class="p">,</span> <span class="n">grady</span>
 
 <div class="viewcode-block" id="PhaseScreenList.makePSF"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.makePSF">[docs]</a>    <span class="k">def</span> <span class="nf">makePSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a PSF from the current `PhaseScreenList`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a PSF from the current `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:                Wavelength in nanometers at which to compute PSF.</span>
@@ -1142,7 +1142,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">r0_500_effective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Effective r0_500 for set of screens in list that define an r0_500 attribute.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Effective r0_500 for set of screens in list that define an r0_500 attribute.&quot;&quot;&quot;</span>
         <span class="n">r0_500s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">l</span><span class="o">.</span><span class="n">r0_500</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s1">&#39;r0_500&#39;</span><span class="p">)])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r0_500s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1150,7 +1150,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">r0_500s</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">5.</span><span class="o">/</span><span class="mi">3</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">3.</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_getStepK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return an appropriate stepk for this list of phase screens.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an appropriate stepk for this list of phase screens.</span>
 
 <span class="sd">        The required set of parameters depends on the types of the individual `PhaseScreen`</span>
 <span class="sd">        instances in the `PhaseScreenList`.  See the documentation for the individual</span>
@@ -1175,7 +1175,7 @@
 
 
 <div class="viewcode-block" id="PhaseScreenPSF"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF">[docs]</a><span class="k">class</span> <span class="nc">PhaseScreenPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A PSF surface brightness profile constructed by integrating over time the instantaneous PSF</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A PSF surface brightness profile constructed by integrating over time the instantaneous PSF</span>
 <span class="sd">    derived from a set of phase screens and an aperture.</span>
 
 <span class="sd">    There are two equivalent ways to construct a PhaseScreenPSF given a `PhaseScreenList`::</span>
@@ -1445,20 +1445,20 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">kcrit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The critical Fourier scale being used for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The critical Fourier scale being used for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fft_sign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The sign (+/-) to use in the exponent of the Fourier kernel when evaluating the Fourier</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The sign (+/-) to use in the exponent of the Fourier kernel when evaluating the Fourier</span>
 <span class="sd">        optics PSF.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">screen_kmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The maximum k value to use in the screen.  Typically `kcrit`/r0.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The maximum k value to use in the screen.  Typically `kcrit`/r0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r0_500</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">r0_500_effective</span>
         <span class="k">if</span> <span class="n">r0_500</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1469,7 +1469,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">second_kick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Make a SecondKick object based on contents of screen_list and aper.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a SecondKick object based on contents of screen_list and aper.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
         <span class="kn">from</span> <span class="nn">.second_kick</span> <span class="kn">import</span> <span class="n">SecondKick</span>
@@ -1489,13 +1489,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The flux of the profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The flux of the profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">screen_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `PhaseScreenList` being used for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `PhaseScreenList` being used for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span>
 
@@ -1559,7 +1559,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute the current instantaneous PSF and add it to the developing integrated PSF.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the current instantaneous PSF and add it to the developing integrated PSF.&quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fft</span>
         <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">u_illuminated</span>
         <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">v_illuminated</span>
@@ -1580,7 +1580,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Take accumulated integrated PSF image and turn it into a proper GSObject.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Take accumulated integrated PSF image and turn it into a proper GSObject.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_img</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">_BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">npix</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_img</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
@@ -1710,7 +1710,7 @@
 
 
 <div class="viewcode-block" id="OpticalPSF"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF">[docs]</a><span class="k">class</span> <span class="nc">OpticalPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing aberrated PSFs due to telescope optics.  Its underlying implementation</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing aberrated PSFs due to telescope optics.  Its underlying implementation</span>
 <span class="sd">    uses an InterpolatedImage to characterize the profile.</span>
 
 <span class="sd">    The diffraction effects are characterized by the diffraction angle, which is a function of the</span>

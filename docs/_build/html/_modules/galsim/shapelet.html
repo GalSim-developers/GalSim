@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.shapelet &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.shapelet &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="Shapelet"><a class="viewcode-back" href="../../arbitrary.html#galsim.Shapelet">[docs]</a><span class="k">class</span> <span class="nc">Shapelet</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing polar shapelet surface brightness profiles.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing polar shapelet surface brightness profiles.</span>
 
 <span class="sd">    This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet</span>
 <span class="sd">    decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions</span>
@@ -200,30 +200,30 @@
 
 <div class="viewcode-block" id="Shapelet.size"><a class="viewcode-back" href="../../arbitrary.html#galsim.Shapelet.size">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The size of the shapelet vector.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The size of the shapelet vector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">;</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale size, sigma.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale size, sigma.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The shapelet order.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The shapelet order.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">bvec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The vector of shapelet coefficients</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The vector of shapelet coefficients</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bvec</span>
 
 <div class="viewcode-block" id="Shapelet.getPQ"><a class="viewcode-back" href="../../arbitrary.html#galsim.Shapelet.getPQ">[docs]</a>    <span class="k">def</span> <span class="nf">getPQ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the (p,q) coefficient.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the (p,q) coefficient.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            p:      The p index to get.</span>
@@ -241,7 +241,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bvec</span><span class="p">[</span><span class="n">pq</span><span class="p">],</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_bvec</span><span class="p">[</span><span class="n">pq</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Shapelet.getNM"><a class="viewcode-back" href="../../arbitrary.html#galsim.Shapelet.getNM">[docs]</a>    <span class="k">def</span> <span class="nf">getNM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">m</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            N:      The value of N=p+q to get.</span>
@@ -327,7 +327,7 @@
 
 <div class="viewcode-block" id="Shapelet.fit"><a class="viewcode-back" href="../../arbitrary.html#galsim.Shapelet.fit">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Fit for a shapelet decomposition of a given image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit for a shapelet decomposition of a given image.</span>
 
 <span class="sd">        The optional ``normalization`` parameter mirrors the parameter of the `InterpolatedImage`</span>
 <span class="sd">        class.  The following sequence should produce drawn images that are approximate matches to</span>

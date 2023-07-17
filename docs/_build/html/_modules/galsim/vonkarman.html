@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.vonkarman &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.vonkarman &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -114,7 +114,7 @@
 
 
 <div class="viewcode-block" id="VonKarman"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman">[docs]</a><span class="k">class</span> <span class="nc">VonKarman</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class describing a von Karman surface brightness profile, which represents a long exposure</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class describing a von Karman surface brightness profile, which represents a long exposure</span>
 <span class="sd">    atmospheric PSF.  The difference between the von Karman profile and the related `Kolmogorov`</span>
 <span class="sd">    profile is that the von Karman profile includes a parameter for the outer scale of atmospheric</span>
 <span class="sd">    turbulence, which is a physical scale beyond which fluctuations in the refractive index stop</span>
@@ -261,43 +261,43 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input lam value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input lam value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">r0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input r0 value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input r0 value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">r0_500</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input r0_500 value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input r0_500 value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="o">/</span><span class="mf">500.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">L0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input L0 value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input L0 value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_L0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input scale_units.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input scale_units.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">force_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Forced value of stepk or 0.0.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forced value of stepk or 0.0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">do_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether to include the delta function at the center.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether to include the delta function at the center.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_delta</span>
 
@@ -307,14 +307,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">delta_amplitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The amplitude of the delta function at the center.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The amplitude of the delta function at the center.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span>  <span class="c1"># This is where _delta is calculated.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span><span class="o">.</span><span class="n">getHalfLightRadius</span><span class="p">()</span>
 

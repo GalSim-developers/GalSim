@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.sensor &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.sensor &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -113,7 +113,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">,</span> <span class="n">GalSimError</span>
 
 <div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor">[docs]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The base class for other sensor models, and also an implementation of the simplest possible</span>
 <span class="sd">    sensor model that just converts each photon into an electron and drops it in the appropriate</span>
 <span class="sd">    pixel.</span>
@@ -122,7 +122,7 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="Sensor.accumulate"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
 <span class="sd">        pixels in the image.</span>
 
 <span class="sd">        Each photon has a position, which corresponds to the (x,y) position at the top of the</span>
@@ -149,7 +149,7 @@
         <span class="k">return</span> <span class="n">photons</span><span class="o">.</span><span class="n">addTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Sensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the pixel areas according to the given sensor.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the pixel areas according to the given sensor.</span>
 
 <span class="sd">        If the pixels are all the same size, then this should just return 1.0.</span>
 
@@ -192,7 +192,7 @@
 
 
 <div class="viewcode-block" id="SiliconSensor"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor">[docs]</a><span class="k">class</span> <span class="nc">SiliconSensor</span><span class="p">(</span><span class="n">Sensor</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A model of a silicon-based CCD sensor that converts photons to electrons at a wavelength-</span>
 <span class="sd">    dependent depth (probabilistically) and drifts them down to the wells, properly taking</span>
 <span class="sd">    into account the repulsion of previously accumulated electrons (known as the brighter-fatter</span>
@@ -379,7 +379,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_silicon</span><span class="p">()</span>  <span class="c1"># Build the _silicon object.</span>
 
 <div class="viewcode-block" id="SiliconSensor.accumulate"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
 <span class="sd">        pixels in the image.</span>
 
 <span class="sd">        Parameters:</span>
@@ -450,7 +450,7 @@
         <span class="k">return</span> <span class="n">added_flux</span></div>
 
 <div class="viewcode-block" id="SiliconSensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create an image with the corresponding pixel areas according to the `SiliconSensor`</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an image with the corresponding pixel areas according to the `SiliconSensor`</span>
 <span class="sd">        model.</span>
 
 <span class="sd">        The input image gives the flux values used to set the current levels of the brighter-fatter</span>
@@ -554,7 +554,7 @@
 
 <div class="viewcode-block" id="SiliconSensor.simple_treerings"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.simple_treerings">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">simple_treerings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mf">8000.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Make a simple sinusoidal tree ring pattern that can be used as the ``treering_func``</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Make a simple sinusoidal tree ring pattern that can be used as the ``treering_func``</span>
 <span class="sd">        parameter of `SiliconSensor`.</span>
 
 <span class="sd">        The functional form is :math:`f(r) = A \cos(2 \pi r/P)` where :math:`A` is the</span>

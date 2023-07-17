@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.fitswcs &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.fitswcs &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -135,7 +135,7 @@
 
 
 <div class="viewcode-block" id="AstropyWCS"><a class="viewcode-back" href="../../wcs.html#galsim.AstropyWCS">[docs]</a><span class="k">class</span> <span class="nc">AstropyWCS</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This WCS uses astropy.wcs to read WCS information from a FITS file.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS uses astropy.wcs to read WCS information from a FITS file.</span>
 <span class="sd">    It requires the astropy.wcs python module to be installed.</span>
 
 <span class="sd">    Astropy may be installed using pip, fink, or port::</span>
@@ -282,13 +282,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The underlying ``astropy.wcs.WCS`` object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying ``astropy.wcs.WCS`` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
 
@@ -386,7 +386,7 @@
 
 
 <div class="viewcode-block" id="PyAstWCS"><a class="viewcode-back" href="../../wcs.html#galsim.PyAstWCS">[docs]</a><span class="k">class</span> <span class="nc">PyAstWCS</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS</span>
 <span class="sd">    information from a FITS file.  It requires the starlink.Ast python module to be installed.</span>
 
 <span class="sd">    Starlink may be installed using pip::</span>
@@ -531,13 +531,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">wcsinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The underlying ``starlink.Ast.FrameSet`` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying ``starlink.Ast.FrameSet`` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcsinfo</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
 
@@ -673,7 +673,7 @@
 <span class="c1"># This class was mostly useful as a refernce implementation anyway. It&#39;s much too slow for most</span>
 <span class="c1"># users to ever want to use it.</span>
 <div class="viewcode-block" id="WcsToolsWCS"><a class="viewcode-back" href="../../wcs.html#galsim.WcsToolsWCS">[docs]</a><span class="k">class</span> <span class="nc">WcsToolsWCS</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;This WCS uses wcstools executables to perform the appropriate WCS transformations</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS uses wcstools executables to perform the appropriate WCS transformations</span>
 <span class="sd">    for a given FITS file.  It requires wcstools command line functions to be installed.</span>
 
 <span class="sd">    Note: It uses the wcstools executables xy2sky and sky2xy, so it can be quite a bit less</span>
@@ -726,13 +726,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The file name of the FITS file with the WCS information.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The file name of the FITS file with the WCS information.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
 
@@ -927,7 +927,7 @@
 
 
 <div class="viewcode-block" id="GSFitsWCS"><a class="viewcode-back" href="../../wcs.html#galsim.GSFitsWCS">[docs]</a><span class="k">class</span> <span class="nc">GSFitsWCS</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This WCS uses a GalSim implementation to read a WCS from a FITS file.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS uses a GalSim implementation to read a WCS from a FITS file.</span>
 
 <span class="sd">    It doesn&#39;t do nearly as many WCS types as the other options, and it does not try to be</span>
 <span class="sd">    as rigorous about supporting all possible valid variations in the FITS parameters.</span>
@@ -1041,7 +1041,7 @@
     <span class="c1"># just make origin a dummy property that returns 0,0.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
 
@@ -1691,7 +1691,7 @@
 
 
 <div class="viewcode-block" id="TanWCS"><a class="viewcode-back" href="../../wcs.html#galsim.TanWCS">[docs]</a><span class="k">def</span> <span class="nf">TanWCS</span><span class="p">(</span><span class="n">affine</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This is a function that returns a `GSFitsWCS` object for a TAN WCS projection.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This is a function that returns a `GSFitsWCS` object for a TAN WCS projection.</span>
 
 <span class="sd">    The TAN projection is essentially an affine transformation from image coordinates to</span>
 <span class="sd">    Euclidean (u,v) coordinates on a tangent plane, and then a &quot;deprojection&quot; of this plane</span>
@@ -1764,7 +1764,7 @@
 
 <div class="viewcode-block" id="FitsWCS"><a class="viewcode-back" href="../../wcs.html#galsim.FitsWCS">[docs]</a><span class="k">def</span> <span class="nf">FitsWCS</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
             <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This factory function will try to read the WCS from a FITS file and return a WCS that will</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This factory function will try to read the WCS from a FITS file and return a WCS that will</span>
 <span class="sd">    work.  It tries a number of different WCS classes until it finds one that succeeds in reading</span>
 <span class="sd">    the file.</span>
 
@@ -1865,7 +1865,7 @@
 <span class="n">FitsWCS</span><span class="o">.</span><span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;hdu&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;compression&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;text_file&#39;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">}</span>
 
 <div class="viewcode-block" id="FittedSIPWCS"><a class="viewcode-back" href="../../wcs.html#galsim.FittedSIPWCS">[docs]</a><span class="k">def</span> <span class="nf">FittedSIPWCS</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">wcs_type</span><span class="o">=</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A WCS constructed from a list of reference celestial and image</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A WCS constructed from a list of reference celestial and image</span>
 <span class="sd">    coordinates.</span>
 
 <span class="sd">    Parameters:</span>

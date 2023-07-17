@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.output &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.output &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -127,7 +127,7 @@
 <span class="n">valid_output_types</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="BuildFiles"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildFiles">[docs]</a><span class="k">def</span> <span class="nf">BuildFiles</span><span class="p">(</span><span class="n">nfiles</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_abort</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build a number of output files as specified in config.</span>
 
 <span class="sd">    Parameters:</span>
@@ -273,7 +273,7 @@
 <span class="n">output_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="s1">&#39;noclobber&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_io&#39;</span> <span class="p">]</span>
 
 <div class="viewcode-block" id="BuildFile"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildFile">[docs]</a><span class="k">def</span> <span class="nf">BuildFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build an output file as specified in config.</span>
 
 <span class="sd">    Parameters:</span>
@@ -362,7 +362,7 @@
     <span class="k">return</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">t2</span><span class="o">-</span><span class="n">t1</span></div>
 
 <div class="viewcode-block" id="GetNFiles"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNFiles">[docs]</a><span class="k">def</span> <span class="nf">GetNFiles</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of files that will be made, based on the information in the config dict.</span>
 
 <span class="sd">    Parameters:</span>
@@ -381,7 +381,7 @@
 
 
 <div class="viewcode-block" id="GetNImagesForFile"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNImagesForFile">[docs]</a><span class="k">def</span> <span class="nf">GetNImagesForFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of images that will be made for the file number file_num, based on the</span>
 <span class="sd">    information in the config dict.</span>
 
@@ -402,7 +402,7 @@
 
 
 <div class="viewcode-block" id="GetNObjForFile"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNObjForFile">[docs]</a><span class="k">def</span> <span class="nf">GetNObjForFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of objects that will be made for each image built as part of the file file_num,</span>
 <span class="sd">    which starts at image number image_num, based on the information in the config dict.</span>
 
@@ -426,7 +426,7 @@
 
 
 <div class="viewcode-block" id="SetupConfigFileNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigFileNum">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigFileNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the file processing level.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the file processing level.</span>
 
 <span class="sd">    Includes:</span>
 <span class="sd">    - Set config[&#39;file_num&#39;] = file_num</span>
@@ -468,7 +468,7 @@
 
 
 <div class="viewcode-block" id="OutputBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder">[docs]</a><span class="k">class</span> <span class="nc">OutputBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building and writing the output objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building and writing the output objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    It also includes the implementation of the default output type: Fits.</span>
@@ -478,7 +478,7 @@
     <span class="n">default_ext</span> <span class="o">=</span> <span class="s1">&#39;.fits&#39;</span>
 
 <div class="viewcode-block" id="OutputBuilder.setup"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Do any necessary setup at the start of processing a file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do any necessary setup at the start of processing a file.</span>
 
 <span class="sd">        The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to</span>
 <span class="sd">        do more things before any processing gets started on this file.</span>
@@ -493,7 +493,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">seed</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.getFilename"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.getFilename">[docs]</a>    <span class="k">def</span> <span class="nf">getFilename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the file_name for the current file being worked on.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the file_name for the current file being worked on.</span>
 
 <span class="sd">        Note that the base class defines a default extension = &#39;.fits&#39;.</span>
 <span class="sd">        This can be overridden by subclasses by changing the default_ext property.</span>
@@ -526,7 +526,7 @@
         <span class="k">return</span> <span class="n">file_name</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.buildImages"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.buildImages">[docs]</a>    <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the images for output.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the images for output.</span>
 
 <span class="sd">        In the base class, this function just calls BuildImage to build the single image to</span>
 <span class="sd">        put in the output file.  So the returned list only has one item.</span>
@@ -553,7 +553,7 @@
         <span class="k">return</span> <span class="p">[</span> <span class="n">image</span> <span class="p">]</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.getNFiles"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.getNFiles">[docs]</a>    <span class="k">def</span> <span class="nf">getNFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the number of files to be built.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of files to be built.</span>
 
 <span class="sd">        In the base class, this is just output.nfiles.</span>
 
@@ -571,7 +571,7 @@
             <span class="k">return</span> <span class="mi">1</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.getNImages"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.getNImages">[docs]</a>    <span class="k">def</span> <span class="nf">getNImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the number of images to be built for a given ``file_num``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of images to be built for a given ``file_num``.</span>
 
 <span class="sd">        In the base class, we only build a single image, so it returns 1.</span>
 
@@ -587,7 +587,7 @@
         <span class="k">return</span> <span class="mi">1</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.getNObjPerImage"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.getNObjPerImage">[docs]</a>    <span class="k">def</span> <span class="nf">getNObjPerImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of objects that will be made for each image built as part of the file</span>
 <span class="sd">        file_num, which starts at image number image_num, based on the information in the config</span>
 <span class="sd">        dict.</span>
@@ -610,14 +610,14 @@
         <span class="k">return</span> <span class="n">nobj</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.canAddHdus"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.canAddHdus">[docs]</a>    <span class="k">def</span> <span class="nf">canAddHdus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns whether it is permissible to add extra HDUs to the end of the data list.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether it is permissible to add extra HDUs to the end of the data list.</span>
 
 <span class="sd">        In the base class, this returns True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.addExtraOutputHDUs"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.addExtraOutputHDUs">[docs]</a>    <span class="k">def</span> <span class="nf">addExtraOutputHDUs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If appropriate, add any extra output items that go into HDUs to the data list.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If appropriate, add any extra output items that go into HDUs to the data list.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the output field.</span>
@@ -634,7 +634,7 @@
         <span class="k">return</span> <span class="n">data</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.writeFile"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.writeFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write the data to a file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            data:           The data to write.  Usually a list of images returned by</span>
@@ -648,7 +648,7 @@
         <span class="n">writeMulti</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputBuilder.writeExtraOutputs"><a class="viewcode-back" href="../../../config_output.html#galsim.config.OutputBuilder.writeExtraOutputs">[docs]</a>    <span class="k">def</span> <span class="nf">writeExtraOutputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If appropriate, write any extra output items that write their own files.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If appropriate, write any extra output items that write their own files.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the output field.</span>
@@ -659,7 +659,7 @@
 
 
 <div class="viewcode-block" id="RegisterOutputType"><a class="viewcode-back" href="../../../config_output.html#galsim.config.RegisterOutputType">[docs]</a><span class="k">def</span> <span class="nf">RegisterOutputType</span><span class="p">(</span><span class="n">output_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register an output type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an output type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        output_type:    The name of the type in config[&#39;output&#39;]</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input_cosmos &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input_cosmos &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -158,14 +158,14 @@
 <span class="c1"># The gsobject types coupled to these are COSMOSGalaxy and SampleGalaxy respectively.</span>
 
 <div class="viewcode-block" id="_BuildCOSMOSGalaxy"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_cosmos._BuildCOSMOSGalaxy">[docs]</a><span class="k">def</span> <span class="nf">_BuildCOSMOSGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a COSMOS galaxy using the cosmos_catalog input item.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a COSMOS galaxy using the cosmos_catalog input item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sample_cat</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;cosmos_catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;COSMOSGalaxy&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_FinishBuildSampleGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span>
                                     <span class="n">sample_cat</span><span class="p">,</span> <span class="s1">&#39;COSMOSGalaxy&#39;</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">_BuildSampleGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a sample galaxy using the galaxy_sample input item.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a sample galaxy using the galaxy_sample input item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sample_cat</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;galaxy_sample&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;SampleGalaxy&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_FinishBuildSampleGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span>

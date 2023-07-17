@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.dcr &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.dcr &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -104,7 +104,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="air_refractive_index_minus_one"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.air_refractive_index_minus_one">[docs]</a><span class="k">def</span> <span class="nf">air_refractive_index_minus_one</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">69.328</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">293.15</span><span class="p">,</span> <span class="n">H2O_pressure</span><span class="o">=</span><span class="mf">1.067</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the refractive index of air as function of wavelength.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the refractive index of air as function of wavelength.</span>
 
 <span class="sd">    Uses the formulae given in Filippenko (1982), which appear to come from Edlen (1953),</span>
 <span class="sd">    and Coleman, Bozman, and Meggers (1960).  The units of the original formula are non-SI,</span>
@@ -136,7 +136,7 @@
     <span class="k">return</span> <span class="n">n_minus_one</span></div>
 
 <div class="viewcode-block" id="get_refraction"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.get_refraction">[docs]</a><span class="k">def</span> <span class="nf">get_refraction</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute the angle of refraction for a photon entering the atmosphere.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the angle of refraction for a photon entering the atmosphere.</span>
 
 <span class="sd">    Photons refract when transitioning from space, where the refractive index n = 1.0 exactly, to</span>
 <span class="sd">    air, where the refractive index is slightly greater than 1.0.  This function computes the</span>
@@ -160,7 +160,7 @@
     <span class="k">return</span> <span class="n">r0</span> <span class="o">*</span> <span class="n">zenith_angle</span><span class="o">.</span><span class="n">tan</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="zenith_parallactic_angles"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.zenith_parallactic_angles">[docs]</a><span class="k">def</span> <span class="nf">zenith_parallactic_angles</span><span class="p">(</span><span class="n">obj_coord</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">HA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute the zenith angle and parallactic angle of a celestial coordinate, given either</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the zenith angle and parallactic angle of a celestial coordinate, given either</span>
 <span class="sd">    the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and</span>
 <span class="sd">    the latitude of the observer.  This is useful for the function `ChromaticAtmosphere`.</span>
 
@@ -194,7 +194,7 @@
     <span class="k">return</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">parallactic_angle</span></div>
 
 <div class="viewcode-block" id="parse_dcr_angles"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.parse_dcr_angles">[docs]</a><span class="k">def</span> <span class="nf">parse_dcr_angles</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Parse the various options for specifying the zenith angle and parallactic angle</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the various options for specifying the zenith angle and parallactic angle</span>
 <span class="sd">    in `ChromaticAtmosphere`.</span>
 
 <span class="sd">    Parameters:</span>

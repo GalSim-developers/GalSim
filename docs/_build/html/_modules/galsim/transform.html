@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.transform &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.transform &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -114,7 +114,7 @@
 
 <div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../transform.html#galsim.Transform">[docs]</a><span class="k">def</span> <span class="nf">Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for transforming either a `GSObject` or `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for transforming either a `GSObject` or `ChromaticObject`.</span>
 
 <span class="sd">    This function will inspect its input argument to decide if a `Transformation` object or a</span>
 <span class="sd">    `ChromaticTransformation` object is required to represent the resulting transformed object.</span>
@@ -185,7 +185,7 @@
 
 
 <div class="viewcode-block" id="Transformation"><a class="viewcode-back" href="../../transform.html#galsim.Transformation">[docs]</a><span class="k">class</span> <span class="nc">Transformation</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for modeling an affine transformation of a `GSObject` instance.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for modeling an affine transformation of a `GSObject` instance.</span>
 
 <span class="sd">    Typically, you do not need to construct a Transformation object explicitly.  This is the type</span>
 <span class="sd">    returned by the various transformation methods of `GSObject` such as `GSObject.shear`,</span>
@@ -267,25 +267,25 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object being transformed.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object being transformed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">jac</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Jacobian of the transforamtion.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Jacobian of the transforamtion.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_jac</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The offset of the transformation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The offset of the transformation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The flux ratio of the transformation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The flux ratio of the transformation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span>
 
@@ -312,7 +312,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Transformation.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 
@@ -640,7 +640,7 @@
 
 
 <div class="viewcode-block" id="_Transform"><a class="viewcode-back" href="../../transform.html#galsim._Transform">[docs]</a><span class="k">def</span> <span class="nf">_Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Approximately equivalent to Transform, but without some of the sanity checks (such as</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Approximately equivalent to Transform, but without some of the sanity checks (such as</span>
 <span class="sd">    checking for chromatic options) or setting a new gsparams.</span>
 
 <span class="sd">    For a `ChromaticObject`, you must use the regular `Transform`.</span>

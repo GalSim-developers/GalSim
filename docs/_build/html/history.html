@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Revision History &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-6-to-v2-4-7">Changes from v2.4.6 to v2.4.7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-7-to-v2-4-8">Changes from v2.4.7 to v2.4.8</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-8-to-v2-4-9">Changes from v2.4.8 to v2.4.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-9-to-v2-4-10">Changes from v2.4.9 to v2.4.10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="older.html">v2.3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
@@ -273,12 +274,12 @@ normal BuildFile processing.</p></li>
 <div class="section" id="changes-from-v2-4-6-to-v2-4-7">
 <h2>Changes from v2.4.6 to v2.4.7<a class="headerlink" href="#changes-from-v2-4-6-to-v2-4-7" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Fix the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)</p></li>
-<li><p>Add –log_format option to galsim executable. (#1201)</p></li>
-<li><p>Allow input objects with has_nobj=True to return an approximate number of objects for the
+<li><p>Fixed the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)</p></li>
+<li><p>Added –log_format option to galsim executable. (#1201)</p></li>
+<li><p>Allowed input objects with has_nobj=True to return an approximate number of objects for the
 initial pass, rather than the eventual exact number. (#1202)</p></li>
-<li><p>Update the Great3 links to non-broken URLs. (#1205)</p></li>
-<li><p>Add options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)</p></li>
+<li><p>Updated the Great3 links to non-broken URLs. (#1205)</p></li>
+<li><p>Added options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)</p></li>
 <li><p>Only use proxies for input objects if not yet in a multiprocessing context. This had been
 causing significant slow downs in some imsim runs. (#1206)</p></li>
 </ul>
@@ -286,14 +287,21 @@ causing significant slow downs in some imsim runs. (#1206)</p></li>
 <div class="section" id="changes-from-v2-4-7-to-v2-4-8">
 <h2>Changes from v2.4.7 to v2.4.8<a class="headerlink" href="#changes-from-v2-4-7-to-v2-4-8" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Fix a slow-down in multiprocessing especially when running very many (&gt;10) processes. (#1213)</p></li>
+<li><p>Fixed a slow-down in multiprocessing especially when running very many (&gt;10) processes. (#1213)</p></li>
 </ul>
 </div>
 <div class="section" id="changes-from-v2-4-8-to-v2-4-9">
 <h2>Changes from v2.4.8 to v2.4.9<a class="headerlink" href="#changes-from-v2-4-8-to-v2-4-9" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Fix a potential segmentation fault that could happen when using photon_ops with FFT drawing.
+<li><p>Fixed a potential segmentation fault that could happen when using photon_ops with FFT drawing.
 (#1216)</p></li>
+</ul>
+</div>
+<div class="section" id="changes-from-v2-4-9-to-v2-4-10">
+<h2>Changes from v2.4.9 to v2.4.10<a class="headerlink" href="#changes-from-v2-4-9-to-v2-4-10" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fixed the Silicon class to handle invalid wavelengths gracefully rather than raise an
+exception. (#1227)</p></li>
 </ul>
 </div>
 <div class="section" id="older-versions">

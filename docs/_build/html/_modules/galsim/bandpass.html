@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.bandpass &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.bandpass &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -113,7 +113,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="Bandpass"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass">[docs]</a><span class="k">class</span> <span class="nc">Bandpass</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Simple bandpass object, which models the transmission fraction of incident light as a</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple bandpass object, which models the transmission fraction of incident light as a</span>
 <span class="sd">    function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and</span>
 <span class="sd">    refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.</span>
 <span class="sd">    Bandpasses representing individual components may be combined through the ``*`` operator to form</span>
@@ -405,7 +405,7 @@
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
 <div class="viewcode-block" id="Bandpass.__call__"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return dimensionless throughput of bandpass at given wavelength in nanometers.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dimensionless throughput of bandpass at given wavelength in nanometers.</span>
 
 <span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
 <span class="sd">        attributes, the throughput is assumed to be zero.</span>
@@ -430,14 +430,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">effective_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The effective wavelength of the `Bandpass`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The effective wavelength of the `Bandpass`.</span>
 
 <span class="sd">        An alias for ``self.calculateEffectiveWavelength()``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateEffectiveWavelength</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Bandpass.calculateEffectiveWavelength"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.calculateEffectiveWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">calculateEffectiveWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate, store, and return the effective wavelength for this bandpass.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate, store, and return the effective wavelength for this bandpass.</span>
 
 <span class="sd">        We define the effective wavelength as the throughput-weighted average wavelength, which is</span>
 <span class="sd">        SED-independent.  Units are nanometers.</span>
@@ -463,7 +463,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_effective_wavelength</span></div>
 
 <div class="viewcode-block" id="Bandpass.withZeropoint"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.withZeropoint">[docs]</a>    <span class="k">def</span> <span class="nf">withZeropoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeropoint</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign a zeropoint to this `Bandpass`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign a zeropoint to this `Bandpass`.</span>
 
 <span class="sd">        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes::</span>
 
@@ -521,7 +521,7 @@
 
 <div class="viewcode-block" id="Bandpass.truncate"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.truncate">[docs]</a>    <span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_throughput</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">preserve_zp</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a bandpass with its wavelength range truncated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a bandpass with its wavelength range truncated.</span>
 
 <span class="sd">        This function truncate the range of the bandpass either explicitly (with ``blue_limit`` or</span>
 <span class="sd">        ``red_limit`` or both) or automatically, just trimming off leading and trailing wavelength</span>
@@ -618,7 +618,7 @@
 
 <div class="viewcode-block" id="Bandpass.thin"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
              <span class="n">preserve_zp</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Thin out the internal wavelengths of a `Bandpass` that uses a `LookupTable`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Thin out the internal wavelengths of a `Bandpass` that uses a `LookupTable`.</span>
 
 <span class="sd">        If the bandpass was initialized with a `LookupTable` or from a file (which internally</span>
 <span class="sd">        creates a `LookupTable`), this function removes tabulated values while keeping the integral</span>

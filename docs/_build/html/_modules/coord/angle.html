@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coord.angle &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>coord.angle &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -109,7 +109,7 @@
 <span class="kn">from</span> <span class="nn">.angleunit</span> <span class="kn">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">arcmin</span><span class="p">,</span> <span class="n">arcsec</span>
 
 <div class="viewcode-block" id="Angle"><a class="viewcode-back" href="../../units.html#galsim.Angle">[docs]</a><span class="k">class</span> <span class="nc">Angle</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class representing an Angle.  Angles are a value with an AngleUnit.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing an Angle.  Angles are a value with an AngleUnit.</span>
 
 <span class="sd">    **Initialization:**</span>
 
@@ -235,7 +235,7 @@
 <span class="sd">        the center of the range.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param theta:   The numerical value of the angle.</span>
 <span class="sd">        :param unit:    The units theta is measured in.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -254,7 +254,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the Angle in radians.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Angle in radians.</span>
 
 <span class="sd">        Equivalent to angle / coord.radians</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -262,7 +262,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">deg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the Angle in degrees.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Angle in degrees.</span>
 
 <span class="sd">        Equivalent to angle / coord.degrees</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -299,7 +299,7 @@
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
 <div class="viewcode-block" id="Angle.wrap"><a class="viewcode-back" href="../../units.html#galsim.Angle.wrap">[docs]</a>    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Wrap Angle to lie in the range [-pi, pi) radians (or other range  of 2pi radians)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap Angle to lie in the range [-pi, pi) radians (or other range  of 2pi radians)</span>
 
 <span class="sd">        Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.</span>
 <span class="sd">        If you want your angles to be wrapped to [-pi, pi) radians, you can do this as follows:</span>
@@ -334,19 +334,19 @@
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">-</span> <span class="n">offset</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Angle.sin"><a class="viewcode-back" href="../../units.html#galsim.Angle.sin">[docs]</a>    <span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the sin of an Angle.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sin of an Angle.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Angle.cos"><a class="viewcode-back" href="../../units.html#galsim.Angle.cos">[docs]</a>    <span class="k">def</span> <span class="nf">cos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the cos of an Angle.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cos of an Angle.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Angle.tan"><a class="viewcode-back" href="../../units.html#galsim.Angle.tan">[docs]</a>    <span class="k">def</span> <span class="nf">tan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the tan of an Angle.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the tan of an Angle.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Angle.sincos"><a class="viewcode-back" href="../../units.html#galsim.Angle.sincos">[docs]</a>    <span class="k">def</span> <span class="nf">sincos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return both the sin and cos of an Angle as a numpy array [sint, cost].</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return both the sin and cos of an Angle as a numpy array [sint, cost].</span>
 
 <span class="sd">        (On some systems, this may be slightly faster than doing each separately.)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -446,7 +446,7 @@
         <span class="k">return</span> <span class="n">string</span>
 
 <div class="viewcode-block" id="Angle.hms"><a class="viewcode-back" href="../../units.html#galsim.Angle.hms">[docs]</a>    <span class="k">def</span> <span class="nf">hms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plus_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return an HMS representation of the angle as a string: +-hh:mm:ss.decimal.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an HMS representation of the angle as a string: +-hh:mm:ss.decimal.</span>
 
 <span class="sd">        An optional ``sep`` parameter can change the : to something else (e.g. a space or</span>
 <span class="sd">        nothing at all).</span>
@@ -482,7 +482,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_dms_string</span><span class="p">(</span><span class="bp">self</span><span class="o">/</span><span class="n">hours</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">plus_sign</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Angle.dms"><a class="viewcode-back" href="../../units.html#galsim.Angle.dms">[docs]</a>    <span class="k">def</span> <span class="nf">dms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plus_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a DMS representation of the angle as a string: +-dd:mm:ss.decimal</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a DMS representation of the angle as a string: +-dd:mm:ss.decimal</span>
 <span class="sd">        An optional ``sep`` parameter can change the : to something else (e.g. a space or</span>
 <span class="sd">        nothing at all).</span>
 
@@ -518,7 +518,7 @@
 
 <div class="viewcode-block" id="Angle.from_hms"><a class="viewcode-back" href="../../units.html#galsim.Angle.from_hms">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_hms</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert a string of the form hh:mm:ss.decimal into an Angle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a string of the form hh:mm:ss.decimal into an Angle.</span>
 
 <span class="sd">        There may be an initial + or - (or neither), then two digits for the hours, two for the</span>
 <span class="sd">        minutes, and two for the seconds.  Then there may be a decimal point followed by more</span>
@@ -545,7 +545,7 @@
 
 <div class="viewcode-block" id="Angle.from_dms"><a class="viewcode-back" href="../../units.html#galsim.Angle.from_dms">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_dms</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert a string of the form dd:mm:ss.decimal into an Angle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a string of the form dd:mm:ss.decimal into an Angle.</span>
 
 <span class="sd">        There may be an initial + or - (or neither), then two digits for the degrees, two for the</span>
 <span class="sd">        minutes, and two for the seconds.  Then there may be a decimal point followed by more</span>
@@ -572,7 +572,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_parse_dms</span><span class="p">(</span><span class="n">dms</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert a string of the form dd:mm:ss.decimal into decimal degrees.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a string of the form dd:mm:ss.decimal into decimal degrees.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">re</span>
         <span class="n">tokens</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([\.\d]+)&#39;</span><span class="p">,</span> <span class="n">dms</span><span class="o">.</span><span class="n">strip</span><span class="p">())))</span>
@@ -599,7 +599,7 @@
         <span class="k">return</span> <span class="n">sign</span> <span class="o">*</span> <span class="p">(</span><span class="n">dd</span> <span class="o">+</span> <span class="n">mm</span><span class="o">/</span><span class="mf">60.</span> <span class="o">+</span> <span class="n">ss</span><span class="o">/</span><span class="mf">3600.</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="_Angle"><a class="viewcode-back" href="../../units.html#galsim._Angle">[docs]</a><span class="k">def</span> <span class="nf">_Angle</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to ``Angle(theta, coord.radians)``, but without the normal overhead (which isn&#39;t</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to ``Angle(theta, coord.radians)``, but without the normal overhead (which isn&#39;t</span>
 <span class="sd">    much to be honest, but this is nonetheless slightly quicker).</span>
 
 <span class="sd">    :param theta:   The numerical value of the angle in radians.</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.fouriersqrt &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.fouriersqrt &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="FourierSqrt"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrt">[docs]</a><span class="k">def</span> <span class="nf">FourierSqrt</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for computing the Fourier-space square root of either a `GSObject` or</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for computing the Fourier-space square root of either a `GSObject` or</span>
 <span class="sd">    `ChromaticObject`.</span>
 
 <span class="sd">    The FourierSqrt function is principally used for doing an optimal coaddition algorithm</span>
@@ -145,7 +145,7 @@
 
 
 <div class="viewcode-block" id="FourierSqrtProfile"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile">[docs]</a><span class="k">class</span> <span class="nc">FourierSqrtProfile</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space sqrt of a `GSObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space sqrt of a `GSObject`.</span>
 
 <span class="sd">    The FourierSqrtProfile class represents the Fourier-space square root of another profile.</span>
 <span class="sd">    Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a</span>
@@ -186,7 +186,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object being Fourier sqrt-ed.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object being Fourier sqrt-ed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
 
@@ -197,7 +197,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="FourierSqrtProfile.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 

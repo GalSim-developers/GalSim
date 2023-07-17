@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.noise &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.noise &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -111,7 +111,7 @@
 
 <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
     <span class="c1"># This will be inserted into the Image class as a method.  So self = image.</span>
-    <span class="sd">&quot;&quot;&quot;Add noise to the image according to a supplied noise model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add noise to the image according to a supplied noise model.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        noise:      The noise (`BaseNoise`) model to use.</span>
@@ -120,7 +120,7 @@
 
 <span class="c1"># This will be inserted into the Image class as a method.  So self = image.</span>
 <span class="k">def</span> <span class="nf">addNoiseSNR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">snr</span><span class="p">,</span> <span class="n">preserve_flux</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Adds noise to the image in a way that achieves the specified signal-to-noise ratio.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Adds noise to the image in a way that achieves the specified signal-to-noise ratio.</span>
 
 <span class="sd">    The specified ``snr`` (signal-to-noise ratio, or :math:`S/N`) can be achieved either by scaling</span>
 <span class="sd">    the flux of the object while keeping the noise level fixed, or the flux can be preserved and</span>
@@ -184,7 +184,7 @@
 
 
 <div class="viewcode-block" id="BaseNoise"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise">[docs]</a><span class="k">class</span> <span class="nc">BaseNoise</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Base class for all noise classes.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all noise classes.</span>
 
 <span class="sd">    This class should not be constructed directly.  Rather, you should instantiate one of the</span>
 <span class="sd">    subclasses:</span>
@@ -211,19 +211,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `BaseDeviate` of this noise object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `BaseDeviate` of this noise object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
 
 <div class="viewcode-block" id="BaseNoise.getVariance"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.getVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get variance in current noise model.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get variance in current noise model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getVariance</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot call getVariance on a pure BaseNoise object&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BaseNoise.withVariance"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.withVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a new noise object (of the same type as the current one) with the specified</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new noise object (of the same type as the current one) with the specified</span>
 <span class="sd">        variance.</span>
 
 <span class="sd">        Parameters:</span>
@@ -238,7 +238,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot call withVariance on a pure BaseNoise object&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BaseNoise.withScaledVariance"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.withScaledVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a new noise object with the variance scaled up by the specified factor.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new noise object with the variance scaled up by the specified factor.</span>
 
 <span class="sd">        This is equivalent to noise * variance_ratio.</span>
 
@@ -255,7 +255,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot call withScaledVariance on a pure BaseNoise object&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BaseNoise.__mul__"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Multiply the variance of the noise by ``variance_ratio``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Multiply the variance of the noise by ``variance_ratio``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            variance_ratio: The factor by which to scale the variance of the correlation</span>
@@ -267,14 +267,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseNoise.__div__"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.__div__">[docs]</a>    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to self * (1/variance_ratio)&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to self * (1/variance_ratio)&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">variance_ratio</span><span class="p">)</span></div>
 
     <span class="fm">__rmul__</span> <span class="o">=</span> <span class="fm">__mul__</span>
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
 <div class="viewcode-block" id="BaseNoise.applyTo"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add noise to an input `Image`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add noise to an input `Image`.</span>
 
 <span class="sd">        e.g.::</span>
 
@@ -307,7 +307,7 @@
 
 
 <div class="viewcode-block" id="GaussianNoise"><a class="viewcode-back" href="../../noise.html#galsim.GaussianNoise">[docs]</a><span class="k">class</span> <span class="nc">GaussianNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class implementing simple Gaussian noise.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class implementing simple Gaussian noise.</span>
 
 <span class="sd">    This is a simple noise model where each pixel in the image gets Gaussian noise with a</span>
 <span class="sd">    given ``sigma``.</span>
@@ -335,7 +335,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input sigma value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input sigma value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span>
 
@@ -355,7 +355,7 @@
         <span class="k">return</span> <span class="n">GaussianNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">))</span>
 
 <div class="viewcode-block" id="GaussianNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim.GaussianNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the Gaussian noise model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the Gaussian noise model.</span>
 
 <span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>
@@ -373,7 +373,7 @@
 
 
 <div class="viewcode-block" id="PoissonNoise"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise">[docs]</a><span class="k">class</span> <span class="nc">PoissonNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class implementing Poisson noise according to the flux (and sky level) present in the image.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class implementing Poisson noise according to the flux (and sky level) present in the image.</span>
 
 <span class="sd">    The PoissonNoise class encapsulates a simple version of the noise model of a normal CCD image</span>
 <span class="sd">    where each pixel has Poisson noise corresponding to the number of electrons in each pixel</span>
@@ -408,7 +408,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sky_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input sky_level.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input sky_level.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span>
 
@@ -448,7 +448,7 @@
         <span class="k">return</span> <span class="n">PoissonNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span> <span class="o">*</span> <span class="n">variance_ratio</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PoissonNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the Poisson noise model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the Poisson noise model.</span>
 
 <span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>
@@ -466,7 +466,7 @@
 
 
 <div class="viewcode-block" id="CCDNoise"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise">[docs]</a><span class="k">class</span> <span class="nc">CCDNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class implementing a basic CCD noise model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class implementing a basic CCD noise model.</span>
 
 <span class="sd">    The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two</span>
 <span class="sd">    components: first, Poisson noise corresponding to the number of electrons in each pixel</span>
@@ -529,19 +529,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sky_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input sky_level.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input sky_level.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input gain.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input gain.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">read_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input read_noise.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input read_noise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_noise</span>
 
@@ -595,7 +595,7 @@
                         <span class="n">read_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">))</span>
 
 <div class="viewcode-block" id="CCDNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the CCD noise model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the CCD noise model.</span>
 
 <span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>
@@ -615,7 +615,7 @@
 
 
 <div class="viewcode-block" id="DeviateNoise"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise">[docs]</a><span class="k">class</span> <span class="nc">DeviateNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class implementing noise with an arbitrary `BaseDeviate` object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class implementing noise with an arbitrary `BaseDeviate` object.</span>
 
 <span class="sd">    The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for</span>
 <span class="sd">    each pixel in an image.</span>
@@ -649,7 +649,7 @@
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Changing the variance is not allowed for DeviateNoise&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DeviateNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the `DeviateNoise` instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the `DeviateNoise` instance.</span>
 
 <span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>
@@ -673,7 +673,7 @@
 
 
 <div class="viewcode-block" id="VariableGaussianNoise"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise">[docs]</a><span class="k">class</span> <span class="nc">VariableGaussianNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class implementing Gaussian noise that has a different variance in each pixel.</span>
 
 <span class="sd">    The following will add variable Gaussian noise to every element of an image::</span>
@@ -700,7 +700,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input var_image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input var_image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_image</span>
 
@@ -722,7 +722,7 @@
         <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">+=</span> <span class="n">noise_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
 <div class="viewcode-block" id="VariableGaussianNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the variable Gaussian noise model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the variable Gaussian noise model.</span>
 
 <span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.hsm &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.hsm &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -111,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="ShapeData"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a><span class="k">class</span> <span class="nc">ShapeData</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class to contain the outputs of the HSM shape and moments measurement routines.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to contain the outputs of the HSM shape and moments measurement routines.</span>
 
 <span class="sd">    The ShapeData class contains the following information about moment measurement (from either</span>
 <span class="sd">    `EstimateShear` or `FindAdaptiveMom`:</span>
@@ -307,7 +307,7 @@
 
 
 <div class="viewcode-block" id="HSMParams"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams">[docs]</a><span class="k">class</span> <span class="nc">HSMParams</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A collection of parameters that govern how the HSM functions operate.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A collection of parameters that govern how the HSM functions operate.</span>
 
 <span class="sd">    HSMParams stores a set of numbers that determine how the moments/shape estimation</span>
 <span class="sd">    routines make speed/accuracy tradeoff decisions and/or store their results.</span>
@@ -462,7 +462,7 @@
 
 <div class="viewcode-block" id="HSMParams.check"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams.check">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks that hsmparams is either a valid HSMParams instance or None.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that hsmparams is either a valid HSMParams instance or None.</span>
 
 <span class="sd">        In the former case, it returns hsmparams, in the latter it returns default</span>
 <span class="sd">        (HSMParams.default if no other default specified).</span>
@@ -568,7 +568,7 @@
                   <span class="n">shear_est</span><span class="o">=</span><span class="s2">&quot;REGAUSS&quot;</span><span class="p">,</span> <span class="n">recompute_flux</span><span class="o">=</span><span class="s2">&quot;FIT&quot;</span><span class="p">,</span> <span class="n">guess_sig_gal</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
                   <span class="n">guess_sig_PSF</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Carry out moments-based PSF correction routines.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Carry out moments-based PSF correction routines.</span>
 
 <span class="sd">    Carry out PSF correction using one of the methods of the HSM package (see references in</span>
 <span class="sd">    docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the</span>
@@ -697,7 +697,7 @@
 
 <div class="viewcode-block" id="FindAdaptiveMom"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.FindAdaptiveMom">[docs]</a><span class="k">def</span> <span class="nf">FindAdaptiveMom</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_sig</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
                     <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">round_moments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Measure adaptive moments of an object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure adaptive moments of an object.</span>
 
 <span class="sd">    This method estimates the best-fit elliptical Gaussian to the object (see Hirata &amp; Seljak 2003</span>
 <span class="sd">    for more discussion of adaptive moments).  This elliptical Gaussian is computed iteratively</span>

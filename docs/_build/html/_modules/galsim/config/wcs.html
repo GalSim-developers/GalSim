@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.wcs &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.wcs &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -125,7 +125,7 @@
 
 
 <div class="viewcode-block" id="BuildWCS"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildWCS">[docs]</a><span class="k">def</span> <span class="nf">BuildWCS</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the wcs parameters from config[key] and return a constructed wcs object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the wcs parameters from config[key] and return a constructed wcs object.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     A dict with the configuration information. (usually base[&#39;image&#39;])</span>
@@ -195,12 +195,12 @@
 
 
 <div class="viewcode-block" id="WCSBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.WCSBuilder">[docs]</a><span class="k">class</span> <span class="nc">WCSBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building WCS objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building WCS objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="WCSBuilder.buildWCS"><a class="viewcode-back" href="../../../config_image.html#galsim.config.WCSBuilder.buildWCS">[docs]</a>    <span class="k">def</span> <span class="nf">buildWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict.</span>
 
 <span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
 
@@ -216,7 +216,7 @@
 
 
 <div class="viewcode-block" id="SimpleWCSBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.SimpleWCSBuilder">[docs]</a><span class="k">class</span> <span class="nc">SimpleWCSBuilder</span><span class="p">(</span><span class="n">WCSBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for building simple WCS objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building simple WCS objects.</span>
 
 <span class="sd">    The initializer takes an init_func, which is the class or function to call to build the WCS.</span>
 <span class="sd">    For the kwargs, it calls getKwargs, which does the normal parsing of the req_params and</span>
@@ -226,7 +226,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
 
     <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">build_func</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
 <span class="sd">        build_func:</span>
 
 <span class="sd">        _req_params</span>
@@ -267,7 +267,7 @@
         <span class="k">return</span> <span class="n">kwargs</span>
 
     <span class="k">def</span> <span class="nf">buildWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the wcs type.</span>
@@ -282,7 +282,7 @@
 
 
 <div class="viewcode-block" id="OriginWCSBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.OriginWCSBuilder">[docs]</a><span class="k">class</span> <span class="nc">OriginWCSBuilder</span><span class="p">(</span><span class="n">SimpleWCSBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A specialization for WCS classes that use a different type depending on whether there</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A specialization for WCS classes that use a different type depending on whether there</span>
 <span class="sd">    is an origin or world_origin parameter in the config dict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">origin_init_func</span><span class="p">):</span>
@@ -290,7 +290,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">origin_init_func</span> <span class="o">=</span> <span class="n">origin_init_func</span>
 
     <span class="k">def</span> <span class="nf">buildWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict, using the appropriate</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the WCS based on the specifications in the config dict, using the appropriate</span>
 <span class="sd">        type depending on whether an origin is provided.</span>
 
 <span class="sd">        Parameters:</span>
@@ -310,7 +310,7 @@
 
 
 <div class="viewcode-block" id="TanWCSBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.TanWCSBuilder">[docs]</a><span class="k">class</span> <span class="nc">TanWCSBuilder</span><span class="p">(</span><span class="n">WCSBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The TanWCS type needs special handling to get the kwargs, since the TanWCS function</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The TanWCS type needs special handling to get the kwargs, since the TanWCS function</span>
 <span class="sd">    takes an AffineTransform as one of the arguments, so we need to build that from</span>
 <span class="sd">    dudx, dudy, etc.  We also need to construct a CelestialCoord object for the world_origin,</span>
 <span class="sd">    which we make from ra, dec paramters.</span>
@@ -318,7 +318,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">buildWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the TanWCS based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the TanWCS based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the wcs type.</span>
@@ -349,7 +349,7 @@
         <span class="k">return</span> <span class="n">TanWCS</span><span class="p">(</span><span class="n">affine</span><span class="o">=</span><span class="n">affine</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="n">world_origin</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ListWCSBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ListWCSBuilder">[docs]</a><span class="k">class</span> <span class="nc">ListWCSBuilder</span><span class="p">(</span><span class="n">WCSBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Select a wcs from a list</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select a wcs from a list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">buildWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
@@ -369,7 +369,7 @@
         <span class="k">return</span> <span class="n">BuildWCS</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RegisterWCSType"><a class="viewcode-back" href="../../../config_image.html#galsim.config.RegisterWCSType">[docs]</a><span class="k">def</span> <span class="nf">RegisterWCSType</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a wcs type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a wcs type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        wcs_type:       The name of the type in config[&#39;image&#39;][&#39;wcs&#39;]</span>

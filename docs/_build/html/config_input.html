@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Input Field &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Input Field &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -269,7 +269,7 @@ or how to set up any objects that require initialization.</p>
 be something you have installed in your Python distro) with a class that will be used
 to load whatever information you want loaded:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyInputData</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class that knows how to load some information from a file or maybe build some</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that knows how to load some information from a file or maybe build some</span>
 <span class="sd">    structure in advance that will be used repeatedly in the simulation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
@@ -462,8 +462,8 @@ that defines the object being built, which would in this case be <code class="do
 name of the module to load at the start of processing.  e.g. if this function is defined in the
 file <code class="docutils literal notranslate"><span class="pre">my_custom_input.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
 in the config file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_input</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_input</span>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
@@ -471,9 +471,9 @@ Then before processing anything, the code will execute the command <code class="
 which will read your file and execute the registration command to add the builder to the list
 of valid input types.</p>
 <p>Then you can use this as a valid value type:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">input</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">CustomInput</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">input</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">CustomInput</span><span class="p">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
 <p>For examples of custom inputs, see <a class="reference download internal" download="" href="_downloads/5a3fd734fc69032ea0359196db84be9c/des_wcs.py"><code class="xref download docutils literal notranslate"><span class="pre">des_wcs.py</span></code></a>,

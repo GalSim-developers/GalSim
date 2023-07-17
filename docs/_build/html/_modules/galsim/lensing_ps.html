@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.lensing_ps &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.lensing_ps &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -116,7 +116,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="theoryToObserved"><a class="viewcode-back" href="../../powerspectrum.html#galsim.theoryToObserved">[docs]</a><span class="k">def</span> <span class="nf">theoryToObserved</span><span class="p">(</span><span class="n">gamma1</span><span class="p">,</span> <span class="n">gamma2</span><span class="p">,</span> <span class="n">kappa</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to convert theoretical lensing quantities to observed ones.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to convert theoretical lensing quantities to observed ones.</span>
 
 <span class="sd">    This helper function is used internally by the methods `PowerSpectrum.getShear`,</span>
 <span class="sd">    `PowerSpectrum.getMagnification`, and `PowerSpectrum.getLensing` to convert from theoretical</span>
@@ -144,7 +144,7 @@
     <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrum</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class to represent a lensing shear field according to some power spectrum :math:`P(k)`.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class to represent a lensing shear field according to some power spectrum :math:`P(k)`.</span>
 
 <span class="sd">    **General considerations**:</span>
 
@@ -358,7 +358,7 @@
 <div class="viewcode-block" id="PowerSpectrum.buildGrid"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.buildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">buildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">center</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">get_convergence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">kmax_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kmin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bandlimit</span><span class="o">=</span><span class="s2">&quot;hard&quot;</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum on the specified grid.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum on the specified grid.</span>
 
 <span class="sd">        **Basic functionality**:</span>
 
@@ -654,7 +654,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_g1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_g2</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum.nRandCallsForBuildGrid"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.nRandCallsForBuildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">nRandCallsForBuildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the number of times the rng() was called the last time `buildGrid` was called.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of times the rng() was called the last time `buildGrid` was called.</span>
 
 <span class="sd">        This can be useful for keeping rngs in sync if the connection between them is broken</span>
 <span class="sd">        (e.g. when calling the function through a Proxy object).</span>
@@ -701,7 +701,7 @@
 
 <div class="viewcode-block" id="PowerSpectrum.calculateXi"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.calculateXi">[docs]</a>    <span class="k">def</span> <span class="nf">calculateXi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">kmax_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kmin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                     <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">bandlimit</span><span class="o">=</span><span class="s2">&quot;hard&quot;</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate shear correlation functions for the current power spectrum on the specified</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate shear correlation functions for the current power spectrum on the specified</span>
 <span class="sd">        grid.</span>
 
 <span class="sd">        This function will calculate the theoretical shear correlation functions, :math:`\xi_+`</span>
@@ -863,7 +863,7 @@
             <span class="k">return</span> <span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="n">k_max</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PowerSpectrum.getShear"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the shear values for a given</span>
 <span class="sd">        list of input positions (or just a single position).  Before calling this function, you must</span>
 <span class="sd">        call `buildGrid` first to define the grid of shears and convergences on which to</span>
@@ -948,7 +948,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getShear</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum._getShear"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getShear">[docs]</a>    <span class="k">def</span> <span class="nf">_getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getShear`, but without some sanity checks and the positions must be</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getShear`, but without some sanity checks and the positions must be</span>
 <span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
 
 <span class="sd">        Parameters:</span>
@@ -979,7 +979,7 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum.getConvergence"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the convergence values for a</span>
 <span class="sd">        given list of input positions (or just a single position).  Before calling this function,</span>
 <span class="sd">        you must call `buildGrid` first to define the grid of convergences on which to interpolate.</span>
@@ -1025,7 +1025,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getConvergence</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum._getConvergence"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">_getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getConvergence`, but without some sanity checks and the positions must be</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getConvergence`, but without some sanity checks and the positions must be</span>
 <span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1046,7 +1046,7 @@
         <span class="k">return</span> <span class="n">lut_kappa</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum.getMagnification"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the lensing magnification (mu)</span>
 <span class="sd">        values for a given list of input positions (or just a single position).  Before calling this</span>
 <span class="sd">        function, you must call `buildGrid` first to define the grid of shears and convergences on</span>
@@ -1093,7 +1093,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMagnification</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum._getMagnification"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">_getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getMagnification`, but without some sanity checks and the positions must</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getMagnification`, but without some sanity checks and the positions must</span>
 <span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1113,7 +1113,7 @@
         <span class="k">return</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum.getLensing"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the lensing observable</span>
 <span class="sd">        quantities (reduced shears g1 and g2, and magnification mu) for a given list of input</span>
 <span class="sd">        positions (or just a single position).  Before calling this function, you must call</span>
@@ -1162,7 +1162,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getLensing</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerSpectrum._getLensing"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">_getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getLensing`, but without some sanity checks and the positions must</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getLensing`, but without some sanity checks and the positions must</span>
 <span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1191,7 +1191,7 @@
         <span class="k">return</span> <span class="n">lut_g1</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_g2</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span></div></div>
 
 <div class="viewcode-block" id="PowerSpectrumRealizer"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrumRealizer</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class for generating realizations of power spectra with any area and pixel size.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for generating realizations of power spectra with any area and pixel size.</span>
 
 <span class="sd">    This class is not one that end-users should expect to interact with.  It is designed to quickly</span>
 <span class="sd">    generate many realizations of the same shear power spectra on a square grid.  The initializer</span>
@@ -1259,7 +1259,7 @@
         <span class="k">else</span><span class="p">:</span>            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_power_array</span><span class="p">(</span><span class="n">p_B</span><span class="p">))</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_size</span>
 
 <div class="viewcode-block" id="PowerSpectrumRealizer.__call__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            gd:         A Gaussian deviate to use when generating the shear fields.</span>
@@ -1399,7 +1399,7 @@
         <span class="c1"># ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).</span>
 
 <span class="k">def</span> <span class="nf">kappaKaiserSquires</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Perform a Kaiser &amp; Squires (1993) inversion to get a convergence map from gridded shears.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform a Kaiser &amp; Squires (1993) inversion to get a convergence map from gridded shears.</span>
 
 <span class="sd">    This function takes gridded shears and constructs a convergence map from them.  While this is</span>
 <span class="sd">    complicated in reality by the non-gridded galaxy positions, it is a straightforward</span>
@@ -1470,7 +1470,7 @@
     <span class="k">return</span> <span class="n">kappaE</span><span class="p">,</span> <span class="n">kappaB</span>
 
 <span class="k">class</span> <span class="nc">xip_integrand</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_+ shear correlation function from power</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_+ shear correlation function from power</span>
 <span class="sd">    spectra.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="o">=</span> <span class="n">pk</span>
@@ -1480,7 +1480,7 @@
         <span class="k">return</span> <span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">j0</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">xim_integrand</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_- shear correlation function from power</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_- shear correlation function from power</span>
 <span class="sd">    spectra.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="o">=</span> <span class="n">pk</span>

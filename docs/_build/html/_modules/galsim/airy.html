@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.airy &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.airy &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="Airy"><a class="viewcode-back" href="../../psf.html#galsim.Airy">[docs]</a><span class="k">class</span> <span class="nc">Airy</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing the surface brightness profile for an Airy disk (perfect</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing the surface brightness profile for an Airy disk (perfect</span>
 <span class="sd">    diffraction-limited PSF for a circular aperture), with an optional central obscuration.</span>
 
 <span class="sd">    For more information, refer to</span>
@@ -219,18 +219,18 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lam_over_diam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input lambda/diam value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input lambda/diam value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obscuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The input obscuration.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The input obscuration.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half light radius of this Airy profile (only supported for obscuration = 0.).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half light radius of this Airy profile (only supported for obscuration = 0.).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span> <span class="o">*</span> <span class="n">Airy</span><span class="o">.</span><span class="n">_hlr_factor</span>
@@ -243,7 +243,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The FWHM of this Airy profile (only supported for obscuration = 0.).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The FWHM of this Airy profile (only supported for obscuration = 0.).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># As above, likewise, FWHM only easy to define for unobscured Airy</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>

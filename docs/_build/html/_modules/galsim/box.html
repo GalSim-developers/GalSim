@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.box &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.box &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -111,7 +111,7 @@
 
 
 <div class="viewcode-block" id="Box"><a class="viewcode-back" href="../../simple.html#galsim.Box">[docs]</a><span class="k">class</span> <span class="nc">Box</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing a box profile.  This is just a 2D top-hat function, where the</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing a box profile.  This is just a 2D top-hat function, where the</span>
 <span class="sd">    width and height are allowed to be different.</span>
 
 <span class="sd">    Parameters:</span>
@@ -141,12 +141,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The width of the `Box`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The width of the `Box`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The height of the `Box`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The height of the `Box`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span>
 
@@ -218,7 +218,7 @@
         <span class="k">return</span> <span class="n">Box</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="Pixel"><a class="viewcode-back" href="../../simple.html#galsim.Pixel">[docs]</a><span class="k">class</span> <span class="nc">Pixel</span><span class="p">(</span><span class="n">Box</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing a pixel profile.  This is just a 2D square top-hat function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing a pixel profile.  This is just a 2D square top-hat function.</span>
 
 <span class="sd">    This class is typically used to represent a pixel response function.  It is used internally by</span>
 <span class="sd">    the `GSObject.drawImage` function, but there may be cases where the user would want to use</span>
@@ -238,7 +238,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The linear scale size of the `Pixel`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The linear scale size of the `Pixel`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
 
@@ -259,7 +259,7 @@
 
 
 <div class="viewcode-block" id="TopHat"><a class="viewcode-back" href="../../simple.html#galsim.TopHat">[docs]</a><span class="k">class</span> <span class="nc">TopHat</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing a radial tophat profile.  This profile is a constant value within some</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing a radial tophat profile.  This profile is a constant value within some</span>
 <span class="sd">    radius, and zero outside this radius.</span>
 
 <span class="sd">    Parameters:</span>
@@ -288,7 +288,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The radius of the `TopHat` profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The radius of the `TopHat` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radius</span>
 

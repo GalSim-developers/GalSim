@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input_powerspectrum &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input_powerspectrum &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,7 +126,7 @@
 <div class="viewcode-block" id="PowerSpectrumLoader"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_powerspectrum.PowerSpectrumLoader">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrumLoader</span><span class="p">(</span><span class="n">InputLoader</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Parse the config dict and return the kwargs needed to build the PowerSpectrum object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the config dict and return the kwargs needed to build the PowerSpectrum object.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for &#39;power_spectrum&#39;</span>
@@ -181,7 +181,7 @@
         <span class="k">return</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">setupImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set up the PowerSpectrum input object&#39;s gridded values based on the</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the PowerSpectrum input object&#39;s gridded values based on the</span>
 <span class="sd">        size of the image and the grid spacing.</span>
 
 <span class="sd">        Parameters:</span>
@@ -273,7 +273,7 @@
 <span class="c1"># PowerSpectrumMagnification.</span>
 
 <div class="viewcode-block" id="_GenerateFromPowerSpectrumShear"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear">[docs]</a><span class="k">def</span> <span class="nf">_GenerateFromPowerSpectrumShear</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a shear calculated from a PowerSpectrum object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a shear calculated from a PowerSpectrum object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;power_spectrum&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;PowerSpectrumShear&#39;</span><span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">power_spectrum</span><span class="o">.</span><span class="n">logger</span>
@@ -310,7 +310,7 @@
     <span class="k">return</span> <span class="n">shear</span><span class="p">,</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="_GenerateFromPowerSpectrumMagnification"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification">[docs]</a><span class="k">def</span> <span class="nf">_GenerateFromPowerSpectrumMagnification</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a magnification calculated from a PowerSpectrum object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a magnification calculated from a PowerSpectrum object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">power_spectrum</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;power_spectrum&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;PowerSpectrumMagnification&#39;</span><span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">power_spectrum</span><span class="o">.</span><span class="n">logger</span>

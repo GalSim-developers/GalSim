@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsparams &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.gsparams &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -104,7 +104,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 
 <div class="viewcode-block" id="GSParams"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams">[docs]</a><span class="k">class</span> <span class="nc">GSParams</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy</span>
 <span class="sd">    tradeoff decisions.</span>
 
 <span class="sd">    All `GSObject` classes can take an optional parameter named ``gsparams``, which would be an</span>
@@ -260,7 +260,7 @@
 
 <div class="viewcode-block" id="GSParams.check"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.check">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks that gsparams is either a valid GSParams instance or None.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that gsparams is either a valid GSParams instance or None.</span>
 
 <span class="sd">        In the former case, it returns gsparams, in the latter it returns default</span>
 <span class="sd">        (GSParams.default if no other default specified).</span>
@@ -272,7 +272,7 @@
         <span class="k">return</span> <span class="n">gsparams</span><span class="o">.</span><span class="n">withParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSParams.withParams"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.withParams">[docs]</a>    <span class="k">def</span> <span class="nf">withParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a `GSParams` that is identical to the current one except for any keyword</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a `GSParams` that is identical to the current one except for any keyword</span>
 <span class="sd">        arguments given here, which supersede the current value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">copy</span>
@@ -289,7 +289,7 @@
 
 <div class="viewcode-block" id="GSParams.combine"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.combine">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">combine</span><span class="p">(</span><span class="n">gsp_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Combine a list of `GSParams` instances using the most restrictive parameter from each.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine a list of `GSParams` instances using the most restrictive parameter from each.</span>
 
 <span class="sd">        Uses the minimum value for most parameters. For the following parameters, it uses the</span>
 <span class="sd">        maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.</span>

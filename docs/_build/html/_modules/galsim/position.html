@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.position &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.position &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -104,7 +104,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 
 <div class="viewcode-block" id="Position"><a class="viewcode-back" href="../../pos.html#galsim.Position">[docs]</a><span class="k">class</span> <span class="nc">Position</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class for representing 2D positions on the plane.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for representing 2D positions on the plane.</span>
 
 <span class="sd">    Position is a base class for two slightly different kinds of positions:</span>
 <span class="sd">    PositionD describes positions with floating point values in ``x`` and ``y``.</span>
@@ -245,7 +245,7 @@
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Position.shear"><a class="viewcode-back" href="../../pos.html#galsim.Position.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shear the position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shear the position.</span>
 
 <span class="sd">        See the doc string of `galsim.Shear.getMatrix` for more details.</span>
 
@@ -263,7 +263,7 @@
 
 
 <div class="viewcode-block" id="PositionD"><a class="viewcode-back" href="../../pos.html#galsim.PositionD">[docs]</a><span class="k">class</span> <span class="nc">PositionD</span><span class="p">(</span><span class="n">Position</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A Position that takes floating point values.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A Position that takes floating point values.</span>
 
 <span class="sd">    See the Position doc string for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -277,7 +277,7 @@
         <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PositionD.round"><a class="viewcode-back" href="../../pos.html#galsim.PositionD.round">[docs]</a>    <span class="k">def</span> <span class="nf">round</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the rounded-off PositionI version of this position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the rounded-off PositionI version of this position.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_PositionI</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span></div>
 
@@ -290,7 +290,7 @@
 
 
 <div class="viewcode-block" id="PositionI"><a class="viewcode-back" href="../../pos.html#galsim.PositionI">[docs]</a><span class="k">class</span> <span class="nc">PositionI</span><span class="p">(</span><span class="n">Position</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A Position that takes only integer values.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A Position that takes only integer values.</span>
 
 <span class="sd">    Typically used for coordinate positions on an image.</span>
 
@@ -319,7 +319,7 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Can only </span><span class="si">%s</span><span class="s2"> a PositionI by integer values&quot;</span><span class="o">%</span><span class="n">op</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">_PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `PositionD` constructor, but skips some sanity checks and argument parsing.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `PositionD` constructor, but skips some sanity checks and argument parsing.</span>
 <span class="sd">    This requires that x,y are floats.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">PositionD</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">PositionD</span><span class="p">)</span>
@@ -329,7 +329,7 @@
 
 
 <span class="k">def</span> <span class="nf">_PositionI</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `PositionI` constructor, but skips some sanity checks and argument parsing.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `PositionI` constructor, but skips some sanity checks and argument parsing.</span>
 <span class="sd">    This requires that x,y are ints.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">PositionI</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">PositionI</span><span class="p">)</span>

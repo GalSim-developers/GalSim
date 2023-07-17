@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.bandpass &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.bandpass &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -117,7 +117,7 @@
 <span class="n">valid_bandpass_types</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="k">def</span> <span class="nf">BuildBandpass</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the Bandpass parameters from config[key] and return a constructed Bandpass object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the Bandpass parameters from config[key] and return a constructed Bandpass object.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     A dict with the configuration information.</span>
@@ -172,12 +172,12 @@
 
 
 <div class="viewcode-block" id="BandpassBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.BandpassBuilder">[docs]</a><span class="k">class</span> <span class="nc">BandpassBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building Bandpass objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building Bandpass objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="BandpassBuilder.buildBandpass"><a class="viewcode-back" href="../../../config_image.html#galsim.config.BandpassBuilder.buildBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">buildBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the Bandpass based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the Bandpass based on the specifications in the config dict.</span>
 
 <span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
 
@@ -193,7 +193,7 @@
 
 
 <span class="k">class</span> <span class="nc">FileBandpassBuilder</span><span class="p">(</span><span class="n">BandpassBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for loading a Bandpass from a file</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for loading a Bandpass from a file</span>
 
 <span class="sd">    FileBandpass expected the following parameters:</span>
 
@@ -205,7 +205,7 @@
 <span class="sd">        zeropoint (float)   A zeropoint to use (default: None)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">buildBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the Bandpass based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the Bandpass based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the bandpass type.</span>
@@ -233,7 +233,7 @@
         <span class="k">return</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">safe</span>
 
 <div class="viewcode-block" id="RegisterBandpassType"><a class="viewcode-back" href="../../../config_image.html#galsim.config.RegisterBandpassType">[docs]</a><span class="k">def</span> <span class="nf">RegisterBandpassType</span><span class="p">(</span><span class="n">bandpass_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a bandpass type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a bandpass type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        bandpass_type:  The name of the type in the config dict.</span>

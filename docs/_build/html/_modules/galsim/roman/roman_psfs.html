@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.roman.roman_psfs &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.roman.roman_psfs &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -129,7 +129,7 @@
            <span class="n">n_waves</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
            <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
            <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high_accuracy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approximate_struts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get a single PSF for Roman ST observations.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a single PSF for Roman ST observations.</span>
 
 <span class="sd">    The user must provide the SCA and bandpass; the latter is used when setting up the pupil</span>
 <span class="sd">    plane configuration and when interpolating chromatic information, if requested.</span>
@@ -388,7 +388,7 @@
 <span class="k">def</span> <span class="nf">_get_single_PSF</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="p">,</span>
                     <span class="n">n_waves</span><span class="p">,</span> <span class="n">extra_aberrations</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span>
                     <span class="n">pupil_plane_type</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Routine for making a single PSF.  This gets called by `getPSF` after it parses all the</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Routine for making a single PSF.  This gets called by `getPSF` after it parses all the</span>
 <span class="sd">       options that were passed in.  Users will not directly interact with this routine.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">OpticalPSF</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span>
@@ -438,7 +438,7 @@
     <span class="k">return</span> <span class="n">PSF</span>
 
 <span class="k">def</span> <span class="nf">_read_aberrations</span><span class="p">(</span><span class="n">SCA</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as</span>
 <span class="sd">    galsim.roman.roman_psfs.zemax_wavelength) from stored files, and returns them along with the</span>
 <span class="sd">    field positions.</span>
@@ -475,7 +475,7 @@
     <span class="k">return</span> <span class="n">aberrations</span><span class="p">,</span> <span class="n">x_sca_pos</span><span class="p">,</span> <span class="n">y_sca_pos</span>
 
 <span class="k">def</span> <span class="nf">_interp_aberrations_bilinear</span><span class="p">(</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a helper routine to do bilinear interpolation of aberrations defined at 4 field</span>
 <span class="sd">    positions: the four corners.  Note that we also have aberrations at the center position,</span>
 <span class="sd">    but these are generally quite close (within a few percent) of what would come from this bilinear</span>

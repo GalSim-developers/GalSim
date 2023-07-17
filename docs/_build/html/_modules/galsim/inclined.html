@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.inclined &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.inclined &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -113,7 +113,7 @@
 
 
 <div class="viewcode-block" id="InclinedExponential"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential">[docs]</a><span class="k">class</span> <span class="nc">InclinedExponential</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing an inclined exponential profile.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing an inclined exponential profile.</span>
 
 <span class="sd">    The Inclined Exponential surface brightness profile is characterized by three properties: its</span>
 <span class="sd">    inclination angle (where 0 degrees = face-on and 90 degrees = edge-on), its scale radius, and</span>
@@ -219,28 +219,28 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inclination</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The inclination angle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The inclination angle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclination</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale radius of the exponential disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale radius of the exponential disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale height of the disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale height of the disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">disk_half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius of the exponential disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius of the exponential disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="n">Exponential</span><span class="o">.</span><span class="n">_hlr_factor</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_h_over_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The ratio scale_height / scale_radius</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ratio scale_height / scale_radius</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
@@ -305,7 +305,7 @@
 
 
 <div class="viewcode-block" id="InclinedSersic"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic">[docs]</a><span class="k">class</span> <span class="nc">InclinedSersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing an inclined sersic profile. This class is general, and so for certain</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing an inclined sersic profile. This class is general, and so for certain</span>
 <span class="sd">    special cases, more specialized classes will be more efficient. For the case where n==1</span>
 <span class="sd">    with no truncation, the `InclinedExponential` class will be much more efficient. For the case</span>
 <span class="sd">    where the inclination angle is zero (face-on), the `Sersic` class will be slightly more</span>
@@ -456,38 +456,38 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">n</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Sersic parameter n.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Sersic parameter n.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inclination</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The inclination angle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The inclination angle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclination</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale radius of the exponential disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale radius of the exponential disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale height of the disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale height of the disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h0</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">trunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The truncation radius (if any).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The truncation radius (if any).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trunc</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_h_over_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The ratio scale_height / scale_radius.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ratio scale_height / scale_radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">disk_half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius of the exponential disk.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius of the exponential disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>

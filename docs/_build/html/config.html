@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Config Module &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>The Config Module &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -114,24 +114,24 @@ See <a class="reference internal" href="tutorials.html#tutorials"><span class="s
 <a class="reference download internal" download="" href="_downloads/c435324ccd9edf980676889cd542c3f1/demo1.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo1.yaml</span></code></a>
 (the first file in the aforementioned tutorial) stripped of most of the comments to make it easier
 to see the essence of the structure:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span><span class="w"></span>
-<span class="w">    </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># arcsec</span><span class="w"></span>
-<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.e5</span><span class="w">  </span><span class="c1"># total counts in all pixels</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span>
+<span class="w">    </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># arcsec</span>
+<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.e5</span><span class="w">  </span><span class="c1"># total counts in all pixels</span>
 
-<span class="nt">psf </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span><span class="w"></span>
-<span class="w">    </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># arcsec</span><span class="w"></span>
+<span class="nt">psf </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span>
+<span class="w">    </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># arcsec</span>
 
-<span class="nt">image </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">pixel_scale </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span><span class="w">  </span><span class="c1"># arcsec / pixel</span><span class="w"></span>
-<span class="w">    </span><span class="nt">noise </span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span><span class="w"></span>
-<span class="w">        </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w">  </span><span class="c1"># standard deviation of the counts in each pixel</span><span class="w"></span>
+<span class="nt">image </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">pixel_scale </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span><span class="w">  </span><span class="c1"># arcsec / pixel</span>
+<span class="w">    </span><span class="nt">noise </span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gaussian</span>
+<span class="w">        </span><span class="nt">sigma </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w">  </span><span class="c1"># standard deviation of the counts in each pixel</span>
 
-<span class="nt">output </span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output_yaml</span><span class="w"></span>
-<span class="w">    </span><span class="nt">file_name </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demo1.fits</span><span class="w"></span>
+<span class="nt">output </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output_yaml</span>
+<span class="w">    </span><span class="nt">file_name </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demo1.fits</span>
 </pre></div>
 </div>
 <p>This file defines a dictionary, which in python would look like:</p>

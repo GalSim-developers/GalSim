@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.knots &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.knots &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 <span class="kn">from</span> <span class="nn">.gaussian</span> <span class="kn">import</span> <span class="n">Gaussian</span>
 
 <div class="viewcode-block" id="RandomKnots"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots">[docs]</a><span class="k">class</span> <span class="nc">RandomKnots</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for generating a set of point sources, following either a `Gaussian` profile or a</span>
 <span class="sd">    specified input profile.</span>
 
@@ -225,7 +225,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">input_half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the input half light radius (HLR).</span>
 
 <span class="sd">        Note the input HLR is not necessarily the realized HLR,</span>
@@ -241,13 +241,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">npoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of point sources.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of point sources.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A list of the locations (x,y) of the point sources.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of the locations (x,y) of the point sources.</span>
 
 <span class="sd">        Technically, this is a numpy array of shape (npoints, 2).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -256,7 +256,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="p">])</span>
 
 <div class="viewcode-block" id="RandomKnots.calculateHLR"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.calculateHLR">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        calculate the half-light radius of the generated points</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
@@ -269,7 +269,7 @@
         <span class="k">return</span> <span class="n">hlr</span></div>
 
     <span class="k">def</span> <span class="nf">_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        type and range checking on the inputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.spergel &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.spergel &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="Spergel"><a class="viewcode-back" href="../../gal.html#galsim.Spergel">[docs]</a><span class="k">class</span> <span class="nc">Spergel</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Spergel profile.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Spergel profile.</span>
 
 <span class="sd">    The Spergel surface brightness profile is characterized by three properties: its Spergel index</span>
 <span class="sd">    ``nu``, its ``flux``, and either the ``half_light_radius`` or ``scale_radius``.  Given these</span>
@@ -224,19 +224,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Spergel index, nu</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The Spergel index, nu</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nu</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The scale radius</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scale radius</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
@@ -244,11 +244,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span>
 
 <div class="viewcode-block" id="Spergel.calculateIntegratedFlux"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.calculateIntegratedFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the integrated flux out to a given radius, r&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the integrated flux out to a given radius, r&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">calculateIntegratedFlux</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Spergel.calculateFluxRadius"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.calculateFluxRadius">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFluxRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the radius within which the total flux is f&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the radius within which the total flux is f&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">calculateFluxRadius</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>

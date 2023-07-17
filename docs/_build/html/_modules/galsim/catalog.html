@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.catalog &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.catalog &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -109,7 +109,7 @@
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span>
 
 <div class="viewcode-block" id="Catalog"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog">[docs]</a><span class="k">class</span> <span class="nc">Catalog</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class storing the data from an input catalog.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class storing the data from an input catalog.</span>
 
 <span class="sd">    Each row corresponds to a different object to be built, and each column stores some item of</span>
 <span class="sd">    information about that object (e.g. flux or half_light_radius).</span>
@@ -187,7 +187,7 @@
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
 
 <div class="viewcode-block" id="Catalog.readAscii"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readAscii">[docs]</a>    <span class="k">def</span> <span class="nf">readAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Read in an input catalog from an ASCII file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in an input catalog from an ASCII file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Invalid comments character&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
@@ -217,7 +217,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ncols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Catalog.readFits"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readFits">[docs]</a>    <span class="k">def</span> <span class="nf">readFits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Read in an input catalog from a FITS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in an input catalog from a FITS file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
@@ -228,7 +228,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">isfits</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Catalog.get"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` in its native type.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` in its native type.</span>
 
 <span class="sd">        For ASCII catalogs, ``col`` is the column number.</span>
 <span class="sd">        For FITS catalogs, ``col`` is a string giving the name of the column in the FITS table.</span>
@@ -257,12 +257,12 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Catalog.getFloat"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getFloat">[docs]</a>    <span class="k">def</span> <span class="nf">getFloat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as a float if possible</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as a float if possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="n">col</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Catalog.getInt"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getInt">[docs]</a>    <span class="k">def</span> <span class="nf">getInt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as an int if possible</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as an int if possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="n">col</span><span class="p">))</span></div>
 
@@ -281,7 +281,7 @@
 
 
 <div class="viewcode-block" id="Dict"><a class="viewcode-back" href="../../catalog.html#galsim.Dict">[docs]</a><span class="k">class</span> <span class="nc">Dict</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class that reads a python dict from a file.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that reads a python dict from a file.</span>
 
 <span class="sd">    After construction, it behaves like a regular python dict, with one exception.</span>
 <span class="sd">    In order to facilitate getting values in a hierarchy of fields, we allow the &#39;.&#39;</span>
@@ -432,7 +432,7 @@
 
 
 <div class="viewcode-block" id="OutputCatalog"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog">[docs]</a><span class="k">class</span> <span class="nc">OutputCatalog</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A class for building up a catalog for output, typically storing truth information</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building up a catalog for output, typically storing truth information</span>
 <span class="sd">    about a simulation.</span>
 
 <span class="sd">    Each row corresponds to a different object, and each column stores some item of</span>
@@ -469,35 +469,35 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nobjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of objects in the `OutputCatalog`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of objects in the `OutputCatalog`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ncols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of columns in the `OutputCatalog`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of columns in the `OutputCatalog`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
 
     <span class="c1"># Again, when we use this through a proxy, we need getters for the attributes.</span>
 <div class="viewcode-block" id="OutputCatalog.getNames"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNames">[docs]</a>    <span class="k">def</span> <span class="nf">getNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to sef.names.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span></div>
 <div class="viewcode-block" id="OutputCatalog.getTypes"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getTypes">[docs]</a>    <span class="k">def</span> <span class="nf">getTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to sef.types.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.types.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span></div>
 <div class="viewcode-block" id="OutputCatalog.setTypes"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.setTypes">[docs]</a>    <span class="k">def</span> <span class="nf">setTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to sef.types = types.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.types = types.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="n">types</span></div>
 <div class="viewcode-block" id="OutputCatalog.getNObjects"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNObjects">[docs]</a>    <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to sef.nobjects.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.nobjects.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span></div>
 <div class="viewcode-block" id="OutputCatalog.getNCols"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNCols">[docs]</a>    <span class="k">def</span> <span class="nf">getNCols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to sef.ncols.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.ncols.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.addRow"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.addRow">[docs]</a>    <span class="k">def</span> <span class="nf">addRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">sort_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add a row of data to the catalog.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a row of data to the catalog.</span>
 
 <span class="sd">        Warning: no type checking is done at this point.  If the values in the row do not</span>
 <span class="sd">        match the column types, you may get an error when writing, or you may lose precision,</span>
@@ -518,7 +518,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">sort_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sort_key</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.write"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write the catalog to a file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the catalog to a file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            file_name:  The name of the file to write to.</span>
@@ -550,7 +550,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">writeAscii</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.makeData"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.makeData">[docs]</a>    <span class="k">def</span> <span class="nf">makeData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a numpy array of the data as it should be written to an output file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a numpy array of the data as it should be written to an output file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span>
         <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
@@ -601,7 +601,7 @@
         <span class="k">return</span> <span class="n">data</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.writeAscii"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeAscii">[docs]</a>    <span class="k">def</span> <span class="nf">writeAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write catalog to an ASCII file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to an ASCII file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            file_name:  The name of the file to write to.</span>
@@ -628,7 +628,7 @@
         <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.writeFits"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFits">[docs]</a>    <span class="k">def</span> <span class="nf">writeFits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write catalog to a FITS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to a FITS file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            file_name:  The name of the file to write to.</span>
@@ -638,7 +638,7 @@
         <span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">tbhdu</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="OutputCatalog.writeFitsHdu"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFitsHdu">[docs]</a>    <span class="k">def</span> <span class="nf">writeFitsHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write catalog to a FITS hdu.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to a FITS hdu.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            an HDU with the FITS binary table of the catalog.</span>

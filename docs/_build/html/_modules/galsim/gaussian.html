@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gaussian &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.gaussian &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="Gaussian"><a class="viewcode-back" href="../../simple.html#galsim.Gaussian">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a 2D Gaussian surface brightness profile.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a 2D Gaussian surface brightness profile.</span>
 
 <span class="sd">    The Gaussian surface brightness profile is characterized by two properties, its ``flux``</span>
 <span class="sd">    and the characteristic size ``sigma`` where the radial profile of the circular Gaussian</span>
@@ -182,19 +182,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The sigma of this Gaussian profile</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The sigma of this Gaussian profile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The half-light radius of this Gaussian profile</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The half-light radius of this Gaussian profile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">Gaussian</span><span class="o">.</span><span class="n">_hlr_factor</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The FWHM of this Gaussian profile</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The FWHM of this Gaussian profile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">Gaussian</span><span class="o">.</span><span class="n">_fwhm_factor</span>
 

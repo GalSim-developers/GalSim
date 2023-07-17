@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.chromatic &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.chromatic &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -117,7 +117,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="ChromaticObject"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject">[docs]</a><span class="k">class</span> <span class="nc">ChromaticObject</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Base class for defining wavelength-dependent objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for defining wavelength-dependent objects.</span>
 
 <span class="sd">    This class primarily serves as the base class for chromatic subclasses.  See the docstrings for</span>
 <span class="sd">    subclasses for more details.</span>
@@ -245,18 +245,18 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">gsparams</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">redshift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The redshift of the object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The redshift of the object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">redshift</span>
 
 <div class="viewcode-block" id="ChromaticObject.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)</span>
 <span class="sd">        those component objects will also have their gsparams updated to the new value.</span>
@@ -269,7 +269,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_multiplier</span><span class="p">(</span><span class="n">sed</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">wave_list</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Cached integral of product of sed and bandpass.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cached integral of product of sed and bandpass.&quot;&quot;&quot;</span>
         <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wave_list</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">bp</span> <span class="o">=</span> <span class="n">_LookupTable</span><span class="p">(</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">wave_list</span><span class="p">),</span> <span class="s1">&#39;linear&#39;</span><span class="p">)</span>
@@ -281,7 +281,7 @@
 
 <div class="viewcode-block" id="ChromaticObject.resize_multiplier_cache"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.resize_multiplier_cache">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">resize_multiplier_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Resize the cache (default size=10) containing the integral over the product of an `SED`</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the cache (default size=10) containing the integral over the product of an `SED`</span>
 <span class="sd">        and a `Bandpass`, which is used by `ChromaticObject.drawImage`.</span>
 
 <span class="sd">        Parameters:</span>
@@ -290,7 +290,7 @@
         <span class="n">ChromaticObject</span><span class="o">.</span><span class="n">_multiplier_cache</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">maxsize</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_fiducial_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a fiducial achromatic profile of a chromatic object that can be used to estimate</span>
 <span class="sd">        default output image characteristics, or in the case of separable profiles, can be scaled to</span>
 <span class="sd">        give the monochromatic profile at any wavelength or the wavelength-integrated profile.</span>
@@ -336,7 +336,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticObject(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticObject.interpolate"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build interpolation images to (possibly) speed up subsequent `drawImage` calls.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build interpolation images to (possibly) speed up subsequent `drawImage` calls.</span>
 
 <span class="sd">        This method is used as a pre-processing step that can expedite image rendering using objects</span>
 <span class="sd">        that have to be built up as sums of `GSObject` instances with different parameters at each</span>
@@ -425,13 +425,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Boolean indicating if the `ChromaticObject` has units compatible with a spectral density.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Boolean indicating if the `ChromaticObject` has units compatible with a spectral density.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">spectral</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Boolean indicating if the `ChromaticObject` is dimensionless.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Boolean indicating if the `ChromaticObject` is dimensionless.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span>
 
@@ -459,7 +459,7 @@
         <span class="k">return</span> <span class="n">integrator</span>
 
 <div class="viewcode-block" id="ChromaticObject.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Base implementation for drawing an image of a `ChromaticObject`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base implementation for drawing an image of a `ChromaticObject`.</span>
 
 <span class="sd">        Some subclasses may choose to override this for specific efficiency gains.  For instance,</span>
 <span class="sd">        most GalSim use cases will probably finish with a convolution, in which case</span>
@@ -529,7 +529,7 @@
 
         <span class="c1"># If there are photon ops, they&#39;ll probably need valid wavelengths, so add</span>
         <span class="c1"># WavelengthSampler as the first op in the list.</span>
-        <span class="k">if</span> <span class="s1">&#39;photon_ops&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">wave_sampler</span> <span class="o">=</span> <span class="n">WavelengthSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">wave_sampler</span><span class="p">]</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">]</span>
 
@@ -569,7 +569,7 @@
         <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.drawKImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Base implementation for drawing the Fourier transform of a `ChromaticObject`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base implementation for drawing the Fourier transform of a `ChromaticObject`.</span>
 
 <span class="sd">        The task of drawKImage() in a chromatic context is exactly analogous to the task of</span>
 <span class="sd">        `drawImage` in a chromatic context: to integrate the ``sed * bandpass`` weighted Fourier</span>
@@ -639,7 +639,7 @@
         <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -654,7 +654,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticObject.applyTo"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the chromatic profile as a convolution to an existing photon array.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the chromatic profile as a convolution to an existing photon array.</span>
 
 <span class="sd">        This method allows instances of this class to duck type as a PhotonOp, so one can apply it</span>
 <span class="sd">        in a photon_ops list.</span>
@@ -684,7 +684,7 @@
 
     <span class="c1"># Make op* and op*= work to adjust the flux of the object</span>
 <div class="viewcode-block" id="ChromaticObject.__mul__"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given flux ratio, which may be an `SED`, a float, or</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given flux ratio, which may be an `SED`, a float, or</span>
 <span class="sd">        a univariate callable function (of wavelength in nanometers) that returns a float.</span>
 
 <span class="sd">        The normalization of a `ChromaticObject` is tracked through its ``.SED`` attribute, which</span>
@@ -717,7 +717,7 @@
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
 <div class="viewcode-block" id="ChromaticObject.withScaledFlux"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withScaledFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Multiply the flux of the object by ``flux_ratio``</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Multiply the flux of the object by ``flux_ratio``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            flux_ratio:     The factor by which to scale the normalization of the object.</span>
@@ -732,7 +732,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.withFlux"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with flux through the `Bandpass` ``bandpass`` set to</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with flux through the `Bandpass` ``bandpass`` set to</span>
 <span class="sd">        ``target_flux``.</span>
 
 <span class="sd">        Parameters:</span>
@@ -747,7 +747,7 @@
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.withMagnitude"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">withMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_magnitude</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with magnitude through ``bandpass`` set to</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with magnitude through ``bandpass`` set to</span>
 <span class="sd">        ``target_magnitude``.  Note that this requires ``bandpass`` to have been assigned a</span>
 <span class="sd">        zeropoint using `Bandpass.withZeropoint`.</span>
 
@@ -766,7 +766,7 @@
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.withFluxDensity"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withFluxDensity">[docs]</a>    <span class="k">def</span> <span class="nf">withFluxDensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux_density</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with flux density set to ``target_flux_density`` at</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `ChromaticObject` with flux density set to ``target_flux_density`` at</span>
 <span class="sd">        wavelength ``wavelength``.</span>
 
 <span class="sd">        Parameters:</span>
@@ -794,7 +794,7 @@
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">factor</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.atRedshift"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with a different redshift.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with a different redshift.</span>
 
 <span class="sd">        This will both adjust the SED to have the given redshift and set a ``redshift`` attribute</span>
 <span class="sd">        with the given value.</span>
@@ -805,7 +805,7 @@
         <span class="k">return</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="n">redshift</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.calculateCentroid"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.calculateCentroid">[docs]</a>    <span class="k">def</span> <span class="nf">calculateCentroid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determine the centroid of the wavelength-integrated surface brightness profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the centroid of the wavelength-integrated surface brightness profile.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            bandpass:   The bandpass through which the observation is made.</span>
@@ -845,7 +845,7 @@
             <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">xcentroid</span><span class="p">,</span> <span class="n">ycentroid</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.calculateFlux"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.calculateFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the flux (photons/cm^2/s) of the `ChromaticObject` through a `Bandpass` bandpass.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the flux (photons/cm^2/s) of the `ChromaticObject` through a `Bandpass` bandpass.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            bandpass:   A `Bandpass` object representing a filter, or None to compute the bolometric</span>
@@ -863,7 +863,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.calculateMagnitude"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.calculateMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the `ChromaticObject` magnitude through a `Bandpass` ``bandpass``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the `ChromaticObject` magnitude through a `Bandpass` ``bandpass``.</span>
 
 <span class="sd">        Note that this requires ``bandpass`` to have been assigned a zeropoint using</span>
 <span class="sd">        `Bandpass.withZeropoint`.</span>
@@ -898,7 +898,7 @@
     <span class="c1"># Following functions work to apply affine transformations to a ChromaticObject.</span>
     <span class="c1">#</span>
 <div class="viewcode-block" id="ChromaticObject.expand"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Expand the linear size of the profile by the given (possibly wavelength-dependent)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Expand the linear size of the profile by the given (possibly wavelength-dependent)</span>
 <span class="sd">        scale factor ``scale``, while preserving surface brightness.</span>
 
 <span class="sd">        This doesn&#39;t correspond to either of the normal operations one would typically want to</span>
@@ -931,7 +931,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.dilate"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.dilate">[docs]</a>    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Dilate the linear size of the profile by the given (possibly wavelength-dependent)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dilate the linear size of the profile by the given (possibly wavelength-dependent)</span>
 <span class="sd">        ``scale``, while preserving flux.</span>
 
 <span class="sd">        e.g. ``half_light_radius`` &lt;-- ``half_light_radius * scale``</span>
@@ -953,7 +953,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">scale</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.magnify"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.magnify">[docs]</a>    <span class="k">def</span> <span class="nf">magnify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply a lensing magnification, scaling the area and flux by ``mu`` at fixed surface</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a lensing magnification, scaling the area and flux by ``mu`` at fixed surface</span>
 <span class="sd">        brightness.</span>
 
 <span class="sd">        This process applies a lensing magnification ``mu``, which scales the linear dimensions of the</span>
@@ -978,7 +978,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.shear"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply an area-preserving shear to this object, where arguments are either a `Shear`,</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply an area-preserving shear to this object, where arguments are either a `Shear`,</span>
 <span class="sd">        or arguments that will be used to initialize one.</span>
 
 <span class="sd">        For more details about the allowed keyword arguments, see the `Shear` docstring.</span>
@@ -1026,7 +1026,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.shear`, but only valid for a galsim.Shear object,</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.shear`, but only valid for a galsim.Shear object,</span>
 <span class="sd">        not any of the possible wavelength-dependent options.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1039,7 +1039,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span>
 
 <div class="viewcode-block" id="ChromaticObject.lens"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply a lensing shear and magnification to this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a lensing shear and magnification to this object.</span>
 
 <span class="sd">        This `ChromaticObject` method applies a lensing (reduced) shear and magnification.</span>
 <span class="sd">        The shear must be specified using the g1, g2 definition of shear (see `Shear` for details).</span>
@@ -1076,7 +1076,7 @@
         <span class="k">return</span> <span class="n">sheared</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.lens`, but without the overhead of some of the sanity</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.lens`, but without the overhead of some of the sanity</span>
 <span class="sd">        checks or any of the possible wavelength-dependent options.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1096,7 +1096,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span>
 
 <div class="viewcode-block" id="ChromaticObject.rotate"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Rotate this object by an `Angle` ``theta``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rotate this object by an `Angle` ``theta``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            theta:      Rotation angle (`Angle` object, +ve anticlockwise). In addition, ``theta``</span>
@@ -1122,7 +1122,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.transform"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply a transformation to this object defined by an arbitrary Jacobian matrix.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a transformation to this object defined by an arbitrary Jacobian matrix.</span>
 
 <span class="sd">        This works the same as `GSObject.transform`, so see that method&#39;s docstring for more</span>
 <span class="sd">        details.</span>
@@ -1158,7 +1158,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.shift"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.</span>
 
 <span class="sd">        For a wavelength-independent shift, you may supply ``dx,dy`` as either two arguments, as a</span>
 <span class="sd">        tuple, or as a PositionD or PositionI object.</span>
@@ -1222,7 +1222,7 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.shift`, but only valid for a scalar shift (dx, dy)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `ChromaticObject.shift`, but only valid for a scalar shift (dx, dy)</span>
 <span class="sd">        not any of the possible wavelength-dependent options.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1240,7 +1240,7 @@
 
 
 <div class="viewcode-block" id="InterpolatedChromaticObject"><a class="viewcode-back" href="../../chromaticobject.html#galsim.InterpolatedChromaticObject">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedChromaticObject</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A `ChromaticObject` that uses interpolation of predrawn images to speed up subsequent</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A `ChromaticObject` that uses interpolation of predrawn images to speed up subsequent</span>
 <span class="sd">    rendering.</span>
 
 <span class="sd">    This class wraps another `ChromaticObject`, which is stored in the attribute ``deinterpolated``.</span>
@@ -1322,7 +1322,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="o">.</span><span class="n">gsparams</span>
 
@@ -1359,7 +1359,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedChromaticObject(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_imageAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an image of the object at a particular wavelength, using linear interpolation between</span>
 <span class="sd">        the originally-stored images.  Also returns values for step_k and max_k, to be used to</span>
 <span class="sd">        expedite the instantation of `InterpolatedImage`.</span>
@@ -1400,7 +1400,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">objs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
 <div class="viewcode-block" id="InterpolatedChromaticObject.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.InterpolatedChromaticObject.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluate this `ChromaticObject` at a particular wavelength using interpolation.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1527,7 +1527,7 @@
         <span class="k">return</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="n">stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="n">maxk</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InterpolatedChromaticObject.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.InterpolatedChromaticObject.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Draw an image as seen through a particular bandpass using the stored interpolated</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw an image as seen through a particular bandpass using the stored interpolated</span>
 <span class="sd">        images at the specified wavelengths.</span>
 
 <span class="sd">        This integration will take place using interpolation between stored images that were</span>
@@ -1558,7 +1558,7 @@
 
 
 <div class="viewcode-block" id="ChromaticAtmosphere"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAtmosphere">[docs]</a><span class="k">class</span> <span class="nc">ChromaticAtmosphere</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A `ChromaticObject` implementing two atmospheric chromatic effects: differential</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A `ChromaticObject` implementing two atmospheric chromatic effects: differential</span>
 <span class="sd">    chromatic refraction (DCR) and wavelength-dependent seeing.</span>
 
 <span class="sd">    Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence</span>
@@ -1647,7 +1647,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="o">.</span><span class="n">gsparams</span>
 
@@ -1690,7 +1690,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticAtmosphere.build_obj"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAtmosphere.build_obj">[docs]</a>    <span class="k">def</span> <span class="nf">build_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build a `ChromaticTransformation` object for this `ChromaticAtmosphere`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a `ChromaticTransformation` object for this `ChromaticAtmosphere`.</span>
 
 <span class="sd">        We don&#39;t do this right away to help make `ChromaticAtmosphere` objects be picklable.</span>
 <span class="sd">        Building this is quite fast, so we do it on the fly in `evaluateAtWavelength` and</span>
@@ -1739,7 +1739,7 @@
         <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">shift_magnitude</span> <span class="o">*</span> <span class="n">cosp</span>
 
 <div class="viewcode-block" id="ChromaticAtmosphere.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAtmosphere.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -1751,7 +1751,7 @@
 
 
 <div class="viewcode-block" id="ChromaticTransformation"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation">[docs]</a><span class="k">class</span> <span class="nc">ChromaticTransformation</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for modeling a wavelength-dependent affine transformation of a `ChromaticObject`</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for modeling a wavelength-dependent affine transformation of a `ChromaticObject`</span>
 <span class="sd">    instance.</span>
 
 <span class="sd">    Typically, you do not need to construct a ChromaticTransformation object explicitly.</span>
@@ -1868,7 +1868,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -1888,7 +1888,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object that was transformed.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that was transformed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span>
 
@@ -1993,7 +1993,7 @@
                                     <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticTransformation.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -2034,7 +2034,7 @@
         <span class="n">photons</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="n">flux_ratio</span>
 
 <div class="viewcode-block" id="ChromaticTransformation.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        See `ChromaticObject.drawImage` for a full description.</span>
 
 <span class="sd">        This version usually just calls that one, but if the transformed object (self.original) is</span>
@@ -2087,7 +2087,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">BaseCorrelatedNoise</span>
@@ -2107,7 +2107,7 @@
 
 
 <div class="viewcode-block" id="ChromaticSum"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum">[docs]</a><span class="k">class</span> <span class="nc">ChromaticSum</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A sum of several `ChromaticObject` and/or `GSObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A sum of several `ChromaticObject` and/or `GSObject` instances.</span>
 
 <span class="sd">    Any `GSObject` in the sum is assumed to have a flat `SED` with spectral density of 1</span>
 <span class="sd">    photon/s/cm**2/nm.</span>
@@ -2226,12 +2226,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The list of objects being added.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of objects being added.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span>
 
@@ -2272,7 +2272,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticSum([</span><span class="si">%s</span><span class="s1">])&#39;</span><span class="o">%</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticSum.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -2288,7 +2288,7 @@
         <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span><span class="s2">&quot;ChromaticSum cannot be used as a PhotonOp&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticSum.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Slightly optimized draw method for `ChromaticSum` instances.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Slightly optimized draw method for `ChromaticSum` instances.</span>
 
 <span class="sd">        Draws each summand individually and add resulting images together.  This might waste time if</span>
 <span class="sd">        two or more summands are separable and have the same `SED`, and another summand with a</span>
@@ -2363,7 +2363,7 @@
         <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="ChromaticSum.withScaledFlux"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum.withScaledFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Multiply the flux of the object by ``flux_ratio``</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Multiply the flux of the object by ``flux_ratio``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            flux_ratio:     The factor by which to scale the flux.</span>
@@ -2379,7 +2379,7 @@
 
 
 <div class="viewcode-block" id="ChromaticConvolution"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticConvolution">[docs]</a><span class="k">class</span> <span class="nc">ChromaticConvolution</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A convolution of several `ChromaticObject` and/or `GSObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A convolution of several `ChromaticObject` and/or `GSObject` instances.</span>
 
 <span class="sd">    Any `GSObject` in the convolution is assumed to have a flat `SED` with spectral density of 1</span>
 <span class="sd">    photon/s/cm**2/nm.</span>
@@ -2493,12 +2493,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The list of objects being convolved.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of objects being convolved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span>
 
@@ -2545,7 +2545,7 @@
 
 <div class="viewcode-block" id="ChromaticConvolution.resize_effective_prof_cache"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticConvolution.resize_effective_prof_cache">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">resize_effective_prof_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Resize the cache containing effective profiles.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the cache containing effective profiles.</span>
 
 <span class="sd">        These are wavelength-integrated products of separable profile SEDs, inseparable profiles,</span>
 <span class="sd">        and Bandpasses) used by `ChromaticConvolution.drawImage`.</span>
@@ -2593,7 +2593,7 @@
                                   <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticConvolution.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticConvolution.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -2609,7 +2609,7 @@
         <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span><span class="s2">&quot;ChromaticConvolution cannot be used as a PhotonOp&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticConvolution.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticConvolution.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="n">iimult</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Optimized draw method for the `ChromaticConvolution` class.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Optimized draw method for the `ChromaticConvolution` class.</span>
 
 <span class="sd">        Works by finding sums of profiles which include separable portions, which can then be</span>
 <span class="sd">        integrated before doing any convolutions, which are pushed to the end.</span>
@@ -2795,7 +2795,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
         <span class="c1"># Condition for being able to propagate noise:</span>
@@ -2817,7 +2817,7 @@
 
 
 <div class="viewcode-block" id="ChromaticDeconvolution"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticDeconvolution">[docs]</a><span class="k">class</span> <span class="nc">ChromaticDeconvolution</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for deconvolving a `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for deconvolving a `ChromaticObject`.</span>
 
 <span class="sd">    The ChromaticDeconvolution class represents a wavelength-dependent deconvolution kernel.</span>
 
@@ -2857,7 +2857,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -2890,7 +2890,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticDeconvolution(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticDeconvolution.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticDeconvolution.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -2907,7 +2907,7 @@
 
 
 <div class="viewcode-block" id="ChromaticAutoConvolution"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoConvolution">[docs]</a><span class="k">class</span> <span class="nc">ChromaticAutoConvolution</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A special class for convolving a `ChromaticObject` with itself.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for convolving a `ChromaticObject` with itself.</span>
 
 <span class="sd">    It is equivalent in functionality to ``galsim.Convolve([obj,obj])``, but takes advantage of</span>
 <span class="sd">    the fact that the two profiles are the same for some efficiency gains.</span>
@@ -2948,7 +2948,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -2983,7 +2983,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAutoConvolution(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticAutoConvolution.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoConvolution.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -3000,7 +3000,7 @@
 
 
 <div class="viewcode-block" id="ChromaticAutoCorrelation"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoCorrelation">[docs]</a><span class="k">class</span> <span class="nc">ChromaticAutoCorrelation</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A special class for correlating a `ChromaticObject` with itself.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for correlating a `ChromaticObject` with itself.</span>
 
 <span class="sd">    It is equivalent in functionality to::</span>
 
@@ -3045,7 +3045,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -3080,7 +3080,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAutoCorrelation(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticAutoCorrelation.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoCorrelation.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -3097,7 +3097,7 @@
 
 
 <div class="viewcode-block" id="ChromaticFourierSqrtProfile"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticFourierSqrtProfile">[docs]</a><span class="k">class</span> <span class="nc">ChromaticFourierSqrtProfile</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space square root of a `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space square root of a `ChromaticObject`.</span>
 
 <span class="sd">    The ChromaticFourierSqrtProfile class represents a wavelength-dependent Fourier-space square</span>
 <span class="sd">    root of a profile.</span>
@@ -3143,7 +3143,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -3176,7 +3176,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticFourierSqrtProfile(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticFourierSqrtProfile.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticFourierSqrtProfile.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this chromatic object at a particular wavelength ``wave``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            wave:   Wavelength in nanometers.</span>
@@ -3193,7 +3193,7 @@
 
 
 <div class="viewcode-block" id="ChromaticOpticalPSF"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticOpticalPSF">[docs]</a><span class="k">class</span> <span class="nc">ChromaticOpticalPSF</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A subclass of ChromaticObject meant to represent chromatic optical PSFs.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A subclass of ChromaticObject meant to represent chromatic optical PSFs.</span>
 
 <span class="sd">    Chromaticity plays two roles in optical PSFs. First, it determines the diffraction limit, via</span>
 <span class="sd">    the wavelength/diameter factor.  Second, aberrations such as defocus, coma, etc. are typically</span>
@@ -3337,7 +3337,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -3392,7 +3392,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
 <div class="viewcode-block" id="ChromaticOpticalPSF.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticOpticalPSF.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to directly instantiate a monochromatic instance of this object.</span>
 
 <span class="sd">        Parameters:</span>
@@ -3510,7 +3510,7 @@
 
 
 <div class="viewcode-block" id="ChromaticAiry"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAiry">[docs]</a><span class="k">class</span> <span class="nc">ChromaticAiry</span><span class="p">(</span><span class="n">ChromaticObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A subclass of `ChromaticObject` meant to represent chromatic Airy profiles.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A subclass of `ChromaticObject` meant to represent chromatic Airy profiles.</span>
 
 <span class="sd">    For more information about the basics of Airy profiles, please see `galsim.Airy`.</span>
 
@@ -3574,7 +3574,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
@@ -3614,7 +3614,7 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAiry(lam=</span><span class="si">%s</span><span class="s1">, lam_over_diam=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticAiry.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAiry.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to directly instantiate a monochromatic instance of this object.</span>
 
 <span class="sd">        Parameters:</span>

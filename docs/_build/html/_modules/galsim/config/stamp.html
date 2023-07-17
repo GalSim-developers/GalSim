@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.stamp &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.stamp &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -143,7 +143,7 @@
 
 <div class="viewcode-block" id="BuildStamps"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildStamps">[docs]</a><span class="k">def</span> <span class="nf">BuildStamps</span><span class="p">(</span><span class="n">nobjects</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">xsize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ysize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">do_noise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build a number of postage stamp images as specified by the config dict.</span>
 
 <span class="sd">    Parameters:</span>
@@ -237,7 +237,7 @@
                     <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_rng&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="SetupConfigObjNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigObjNum">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigObjNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the stamp (or object) processing level.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the stamp (or object) processing level.</span>
 
 <span class="sd">    Includes:</span>
 
@@ -298,7 +298,7 @@
     <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;_done&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="SetupConfigStampSize"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigStampSize">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigStampSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Do further setup of the config dict at the stamp (or object) processing level reflecting</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do further setup of the config dict at the stamp (or object) processing level reflecting</span>
 <span class="sd">    the stamp size and position in either image or world coordinates.</span>
 
 <span class="sd">    Note: This is now a StampBuilder method.  So this function just calls StampBuilder.locateStamp.</span>
@@ -327,7 +327,7 @@
 <span class="n">valid_draw_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="s1">&#39;fft&#39;</span><span class="p">,</span> <span class="s1">&#39;phot&#39;</span><span class="p">,</span> <span class="s1">&#39;real_space&#39;</span><span class="p">,</span> <span class="s1">&#39;no_pixel&#39;</span><span class="p">,</span> <span class="s1">&#39;sb&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BuildStamp"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildStamp">[docs]</a><span class="k">def</span> <span class="nf">BuildStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xsize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ysize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">do_noise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build a single stamp image using the given config file</span>
 
 <span class="sd">    Parameters:</span>
@@ -498,7 +498,7 @@
 
 
 <div class="viewcode-block" id="MakeStampTasks"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MakeStampTasks">[docs]</a><span class="k">def</span> <span class="nf">MakeStampTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
 
 <span class="sd">    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.</span>
 
@@ -524,7 +524,7 @@
 
 
 <div class="viewcode-block" id="DrawBasic"><a class="viewcode-back" href="../../../config_process.html#galsim.config.DrawBasic">[docs]</a><span class="k">def</span> <span class="nf">DrawBasic</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The basic implementation of the draw command</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The basic implementation of the draw command</span>
 
 <span class="sd">    This function is provided as a free function, rather than just the base class implementation</span>
 <span class="sd">    in StampBuilder to make it easier for classes derived from StampBuilder to use to help</span>
@@ -628,7 +628,7 @@
     <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="ParseWorldPos"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseWorldPos">[docs]</a><span class="k">def</span> <span class="nf">ParseWorldPos</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A helper function to parse the &#39;world_pos&#39; value.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A helper function to parse the &#39;world_pos&#39; value.</span>
 
 <span class="sd">    The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a</span>
 <span class="sd">    CelestialCoord) or as Euclidean coordinates in the local tangent plane relative to the</span>
@@ -688,14 +688,14 @@
     <span class="k">return</span> <span class="n">dtype</span>
 
 <div class="viewcode-block" id="StampBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder">[docs]</a><span class="k">class</span> <span class="nc">StampBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building stamp images of individual objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building stamp images of individual objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    It also includes the implementation of the default stamp type: Basic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="StampBuilder.setup"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Do the initialization and setup for building a postage stamp.</span>
 
 <span class="sd">        In the base class, we check for and parse the appropriate size and position values in</span>
@@ -760,7 +760,7 @@
         <span class="k">return</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span></div>
 
 <div class="viewcode-block" id="StampBuilder.quickSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.quickSkip">[docs]</a>    <span class="k">def</span> <span class="nf">quickSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check whether this object should be skipped before doing any work.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether this object should be skipped before doing any work.</span>
 
 <span class="sd">        The base class looks for stamp.quick_skip and returns True if it is preset and</span>
 <span class="sd">        evaluates to True.</span>
@@ -773,7 +773,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;quick_skip&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;quick_skip&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="StampBuilder.setupRNG"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.setupRNG">[docs]</a>    <span class="k">def</span> <span class="nf">setupRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Setup the RNG for this object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup the RNG for this object.</span>
 
 <span class="sd">        @param config       The configuration dict for the stamp field.</span>
 <span class="sd">        @param base         The base configuration dict.</span>
@@ -790,7 +790,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">seed</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.locateStamp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.locateStamp">[docs]</a>    <span class="k">def</span> <span class="nf">locateStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determine where and how large the stamp should be.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine where and how large the stamp should be.</span>
 
 <span class="sd">        The base class version does the followin:</span>
 
@@ -890,7 +890,7 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">stamp_center</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.getSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getSkip">[docs]</a>    <span class="k">def</span> <span class="nf">getSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initial check of whether to skip this object based on the stamp.skip field.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initial check of whether to skip this object based on the stamp.skip field.</span>
 
 <span class="sd">        @param config       The configuration dict for the stamp field.</span>
 <span class="sd">        @param base         The base configuration dict.</span>
@@ -907,7 +907,7 @@
         <span class="k">return</span> <span class="n">skip</span></div>
 
 <div class="viewcode-block" id="StampBuilder.buildPSF"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.buildPSF">[docs]</a>    <span class="k">def</span> <span class="nf">buildPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the PSF object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the PSF object.</span>
 
 <span class="sd">        For the Basic stamp type, this builds a PSF from the base[&#39;psf&#39;] dict, if present,</span>
 <span class="sd">        else returns None.</span>
@@ -925,7 +925,7 @@
         <span class="k">return</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="StampBuilder.buildProfile"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.buildProfile">[docs]</a>    <span class="k">def</span> <span class="nf">buildProfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the surface brightness profile (a GSObject) to be drawn.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the surface brightness profile (a GSObject) to be drawn.</span>
 
 <span class="sd">        For the Basic stamp type, this builds a galaxy from the base[&#39;gal&#39;] dict and convolves</span>
 <span class="sd">        it with the psf (if given).  If either the psf or the galaxy is None, then the other one</span>
@@ -960,7 +960,7 @@
                     <span class="s2">&quot;If you really don&#39;t want any object, use gal type = None.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.makeStamp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.makeStamp">[docs]</a>    <span class="k">def</span> <span class="nf">makeStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Make the initial empty postage stamp image, if possible.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make the initial empty postage stamp image, if possible.</span>
 
 <span class="sd">        If we don&#39;t know xsize, ysize, return None, in which case the stamp will be created</span>
 <span class="sd">        automatically by the drawImage command based on the natural size of the profile.</span>
@@ -984,7 +984,7 @@
             <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="StampBuilder.getDrawMethod"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getDrawMethod">[docs]</a>    <span class="k">def</span> <span class="nf">getDrawMethod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determine the draw method to use.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the draw method to use.</span>
 
 <span class="sd">        @param config       The configuration dict for the stamp field.</span>
 <span class="sd">        @param base         The base configuration dict.</span>
@@ -998,7 +998,7 @@
         <span class="k">return</span> <span class="n">method</span></div>
 
 <div class="viewcode-block" id="StampBuilder.getOffset"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getOffset">[docs]</a>    <span class="k">def</span> <span class="nf">getOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determine the offset to use.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the offset to use.</span>
 
 <span class="sd">        The base class version adds the stamp_offset, which comes from calculations related to</span>
 <span class="sd">        world_pos and image_pos, to the field stamp.offset if any.</span>
@@ -1017,7 +1017,7 @@
         <span class="k">return</span> <span class="n">offset</span></div>
 
 <div class="viewcode-block" id="StampBuilder.updateSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.updateSkip">[docs]</a>    <span class="k">def</span> <span class="nf">updateSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Before drawing the profile, see whether this object can be trivially skipped.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Before drawing the profile, see whether this object can be trivially skipped.</span>
 
 <span class="sd">        The base method checks if the object is completely off the main image, so the</span>
 <span class="sd">        intersection bounds will be undefined.  In this case, don&#39;t bother drawing the</span>
@@ -1063,7 +1063,7 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="StampBuilder.draw"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Draw the profile on the postage stamp image.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw the profile on the postage stamp image.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            prof:       The profile to draw.</span>
@@ -1083,7 +1083,7 @@
             <span class="k">return</span> <span class="n">DrawBasic</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">method</span><span class="p">,</span><span class="n">offset</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.whiten"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.whiten">[docs]</a>    <span class="k">def</span> <span class="nf">whiten</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If appropriate, whiten the resulting image according to the requested noise profile</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If appropriate, whiten the resulting image according to the requested noise profile</span>
 <span class="sd">        and the amount of noise originally present in the profile.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1119,7 +1119,7 @@
         <span class="k">return</span> <span class="n">current_var</span></div>
 
 <div class="viewcode-block" id="StampBuilder.getSNRScale"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getSNRScale">[docs]</a>    <span class="k">def</span> <span class="nf">getSNRScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the factor by which to rescale the image based on a desired S/N level.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the factor by which to rescale the image based on a desired S/N level.</span>
 
 <span class="sd">        Note: The default implementation does this for the gal or psf field, so if a custom</span>
 <span class="sd">              stamp builder uses some other way to get the profiles, this method should</span>
@@ -1169,7 +1169,7 @@
         <span class="k">return</span> <span class="n">scale_factor</span></div>
 
 <div class="viewcode-block" id="StampBuilder.applySNRScale"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.applySNRScale">[docs]</a>    <span class="k">def</span> <span class="nf">applySNRScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply the scale_factor from getSNRScale to the image and profile.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the scale_factor from getSNRScale to the image and profile.</span>
 
 <span class="sd">        The default implementaion just multiplies each of them, but if prof is not a regular</span>
 <span class="sd">        GSObject, then you might need to do something different.</span>
@@ -1193,7 +1193,7 @@
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">prof</span></div>
 
 <div class="viewcode-block" id="StampBuilder.updateOrigin"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.updateOrigin">[docs]</a>    <span class="k">def</span> <span class="nf">updateOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Update the image origin to be centered at the right place</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the image origin to be centered at the right place</span>
 
 <span class="sd">        @param config       The configuration dict for the stamp field.</span>
 <span class="sd">        @param base         The base configuration dict.</span>
@@ -1207,7 +1207,7 @@
 
 
 <div class="viewcode-block" id="StampBuilder.reject"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.reject">[docs]</a>    <span class="k">def</span> <span class="nf">reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the stamp field.</span>
@@ -1266,7 +1266,7 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="StampBuilder.reset"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reset some aspects of the config dict so the object can be rebuilt after rejecting the</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset some aspects of the config dict so the object can be rebuilt after rejecting the</span>
 <span class="sd">        current object.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1280,7 +1280,7 @@
                 <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">keep_safe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_key</span><span class="o">=</span><span class="s1">&#39;obj_num&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.addNoise"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add the sky level and the noise to the stamp.</span>
 
 <span class="sd">        Note: This only gets called if the image type requests that the noise be added to each</span>
@@ -1302,7 +1302,7 @@
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span></div>
 
 <div class="viewcode-block" id="StampBuilder.makeTasks"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.makeTasks">[docs]</a>    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
 
 <span class="sd">        For the Basic stamp type, there is just one job per task, so the tasks list is just:</span>
 
@@ -1322,7 +1322,7 @@
 
 
 <span class="k">def</span> <span class="nf">RegisterStampType</span><span class="p">(</span><span class="n">stamp_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register an image type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an image type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        stamp_type:     The name of the type in config[&#39;stamp&#39;]</span>

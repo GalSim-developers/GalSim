@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.extra_psf &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.extra_psf &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -118,7 +118,7 @@
 
 <span class="c1"># The code the actually draws the PSF on a postage stamp.</span>
 <span class="k">def</span> <span class="nf">DrawPSFStamp</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Draw an image using the given psf profile.</span>
 
 <span class="sd">    Returns:</span>
@@ -171,7 +171,7 @@
 
 <span class="c1"># The function to call at the end of building each stamp</span>
 <div class="viewcode-block" id="ExtraPSFBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_psf.ExtraPSFBuilder">[docs]</a><span class="k">class</span> <span class="nc">ExtraPSFBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build an image that draws the PSF at the same location as each object on the main image.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build an image that draws the PSF at the same location as each object on the main image.</span>
 
 <span class="sd">    This makes the most sense when the main image consists of non-overlapping stamps, such as</span>
 <span class="sd">    a TiledImage, since you wouldn&#39;t typically want the PSF images to overlap.  But it just</span>

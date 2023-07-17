@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.des.des_meds &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.des.des_meds &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -129,7 +129,7 @@
 <span class="n">EMPTY_SHIFT</span> <span class="o">=</span> <span class="mi">0</span>
 
 <div class="viewcode-block" id="MultiExposureObject"><a class="viewcode-back" href="../../../des.html#galsim.des.MultiExposureObject">[docs]</a><span class="k">class</span> <span class="nc">MultiExposureObject</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class containing exposures for single object, along with other information.</span>
 
 <span class="sd">    The MultiExposureObject class represents multiple exposure data for a single object for the</span>
@@ -269,7 +269,7 @@
 
 
 <div class="viewcode-block" id="WriteMEDS"><a class="viewcode-back" href="../../../des.html#galsim.des.WriteMEDS">[docs]</a><span class="k">def</span> <span class="nf">WriteMEDS</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Writes a MEDS file from a list of `MultiExposureObject` instances.</span>
 
 <span class="sd">    Parameters:</span>
@@ -525,14 +525,14 @@
 
 <span class="c1"># Make the class that will</span>
 <div class="viewcode-block" id="MEDSBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a><span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class lets you use the `MultiExposureObject` very simply as a special ``output``</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class lets you use the `MultiExposureObject` very simply as a special ``output``</span>
 <span class="sd">    type when using config processing.</span>
 
 <span class="sd">    It requires the use of ``galsim.des`` in the config files ``modules`` section.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MEDSBuilder.buildImages"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.buildImages">[docs]</a>    <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a meds file as specified in config.</span>
 
 <span class="sd">        Parameters:</span>
@@ -603,7 +603,7 @@
         <span class="k">return</span> <span class="n">obj_list</span></div>
 
 <div class="viewcode-block" id="MEDSBuilder.writeFile"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.writeFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Write the data to a file.  In this case a MEDS file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a file.  In this case a MEDS file.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            data:           The data to write.  Here, this is a list of `MultiExposureObject`.</span>
@@ -639,7 +639,7 @@
 <span class="c1"># This extra output type simply saves the values of the image offsets when an</span>
 <span class="c1"># object is drawn into the stamp.</span>
 <div class="viewcode-block" id="OffsetBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a><span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This &quot;extra&quot; output builder saves the stamp offset values for later use.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This &quot;extra&quot; output builder saves the stamp offset values for later use.</span>
 
 <span class="sd">    It is used as a ``meds_get_offset`` field in the ``output`` section.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

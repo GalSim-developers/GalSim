@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.sensor &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.sensor &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -120,7 +120,7 @@
 
 
 <span class="k">def</span> <span class="nf">BuildSensor</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read the parameters from config[key] and return a constructed Sensor.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the parameters from config[key] and return a constructed Sensor.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     A dict with the configuration information for the sensor.</span>
@@ -177,12 +177,12 @@
 
 
 <div class="viewcode-block" id="SensorBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.SensorBuilder">[docs]</a><span class="k">class</span> <span class="nc">SensorBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A base class for building Sensor objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building Sensor objects.</span>
 
 <span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="SensorBuilder.buildSensor"><a class="viewcode-back" href="../../../config_image.html#galsim.config.SensorBuilder.buildSensor">[docs]</a>    <span class="k">def</span> <span class="nf">buildSensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the Sensor based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the Sensor based on the specifications in the config dict.</span>
 
 <span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
 
@@ -198,7 +198,7 @@
 
 
 <span class="k">class</span> <span class="nc">SimpleSensorBuilder</span><span class="p">(</span><span class="n">SensorBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for building simple Sensor objects.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building simple Sensor objects.</span>
 
 <span class="sd">    The initializer takes an init_func, which is the class or function to call to build the</span>
 <span class="sd">    Sensor.  For the kwargs, it calls getKwargs, which does the normal parsing of the req_params</span>
@@ -208,7 +208,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
 
     <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
 <span class="sd">        init_func:</span>
 
 <span class="sd">        _req_params</span>
@@ -238,7 +238,7 @@
         <span class="k">return</span> <span class="n">kwargs</span>
 
     <span class="k">def</span> <span class="nf">buildSensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build the Sensor based on the specifications in the config dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the Sensor based on the specifications in the config dict.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            config:     The configuration dict for the sensor type.</span>
@@ -252,7 +252,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">ListSensorBuilder</span><span class="p">(</span><span class="n">SensorBuilder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Select a sensor from a list</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select a sensor from a list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">buildSensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
@@ -272,7 +272,7 @@
         <span class="k">return</span> <span class="n">BuildSensor</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RegisterSensorType"><a class="viewcode-back" href="../../../config_image.html#galsim.config.RegisterSensorType">[docs]</a><span class="k">def</span> <span class="nf">RegisterSensorType</span><span class="p">(</span><span class="n">sensor_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a sensor type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a sensor type for use by the config apparatus.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        sensor_type:    The name of the config type to register</span>

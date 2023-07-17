@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.value &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.value &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -134,7 +134,7 @@
 <span class="p">]</span>
 
 <div class="viewcode-block" id="ParseValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseValue">[docs]</a><span class="k">def</span> <span class="nf">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read or generate a parameter value from config.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read or generate a parameter value from config.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     The config dict from which to parse the value.</span>
@@ -302,7 +302,7 @@
 
 
 <div class="viewcode-block" id="GetCurrentValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetCurrentValue">[docs]</a><span class="k">def</span> <span class="nf">GetCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get the current value of another config item given the key name.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current value of another config item given the key name.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        key:        The (extended) key value in the dict to get the current value of.</span>
@@ -325,7 +325,7 @@
     <span class="k">return</span> <span class="n">val</span></div>
 
 <div class="viewcode-block" id="EvaluateCurrentValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.EvaluateCurrentValue">[docs]</a><span class="k">def</span> <span class="nf">EvaluateCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to evaluate the current value at config[key] where key is no longer</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to evaluate the current value at config[key] where key is no longer</span>
 <span class="sd">    an extended key, and config is the local dict where it is relevant.</span>
 
 <span class="sd">    Parameters:</span>
@@ -369,7 +369,7 @@
             <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SetDefaultIndex"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetDefaultIndex">[docs]</a><span class="k">def</span> <span class="nf">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    When the number of items in a list is known, we allow the user to omit some of</span>
 <span class="sd">    the parameters of a Sequence or Random and set them automatically based on the</span>
 <span class="sd">    size of the list, catalog, etc.</span>
@@ -422,7 +422,7 @@
 
 
 <div class="viewcode-block" id="CheckAllParams"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CheckAllParams">[docs]</a><span class="k">def</span> <span class="nf">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="p">{},</span> <span class="n">opt</span><span class="o">=</span><span class="p">{},</span> <span class="n">single</span><span class="o">=</span><span class="p">[],</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[]):</span>
-    <span class="sd">&quot;&quot;&quot;Check that the parameters for a particular item are all valid</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that the parameters for a particular item are all valid</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     The config dict to check</span>
@@ -481,7 +481,7 @@
 
 
 <div class="viewcode-block" id="GetAllParams"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetAllParams">[docs]</a><span class="k">def</span> <span class="nf">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="p">{},</span> <span class="n">opt</span><span class="o">=</span><span class="p">{},</span> <span class="n">single</span><span class="o">=</span><span class="p">[],</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[]):</span>
-    <span class="sd">&quot;&quot;&quot;Check and get all the parameters for a particular item</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and get all the parameters for a particular item</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:     The config dict from which to get items.</span>
@@ -511,7 +511,7 @@
 <span class="c1">#</span>
 
 <span class="k">def</span> <span class="nf">_GetAngleValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert a string consisting of a value and an angle unit into an Angle.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string consisting of a value and an angle unit into an Angle.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span> <span class="p">:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
@@ -528,7 +528,7 @@
 
 
 <span class="k">def</span> <span class="nf">_GetPositionValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert a tuple or a string that looks like &quot;a,b&quot; into a galsim.PositionD.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a tuple or a string that looks like &quot;a,b&quot; into a galsim.PositionD.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -544,7 +544,7 @@
 
 
 <span class="k">def</span> <span class="nf">_GetBoolValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert a string to a bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TRUE&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">):</span>
@@ -568,7 +568,7 @@
 <span class="c1">#</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromG1G2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g1, g2)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g1, g2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;g2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -576,7 +576,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromE1E2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e1, e2)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e1, e2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;e2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -584,7 +584,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEta1Eta2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta1, eta2)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta1, eta2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;eta2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -592,7 +592,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromGBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g, beta)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -600,7 +600,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e, beta)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -608,7 +608,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEtaBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta, beta)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -616,7 +616,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromQBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (q, beta)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (q, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;q&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -624,7 +624,7 @@
     <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromXY</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (x,y)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (x,y)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -632,7 +632,7 @@
     <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRTheta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (r,theta)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (r,theta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;r&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -643,7 +643,7 @@
     <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">cos</span><span class="p">(),</span> <span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRADec</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a CelestialCoord constructed from given (ra,dec)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a CelestialCoord constructed from given (ra,dec)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ra&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;dec&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -651,7 +651,7 @@
     <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRad</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in radians</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in radians</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -659,7 +659,7 @@
     <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromDeg</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in degrees</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in degrees</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
@@ -667,7 +667,7 @@
     <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromSequence</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return next in a sequence of integers</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next in a sequence of integers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;default&#39;</span> <span class="p">]</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;first&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span> <span class="s1">&#39;last&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span>
@@ -724,7 +724,7 @@
 
 
 <span class="k">def</span> <span class="nf">_GenerateFromNumberedFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a file_name using a root, a number, and an extension</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a file_name using a root, a number, and an extension</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;num&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Sequence&#39;</span> <span class="p">}</span>
@@ -744,7 +744,7 @@
     <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromFormattedStr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a string from a format string</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a string from a format string</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;format&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
     <span class="c1"># Ignore items for now, we&#39;ll deal with it differently.</span>
@@ -793,7 +793,7 @@
 
 
 <span class="k">def</span> <span class="nf">_GenerateFromList</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
@@ -817,7 +817,7 @@
     <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromSum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
     <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
@@ -836,7 +836,7 @@
     <span class="k">return</span> <span class="nb">sum</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return a LookupTable from reading a file</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a LookupTable from reading a file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;interpolant&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;x_log&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="s1">&#39;f_log&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="s1">&#39;amplitude&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
@@ -845,7 +845,7 @@
     <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="kc">False</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromCurrent</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get the current value of another config item.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current value of another config item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;_kd&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">]</span>
@@ -865,7 +865,7 @@
 
 
 <div class="viewcode-block" id="RegisterValueType"><a class="viewcode-back" href="../../../config_values.html#galsim.config.RegisterValueType">[docs]</a><span class="k">def</span> <span class="nf">RegisterValueType</span><span class="p">(</span><span class="n">type_name</span><span class="p">,</span> <span class="n">gen_func</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Register a value type for use by the config apparatus.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a value type for use by the config apparatus.</span>
 
 <span class="sd">    A few notes about the signature of the generating function:</span>
 

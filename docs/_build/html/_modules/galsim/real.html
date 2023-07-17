@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.real &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.real &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -142,7 +142,7 @@
 <span class="p">}</span>
 
 <div class="viewcode-block" id="RealGalaxy"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy">[docs]</a><span class="k">class</span> <span class="nc">RealGalaxy</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing real galaxies from some training dataset.  Its underlying implementation</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing real galaxies from some training dataset.  Its underlying implementation</span>
 <span class="sd">    uses a Convolution instance of an `InterpolatedImage` (for the observed galaxy) with a</span>
 <span class="sd">    `Deconvolution` of another `InterpolatedImage` (for the PSF).</span>
 
@@ -414,7 +414,7 @@
 
 <div class="viewcode-block" id="RealGalaxy.makeFromImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.makeFromImage">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">makeFromImage</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">PSF</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `RealGalaxy` directly from image, PSF, and noise description.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `RealGalaxy` directly from image, PSF, and noise description.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            image:  `Image` of the galaxy you want to simulate.</span>
@@ -535,7 +535,7 @@
 
 
 <div class="viewcode-block" id="RealGalaxyCatalog"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog">[docs]</a><span class="k">class</span> <span class="nc">RealGalaxyCatalog</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class containing a catalog with information about real galaxy training data.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class containing a catalog with information about real galaxy training data.</span>
 
 <span class="sd">    The RealGalaxyCatalog class reads in and stores information about a specific training sample of</span>
 <span class="sd">    realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in</span>
@@ -746,7 +746,7 @@
     <span class="k">def</span> <span class="nf">getFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getIndexForID"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getIndexForID">[docs]</a>    <span class="k">def</span> <span class="nf">getIndexForID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Internal function to find which index number corresponds to the value ID in the ident</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal function to find which index number corresponds to the value ID in the ident</span>
 <span class="sd">        field.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Just to be completely consistent, convert id to a string in the same way we</span>
@@ -767,7 +767,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Once we&#39;ve loaded them.  Don&#39;t do it again.</span>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.preload"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.preload">[docs]</a>    <span class="k">def</span> <span class="nf">preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Preload the files into memory.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Preload the files into memory.</span>
 
 <span class="sd">        There are memory implications to this, so we don&#39;t do this by default.  However, it can be</span>
 <span class="sd">        a big speedup if memory isn&#39;t an issue.</span>
@@ -807,7 +807,7 @@
         <span class="k">return</span> <span class="n">f</span>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getBandpass"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a `Bandpass` object for the catalog.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a `Bandpass` object for the catalog.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
         <span class="k">try</span><span class="p">:</span>
@@ -819,7 +819,7 @@
         <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">bp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">zeropoint</span><span class="o">=</span><span class="n">bp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getGalImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getGalImage">[docs]</a>    <span class="k">def</span> <span class="nf">getGalImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the galaxy at index ``i`` as an `Image` object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the galaxy at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">):</span>
@@ -831,7 +831,7 @@
         <span class="k">return</span> <span class="n">im</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getPSFImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSFImage">[docs]</a>    <span class="k">def</span> <span class="nf">getPSFImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as an `Image` object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">):</span>
@@ -842,7 +842,7 @@
         <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getPSF"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as a `GSObject`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as a `GSObject`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="n">psf_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPSFImage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -851,7 +851,7 @@
                                  <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getNoiseProperties"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoiseProperties">[docs]</a>    <span class="k">def</span> <span class="nf">getNoiseProperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the components needed to make the noise correlation function at index ``i``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the components needed to make the noise correlation function at index ``i``.</span>
 <span class="sd">           Specifically, the noise image (or None), the pixel_scale, and the noise variance,</span>
 <span class="sd">           as a tuple (im, scale, var).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -879,7 +879,7 @@
         <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getNoise"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoise">[docs]</a>    <span class="k">def</span> <span class="nf">getNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">UncorrelatedNoise</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span>
         <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
@@ -967,7 +967,7 @@
 
 
 <div class="viewcode-block" id="ChromaticRealGalaxy"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy">[docs]</a><span class="k">class</span> <span class="nc">ChromaticRealGalaxy</span><span class="p">(</span><span class="n">ChromaticSum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing real galaxies over multiple wavelengths, using some multi-band training</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing real galaxies over multiple wavelengths, using some multi-band training</span>
 <span class="sd">    dataset.  The underlying implementation models multi-band images of individual galaxies</span>
 <span class="sd">    as chromatic PSF convolutions (and integrations over wavelength) with a sum of profiles</span>
 <span class="sd">    separable into spatial and spectral components.  The spectral components are specified by the</span>
@@ -1177,7 +1177,7 @@
 
 <div class="viewcode-block" id="ChromaticRealGalaxy.makeFromImages"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy.makeFromImages">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">makeFromImages</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">PSFs</span><span class="p">,</span> <span class="n">xis</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `ChromaticRealGalaxy` directly from images, bandpasses, PSFs, and noise</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `ChromaticRealGalaxy` directly from images, bandpasses, PSFs, and noise</span>
 <span class="sd">        descriptions.  See the `ChromaticRealGalaxy` docstring for more information.</span>
 
 <span class="sd">        Parameters:</span>

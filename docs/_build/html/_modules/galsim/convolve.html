@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.convolve &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.convolve &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -111,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="Convolve"><a class="viewcode-back" href="../../composite.html#galsim.Convolve">[docs]</a><span class="k">def</span> <span class="nf">Convolve</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.</span>
 
 <span class="sd">    This function will inspect its input arguments to decide if a `Convolution` object or a</span>
 <span class="sd">    `ChromaticConvolution` object is required to represent the convolution of surface</span>
@@ -151,7 +151,7 @@
 
 
 <div class="viewcode-block" id="Convolution"><a class="viewcode-back" href="../../composite.html#galsim.Convolution">[docs]</a><span class="k">class</span> <span class="nc">Convolution</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for convolving 2 or more `GSObject` instances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for convolving 2 or more `GSObject` instances.</span>
 
 <span class="sd">    The convolution will normally be done using discrete Fourier transforms of each of the component</span>
 <span class="sd">    profiles, multiplying them together, and then transforming back to real space.</span>
@@ -295,13 +295,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The list of objects being convolved.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of objects being convolved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
 <span class="sd">        than FFT convolution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
@@ -332,7 +332,7 @@
         <span class="k">return</span> <span class="n">_noise</span>
 
 <div class="viewcode-block" id="Convolution.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.Convolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 
@@ -525,7 +525,7 @@
 
 
 <div class="viewcode-block" id="Deconvolve"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolve">[docs]</a><span class="k">def</span> <span class="nf">Deconvolve</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for deconvolving by either a `GSObject` or `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for deconvolving by either a `GSObject` or `ChromaticObject`.</span>
 
 <span class="sd">    This function will inspect its input argument to decide if a `Deconvolution` object or a</span>
 <span class="sd">    `ChromaticDeconvolution` object is required to represent the deconvolution by a surface</span>
@@ -551,7 +551,7 @@
 
 
 <div class="viewcode-block" id="Deconvolution"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolution">[docs]</a><span class="k">class</span> <span class="nc">Deconvolution</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for deconvolving a `GSObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for deconvolving a `GSObject`.</span>
 
 <span class="sd">    The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,</span>
 <span class="sd">    or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,</span>
@@ -592,7 +592,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object that is being deconvolved.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being deconvolved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
 
@@ -603,7 +603,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Deconvolution.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 
@@ -704,7 +704,7 @@
 
 
 <div class="viewcode-block" id="AutoConvolve"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolve">[docs]</a><span class="k">def</span> <span class="nf">AutoConvolve</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for autoconvolving either a `GSObject` or `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for autoconvolving either a `GSObject` or `ChromaticObject`.</span>
 
 <span class="sd">    This function will inspect its input argument to decide if a `AutoConvolution` object or a</span>
 <span class="sd">    `ChromaticAutoConvolution` object is required to represent the convolution of a surface</span>
@@ -735,7 +735,7 @@
 
 
 <div class="viewcode-block" id="AutoConvolution"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolution">[docs]</a><span class="k">class</span> <span class="nc">AutoConvolution</span><span class="p">(</span><span class="n">Convolution</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A special class for convolving a `GSObject` with itself.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for convolving a `GSObject` with itself.</span>
 
 <span class="sd">    It is equivalent in functionality to ``Convolve([obj,obj])``, but takes advantage of</span>
 <span class="sd">    the fact that the two profiles are the same for some efficiency gains.</span>
@@ -798,12 +798,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object that is being auto-convolved.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being auto-convolved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
 <span class="sd">        than FFT convolution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
@@ -815,7 +815,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AutoConvolution.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 
@@ -866,7 +866,7 @@
 
 
 <div class="viewcode-block" id="AutoCorrelate"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelate">[docs]</a><span class="k">def</span> <span class="nf">AutoCorrelate</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for autocorrelating either a `GSObject` or `ChromaticObject`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for autocorrelating either a `GSObject` or `ChromaticObject`.</span>
 
 <span class="sd">    This function will inspect its input argument to decide if a `AutoCorrelation` object or a</span>
 <span class="sd">    `ChromaticAutoCorrelation` object is required to represent the correlation of a surface</span>
@@ -897,7 +897,7 @@
 
 
 <div class="viewcode-block" id="AutoCorrelation"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelation">[docs]</a><span class="k">class</span> <span class="nc">AutoCorrelation</span><span class="p">(</span><span class="n">Convolution</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A special class for correlating a `GSObject` with itself.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for correlating a `GSObject` with itself.</span>
 
 <span class="sd">    It is equivalent in functionality to::</span>
 
@@ -966,12 +966,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The original object that is being auto-correlated.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being auto-correlated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
 <span class="sd">        than FFT convolution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
@@ -983,7 +983,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AutoCorrelation.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelation.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
 

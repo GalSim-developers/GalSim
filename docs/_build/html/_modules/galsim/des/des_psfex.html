@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.des.des_psfex &mdash; GalSim 2.4.9 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.des.des_psfex &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -117,7 +117,7 @@
 
 
 <div class="viewcode-block" id="DES_PSFEx"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx">[docs]</a><span class="k">class</span> <span class="nc">DES_PSFEx</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated principal component images</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated principal component images</span>
 <span class="sd">    of the PSF.  These are usually stored as \*_psfcat.psf files.</span>
 
 <span class="sd">    PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please</span>
@@ -326,7 +326,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span>
 
 <div class="viewcode-block" id="DES_PSFEx.getLocalWCS"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getLocalWCS">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;If the original image was provided to the constructor, this will return the local</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the original image was provided to the constructor, this will return the local</span>
 <span class="sd">        WCS at a given location in that original image.  If not, this will return None.</span>
 
 <span class="sd">        Parameter:</span>
@@ -341,7 +341,7 @@
             <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="DES_PSFEx.getPSF"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the PSF at position ``image_pos``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at position ``image_pos``.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">           image_pos:   The position in image coordinates at which to build the PSF.</span>
@@ -365,7 +365,7 @@
         <span class="k">return</span> <span class="n">psf</span></div>
 
 <div class="viewcode-block" id="DES_PSFEx.getPSFArray"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getPSFArray">[docs]</a>    <span class="k">def</span> <span class="nf">getPSFArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the PSF image as a numpy array at position image_pos in image coordinates.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF image as a numpy array at position image_pos in image coordinates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">xto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_xto</span><span class="p">(</span> <span class="p">(</span><span class="n">image_pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_zero</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_scale</span> <span class="p">)</span>
         <span class="n">yto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_xto</span><span class="p">(</span> <span class="p">(</span><span class="n">image_pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_zero</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_scale</span> <span class="p">)</span>
@@ -417,7 +417,7 @@
 <span class="c1"># base is the top level config dictionary where some global variables are stored.</span>
 <span class="c1"># ignore is a list of key words that might be in the config dictionary that you should ignore.</span>
 <span class="k">def</span> <span class="nf">BuildDES_PSFEx</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build a GSObject representing the PSFex model at the correct location in the image in a</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a GSObject representing the PSFex model at the correct location in the image in a</span>
 <span class="sd">    config-processing context.</span>
 
 <span class="sd">    This is used as object type ``DES_PSFEx`` in a config file.</span>
