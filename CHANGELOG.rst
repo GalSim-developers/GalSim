@@ -143,22 +143,28 @@ Changes from v2.4.5 to v2.4.6
 Changes from v2.4.6 to v2.4.7
 =============================
 
-- Fix the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
-- Add --log_format option to galsim executable. (#1201)
-- Allow input objects with has_nobj=True to return an approximate number of objects for the
+- Fixed the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
+- Added --log_format option to galsim executable. (#1201)
+- Allowed input objects with has_nobj=True to return an approximate number of objects for the
   initial pass, rather than the eventual exact number. (#1202)
-- Update the Great3 links to non-broken URLs. (#1205)
-- Add options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
+- Updated the Great3 links to non-broken URLs. (#1205)
+- Added options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
 - Only use proxies for input objects if not yet in a multiprocessing context. This had been
   causing significant slow downs in some imsim runs. (#1206)
 
 Changes from v2.4.7 to v2.4.8
 =============================
 
-- Fix a slow-down in multiprocessing especially when running very many (>10) processes. (#1213)
+- Fixed a slow-down in multiprocessing especially when running very many (>10) processes. (#1213)
 
 Changes from v2.4.8 to v2.4.9
 =============================
 
-- Fix a potential segmentation fault that could happen when using photon_ops with FFT drawing.
+- Fixed a potential segmentation fault that could happen when using photon_ops with FFT drawing.
   (#1216)
+
+Changes from v2.4.9 to v2.4.10
+==============================
+
+- Fixed the Silicon class to handle invalid wavelengths gracefully rather than raise an
+  exception. (#1227)
