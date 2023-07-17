@@ -810,16 +810,17 @@ namespace galsim {
         if (photonsHasAllocatedWavelengths) {
             double lambda = photonsWavelength[i]; // in nm
             // Lookup the absorption length in the imported table
+
             // perform abs_length_table lookup with linear interpolation
             int tableIdx = int((lambda - _abs_length_arg_min) / _abs_length_increment);
             double alpha = (lambda - ((float(tableIdx) * _abs_length_increment) +
                                       _abs_length_arg_min)) / _abs_length_increment;
-            if (tableIdx < 0) tableIdx = 0;
             int tableIdx1 = tableIdx + 1;
-            if (tableIdx >= _abs_length_size) tableIdx = _abs_length_size - 1;
-            if (tableIdx1 >= _abs_length_size) tableIdx1 = _abs_length_size - 1;
+            if (tableIdx <= 0) tableIdx = tableIdx1 = 0;
+            if (tableIdx >= _abs_length_size-1) tableIdx = tableIdx1 = _abs_length_size - 1;
             double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
                 (abs_length_table_data[tableIdx1] * alpha); // in microns
+
             si_length = -abs_length * log(1.0 - randomNumber); // in microns
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
