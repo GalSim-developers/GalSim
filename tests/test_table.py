@@ -407,7 +407,7 @@ def test_table_GSInterp():
 def test_table2d():
     """Check LookupTable2D functionality.
     """
-    from scipy.interpolate import interp2d
+    from scipy.interpolate import RectBivariateSpline
 
     def f(x_, y_):
         return np.sin(x_) * np.cos(y_) + x_
@@ -437,8 +437,8 @@ def test_table2d():
                                                          for x0 in newx]
                                                         for y0 in newy]))
 
-    scitab2d = interp2d(x, y, z)
-    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy))
+    scitab2d = RectBivariateSpline(x, y, z.T, kx=1, ky=1)
+    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy).T)
 
     # Try using linear GSInterp
     tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Linear())
@@ -466,8 +466,8 @@ def test_table2d():
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for x0 in newx]
                                                         for y0 in newy]))
-    scitab2d = interp2d(x, y, z)
-    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy))
+    scitab2d = RectBivariateSpline(x, y, z.T, kx=1, ky=1)
+    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy).T)
 
     # Using a galsim.Interpolant should raise an exception if x/y are not equal spaced.
     with assert_raises(galsim.GalSimIncompatibleValuesError):
