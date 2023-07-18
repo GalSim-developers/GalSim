@@ -1278,6 +1278,12 @@ namespace galsim {
         // add=false
         // subtract_delta=false
         _addDelta<false, false>(target, _delta);
+
+        // And if doing this on the GPU, we need to copy back to the CPU now.
+#ifdef GALSIM_USE_GPU
+        T* targetData = static_cast<T*>(_targetData);
+#pragma omp target update from(targetData[0:_targetDataLength])
+#endif
     }
 
     template <typename T>
