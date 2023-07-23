@@ -948,9 +948,9 @@ def test_compound():
     gal5.drawImage(image=im5_f, method='sb', scale=0.2)
     np.testing.assert_almost_equal(im3_f[1,1], gal3.xValue(-0.7,-0.7), decimal=4)
     np.testing.assert_almost_equal(im5_f[1,1], gal3.xValue(-0.7,-0.7), decimal=4)
-    np.testing.assert_almost_equal(im3_f.array, im5_f.array, decimal=4)
-    np.testing.assert_almost_equal(im3_f.array, im3_d.array, decimal=4)
-    np.testing.assert_almost_equal(im5_f.array, im5_d.array, decimal=4)
+    np.testing.assert_array_almost_equal(im3_f.array, im5_f.array, decimal=4)
+    np.testing.assert_array_almost_equal(im3_f.array, im3_d.array, decimal=4)
+    np.testing.assert_array_almost_equal(im5_f.array, im5_d.array, decimal=4)
 
     gal3.drawKImage(image=im3_cd, scale=0.5)
     gal5.drawKImage(image=im5_cd, scale=0.5)
