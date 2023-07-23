@@ -260,12 +260,12 @@ def test_sum_transform():
         rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
 
         # Check that the objects are equivalent, even if they may be written differently.
-        np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
-        np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
+        np.testing.assert_array_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
+        np.testing.assert_array_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
 
         # These two used to fail.
-        np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
-        np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
+        np.testing.assert_array_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
+        np.testing.assert_array_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
 
         check_pickle(gal0)
         check_pickle(gal1)
