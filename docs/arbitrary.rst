@@ -1,4 +1,4 @@
-Aribtrary Profiles
+Arbitrary Profiles
 ==================
 
 If none of the above classes seem appropriate, it is possible to define any arbitrary
