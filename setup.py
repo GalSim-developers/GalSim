@@ -90,7 +90,7 @@ copt =  {
 }
 lopt =  {
     'gcc' : ['-fopenmp'],
-    'gcc w/ GPU' : ['-fopenmp','-foffload=nvptx-none'],
+    'gcc w/ GPU' : ['-fopenmp','-foffload=nvptx-none', '-foffload=-lm'],
     'icc' : ['-openmp'],
     'clang' : ['-stdlib=libc++'],
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],

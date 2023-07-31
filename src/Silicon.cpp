@@ -1372,7 +1372,9 @@ namespace galsim {
             // Get the location where the photon strikes the silicon:
             double x0 = photonsX[i]; // in pixels
             double y0 = photonsY[i]; // in pixels
+#ifdef DEBUGLOGGING
             xdbg<<"x0,y0 = "<<x0<<','<<y0;
+#endif
 
             // get uniform random number for conversion depth from randomArray
             // (4th of 4 numbers for this photon)
@@ -1390,10 +1392,14 @@ namespace galsim {
                 x0 += dxdz * dz_pixel; // dx in pixels
                 y0 += dydz * dz_pixel; // dy in pixels
             }
+#ifdef DEBUGLOGGING
             xdbg<<" => "<<x0<<','<<y0;
+#endif
             // This is the reverse of depth. zconv is how far above the substrate the e- converts.
             double zconv = _sensorThickness - dz;
+#ifdef DEBUGLOGGING
             xdbg<<"zconv = "<<zconv<<std::endl;
+#endif
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
@@ -1405,7 +1411,9 @@ namespace galsim {
                 x0 += diffStep * randomArray[(i-i1)*4];
                 y0 += diffStep * randomArray[(i-i1)*4+1];
             }
+#ifdef DEBUGLOGGING
             xdbg<<" => "<<x0<<','<<y0<<std::endl;
+#endif
             double flux = photonsFlux[i];
 
 #ifdef DEBUGLOGGING
