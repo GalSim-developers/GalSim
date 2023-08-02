@@ -2471,6 +2471,29 @@ def test_template():
     print(cl.output)
     assert "Removing item 0 from image.random_seed." in cl.output
 
+    # Read a template config from a file
+    config8 = galsim.config.ReadConfig('config_input/template.yaml')[0]
+    galsim.config.ProcessAllTemplates(config8)
+    for key in config3:
+        print(key)
+        print(config4[key])
+        print(config8[key])
+        assert config8[key] == config4[key]
+    assert config8 == config4
+
+    # Make sure nested templating works
+    config9 = {
+        "template" : "config_input/template.yaml",
+        "gal.ellip.num" : 1,
+        "psf.items.0.beta" : 2.5,
+        "psf.items.2" : { "template" : "multirng:image.noise" },
+    }
+    galsim.config.ProcessAllTemplates(config9)
+    config8['gal']['ellip']['num'] = 1
+    config8['psf']['items'][0]['beta'] = 2.5
+    config8['psf']['items'][2] = config4['image']['noise']
+    assert config9 == config8
+
 
 @timer
 def test_variable_cat_size():
