@@ -168,3 +168,8 @@ Changes from v2.4.9 to v2.4.10
 
 - Fixed the Silicon class to handle invalid wavelengths gracefully rather than raise an
   exception. (#1227)
+
+Changes from v2.4.10 to v2.4.11
+===============================
+
+- Fixed the config template processing to handle recursive templates. (#1233)

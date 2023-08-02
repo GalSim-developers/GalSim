@@ -175,6 +175,9 @@ def ProcessTemplate(config, base, logger=None):
         if field is not None:
             template = GetFromConfig(template, field)
 
+        # In case template has further templates to process, do that now.
+        ProcessTemplate(template, base=base, logger=logger)
+
         # Copy over the template config into this one.
         new_params = config.copy()  # N.B. Already popped config['template'].
         config.clear()
