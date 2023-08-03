@@ -116,18 +116,17 @@ def ImportModules(config, gdict=None):
         config:     The configuration dict.
     """
     import sys
-    from importlib import import_module
     if gdict is None:
         gdict = globals()
     if 'modules' in config:
         for module in config['modules']:
             try:
-                gdict[module] = import_module(module)
+                exec('import ' + module, gdict)
             except ImportError:
                 # Try adding '.' to path, in case loading a local module and '.' not present.
                 if '.' not in sys.path:
                     sys.path.append('.')
-                    gdict[module] = import_module(module)
+                    exec('import ' + module, gdict)
                 else:
                     raise
 
