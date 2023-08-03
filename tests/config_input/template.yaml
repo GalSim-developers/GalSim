@@ -21,6 +21,7 @@ template: multirng
 
 modules: 
   - template_register
+  - astropy.time
 
 output:
   file_name: test_template.fits
@@ -40,7 +41,7 @@ gal.ellip:
   template: multirng:psf.ellip
 
 gal.half_light_radius: ""
-gal.scale_radius: 1.6
+gal.scale_radius: "$astropy.time.Time(1.6, format='jd').to_value('jd')"
 
 psf:
   type: List

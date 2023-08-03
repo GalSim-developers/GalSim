@@ -173,3 +173,6 @@ Changes from v2.4.10 to v2.4.11
 ===============================
 
 - Fixed the config template processing to handle recursive templates. (#1233)
+- Fixed the processing of modules in config files to allow sub-modules to be included without
+  requiring the parent module.  E.g. to include astropy.time as a module no longer requires
+  astropy to also be in the list of modules. (#1233)

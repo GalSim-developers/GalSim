@@ -2342,7 +2342,7 @@ def test_template():
         "template" : "config_input/multirng.yaml",
 
         # Modules works differently from the others.  Here, we want to concatenate the lists.
-        "modules" : ["astropy"],
+        "modules" : ["astropy.time"],
 
         # Specific fields can be overridden
         "output" : { "file_name" : "test_template.fits" },
@@ -2361,7 +2361,8 @@ def test_template():
 
         # Using a zero-length string deletes an item
         "gal.half_light_radius" : "",
-        "gal.scale_radius" : 1.6,
+        # Gratuitous use of astropy.time to test submodule inclusions.
+        "gal.scale_radius" : "$astropy.time.Time(1.6, format='jd').to_value('jd')",
 
         # Check that template items work inside a list.
         "psf" : {
@@ -2398,7 +2399,11 @@ def test_template():
     assert config['gal']['magnify'] == { "type" : "PowerSpectrumMagnification", "num" : 1 }
     assert config['gal']['ellip'] == { "type" : "PowerSpectrumShear", "num" : 0 }
     assert 'half_light_radius' not in config['gal']
-    assert config['gal']['scale_radius'] == 1.6
+    assert config['gal']['scale_radius'] == "$astropy.time.Time(1.6, format='jd').to_value('jd')"
+
+    # Make sure that parses correctly.
+    sr = galsim.config.ParseValue(config['gal'].copy(), 'scale_radius', config.copy(), float)[0]
+    assert sr == 1.6
 
     assert config['psf']['type'] == 'List'
     assert config['psf']['items'][0] == { "type": "Moffat", "beta": 2, "fwhm": 0.9,
@@ -2411,7 +2416,7 @@ def test_template():
     assert config['input']['power_spectrum'][0]['ngrid'] == 50
     assert config['input']['power_spectrum'][0]['variance'] == 0.2
 
-    assert config['modules'] == ['numpy', 'astropy']
+    assert config['modules'] == ['numpy', 'astropy.time']
 
     # Test registering the template.
     galsim.config.RegisterTemplate('multirng', 'config_input/multirng.yaml')
@@ -2425,7 +2430,7 @@ def test_template():
     del galsim.config.process.valid_templates['multirng']
     config4 = config1.copy()
     config4['template'] = 'multirng'
-    config4['modules'] = ['template_register']
+    config4['modules'] = ['template_register', 'astropy.time']
     galsim.config.ImportModules(config4)
     galsim.config.ProcessAllTemplates(config4)
     for field in ['image', 'output', 'gal', 'psf']:
