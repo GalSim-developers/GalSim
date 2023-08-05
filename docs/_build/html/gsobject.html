@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The GSObject base class &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>The GSObject base class &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -47,7 +47,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Arbitrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
@@ -230,8 +230,8 @@ larger <code class="docutils literal notranslate"><span class="pre">maximum_fft_
   File <span class="nb">&quot;galsim/gsobject.py&quot;</span>, line <span class="m">1802</span>, in <span class="n">drawFFT_makeKImage</span>
 <span class="w">    </span><span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;drawFFT requires an FFT that is too large.&quot;</span><span class="p">,</span> <span class="n">Nk</span><span class="p">)</span>
 <span class="gr">galsim.errors.GalSimFFTSizeError</span>: <span class="n">drawFFT requires an FFT that is too large.</span>
-<span class="go">The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.</span>
-<span class="go">If you can handle the large FFT, you may update gsparams.maximum_fft_size.</span>
+<span class="x">The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.</span>
+<span class="x">If you can handle the large FFT, you may update gsparams.maximum_fft_size.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">big_fft_params</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">12300</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conv</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">([</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">],</span><span class="n">gsparams</span><span class="o">=</span><span class="n">big_fft_params</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im</span><span class="p">)</span>                   <span class="c1"># Now it works (but is slow!)</span>

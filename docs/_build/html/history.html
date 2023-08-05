@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Revision History &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -76,6 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-7-to-v2-4-8">Changes from v2.4.7 to v2.4.8</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-8-to-v2-4-9">Changes from v2.4.8 to v2.4.9</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-9-to-v2-4-10">Changes from v2.4.9 to v2.4.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-4-10-to-v2-4-11">Changes from v2.4.10 to v2.4.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="older.html">v2.3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
@@ -302,6 +303,15 @@ causing significant slow downs in some imsim runs. (#1206)</p></li>
 <ul class="simple">
 <li><p>Fixed the Silicon class to handle invalid wavelengths gracefully rather than raise an
 exception. (#1227)</p></li>
+</ul>
+</div>
+<div class="section" id="changes-from-v2-4-10-to-v2-4-11">
+<h2>Changes from v2.4.10 to v2.4.11<a class="headerlink" href="#changes-from-v2-4-10-to-v2-4-11" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fixed the config template processing to handle recursive templates. (#1233)</p></li>
+<li><p>Fixed the processing of modules in config files to allow sub-modules to be included without
+requiring the parent module.  E.g. to include astropy.time as a module no longer requires
+astropy to also be in the list of modules. (#1233)</p></li>
 </ul>
 </div>
 <div class="section" id="older-versions">

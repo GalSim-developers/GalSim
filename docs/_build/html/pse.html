@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Power Spectrum Estimation &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Power Spectrum Estimation &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -116,23 +116,23 @@ directory):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grid_size</span> <span class="o">=</span> <span class="mf">10.</span>  <span class="c1"># Define the total grid extent, in degrees</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ngrid</span> <span class="o">=</span> <span class="mi">100</span>      <span class="c1"># Define the number of grid points in each dimension: (ngrid x ngrid)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n_ell</span> <span class="o">=</span> <span class="mi">15</span>       <span class="c1"># Choose the number of logarithmic bins in ell or k for outputs</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define a lookup-table for the power spectrum as a function of k based on the outputs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># of iCosmo (see demo11.py for more description of how this was generated).</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_tab</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">LookupTable</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;data/cosmo-fid.zmed1.00.out&#39;</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generate a galsim.PowerSpectrum with this P(k), noting the units.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_ps</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">my_tab</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Build a grid of shear values with the desired parameters.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span><span class="n">grid_spacing</span><span class="o">=</span><span class="n">grid_size</span><span class="o">/</span><span class="n">ngrid</span><span class="p">,</span> <span class="n">ngrid</span><span class="o">=</span><span class="n">ngrid</span><span class="p">,</span>
 <span class="gp">... </span>                         <span class="n">units</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># bins. Note that these values are actually the default, so we didn&#39;t technically have</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># to specifythem.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_pse</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">pse</span><span class="o">.</span><span class="n">PowerSpectrumEstimator</span><span class="p">(</span><span class="n">ngrid</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">,</span> <span class="n">n_ell</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Estimate the power based on this set of g1, g2.  If we get another set of shears for</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># the same grid geometry, we can reuse the same PowerSpectrumEstimator object.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ell</span><span class="p">,</span> <span class="n">P_e</span><span class="p">,</span> <span class="n">P_b</span><span class="p">,</span> <span class="n">P_eb</span> <span class="o">=</span> <span class="n">my_pse</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">)</span>

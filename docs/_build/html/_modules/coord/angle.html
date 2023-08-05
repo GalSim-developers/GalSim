@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coord.angle &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>coord.angle &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -347,17 +347,10 @@
 
 <div class="viewcode-block" id="Angle.sincos"><a class="viewcode-back" href="../../units.html#galsim.Angle.sincos">[docs]</a>    <span class="k">def</span> <span class="nf">sincos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return both the sin and cos of an Angle as a numpy array [sint, cost].</span>
-
-<span class="sd">        (On some systems, this may be slightly faster than doing each separately.)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Note: This is admittedly pretty gratuitous.  We&#39;re writing Python after all, so the</span>
-        <span class="c1"># difference between this and two trig calls is probably neglible given all the normal</span>
-        <span class="c1"># Python overhead.  Mostly, I added this as an excuse to set up the C++ extension stuff</span>
-        <span class="c1"># to make sure people could see how to add further C++-layer optimizations as needed.</span>
-        <span class="kn">import</span> <span class="nn">coord</span>
-        <span class="n">sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">coord</span><span class="o">.</span><span class="n">_lib</span><span class="o">.</span><span class="n">coord_sincos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">_ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">sc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">sc</span></div>
+        <span class="n">sin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span>
+        <span class="n">cos</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; radians&#39;</span>
@@ -575,7 +568,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a string of the form dd:mm:ss.decimal into decimal degrees.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">re</span>
-        <span class="n">tokens</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([\.\d]+)&#39;</span><span class="p">,</span> <span class="n">dms</span><span class="o">.</span><span class="n">strip</span><span class="p">())))</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;([\.\d]+)&#39;</span><span class="p">,</span> <span class="n">dms</span><span class="o">.</span><span class="n">strip</span><span class="p">())))</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;string is not of the expected format&quot;</span><span class="p">)</span>
         <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.process &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.process &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -201,18 +201,17 @@
 <span class="sd">        config:     The configuration dict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">sys</span>
-    <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">import_module</span>
     <span class="k">if</span> <span class="n">gdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
     <span class="k">if</span> <span class="s1">&#39;modules&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;modules&#39;</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">gdict</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+                <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">module</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
                 <span class="c1"># Try adding &#39;.&#39; to path, in case loading a local module and &#39;.&#39; not present.</span>
                 <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
                     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-                    <span class="n">gdict</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">module</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span></div>
 
@@ -259,6 +258,9 @@
         <span class="c1"># Pull out the specified field, if any</span>
         <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">template</span> <span class="o">=</span> <span class="n">GetFromConfig</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+        <span class="c1"># In case template has further templates to process, do that now.</span>
+        <span class="n">ProcessTemplate</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
         <span class="c1"># Copy over the template config into this one.</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># N.B. Already popped config[&#39;template&#39;].</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.chromatic &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.chromatic &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -1185,7 +1185,7 @@
                 <span class="n">dx</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dx&#39;</span><span class="p">)</span>
                 <span class="n">dy</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dy&#39;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;shift() requires exactly 2 arguments (dx, dy)&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;shift() requires exactly 2 arguments (dx, dy)&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>

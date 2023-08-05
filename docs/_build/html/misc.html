@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Miscellaneous Utilities &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Miscellaneous Utilities &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -248,7 +248,7 @@ overwritten on a cache miss.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="c1"># A slow-to-evaluate python function</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">...</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">k1</span><span class="p">)</span>  <span class="c1"># Calling function is slow</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">k1</span><span class="p">)</span>  <span class="c1"># Calling again with same args is still slow</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">LRU_Cache</span><span class="p">(</span><span class="n">slow_function</span><span class="p">)</span>

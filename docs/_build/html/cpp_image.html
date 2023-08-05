@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C++ Images &mdash; GalSim 2.4.10 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>C++ Images &mdash; GalSim 2.4.11 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -110,7 +110,7 @@
 <span id="_CPPv3I0EN6galsim17AssignableToImageE"></span><span id="_CPPv2I0EN6galsim17AssignableToImageE"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_assignable_to_image"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">AssignableToImage</span></code><a class="headerlink" href="#_CPPv4I0EN6galsim17AssignableToImageE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgalsim_1_1_assignable_to_image"><span class="std std-ref">AssignableToImage</span></a> is a base class for anything that can be assigned to an Image. </p>
 <p>It is the base class for both <a class="reference internal" href="#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a>, which has all the real image types and various composite types that are used to make im3 = im1 + im2 efficient. </p>
-<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_base_image"><span class="std std-ref">galsim::BaseImage&lt; T &gt;</span></a></p>
+<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_base_image"><span class="std std-ref">galsim::BaseImage&lt; double &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_base_image"><span class="std std-ref">galsim::BaseImage&lt; T &gt;</span></a></p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
 <dl class="cpp function">
@@ -145,7 +145,7 @@
 </ul>
 </p>
 <p>You should never need to declare an object of this class directly, using instead the various derived classes. However, if you are using an image as a parameter to a function in a non-modifying context, then it is convenient to declare the parameter “const BaseImage&lt;T&gt;&amp;” so that any of the various image types can be used without requiring any casts. </p>
-<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_const_image_view"><span class="std std-ref">galsim::ConstImageView&lt; T &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_image_alloc"><span class="std std-ref">galsim::ImageAlloc&lt; T &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_image_view"><span class="std std-ref">galsim::ImageView&lt; T &gt;</span></a></p>
+<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_image_alloc"><span class="std std-ref">galsim::ImageAlloc&lt; double &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_const_image_view"><span class="std std-ref">galsim::ConstImageView&lt; T &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_image_alloc"><span class="std std-ref">galsim::ImageAlloc&lt; T &gt;</span></a>, <a class="reference internal" href="#classgalsim_1_1_image_view"><span class="std std-ref">galsim::ImageView&lt; T &gt;</span></a></p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
 <dl class="cpp function">
