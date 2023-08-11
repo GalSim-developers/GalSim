@@ -134,9 +134,10 @@ private:
 #define verbose_level Debugger::instance().get_level()
 #define xassert(x) assert(x)
 #else
-#define dbg if(false) (std::cerr)
-#define xdbg if(false) (std::cerr)
-#define xxdbg if(false) (std::cerr)
+extern std::ostream* dbgout;
+#define dbg if(false) (*dbgout)
+#define xdbg if(false) (*dbgout)
+#define xxdbg if(false) (*dbgout)
 #define set_dbgout(dbgout)
 #define set_verbose(level)
 #define xassert(x)
