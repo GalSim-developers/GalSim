@@ -386,6 +386,26 @@ def test_ne():
     check_all_diff(gals)
 
 
+@timer
+def test_accurate_shift():
+    """Test that shifted Gaussian looks the same with real and fourier drawing.
+    """
+    # This is in response to issue #1231
+
+    gal = galsim.Gaussian(sigma=1.).shift([5,5]).withFlux(200)
+
+    real_im = gal.drawImage(nx=128, ny=128, scale=0.2, method='real_space')
+    fft_im = gal.drawImage(nx=128, ny=128, scale=0.2, method='fft')
+    print('max abs diff = ',np.max(np.abs(real_im.array - fft_im.array)))
+    np.testing.assert_allclose(fft_im.array, real_im.array, rtol=1.e-7, atol=1.e-7)
+
+    # In double precision it's almost perfect.
+    real_im = gal.drawImage(nx=128, ny=128, scale=0.2, method='real_space', dtype=float)
+    fft_im = gal.drawImage(nx=128, ny=128, scale=0.2, method='fft', dtype=float)
+    print('max abs diff = ',np.max(np.abs(real_im.array - fft_im.array)))
+    np.testing.assert_allclose(fft_im.array, real_im.array, rtol=1.e-14, atol=1.e-14)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:

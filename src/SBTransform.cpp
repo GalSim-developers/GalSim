@@ -735,24 +735,26 @@ namespace galsim {
 
     // A helper function for filKImage below.
     // Probably not worth specializing using SSE, since not much time spent in this.
+    // Also, to avoid rounding errors accumulating, it's better to do this in double
+    // precision anyway, so we probably don't really want a single-precision SSE version.
     template <typename T>
-    inline void fillphase_1d(std::complex<T>* kit, int m, T k, T dk)
+    inline void fillphase_1d(std::complex<T>* kit, int m, double k, double dk)
     {
 #if 0
         // Original, more legible code
         for (; m; --m, k+=dk)
-            *kit++ = std::polar(T(1), -k);
+            *kit++ = std::polar(1., -k);
 #else
         // Implement by repeated multiplications by polar(1, -dk), rather than computing
         // the polar form each time. (slow trig!)
         // This is mildly unstable, so guard the magnitude by multiplying by
         // 1/|z|.  Since z ~= 1, 1/|z| is very nearly = |z|^2^-1/2 ~= 1.5 - 0.5|z|^2.
-        std::complex<T> kpol = std::polar(T(1), -k);
-        std::complex<T> dkpol = std::polar(T(1), -dk);
+        std::complex<double> kpol = std::polar(1., -k);
+        std::complex<double> dkpol = std::polar(1., -dk);
         *kit++ = kpol;
         for (--m; m; --m) {
-            kpol = kpol * dkpol;
-            kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
+            kpol *= dkpol;
+            kpol *= (1.5 - 0.5 * std::norm(kpol));
             *kit++ = kpol;
         }
 #endif
@@ -812,28 +814,25 @@ namespace galsim {
         dkyx *= ceny;
 
         // Only ever use these as sum of kx + ky, so add them together now.
-        T k0 = kx0 + ky0;
-        T dk0 = dkxy + dky;
-        T dk1 = dkx + dkyx;
+        double k0 = kx0 + ky0;
+        double dk0 = dkxy + dky;
+        double dk1 = dkx + dkyx;
 
         for (int j=n; j; --j, k0+=dk0, ptr+=skip) {
-            T k = k0;
+            double k = k0;
 #if 0
             // Original, more legible code
             for (int i=m; i; --i, k+=dk1) {
-                *ptr++ *= std::polar(T(fluxScaling), -k);
+                *ptr++ *= std::polar(fluxScaling, -k);
             }
 #else
             // See comments above in fillphase_1d for what's going on here.
-            // MJ: Could consider putting this in the InnerLoop struct above and write
-            // specialized SSE versions, since native complex multiplication is terribly slow.
-            // But this use case is very rare, so probably not worth it.
-            std::complex<T> kpol = std::polar(T(1), -k);
-            std::complex<T> dkpol = std::polar(T(1), -dk1);
+            std::complex<double> kpol = std::polar(1., -k);
+            std::complex<double> dkpol = std::polar(1., -dk1);
             *ptr++ *= fluxScaling * kpol;
             for (int i=m-1; i; --i) {
-                kpol = kpol * dkpol;
-                kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
+                kpol *= dkpol;
+                kpol *= (1.5 - 0.5 * std::norm(kpol));
                 *ptr++ *= fluxScaling * kpol;
             }
 #endif
