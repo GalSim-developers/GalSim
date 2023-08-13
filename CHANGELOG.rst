@@ -61,3 +61,4 @@ Bug Fixes
 - Changed the SED class to correctly broadcast over waves when the SED is constant. (#1228)
 - Fixed some errors when drawing ChromaticTransformation objects with photon shooting. (#1229)
 - Fixed the flux drawn by ChromaticConvolution with photon shooting when poisson_flux=True. (#1229)
+- Fixed a slight inaccuracy in the FFT phase shifts for single-precision images. (#1231, #1234)
