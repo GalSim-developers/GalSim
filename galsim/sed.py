@@ -314,6 +314,17 @@ class SED:
             if isfile:
                 self._spec = LookupTable.from_file(filename, interpolant='linear')
             else:
+                # If a constant function is input as a string (e.g. '1'), then we want to
+                # make sure it is flagged as a const SED.
+                try:
+                    float(self._orig_spec)
+                except ValueError:
+                    pass
+                else:
+                    self._const = True
+                    self._spec = lambda w: float(self._orig_spec)
+                    return
+
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
                 # is a subclass of ArithmeticError) despite being a valid spectrum specification,
@@ -434,6 +445,8 @@ class SED:
         if isinstance(wave, units.Quantity):
             wave = wave.to(units.nm, units.spectral()).value
 
+        wave = np.asarray(wave)
+
         self._check_bounds(wave)
 
         # Figure out rest-frame wave_type wavelength array for query to self._spec.
@@ -461,7 +474,10 @@ class SED:
             photon flux density in units of photons/nm/cm^2/s if self.spectral, or
             dimensionless normalization if self.dimensionless.
         """
-        return self._call(wave)
+        ret = self._call(wave)
+        if self._const:
+            ret = np.full_like(wave, ret, dtype=float)
+        return ret
 
     def _mul_sed(self, other):
         """Equivalent to self * other when other is an SED, but no sanity checks."""
@@ -504,7 +520,7 @@ class SED:
                    _spectral=self.spectral)
 
 
-    def _mul_scalar(self, other):
+    def _mul_scalar(self, other, spectral):
         """Equivalent to self * other when other is a scalar"""
         # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
         if isinstance(self._spec, LookupTable):
@@ -514,13 +530,13 @@ class SED:
             f = np.array(self._spec.getVals()) * other
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
                                 interpolant=self._spec.interpolant)
-        elif self._const:
+        elif self._const and not spectral:
             spec = self._spec(42.0) * other
             wave_type = 'nm'
             flux_type = '1'
         else:
             wave_type = 'nm'
-            flux_type = 'fphotons' if self.spectral else '1'
+            flux_type = 'fphotons' if spectral else '1'
             if self.fast:
                 spec = lambda w: self._fast_spec(w) * other
             else:
@@ -560,9 +576,10 @@ class SED:
                     "Cannot multiply two spectral densities together.", self_sed=self, other=other)
 
             if other._const:
-                return self._mul_scalar(other._spec(42.0))  # const, so can eval anywhere.
+                # const, so can eval anywhere.
+                return self._mul_scalar(other._spec(42.0), self.spectral or other.spectral)
             elif self._const:
-                return other._mul_scalar(self._spec(42.0))
+                return other._mul_scalar(self._spec(42.0), self.spectral or other.spectral)
             else:
                 return self._mul_sed(other)
 
@@ -587,7 +604,7 @@ class SED:
                        _spectral=self.spectral)
 
         elif isinstance(other, (int, float)):
-            return self._mul_scalar(other)
+            return self._mul_scalar(other, self.spectral)
 
         else:
             raise TypeError("Cannot multiply an SED by %s"%(other))

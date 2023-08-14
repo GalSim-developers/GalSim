@@ -1069,6 +1069,38 @@ def test_thin():
     print('s = ',s)
     np.testing.assert_equal(s.wave_list, [0,1])
 
+@timer
+def test_broadcast():
+    """ Check that constand SED broadcasts over waves.
+    """
+    # In response to issue #1228
+    sed = galsim.SED(1, 'nm', '1')
+    waves = [1, 2, 3]
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3))
+
+    sed = galsim.SED('1', 'nm', 'fphotons')
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3))
+
+    sed = galsim.SED('1', 'nm', 'flambda')
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3) * waves / (galsim.SED._h * galsim.SED._c))
+
+    # Repeat with fast=False
+    sed = galsim.SED(1, 'nm', '1', fast=False)
+    waves = [1, 2, 3]
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3))
+
+    sed = galsim.SED('1', 'nm', 'fphotons', fast=False)
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3))
+
+    sed = galsim.SED('1', 'nm', 'flambda', fast=False)
+    print(sed(waves))
+    assert np.array_equal(sed(waves), np.ones(3) * waves / (galsim.SED._h * galsim.SED._c))
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
