@@ -36,3 +36,4 @@ Bug Fixes
 ---------
 
 - Fixed a bug that prevented Eval types from generating lists in config files in some contexts.
+- Changed the SED class to correctly broadcast over waves when the SED is constant. (#1228)
