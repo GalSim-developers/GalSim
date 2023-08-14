@@ -2946,6 +2946,111 @@ def test_atredshift():
     assert gal3.redshift == 1.7
     assert gal.redshift == 0.
 
+@timer
+def test_shoot_transformation():
+    """Check that transformed chromatic objects can be photon shot.
+    """
+    # In response to #1229
+    bandpass = galsim.Bandpass('LSST_r.dat', 'nm')
+    rng = galsim.BaseDeviate(1234)
+    flux = 1000
+
+    # Dilate
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=0.5)
+    ).dilate(lambda w: (w/500)**-0.3)
+    star = galsim.DeltaFunction()*galsim.SED('vega.txt', 'nm', 'flambda')
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    # The real test is that this didn't error.  So this assert isn't very exciting.
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux)
+
+    # Rotate
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).rotate(lambda w: (w/500)*8. * galsim.degrees)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux)
+
+    # Expand
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).expand(lambda w: (w/500)**-0.3)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    # Transformations with a non-unit det get the flux right in an expecations sense, but
+    # because the flux_ratios vary with wavelength, there is some noise on this match.
+    # With only 1000 photons, it only matches to better than 2.e-3.
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+
+    # Shift
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).shift(lambda w: ((w/500)*0.3, (w/500)*0.9))
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux)
+
+    # Shear
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).shear(lambda w: galsim.Shear(g1=(w/500)*0.03, g2=(w/500)*0.05))
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux)
+
+    # Magnify
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).magnify(lambda w: (w/500)**-0.3)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+
+    # Lens
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).lens(g1=lambda w: (w/500)*0.03, g2=lambda w: (w/500)*0.05, mu=lambda w: (w/500)**-0.3)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+
+    # Transform
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).transform(dudx=lambda w: (w/500)**0.02, dudy=lambda w: (w/500)*0.11,
+                dvdx=lambda w: (w/500)*0.08, dvdy=lambda w: (w/500)**0.03)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+
+    # Flux_scale
+    psf = galsim.ChromaticObject(
+        galsim.Gaussian(fwhm=1)
+    ).withScaledFlux(lambda w: (w/500)**1.3)
+    obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
+                        poisson_flux=False)
+    print(img.added_flux)
+    np.testing.assert_allclose(img.added_flux, flux)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
