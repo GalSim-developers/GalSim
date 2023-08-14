@@ -876,11 +876,10 @@ def test_dcr():
     np.testing.assert_allclose(im8.array, im6.array, atol=1.e3,
                                err_msg="base_psf + dcr in photon_ops didn't match")
 
-    # Including the wavelength sampler with chromatic drawing is redundant.
-    # This raises a warning, not an error.
+    # Including the wavelength sampler with chromatic drawing is not necessary, but is allowed.
+    # (Mostly in case someone wants to do something a little different w.r.t. wavelenght sampling.
     photon_ops = [wave_sampler, base_PSF, dcr]
-    with assert_warns(galsim.GalSimWarning):
-        star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
+    star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
     printval(im8, im6, show=False)
     np.testing.assert_allclose(im8.array, im6.array, atol=1.e3,
                                err_msg="wave_sampler,base_psf,dcr in photon_ops didn't match")
