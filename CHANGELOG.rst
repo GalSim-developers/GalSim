@@ -32,6 +32,9 @@ New Features
 Performance Improvements
 ------------------------
 
+- Drawing chromatic objects with photon shooting automatically adds a WavelengthSampler photon_op.
+  It used to do this regardless of if one was already in a photon_ops list, which is inefficient.
+  Now it only adds it if there is not already one given by the user. (#1229)
 - Work around an OMP bug that disables multiprocessing on some systems when omp_get_max_threads
   is called. (#1241)
 
