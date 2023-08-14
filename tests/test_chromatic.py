@@ -2967,6 +2967,12 @@ def test_shoot_transformation():
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux)
 
+    # We used to do the wrong thing with poisson_flux=True.  Check that the flux isn't
+    # just 1000 in that case.
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
+
     # Rotate
     psf = galsim.ChromaticObject(
         galsim.Gaussian(fwhm=1)
@@ -2976,6 +2982,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Expand
     psf = galsim.ChromaticObject(
@@ -2989,16 +2998,22 @@ def test_shoot_transformation():
     # With only 1000 photons, it only matches to better than 2.e-3.
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Shift
     psf = galsim.ChromaticObject(
         galsim.Gaussian(fwhm=1)
-    ).shift(lambda w: ((w/500)*0.3, (w/500)*0.9))
+    ).shift(lambda w: ((w/500)*0.3, (w/500)*-0.4))
     obj = galsim.Convolve(psf, star).withFlux(flux, bandpass)
     img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Shear
     psf = galsim.ChromaticObject(
@@ -3009,6 +3024,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Magnify
     psf = galsim.ChromaticObject(
@@ -3019,6 +3037,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Lens
     psf = galsim.ChromaticObject(
@@ -3029,6 +3050,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Transform
     psf = galsim.ChromaticObject(
@@ -3040,6 +3064,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux, rtol=2.e-3)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
     # Flux_scale
     psf = galsim.ChromaticObject(
@@ -3050,6 +3077,9 @@ def test_shoot_transformation():
                         poisson_flux=False)
     print(img.added_flux)
     np.testing.assert_allclose(img.added_flux, flux)
+    img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
+    print(img.added_flux)
+    assert abs(img.added_flux - flux) > 0.1
 
 
 if __name__ == "__main__":

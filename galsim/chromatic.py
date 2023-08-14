@@ -2674,7 +2674,8 @@ class ChromaticConvolution(ChromaticObject):
             poisson_flux = kwargs.pop('poisson_flux', n_photons == 0.)
             max_extra_noise = kwargs.pop('max_extra_noise', 0.)
             rng = BaseDeviate(kwargs.get('rng', None))
-            n_photons, _ = prof1._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+            n_photons, g = prof1._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+            gal *= g
             return gal.drawImage(bandpass, image=image, integrator=integrator,
                                  n_photons=n_photons, **kwargs)
 
