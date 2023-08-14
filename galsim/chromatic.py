@@ -840,7 +840,7 @@ class ChromaticObject:
         if hasattr(scale, '__call__'):
             def buildScaleJac(w):
                 s = scale(w)
-                return np.diag([s,s])
+                return np.array([[s,np.zeros_like(s)],[np.zeros_like(s),s]])
             jac = buildScaleJac
         else:
             jac = None if scale == 1 else np.diag([scale, scale])
@@ -889,7 +889,7 @@ class ChromaticObject:
         """
         import math
         if hasattr(mu, '__call__'):
-            return self.expand(lambda w: math.sqrt(mu(w)))
+            return self.expand(lambda w: np.sqrt(mu(w)))
         else:
             return self.expand(math.sqrt(mu))
 
@@ -936,7 +936,12 @@ class ChromaticObject:
         else:
             shear = Shear(**kwargs)
         if hasattr(shear, '__call__'):
-            jac = lambda w: shear(w).getMatrix()
+            jac = lambda w: (shear(w).getMatrix()
+                             if np.isscalar(w)
+                             # Note: The .T switches from shape=(N,2,2) to (2,2,N)
+                             # Technically it transposes each 2x2 matrix along the way, but
+                             # the shear matrices are symmetric, so that doesn't matter.
+                             else np.array([shear(ww).getMatrix() for ww in w])).T
         else:
             jac = shear.getMatrix()
         return Transform(self, jac=jac)
@@ -1026,7 +1031,8 @@ class ChromaticObject:
         from .transform import Transform
         if hasattr(theta, '__call__'):
             def buildRMatrix(w):
-                sth, cth = theta(w).sincos()
+                sth = np.sin(theta(w))
+                cth = np.cos(theta(w))
                 R = np.array([[cth, -sth],
                               [sth,  cth]], dtype=float)
                 return R
