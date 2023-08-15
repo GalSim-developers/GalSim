@@ -3377,6 +3377,41 @@ def test_sensor():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'sensor', config)
 
+@timer
+def test_initial_image():
+    # This test simulates a time series of a supernova going off near a big galaxy.
+    # It first makes a reference image of the galaxy alone.
+    # Then it makes 12 observations of the same scene with a SN.
+    # The SN appears between the 3rd and 4th images, and then decays exponentially.
+
+    # Note: this can be run from the command line as just `galsim sn.yaml`, which does
+    # all the parts in one execution.
+    configs = galsim.config.ReadConfig('config_input/sn.yaml')
+
+    # In Python, we have to run each config dict separately.
+    # First make the reference image.
+    galsim.config.Process(configs[0])
+    ref_image = galsim.fits.read('output/ref.fits')
+
+    # Now the supernovae.
+    galsim.config.ProcessInput(configs[1])
+    sn_images = galsim.config.BuildImages(12, configs[1])
+
+    for i, sn_image in enumerate(sn_images):
+        print(i, sn_image.array.max(), sn_image.array.sum())
+        t = (i - 2.3) * 7  # Time in day
+        if t > 0:
+            flux = np.exp(-t/50) * 1.e5
+        else:
+            flux = 0.
+
+        # The diff image is basically perfect here, since we didn't add noise.
+        # The only imprecision is that Moffats have flux off the edge of the stamp.
+        # It's pretty noticable with beta=2.  But here with beta=3, it's pretty slight.
+        diff_image = sn_image - ref_image
+        print(i, t, flux, diff_image.array.sum())
+        np.testing.assert_allclose(diff_image.array.sum(), flux, rtol=1.e-6)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

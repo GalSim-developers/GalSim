@@ -1,0 +1,86 @@
+# Copyright (c) 2012-2022 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+
+modules:
+    - numpy
+
+psf:
+    type: Moffat
+    beta: 3
+    fwhm: 0.6
+    ellip: '$galsim.Shear(e1=0.03, e2=-0.04)'
+
+image:
+    type: Single
+    size: 128
+    dtype: float
+    random_seed:
+        - 12345
+    pixel_scale: 0.2
+    # No noise, which is unrealistic, but makes the test easier.
+
+---
+
+gal:
+    type: Exponential
+    half_light_radius: 2.3
+    flux: 3.e6
+    ellip:
+        type: E1E2
+        e1: 0.4
+        e2: 0.7
+
+output:
+    dir: output
+    file_name: ref.fits
+
+---
+
+eval_variables:
+    # Model the time of the exposure as a linear function of the image_num with a 8 day cadence.
+    # More realistic versions of this could use datetime with observation times from
+    # a file or something similarly interesting.
+    ftime: '$(image_num - 2.3) * 7'  # in days
+    fmax_flux: 1.e5
+
+input:
+    initial_image:
+        dir: output
+        file_name: ref.fits
+
+gal:
+    # The "gal" here is the SN, which is a point source.
+    type: DeltaFunction
+    flux: '$0 if time < 0 else np.exp(-time/50) * max_flux'
+
+stamp:
+    image_pos:
+        type: XY
+        x: 80
+        y: 60
+
+output:
+    nfiles: 12
+    dir: output
+    file_name:
+        type: NumberedFile
+        root: 'SN_image'
+        num: '$file_num'
+        digits: 2
+

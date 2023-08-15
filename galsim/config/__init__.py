@@ -45,6 +45,7 @@ from . import input_real
 from . import input_cosmos
 from . import input_nfw
 from . import input_powerspectrum
+from . import input_image
 
 from . import extra_psf
 from . import extra_weight

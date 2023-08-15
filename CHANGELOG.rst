@@ -18,6 +18,8 @@ Config Updates
 
 - Fixed a bug in Scattered type, where it didn't respect world_pos being specified in the
   stamp field, as it should.  (#1190)
+- Added a new ``initial_image`` input type that lets you read in an existing image file
+  and draw onto it. (#1237)
 
 
 New Features
