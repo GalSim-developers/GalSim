@@ -637,25 +637,25 @@ class StampBuilder:
 
         # Update the size if necessary
         image = base['image']
-        if not xsize:
-            if 'xsize' in config:
-                xsize = ParseValue(config,'xsize',base,int)[0]
-            elif 'size' in config:
-                xsize = ParseValue(config,'size',base,int)[0]
-            elif 'stamp_xsize' in image:
-                xsize = ParseValue(image,'stamp_xsize',base,int)[0]
-            elif 'stamp_size' in image:
-                xsize = ParseValue(image,'stamp_size',base,int)[0]
+        if 'xsize' in config:
+            xsize = ParseValue(config,'xsize',base,int)[0]
+        elif 'size' in config:
+            xsize = ParseValue(config,'size',base,int)[0]
+        elif 'stamp_xsize' in image:
+            xsize = ParseValue(image,'stamp_xsize',base,int)[0]
+        elif 'stamp_size' in image:
+            xsize = ParseValue(image,'stamp_size',base,int)[0]
+        # else use the input xsize
 
-        if not ysize:
-            if 'ysize' in config:
-                ysize = ParseValue(config,'ysize',base,int)[0]
-            elif 'size' in config:
-                ysize = ParseValue(config,'size',base,int)[0]
-            elif 'stamp_ysize' in image:
-                ysize = ParseValue(image,'stamp_ysize',base,int)[0]
-            elif 'stamp_size' in image:
-                ysize = ParseValue(image,'stamp_size',base,int)[0]
+        if 'ysize' in config:
+            ysize = ParseValue(config,'ysize',base,int)[0]
+        elif 'size' in config:
+            ysize = ParseValue(config,'size',base,int)[0]
+        elif 'stamp_ysize' in image:
+            ysize = ParseValue(image,'stamp_ysize',base,int)[0]
+        elif 'stamp_size' in image:
+            ysize = ParseValue(image,'stamp_size',base,int)[0]
+        # else use the input ysize
 
         # Determine where this object is going to go:
         if 'image_pos' in config:
@@ -892,8 +892,17 @@ class StampBuilder:
         """
         if xsize and ysize:
             dtype = ParseDType(config, base)
-            im = Image(xsize, ysize, dtype=dtype)
-            im.setZero()
+            bounds = _BoundsI(1,xsize,1,ysize)
+
+            # Set the origin appropriately
+            stamp_center = base['stamp_center']
+            if stamp_center:
+                bounds = bounds.shift(stamp_center - bounds.center)
+            else:
+                bounds = bounds.shift(base.get('image_origin',PositionI(1,1)) - PositionI(1,1))
+
+            im = Image(bounds=bounds, dtype=dtype, init_value=0)
+
             return im
         else:
             return None
@@ -958,16 +967,15 @@ class StampBuilder:
                     prof = Convolution(prof, Pixel(1.))
                 N = prof.getGoodImageSize(1.)
                 bounds = _BoundsI(1,N,1,N)
+
+                # Set the origin appropriately
+                stamp_center = base['stamp_center']
+                if stamp_center:
+                    bounds = bounds.shift(stamp_center - bounds.center)
+                else:
+                    bounds = bounds.shift(base.get('image_origin',PositionI(1,1)) - PositionI(1,1))
             else:
                 bounds = image.bounds
-
-            # Set the origin appropriately
-            stamp_center = base['stamp_center']
-            if stamp_center:
-                bounds = bounds.shift(stamp_center - bounds.center)
-            else:
-                bounds = bounds.shift(base.get('image_origin',PositionI(1,1)) -
-                                      PositionI(bounds.xmin, bounds.ymin))
 
             overlap = bounds & base['current_image'].bounds
             if not overlap.isDefined():

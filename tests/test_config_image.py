@@ -214,7 +214,7 @@ def test_positions():
     #logger.setLevel(logging.DEBUG)
 
     gal = galsim.Gaussian(sigma=1.7, flux=100)
-    im1= gal.drawImage(nx=21, ny=21, scale=1)
+    im1 = gal.drawImage(nx=21, ny=21, scale=1)
     im1.setCenter(39,43)
 
     im2 = galsim.config.BuildImage(config, logger=logger)
@@ -279,6 +279,29 @@ def test_positions():
     config['stamp']['world_pos'] = { 'type' : 'Random' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
+    del config['stamp']['world_pos']
+
+    # If the size is set in image, then image_pos will put the object offset in this image.
+    config['image'] = {
+        'type' : 'Single',
+        'size' : 64,
+    }
+    im11 = galsim.config.BuildImage(config)
+    assert im11.bounds == galsim.BoundsI(1,64,1,64)
+    assert im11[im2.bounds] == im2
+
+    # If the offset is larger, then only the overlap is included
+    config['image']['size'] = 50
+    im12 = galsim.config.BuildImage(config)
+    assert im12.bounds == galsim.BoundsI(1,50,1,50)
+    b = im12.bounds & im2.bounds
+    assert im12[b] == im2[b]
+
+    # If the offset is large enough, none of the stamp is included.
+    config['image']['size'] = 32
+    im13 = galsim.config.BuildImage(config)
+    assert im13.bounds == galsim.BoundsI(1,32,1,32)
+    np.testing.assert_array_equal(im13.array, 0.)
 
 
 @timer

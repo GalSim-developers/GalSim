@@ -525,7 +525,10 @@ class ImageBuilder:
 
         current_image = base['current_image']
         if current_image is not None and image is not None:
-            image += current_image
+            b = current_image.bounds & image.bounds
+            if b.isDefined():
+                current_image[b] += image[b]
+            image = current_image
 
         return image, current_var
 
