@@ -480,6 +480,7 @@ def test_reject():
         }
     }
     galsim.config.ProcessInput(config)
+    orig_config = config.copy()
 
     if False:
         logger = logging.getLogger('test_reject')
@@ -652,6 +653,30 @@ def test_reject():
     logger = galsim.config.LoggerWrapper(None)
     galsim.config.BuildFiles(nimages, config, logger=logger)
 
+    # Now go back to the original config, and switch to skip_failures rather than retry.
+    config = orig_config
+    config['stamp']['skip_failures'] = True
+
+    # With this and retry_failures, we get an error.
+    with assert_raises(galsim.GalSimConfigValueError):
+        galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)
+
+    del config['stamp']['retry_failures']
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
+    # Everything gets skipped here.
+    np.testing.assert_almost_equal(fluxes, 0, decimal=0)
+
+    # Dial back some of the rejections and skips to get some images drawn.
+    del config['stamp']['reject']
+    del config['stamp']['min_flux_frac']
+    del config['stamp']['max_snr']
+    del config['stamp']['skip']
+    del config['stamp']['quick_skip']
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
+    expected_fluxes = [0, 76673, 0, 0, 24074, 0, 0, 9124, 0, 0, 0]
+    np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
 @timer
 def test_snr():
