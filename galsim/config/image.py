@@ -26,7 +26,7 @@ from .value import ParseValue, GetAllParams
 from .wcs import BuildWCS
 from .sensor import BuildSensor
 from .bandpass import BuildBandpass
-from .stamp import BuildStamp, MakeStampTasks
+from .stamp import BuildStamp, MakeStampTasks, ParseDType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionI, PositionD
 from ..bounds import BoundsI
@@ -181,6 +181,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     - Set config['wcs'] to be the built wcs
     - If wcs.isPixelScale(), also set config['pixel_scale'] for convenience.
     - Set config['world_center'] to either a given value or based on wcs and image_center
+    - Create a blank image if possible and store as config['current_image']
 
     Parameters:
         config:     The configuration dict.
@@ -206,7 +207,8 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
 
     config['image_origin'] = PositionI(origin,origin)
     config['image_center'] = PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
-    config['image_bounds'] = BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
+    bounds = BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
+    config['image_bounds'] = bounds
 
     # Build the wcs
     wcs = BuildWCS(image, 'wcs', config, logger)
@@ -224,6 +226,12 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
         config['world_center'] = ParseValue(image, 'world_center', config, CelestialCoord)[0]
     else:
         config['world_center'] = wcs.toWorld(config['image_center'])
+
+    if bounds.isDefined():
+        dtype = ParseDType(image, config)
+        config['current_image'] = Image(bounds=bounds, dtype=dtype, wcs=wcs, init_value=0)
+    else:
+        config['current_image'] = None
 
 
 # Ignore these when parsing the parameters for specific Image types:
@@ -510,14 +518,15 @@ class ImageBuilder:
         ysize = base['image_ysize']
         logger.debug('image %d: Single Image: size = %s, %s',image_num,xsize,ysize)
 
-        # In case there was one set from before, we don't want to confuse the stamp builder
-        # thinking that this is the full image onto which we are drawing this object.
-        base['current_image'] = None
-
         image, current_var = BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
         if image is not None:
             image.wcs = base['wcs']   # in case stamp has a local jacobian.
+
+        current_image = base['current_image']
+        if current_image is not None and image is not None:
+            image += current_image
+
         return image, current_var
 
     def makeTasks(self, config, base, jobs, logger):

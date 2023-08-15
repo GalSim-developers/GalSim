@@ -21,7 +21,7 @@ import numpy as np
 
 from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
 from .value import ParseValue, GetAllParams
-from .stamp import BuildStamps, _ParseDType
+from .stamp import BuildStamps
 from .noise import AddSky, AddNoise
 from .input import ProcessInputNObjects
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -92,16 +92,7 @@ class ScatteredImageBuilder(ImageBuilder):
         Returns:
             the final image and the current noise variance in the image as a tuple
         """
-        full_xsize = base['image_xsize']
-        full_ysize = base['image_ysize']
-        wcs = base['wcs']
-
-        dtype = _ParseDType(config, base)
-        full_image = Image(full_xsize, full_ysize, dtype=dtype)
-        full_image.setOrigin(base['image_origin'])
-        full_image.wcs = wcs
-        full_image.setZero()
-        base['current_image'] = full_image
+        full_image = base['current_image']
 
         if 'image_pos' in config and 'world_pos' in config:
             raise GalSimConfigValueError(
@@ -111,6 +102,8 @@ class ScatteredImageBuilder(ImageBuilder):
         if ('image_pos' not in config and 'world_pos' not in config and
                 not ('stamp' in base and
                     ('image_pos' in base['stamp'] or 'world_pos' in base['stamp']))):
+            full_xsize = base['image_xsize']
+            full_ysize = base['image_ysize']
             xmin = base['image_origin'].x
             xmax = xmin + full_xsize-1
             ymin = base['image_origin'].y
