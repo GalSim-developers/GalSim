@@ -167,6 +167,7 @@ def ProcessTemplate(config, base, logger=None):
         # Read the config file if appropriate
         if config_file != '':
             template = ReadConfig(config_file, logger=logger)[0]
+            ImportModules(template)
         else:
             template = base
 
