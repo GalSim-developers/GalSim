@@ -22,7 +22,7 @@ import numpy as np
 from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
 from .util import GetRNG
 from .value import ParseValue, GetAllParams
-from .stamp import BuildStamps, _ParseDType
+from .stamp import BuildStamps
 from .noise import AddSky, AddNoise
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image
@@ -115,16 +115,7 @@ class TiledImageBuilder(ImageBuilder):
         Returns:
             the final image and the current noise variance in the image as a tuple
         """
-        full_xsize = base['image_xsize']
-        full_ysize = base['image_ysize']
-        wcs = base['wcs']
-
-        dtype = _ParseDType(config, base)
-        full_image = Image(full_xsize, full_ysize, dtype=dtype)
-        full_image.setOrigin(base['image_origin'])
-        full_image.wcs = wcs
-        full_image.setZero()
-        base['current_image'] = full_image
+        full_image = base['current_image']
 
         nobjects = self.nx_tiles * self.ny_tiles
 

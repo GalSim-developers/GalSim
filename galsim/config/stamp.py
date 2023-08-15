@@ -525,7 +525,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         kwargs['sensor'] = sensor
 
     if image is None:
-        kwargs['dtype'] = _ParseDType(config, base)
+        kwargs['dtype'] = ParseDType(config, base)
 
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.
@@ -584,7 +584,7 @@ def ParseWorldPos(config, param_name, base, logger):
     else:
         return ParseValue(config, param_name, base, PositionD)[0]
 
-def _ParseDType(config, base):
+def ParseDType(config, base):
     dtype = config.get('dtype', None)
     if isinstance(dtype, str):
         try:
@@ -891,7 +891,7 @@ class StampBuilder:
             the image
         """
         if xsize and ysize:
-            dtype = _ParseDType(config, base)
+            dtype = ParseDType(config, base)
             im = Image(xsize, ysize, dtype=dtype)
             im.setZero()
             return im
