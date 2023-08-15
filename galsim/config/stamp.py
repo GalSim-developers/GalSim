@@ -273,8 +273,16 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     builder.setupRNG(stamp, config, logger)
 
+    if 'skip_failures' in stamp:
+        skip_failures = ParseValue(stamp, 'skip_failures', config, bool)[0]
+    else:
+        skip_failures = False
+
     if 'retry_failures' in stamp:
         ntries = ParseValue(stamp,'retry_failures',config,int)[0]
+        if skip_failures and ntries:
+            raise GalSimConfigValueError(
+                "Cannot use retry_failures when skip_failures=True", ntries)
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
     elif ('reject' in stamp or 'min_flux_frac' in stamp or
@@ -388,7 +396,17 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             return im, 0.
 
         except Exception as e:
-            if itry >= ntries:
+            if skip_failures:
+                logger.info('Object %d: Caught exception %s',obj_num,str(e))
+                import traceback
+                tr = traceback.format_exc()
+                logger.debug('obj %d: Traceback = %s',obj_num,tr)
+                logger.info('Skipping this object')
+                # Now same as SkipThisObject case above.
+                im = builder.makeStamp(stamp, config, xsize, ysize, logger)
+                ProcessExtraOutputsForStamp(config, True, logger)
+                return im, 0.
+            elif itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
                 logger.info('Object %d: Caught exception %s',obj_num,str(e))
                 if ntries > 1:
