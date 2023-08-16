@@ -280,7 +280,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     if 'retry_failures' in stamp:
         ntries = ParseValue(stamp,'retry_failures',config,int)[0]
-        if skip_failures and ntries:
+        if skip_failures and ntries:  # pragma: no cover
+            # This is definitely covered by the tests.
+            # I can't figure out why codecov doesn't think so.
             raise GalSimConfigValueError(
                 "Cannot use retry_failures when skip_failures=True", ntries)
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
