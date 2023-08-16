@@ -50,7 +50,7 @@ jobs:
                       #CXX: g++
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
               with:
                 # Need this for git commands to work right.
                 # Also for codecov upload apparently.
@@ -67,7 +67,7 @@ jobs:
                   echo 'event.after: ${{ github.event.after }}'
 
             - name: Set up Python ${{ matrix.py }}
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v3
               with:
                 python-version: ${{ matrix.py }}
 
