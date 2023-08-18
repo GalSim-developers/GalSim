@@ -227,7 +227,7 @@ class SimpleGenerator:
     just returns an already existing object.
     """
     def __init__(self, obj): self._obj = obj
-    def __call__(self):  # pragma: no cover  (It is covered, but coveralls doesn't get it right.)
+    def __call__(self):  # pragma: no cover
         return self._obj
 
 def rand_arr(shape, deviate):
@@ -1959,12 +1959,7 @@ def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
     assert obj2 is not obj
     f1 = func(obj)
     f2 = func(obj2)
-    if not (f1 == f2):  # pragma: no cover
-        print('obj1 = ',repr(obj))
-        print('obj2 = ',repr(obj2))
-        print('func(obj1) = ',repr(f1))
-        print('func(obj2) = ',repr(f2))
-    assert f1 == f2
+    assert f2 == f1, f"func(obj) = {f1}\nfunc(obj2) = {f2}\nrepr(obj) = {repr(obj)}\nrepr(obj2)={repr(obj2)}"
 
     # Check that == works properly if the other thing isn't the same type.
     assert f1 != object()
@@ -1972,9 +1967,7 @@ def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
 
     # Test the hash values are equal for two equivalent objects.
     if isinstance(obj, Hashable):
-        if not(hash(obj) == hash(obj2)): # pragma: no cover
-            print('hash = ',hash(obj),hash(obj2))
-        assert hash(obj) == hash(obj2)
+        assert hash(obj) == hash(obj2), f"hash(obj) = {hash(obj)}, hash(obj2) = {hash(obj2)}"
 
     obj3 = copy.copy(obj)
     assert obj3 is not obj
@@ -1986,16 +1979,14 @@ def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
     elif isinstance(obj, BaseDeviate):
         f1 = func(obj)  # But BaseDeviates will be ok.  Just need to remake f1.
         f3 = func(obj3)
-        assert f3 == f1
+        assert f3 == f1, f"func(obj) = {f1}\nfunc(obj3) = {f3}"
 
     obj4 = copy.deepcopy(obj)
     assert obj4 is not obj
     f4 = func(obj4)
     if random: f1 = func(obj)
-    if not (f4 == f1):  # pragma: no cover
-        print('func(obj1) = ',repr(f1))
-        print('func(obj4) = ',repr(f4))
-    assert f4 == f1  # But everything should be identical with deepcopy.
+    # But everything should be identical with deepcopy.
+    assert f4 == f1, f"func(obj) = {f1}\nfunc(obj4) = {f4}"
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
@@ -2011,12 +2002,7 @@ def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
         with printoptions(precision=20, threshold=np.inf):
             obj5 = eval(repr(obj))
         f5 = func(obj5)
-        if not (f5 == f1):  # pragma: no cover
-            print('obj1 = ',repr(obj))
-            print('obj5 = ',repr(obj5))
-            print('f1 = ',f1)
-            print('f5 = ',f5)
-        assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
+        assert f5 == f1, f"func(obj) = {f1}\nfunc(obj5) = {f5}\nrepr(obj) = {repr(obj)}\nrepr(obj5)={repr(obj5)}"
     else:
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
         repr(obj)
