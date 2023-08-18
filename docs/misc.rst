@@ -12,6 +12,8 @@ Decorators
 
 .. autoclass:: galsim.utilities.doc_inherit
 
+.. autoclass:: galsim.utilities.timer
+
 
 OpenMP Utilties
 ---------------
@@ -74,6 +76,19 @@ Utilities Related to NumPy Functions
 .. autofunction:: galsim.utilities.roll2d
 
 .. autofunction:: galsim.utilities.kxky
+
+
+Test Suite Helper Functions and Contexts
+----------------------------------------
+
+.. autofunction:: galsim.utilities.do_pickle
+
+.. autofunction:: galsim.utilities.all_obj_diff
+
+.. autoclass:: galsim.utilities.CaptureLog
+
+.. autoclass:: galsim.utilities.profile
+
 
 Other Helper Functions
 ----------------------
