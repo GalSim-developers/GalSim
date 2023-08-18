@@ -25,6 +25,8 @@ New Features
 
 - Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.  Also added
   the option ``use_sky_coords=True`` to `FindAdaptiveMom` to apply this automatically.
+- Added galsim.test_utils with some utility functions that we have found useful in our test
+  suite, and which other people might want to use. (#1240)
 
 
 Performance Improvements
