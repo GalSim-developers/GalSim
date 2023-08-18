@@ -288,6 +288,144 @@ def test_atm_input():
         galsim.config.InputLoader(AtmPSF, use_proxy=False,
                                   worker_initargs=galsim.phase_screens.initWorkerArgs)
 
+def test_dependent_inputs():
+    """Test inputs that depend on other inputs.
+
+    imSim has input types that depend on other input types.  If these are listed in order,
+    with dependencies first, everything is fine.  But when using recursive templates, this can
+    be difficult to get right.  So we now have a check in GalSim when loading in input object,
+    if it raises an exception that indicates it needs a different input type, try to load that
+    one first.
+    """
+    class Dict1:
+        def __init__(self):
+            self.d = {'a': 1, 'b': 2}
+
+    def Dict1Item(config, base, value_type):
+        d = galsim.config.GetInputObj('dict1', config, base, 'Dict1').d
+        key, safe = galsim.config.ParseValue(config, 'key', base, str)
+        return d[key], safe
+
+    class Dict2:
+        def __init__(self):
+            self.d = {'c': 1, 'd': 2}
+
+    def Dict2Item(config, base, value_type):
+        d = galsim.config.GetInputObj('dict2', config, base, 'Dict2').d
+        key, safe = galsim.config.ParseValue(config, 'key', base, str)
+        return d[key], safe
+
+    class Dep:
+        _req_params = dict(a=float, b=float, c=float, d=float)
+
+        def __init__(self, a, b, c, d):
+            self.d = dict(a=a, b=b, c=c, d=d)
+
+    def DepItem(config, base, value_type):
+        d = galsim.config.GetInputObj('dep', config, base, 'Dep').d
+        key, safe = galsim.config.ParseValue(config, 'key', base, str)
+        return d[key], safe
+
+    galsim.config.RegisterInputType('dict1', galsim.config.InputLoader(Dict1))
+    galsim.config.RegisterValueType('Dict1Item', Dict1Item, input_type='dict1', valid_types=[float])
+    galsim.config.RegisterInputType('dict2', galsim.config.InputLoader(Dict2))
+    galsim.config.RegisterValueType('Dict2Item', Dict2Item, input_type='dict2', valid_types=[float])
+    galsim.config.RegisterInputType('dep', galsim.config.InputLoader(Dep))
+    galsim.config.RegisterValueType('DepItem', DepItem, input_type='dep', valid_types=[float])
+
+    # First put the input items in order, so all dependencies are resolved before they are needed.
+    config = {
+        'input': {
+            'dict1': {},
+            'dict2': {},
+            'dep': {
+                'a': {'type': 'Dict1Item', 'key': 'a'},
+                'b': {'type': 'Dict1Item', 'key': 'b'},
+                'c': {'type': 'Dict2Item', 'key': 'c'},
+                'd': {'type': 'Dict2Item', 'key': 'd'},
+            },
+        }
+    }
+    with CaptureLog() as cl:
+        galsim.config.ProcessInput(config, cl.logger)
+    assert 'input seems to depend on' not in cl.output
+    dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
+    assert dep.d == dict(a=1, b=2, c=1, d=2)
+
+    # Now put them out of order.
+    config = {
+        'input': {
+            'dep': {
+                'a': {'type': 'Dict1Item', 'key': 'a'},
+                'b': {'type': 'Dict1Item', 'key': 'b'},
+                'c': {'type': 'Dict2Item', 'key': 'c'},
+                'd': {'type': 'Dict2Item', 'key': 'd'},
+            },
+            'dict1': {},
+            'dict2': {},
+        }
+    }
+    with CaptureLog() as cl:
+        galsim.config.ProcessInput(config, cl.logger)
+    assert 'dep input seems to depend on dict1' in cl.output
+    assert 'dep input seems to depend on dict2' in cl.output
+    dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
+    assert dep.d == dict(a=1, b=2, c=1, d=2)
+
+    # If it depends on something that in turn fails, it doesn't work.
+    class Dict3:
+        _opt_params = dict(e=float)
+        _takes_rng = True
+        def __init__(self, rng):
+            ud = galsim.UniformDeviate(rng)
+            self.d = dict(a=ud(), b=ud(), c=ud(), d=ud())
+
+    def Dict3Item(config, base, value_type):
+        d = galsim.config.GetInputObj('dict3', config, base, 'Dict3').d
+        key, safe = galsim.config.ParseValue(config, 'key', base, str)
+        return d[key], safe
+
+    galsim.config.RegisterInputType('dict3', galsim.config.InputLoader(Dict3))
+    galsim.config.RegisterValueType('Dict3Item', Dict3Item, input_type='dict3', valid_types=[float])
+
+    config = {
+        'input': {
+            'dep': {
+                'a': {'type': 'Dict1Item', 'key': 'a'},
+                'b': {'type': 'Dict3Item', 'key': 'b'},
+                'c': {'type': 'Dict2Item', 'key': 'c'},
+                'd': {'type': 'Dict3Item', 'key': 'd'},
+            },
+            'dict1': {},
+            'dict2': {},
+            'dict3': {
+                'e': {'type': 'Dict4Item', 'key': 'e'},
+            }
+        }
+    }
+    with np.testing.assert_raises(galsim.config.GalSimConfigError):
+        galsim.config.ProcessInput(config, cl.logger)
+
+    # But with safe_only=True, it doesn't raise an exception
+    config = galsim.config.CleanConfig(config)
+    with CaptureLog() as cl:
+        galsim.config.ProcessInput(config, cl.logger, safe_only=True)
+
+    assert 'dep input seems to depend on dict1' in cl.output
+    assert 'dep input seems to depend on dict2' not in cl.output  # Doesn't get to the Dict2Item
+    assert 'dep input seems to depend on dict3' in cl.output
+    dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
+    assert dep is None
+
+    # If the dependency graph is circular, make sure we don't get an infinite loop.
+    config = galsim.config.CleanConfig(config)
+    config['input']['dict3']['e'] = {'type': 'DepItem', 'key': 'a'}
+    with CaptureLog() as cl:
+        galsim.config.ProcessInput(config, cl.logger, safe_only=True)
+    dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
+    assert dep is None
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:

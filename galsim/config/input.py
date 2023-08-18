@@ -164,11 +164,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
             if file_scope_only and not loader.file_scope: continue
 
             logger.debug('file %d: Process input key %s',file_num,key)
-            fields = config['input'][key]
-            nfields = len(fields) if isinstance(fields, list) else 1
-
-            for num in range(nfields):
-                input_obj = LoadInputObj(config, key, num, safe_only, logger)
+            LoadAllInputObj(config, key, safe_only, logger)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -191,6 +187,34 @@ def SetupInput(config, logger=None):
         if 'input' in config:
             PropagateIndexKeyRNGNum(config['input'])
         ProcessInput(config, logger=logger)
+
+
+def LoadAllInputObj(config, key, safe_only=False, logger=None):
+    """Load all items of a single input type, named key, with definition given by the dict field.
+
+    This function just detects if the dict item for this key is a list and calls LoadInputObj
+    for every num.
+
+    .. note::
+
+        This is designed as an internal implementation detail, not meant to be used by end users.
+        So it doesn't have some of the safeguards we normally put on public facing functions.
+        However, we expect the API to persist, and we'll try to use deprecations if we change
+        anything, so if users find it useful, it is fine to go ahead and use it in your own
+        custom input module implementations.
+
+    Parameters:
+        config:     The configuration dict to process
+        key:        The key name of this input type
+        safe_only:  Only load "safe" input objects.
+        logger:     If given, a logger object to log progress. [default: None]
+    """
+    fields = config['input'][key]
+    nfields = len(fields) if isinstance(fields, list) else 1
+    for num in range(nfields):
+        input_obj = LoadInputObj(config, key, num, safe_only, logger)
+    return input_obj
+
 
 def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     """Load a single input object, named key, with definition given by the dict field.
@@ -249,6 +273,14 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         # just implies that this input object isn't safe to keep around anyway.
         # So in this case, we just continue on.  If it was not a safe_only run,
         # the exception is reraised.
+        # The one exception is if the exception indicates that another input type was needed.
+        # In that case, we load the dependent input type and try again.
+        if str(e).startswith("No input"):
+            dep_input = str(e).split()[2]
+            logger.info("%s input seems to depend on %s.  Try loading that.", key, dep_input)
+            input_obj = LoadAllInputObj(config, dep_input, safe_only=safe_only, logger=logger)
+            # Now recurse to try this key again.
+            return LoadInputObj(config, key, num=num, safe_only=safe_only, logger=logger)
         if safe_only:
             logger.debug('file %d: caught exception: %s', file_num,e)
             safe = False
@@ -507,7 +539,7 @@ class InputLoader:
         """
         req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single)
-        if takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
+        if takes_rng:
             rng = GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
