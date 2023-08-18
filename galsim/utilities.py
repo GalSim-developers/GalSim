@@ -1930,3 +1930,258 @@ class single_threaded:
         set_omp_threads(self.orig_num_threads)
         if self.tpl is not None:  # pragma: no cover
             self.tpl.unregister()
+
+
+
+# The rest of these are only used by the tests in GalSim.  But we make them available
+# for other code bases who may want to use them as well.
+
+def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
+    """Check that the object is picklable.
+
+    Also check some related desirable properties that we want for (almost) all galsim objects:
+
+    1. pickle.loads(pickle.dumps(obj)) recovers something equivalent to the original.
+    2. obj != object() and object() != obj.  (I.e. it doesn't == things it shouldn't.)
+    3. hash(obj) is the same for two equivalent objects, if it is hashable.
+    4. copy.copy(obj) returns an equivalent copy unless random=True.
+    5. copy.deepcopy(obj) returns an equivalent copy.
+    6. eval(repr(obj)) returns an equivalent copy unless random or irreprable=True.
+    7. repr(obj) makes something if irreprable=False.
+
+    Parameters:
+        obj:            The object to test
+        func:           A function of obj to use to test for equivalence.  [default: lambda x: x]
+        irreprable:     Whether to skip the eval(repr(obj)) test.  [default: False]
+        random:         Whether the obj has some intrinsic randomness. [default: False, unless
+                        it has an rng attribute or it is a galsim.BaseDeviate]
+    """
+    from numbers import Integral, Real, Complex
+    import pickle
+    import copy
+    from .random import BaseDeviate
+    # In case the repr uses these:
+    import galsim
+    import coord
+    import astropy
+    from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
+    from astropy.units import Unit
+    import astropy.io.fits
+    from distutils.version import LooseVersion
+    from collections.abc import Hashable
+
+    print('Try pickling ',str(obj))
+
+    obj2 = pickle.loads(pickle.dumps(obj))
+    assert obj2 is not obj
+    f1 = func(obj)
+    f2 = func(obj2)
+    if not (f1 == f2):  # pragma: no cover
+        print('obj1 = ',repr(obj))
+        print('obj2 = ',repr(obj2))
+        print('func(obj1) = ',repr(f1))
+        print('func(obj2) = ',repr(f2))
+    assert f1 == f2
+
+    # Check that == works properly if the other thing isn't the same type.
+    assert f1 != object()
+    assert object() != f1
+
+    # Test the hash values are equal for two equivalent objects.
+    if isinstance(obj, Hashable):
+        if not(hash(obj) == hash(obj2)): # pragma: no cover
+            print('hash = ',hash(obj),hash(obj2))
+        assert hash(obj) == hash(obj2)
+
+    obj3 = copy.copy(obj)
+    assert obj3 is not obj
+    if random is None:
+        random = hasattr(obj, 'rng') or isinstance(obj, BaseDeviate) or 'rng' in repr(obj)
+    if not random:  # Things with an rng attribute won't be identical on copy.
+        f3 = func(obj3)
+        assert f3 == f1
+    elif isinstance(obj, BaseDeviate):
+        f1 = func(obj)  # But BaseDeviates will be ok.  Just need to remake f1.
+        f3 = func(obj3)
+        assert f3 == f1
+
+    obj4 = copy.deepcopy(obj)
+    assert obj4 is not obj
+    f4 = func(obj4)
+    if random: f1 = func(obj)
+    if not (f4 == f1):  # pragma: no cover
+        print('func(obj1) = ',repr(f1))
+        print('func(obj4) = ',repr(f4))
+    assert f4 == f1  # But everything should be identical with deepcopy.
+
+    # Also test that the repr is an accurate representation of the object.
+    # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
+    # A few objects we don't expect to work this way in GalSim; when testing these, we set the
+    # `irreprable` kwarg to true.  Also, we skip anything with random deviates since these don't
+    # respect the eval/repr roundtrip.
+
+    if not random and not irreprable:
+        # A further complication is that the default numpy print options do not lead to sufficient
+        # precision for the eval string to exactly reproduce the original object, and start
+        # truncating the output for relatively small size arrays.  So we temporarily bump up the
+        # precision and truncation threshold for testing.
+        with printoptions(precision=20, threshold=np.inf):
+            obj5 = eval(repr(obj))
+        f5 = func(obj5)
+        if not (f5 == f1):  # pragma: no cover
+            print('obj1 = ',repr(obj))
+            print('obj5 = ',repr(obj5))
+            print('f1 = ',f1)
+            print('f5 = ',f5)
+        assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
+    else:
+        # Even if we're not actually doing the test, still make the repr to check for syntax errors.
+        repr(obj)
+
+    # Historical note:
+    # We used to have a test here where we perturbed the construction arguments to make sure
+    # that objects that should be different really are different.
+    # However, that used `__getinitargs__`, which we've moved away from using for pickle, so
+    # none of our classes get checked this way anymore.  So we removed this section.
+    # This means that this inequality test has to be done manually via all_obj_diff.
+    # See releases v2.3 or earlier for the old way we did this.
+
+
+def all_obj_diff(objs, check_hash=True):
+    """Test that all objects test as being unequal.
+
+    It checks all pairs of objects in the list and asserts that obj1 != obj2.
+
+    If check_hash=True, then it also checks that their hashes are different.
+
+    Parameters:
+        objs:           A list of objects to test.
+        check_hash:     Whether to also check the hash values.
+    """
+    from collections.abc import Hashable
+    from collections import Counter
+    # Check that all objects are unique.
+    # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
+    # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
+    # to test!.  So instead, we just loop over all combinations.
+    for i, obji in enumerate(objs):
+        assert obji == obji
+        assert not (obji != obji)
+        # Could probably start the next loop at `i+1`, but we start at 0 for completeness
+        # (and to verify a != b implies b != a)
+        for j, objj in enumerate(objs):
+            if i == j:
+                continue
+            assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
+                                  .format(obji, objj, i, j))
+
+    if not check_hash:
+        return
+    # Now check that all hashes are unique (if the items are hashable).
+    if not isinstance(objs[0], Hashable):
+        return
+    hashes = [hash(obj) for obj in objs]
+    if not (len(hashes) == len(set(hashes))):  # pramga: no cover
+        for k, v in Counter(hashes).items():
+            if v <= 1:
+                continue
+            print("Found multiple equivalent object hashes:")
+            for i, obj in enumerate(objs):
+                if hash(obj) == k:
+                    print(i, repr(obj))
+    assert len(hashes) == len(set(hashes))
+
+
+def timer(f):
+    """A decorator that reports how long a function took to run.
+
+    In GalSim we decorate all of our tests with this to try to watch for long-running tests.
+    """
+    import functools
+
+    @functools.wraps(f)
+    def f2(*args, **kwargs):
+        import time
+        t0 = time.time()
+        result = f(*args, **kwargs)
+        t1 = time.time()
+        fname = repr(f).split()[1]
+        print('time for %s = %.2f' % (fname, t1-t0))
+        return result
+    return f2
+
+
+class CaptureLog:
+    """A context manager that saves logging output into a string that is accessible for
+    checking in unit tests.
+
+    After exiting the context, the attribute `output` will have the logging output.
+
+    Sample usage:
+
+            >>> with CaptureLog() as cl:
+            ...     cl.logger.info('Do some stuff')
+            >>> assert cl.output == 'Do some stuff'
+
+    """
+    def __init__(self, level=3):
+        from io import StringIO
+        import logging
+
+        logging_levels = { 0: logging.CRITICAL,
+                           1: logging.WARNING,
+                           2: logging.INFO,
+                           3: logging.DEBUG }
+        self.logger = logging.getLogger('CaptureLog')
+        self.logger.setLevel(logging_levels[level])
+        self.stream = StringIO()
+        self.handler = logging.StreamHandler(self.stream)
+        self.logger.addHandler(self.handler)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.handler.flush()
+        self.output = self.stream.getvalue().strip()
+        self.handler.close()
+
+
+# Context to make it easier to profile bits of the code
+class profile:
+    """A context manager that profiles a snippet of code.
+
+    Sample usage:
+
+            >>> with profile():
+            ...     slow_function()
+
+    Parameters:
+        sortby:     What parameter to sort the results by.  [default: tottime]
+        nlines:     How many lines of output to report.  [default: 30]
+        reverse:    Whether to reverse the order of the output lines to put the most important
+                    items at the bottom rather than the top. [default: False]
+        filename:   If desired, a file to output the full profile information in pstats format.
+                    [default: None]
+    """
+    def __init__(self, sortby='tottime', nlines=30, reverse=False, filename=None):
+        self.sortby = sortby
+        self.nlines = nlines
+        self.reverse = reverse
+        self.filename = filename
+
+    def __enter__(self):
+        import cProfile, pstats
+        self.pr = cProfile.Profile()
+        self.pr.enable()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        import pstats
+        self.pr.disable()
+        if self.filename:  # pragma: no cover
+            self.pr.dump_stats(self.filename)
+        ps = pstats.Stats(self.pr).sort_stats(self.sortby)
+        if self.reverse:  # pragma: no cover
+            ps = ps.reverse_order()
+        ps.print_stats(self.nlines)

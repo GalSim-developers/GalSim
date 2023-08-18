@@ -202,4 +202,3 @@ from . import utilities
 from . import fft
 from . import download_cosmos
 from . import zernike
-from . import test_utils

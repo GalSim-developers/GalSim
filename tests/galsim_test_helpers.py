@@ -24,8 +24,11 @@ import coord
 import copy
 import galsim
 
-from galsim.test_utils import *
+from galsim.utilities import do_pickle, all_obj_diff, timer, CaptureLog, profile
 
+# We used to roll our own versions of these, but numpy.testing has good ones now.
+from numpy.testing import assert_raises
+from numpy.testing import assert_warns
 
 # This file has some helper functions that are used by tests from multiple files to help
 # avoid code duplication.
