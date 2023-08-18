@@ -22,6 +22,8 @@ Config Updates
 - Added a new ``initial_image`` input type that lets you read in an existing image file
   and draw onto it. (#1237)
 - Added skip_failures option in stamp fields.  (#1238)
+- Let input items depend on other input items, even if they appear later in the input field.
+  (#1239)
 
 
 New Features
