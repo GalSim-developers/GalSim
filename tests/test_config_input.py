@@ -376,9 +376,10 @@ def test_dependent_inputs():
     class Dict3:
         _opt_params = dict(e=float)
         _takes_rng = True
-        def __init__(self, rng):
+        def __init__(self, rng, e=None):
             ud = galsim.UniformDeviate(rng)
             self.d = dict(a=ud(), b=ud(), c=ud(), d=ud())
+            if e: self.d['e'] = e
 
     def Dict3Item(config, base, value_type):
         d = galsim.config.GetInputObj('dict3', config, base, 'Dict3').d
@@ -399,7 +400,7 @@ def test_dependent_inputs():
             'dict1': {},
             'dict2': {},
             'dict3': {
-                'e': {'type': 'Dict4Item', 'key': 'e'},
+                'e': {'type': 'Dict4Item', 'key': 'a'},
             }
         }
     }
@@ -420,10 +421,19 @@ def test_dependent_inputs():
     # If the dependency graph is circular, make sure we don't get an infinite loop.
     config = galsim.config.CleanConfig(config)
     config['input']['dict3']['e'] = {'type': 'DepItem', 'key': 'a'}
-    with CaptureLog() as cl:
-        galsim.config.ProcessInput(config, cl.logger, safe_only=True)
+    galsim.config.ProcessInput(config, cl.logger, safe_only=True)
     dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
     assert dep is None
+
+    # Finally, just make sure that if dict3 isn't broken, it all works as expected.
+    config = galsim.config.CleanConfig(config)
+    config['input']['dict3']['e']['type'] = 'Dict1Item'
+    galsim.config.ProcessInput(config, cl.logger)
+    dict3 = galsim.config.GetInputObj('dict3', config, config, 'Dict3')
+    dep = galsim.config.GetInputObj('dep', config, config, 'Dep')
+    print('dict3.d = ',dict3.d)
+    print('dep.d = ',dep.d)
+    assert dep.d == dict(a=1, b=dict3.d['b'], c=1, d=dict3.d['d'])
 
 
 if __name__ == "__main__":
