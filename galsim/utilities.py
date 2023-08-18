@@ -2050,7 +2050,7 @@ def all_obj_diff(objs, check_hash=True):
     if not isinstance(objs[0], Hashable):
         return
     hashes = [hash(obj) for obj in objs]
-    if not (len(hashes) == len(set(hashes))):  # pramga: no cover
+    if not (len(hashes) == len(set(hashes))):  # pragma: no cover
         for k, v in Counter(hashes).items():
             if v <= 1:
                 continue
