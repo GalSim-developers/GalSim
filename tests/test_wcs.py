@@ -3162,7 +3162,7 @@ def test_int_args():
     # is unnecessary.
     dir = 'des_data'
     file_name = 'DECam_00158414_01.fits.fz'
-    with profile():
+    with Profile():
         t0 = time.time()
         wcs = galsim.FitsWCS(file_name, dir=dir)
         t1 = time.time()

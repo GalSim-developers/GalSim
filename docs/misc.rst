@@ -87,7 +87,7 @@ Test Suite Helper Functions and Contexts
 
 .. autoclass:: galsim.utilities.CaptureLog
 
-.. autoclass:: galsim.utilities.profile
+.. autoclass:: galsim.utilities.Profile
 
 
 Other Helper Functions

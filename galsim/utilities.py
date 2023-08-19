@@ -2134,12 +2134,12 @@ class CaptureLog:
 
 
 # Context to make it easier to profile bits of the code
-class profile:
+class Profile:
     """A context manager that profiles a snippet of code.
 
     Sample usage:
 
-            >>> with profile():
+            >>> with Profile():
             ...     slow_function()
 
     Parameters:
