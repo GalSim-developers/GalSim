@@ -1842,6 +1842,11 @@ def set_omp_threads(num_threads, logger=None):
     # Tell OpenMP to use this many threads
     if logger:
         logger.debug('Telling OpenMP to use %d threads',num_threads)
+
+    # Cf. comment in get_omp_threads.  Do it here too.
+    var = "OMP_PROC_BIND"
+    if var not in os.environ:
+        os.environ[var] = "false"
     num_threads = _galsim.SetOMPThreads(num_threads)
 
     # Report back appropriately.
@@ -1860,6 +1865,18 @@ def get_omp_threads():
 
     :returns: num_threads
     """
+    # Some OMP implemenations have a bug where if omp_get_max_threads() is called
+    # (which is what this function does), it sets something called thread affinity.
+    # The upshot of that is that multiprocessing (i.e. not even omp threading) is confined
+    # to a single thread.  Yeah, it's idiotic, but that seems to be the case.
+    # The only solution found by Eli, who looked into it prett hard, is to set the env
+    # variable OMP_PROC_BIND to "false".  This seems to stop the bad behavior.
+    # So we do it here always before calling GetOMPThreads.
+    # If this breaks someone valid use of this variable, let us know and we can try to
+    # come up with another solution, but without this lots of multiprocessing breaks.
+    var = "OMP_PROC_BIND"
+    if var not in os.environ:
+        os.environ[var] = "false"
     return _galsim.GetOMPThreads()
 
 class single_threaded:

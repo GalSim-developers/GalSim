@@ -30,6 +30,8 @@ New Features
 Performance Improvements
 ------------------------
 
+- Work around an OMP bug that disables multiprocessing on some systems when omp_get_max_threads
+  is called. (#1241)
 
 
 Bug Fixes
