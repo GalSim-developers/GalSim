@@ -81,7 +81,7 @@ Utilities Related to NumPy Functions
 Test Suite Helper Functions and Contexts
 ----------------------------------------
 
-.. autofunction:: galsim.utilities.do_pickle
+.. autofunction:: galsim.utilities.check_pickle
 
 .. autofunction:: galsim.utilities.all_obj_diff
 

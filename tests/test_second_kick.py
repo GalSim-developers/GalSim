@@ -49,7 +49,7 @@ def test_init():
                 t1 = time.time()
                 print('   stepk, maxk = ',sk.stepk, sk.maxk)
                 np.testing.assert_almost_equal(sk.flux, 2.2)
-                do_pickle(sk)
+                check_pickle(sk)
                 t2 = time.time()
 
                 gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
@@ -214,8 +214,8 @@ def test_sk_scale():
     kwargs = {'lam':500, 'r0':0.2, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
     sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
-    do_pickle(sk_arcsec)
-    do_pickle(sk_arcmin)
+    check_pickle(sk_arcsec)
+    check_pickle(sk_arcmin)
 
     np.testing.assert_almost_equal(sk_arcsec.flux, sk_arcmin.flux)
     np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 0.0), sk_arcmin.kValue(0.0, 0.0))
@@ -251,8 +251,8 @@ def test_sk_scale():
     del kwargs['flux']
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
     sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
-    do_pickle(sk_arcsec)
-    do_pickle(sk_arcmin)
+    check_pickle(sk_arcsec)
+    check_pickle(sk_arcmin)
     np.testing.assert_almost_equal(sk_arcmin.flux, 1.0)
     np.testing.assert_almost_equal(sk_arcsec.flux, 1.0)
 

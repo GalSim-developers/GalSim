@@ -36,7 +36,7 @@ def test_ascii_catalog():
     np.testing.assert_equal(cat.getInt(1,11), 15)
     np.testing.assert_almost_equal(cat.getFloat(2,1), 8000)
 
-    do_pickle(cat)
+    check_pickle(cat)
 
     cat2 = galsim.Catalog('catalog.txt', 'config_input', comments='#', file_type='ASCII')
     assert cat2 == cat
@@ -47,13 +47,13 @@ def test_ascii_catalog():
     assert cat2.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat2.data, cat.data)
     assert cat2 != cat
-    do_pickle(cat2)
+    check_pickle(cat2)
 
     cat3 = galsim.Catalog('catalog3.txt', 'config_input', comments='')
     assert len(cat3) == cat3.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat3.data, cat.data)
     assert cat3 != cat
-    do_pickle(cat3)
+    check_pickle(cat3)
 
     # Check construction errors
     assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.txt', file_type='invalid')
@@ -82,7 +82,7 @@ def test_fits_catalog():
     np.testing.assert_equal(cat.getInt(1,'angle2'), 15)
     np.testing.assert_almost_equal(cat.getFloat(2,'float2'), 8000)
 
-    do_pickle(cat)
+    check_pickle(cat)
 
     cat2 = galsim.Catalog('catalog.fits', 'config_input', hdu=1, file_type='FITS')
     assert cat2 == cat
@@ -106,14 +106,14 @@ def test_fits_catalog():
     assert len(cat2) == cat2.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat2.data, cat.data)
     assert cat2 != cat
-    do_pickle(cat2)
+    check_pickle(cat2)
 
     cat3 = galsim.Catalog('catalog2.fits', 'config_input', hdu='data')
     assert cat3.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat3.data, cat.data)
     assert cat3 != cat
     assert cat3 != cat2  # Even though these are the same, it doesn't know 'data' is hdu 2.
-    do_pickle(cat3)
+    check_pickle(cat3)
 
 
 
@@ -132,7 +132,7 @@ def test_basic_dict():
     np.testing.assert_almost_equal(d.get('f', 999.), 23.17) # In dict.  Ignore default.
     d2 = galsim.Dict(dir='config_input', file_name='dict.p', file_type='pickle')
     assert d == d2
-    do_pickle(d)
+    check_pickle(d)
 
     # JSON
     d = galsim.Dict(dir='config_input', file_name='dict.json')
@@ -144,7 +144,7 @@ def test_basic_dict():
     np.testing.assert_almost_equal(d.get('f', 999.), -17.23) # In dict.  Ignore default.
     d2 = galsim.Dict(dir='config_input', file_name='dict.json', file_type='json')
     assert d == d2
-    do_pickle(d)
+    check_pickle(d)
 
     # YAML
     d = galsim.Dict(dir='config_input', file_name='dict.yaml')
@@ -156,7 +156,7 @@ def test_basic_dict():
     np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
     d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
     assert d == d2
-    do_pickle(d)
+    check_pickle(d)
 
     # We also have longer chained keys in dict.yaml
     np.testing.assert_equal(d.get('noise.models.0.variance'), 0.12)
@@ -176,7 +176,7 @@ def test_basic_dict():
     d3 = galsim.Dict('dict.yaml', 'config_input', key_split=None)
     with assert_raises(KeyError):
         d3.get('')
-    do_pickle(d3)
+    check_pickle(d3)
 
     with assert_raises(galsim.GalSimValueError):
         galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='invalid')
@@ -320,9 +320,9 @@ def test_output_catalog():
         assert cat2.data[key][3] == cat2.data[key][0]
 
     # Check pickling
-    do_pickle(out_cat)
+    check_pickle(out_cat)
     out_cat2 = galsim.OutputCatalog(names, types)  # No data.
-    do_pickle(out_cat2)
+    check_pickle(out_cat2)
 
     # Check errors
     with assert_raises(galsim.GalSimValueError):

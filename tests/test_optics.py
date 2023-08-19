@@ -92,22 +92,22 @@ def test_OpticalPSF_flux():
             np.testing.assert_almost_equal(optics_im.array.sum(), -17., 2)
             check_basic(optics_test, "OpticalPSF, flux=-17")
 
-    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    do_pickle(optics_test)
-    do_pickle(optics_test._psf)
-    do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics_test)
+    check_pickle(optics_test._psf)
+    check_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     check_basic(optics_test, "OpticalPSF")
     assert optics_test._psf._screen_list.r0_500_effective is None
     assert optics_test._screen == optics_test._psf.screen_list[0]
 
     interpolant_test = galsim.OpticalPSF(lam_over_diam=4., interpolant='linear')
-    do_pickle(interpolant_test)
+    check_pickle(interpolant_test)
 
     scale_unit_test = galsim.OpticalPSF(lam_over_diam=4., scale_unit=galsim.arcmin)
-    do_pickle(scale_unit_test)
+    check_pickle(scale_unit_test)
 
     gsparams_test = optics_test.withGSParams(minimum_fft_size=64)
-    do_pickle(gsparams_test)
+    check_pickle(gsparams_test)
 
     with assert_raises(galsim.GalSimValueError):
         galsim.OpticalPSF(lam_over_diam=lods[0], fft_sign=0)
@@ -150,8 +150,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
                 err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
-    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    do_pickle(optics_test)
+    check_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics_test)
 
 
 @timer
@@ -249,8 +249,8 @@ def test_OpticalPSF_aberrations_struts():
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (all aberrations) disagrees with expected result")
-    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    do_pickle(optics)
+    check_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics)
 
     # test struts
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
@@ -259,8 +259,8 @@ def test_OpticalPSF_aberrations_struts():
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1, fft_sign='-')
     with assert_raises(TypeError):
         galsim.OpticalPSF(lod, nstruts=5, strut_thick=0.01, strut_angle=8.) # wrong units
-    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    do_pickle(optics)
+    check_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics)
 
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
@@ -276,15 +276,15 @@ def test_OpticalPSF_aberrations_struts():
         lod, obscuration=obscuration, nstruts=4,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1, fft_sign='-')
     assert optics_3 == optics_2
-    do_pickle(optics_3)
+    check_pickle(optics_3)
 
     # make sure it doesn't completely explode when asked to return a PSF with non-circular pupil and
     # non-zero obscuration
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, circular_pupil=False, oversampling=1, fft_sign='-')
-    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    do_pickle(optics)
+    check_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_pickle(optics)
 
 
 @timer
@@ -319,8 +319,8 @@ def test_OpticalPSF_aberrations_kwargs():
         opt1.drawImage(scale=0.2*lod, method='no_pixel').array,
         opt2.drawImage(scale=0.2*lod, method='no_pixel').array,
         err_msg="Optical PSF depends on how aberrations are specified (full list)")
-    do_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
-    do_pickle(opt2)
+    check_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
+    check_pickle(opt2)
 
     # Also, check for proper response to weird inputs.
     # aberrations must be a list or an array
@@ -475,8 +475,8 @@ def test_OpticalPSF_pupil_plane():
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
     if do_slow_tests:
-        do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
-        do_pickle(test_psf)
+        check_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
+        check_pickle(test_psf)
 
     # Make a smaller pupil plane image to test the pickling of this, even without slow tests.
     factor = 4 if not do_slow_tests else 16
@@ -484,7 +484,7 @@ def test_OpticalPSF_pupil_plane():
         alt_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                     oversampling=1., pupil_plane_im=im.bin(factor,factor),
                                     pad_factor=1.)
-        do_pickle(alt_psf)
+        check_pickle(alt_psf)
 
     assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam, pupil_plane_im='pp_file')
     assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam, pupil_plane_im=im,
@@ -796,12 +796,12 @@ def test_stepk_maxk_iipad():
             psf2.maxk, maxk*2.0, decimal=7,
             err_msg="OpticalPSF did not adopt forced value for maxk")
 
-    do_pickle(psf2)
+    check_pickle(psf2)
 
     t0 = time.time()
     psf3 = galsim.OpticalPSF(lam=lam, diam=diam, ii_pad_factor=1.)
     print("Time for OpticalPSF with ii_pad_factor=1 {0:6.4f}".format(time.time()-t0))
-    do_pickle(psf3)
+    check_pickle(psf3)
 
     # The two images should be close, but not equivalent.
     im = psf.drawImage(nx=16, ny=16, scale=0.2)

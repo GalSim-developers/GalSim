@@ -192,16 +192,16 @@ def test_real_galaxy_ideal():
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
 
-    do_pickle(rgc, lambda x: [ x.getGalImage(ind_fake), x.getPSFImage(ind_fake),
+    check_pickle(rgc, lambda x: [ x.getGalImage(ind_fake), x.getPSFImage(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
-    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
-    do_pickle(rgc)
-    do_pickle(rg, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+    check_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
+    check_pickle(rgc)
+    check_pickle(rg, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
                               x.original_psf.flux, x.original_gal.flux, x.flux ])
-    do_pickle(rg, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
-    do_pickle(rg_1, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
-    do_pickle(rg)
-    do_pickle(rg_1)
+    check_pickle(rg, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    check_pickle(rg_1, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    check_pickle(rg)
+    check_pickle(rg_1)
 
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
@@ -276,10 +276,10 @@ def test_real_galaxy_makeFromImage():
     rg_2 = galsim.RealGalaxy.makeFromImage(gal_image, psf, xi)
 
     check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
-    do_pickle(rg_2, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+    check_pickle(rg_2, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
                                 x.original_psf.flux, x.original_gal.flux, x.flux ])
-    do_pickle(rg_2, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
-    do_pickle(rg_2)
+    check_pickle(rg_2, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    check_pickle(rg_2)
 
     # See if we get reasonably consistent results for rg and rg_2
     psf = galsim.Kolmogorov(fwhm=0.6)
@@ -338,13 +338,13 @@ def test_real_galaxy_saved():
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
 
     # Check picklability
-    do_pickle(rgc, lambda x: [ x.getGalImage(ind_real), x.getPSFImage(ind_real),
+    check_pickle(rgc, lambda x: [ x.getGalImage(ind_real), x.getPSFImage(ind_real),
                                x.getNoiseProperties(ind_real) ])
-    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
-    do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
+    check_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
+    check_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
                                 nx=20, ny=20, scale=0.7))
-    do_pickle(rgc)
-    do_pickle(rg)
+    check_pickle(rgc)
+    check_pickle(rg)
 
 
 @timer
@@ -354,8 +354,8 @@ def test_pickle_crg():
     f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
     crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
 
-    do_pickle(crg)
-    do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
+    check_pickle(crg)
+    check_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
 
     # Check that missing band raises ValueError
     orig_band = f606w_cat.band
@@ -598,17 +598,17 @@ def test_ne():
             covspec2]
     all_obj_diff(objs)
     for obj in objs[:-5]:
-        do_pickle(obj)
+        check_pickle(obj)
 
     # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather
     # large, so the eval(repr) checks take a long time.
     # Therefore, run them from command line, but not from pytest.
     if __name__ == '__main__':
-        do_pickle(crg1)
-        do_pickle(covspec1)
+        check_pickle(crg1)
+        check_pickle(covspec1)
     else:
-        do_pickle(crg1, irreprable=True)
-        do_pickle(covspec1, irreprable=True)
+        check_pickle(crg1, irreprable=True)
+        check_pickle(covspec1, irreprable=True)
 
 @timer
 def test_flux():
@@ -635,11 +635,11 @@ def test_flux():
     check_basic(rg5, "RealGalaxy flux_rescale=1.7", approx_maxsb=True)
     check_basic(rg6, "RealGalaxy flux_rescale=-17", approx_maxsb=True)
 
-    do_pickle(rg2)
-    do_pickle(rg3)
-    do_pickle(rg4)
-    do_pickle(rg5)
-    do_pickle(rg6)
+    check_pickle(rg2)
+    check_pickle(rg3)
+    check_pickle(rg4)
+    check_pickle(rg5)
+    check_pickle(rg6)
 
 @timer
 def test_noise():
@@ -667,8 +667,8 @@ def test_noise():
     cf_2 = cf_2.withVariance(var_2)
     assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
-    do_pickle(cf_1)
-    do_pickle(cf_2)
+    check_pickle(cf_1)
+    check_pickle(cf_2)
 
 
 @timer

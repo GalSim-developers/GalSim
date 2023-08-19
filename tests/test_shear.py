@@ -170,7 +170,7 @@ def test_shear_initialization():
         all_shear_vals(s2, ind)
 
         # Check picklability
-        do_pickle(s)
+        check_pickle(s)
 
     # finally check some examples of invalid initializations for Shear
     assert_raises(TypeError,galsim.Shear,0.3)

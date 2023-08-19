@@ -38,9 +38,9 @@ def test_aperture():
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.7, pupil_plane_im=im)
     aper3 = galsim.Aperture(diam=1.7, nstruts=4, gsparams=galsim.GSParams(maximum_fft_size=4096))
-    do_pickle(aper1)
-    do_pickle(aper2)
-    do_pickle(aper3)
+    check_pickle(aper1)
+    check_pickle(aper2)
+    check_pickle(aper3)
     # Automatically created Aperture should match one created via OpticalScreen
     aper1 = galsim.Aperture(diam=1.7)
     aper2 = galsim.Aperture(diam=1.7, lam=500, screen_list=[galsim.OpticalScreen(diam=1.7)])
@@ -165,15 +165,15 @@ def test_phase_screen_list():
 
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, time_step=0.01, rng=rng)
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
-    do_pickle(ar1)
-    do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, 0.0).sum())
-    do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
+    check_pickle(ar1)
+    check_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, 0.0).sum())
+    check_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
     t = np.empty_like(aper.u)
     ud = galsim.UniformDeviate(rng.duplicate())
     ud.generate(t.ravel())
     t *= 0.1  # Only do a few boiling steps
-    do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, t).sum())
-    do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, t)))
+    check_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, t).sum())
+    check_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, t)))
 
     # Try seeking backwards
     assert ar1._time > 0.0
@@ -199,9 +199,9 @@ def test_phase_screen_list():
     assert ar1 != ar2
     ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1],
                                obscuration=0.3, annular_zernike=True)
-    do_pickle(ar3)
-    do_pickle(ar3, func=lambda x:x.wavefront(aper.u, aper.v).sum())
-    do_pickle(ar3, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v)))
+    check_pickle(ar3)
+    check_pickle(ar3, func=lambda x:x.wavefront(aper.u, aper.v).sum())
+    check_pickle(ar3, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v)))
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
@@ -209,9 +209,9 @@ def test_phase_screen_list():
                             r0_500=0.15,
                             rng=rng)
     atm.append(ar3)
-    do_pickle(atm)
-    do_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, 0.0, theta0).sum())
-    do_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
+    check_pickle(atm)
+    check_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, 0.0, theta0).sum())
+    check_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = atm[:-1]  # Refers to first n-1 screens
@@ -279,8 +279,8 @@ def test_phase_screen_list():
     atm6 = galsim.PhaseScreenList(atm[0])
     atm7 = galsim.PhaseScreenList([atm[0]])
     assert atm6 == atm7
-    do_pickle(atm6, func=lambda x:x.wavefront(aper.u, aper.v, None, theta0).sum())
-    do_pickle(atm6, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
+    check_pickle(atm6, func=lambda x:x.wavefront(aper.u, aper.v, None, theta0).sum())
+    check_pickle(atm6, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     atm6 = galsim.PhaseScreenList(atm[0], atm[1])
     atm7 = galsim.PhaseScreenList([atm[0], atm[1]])
@@ -294,8 +294,8 @@ def test_phase_screen_list():
     assert atm[0]._time == 0.0, "Wrong time for AtmosphericScreen"
     kwargs = dict(exptime=0.05, time_step=0.01, diam=1.1, lam=1000.0)
     psf = atm.makePSF(**kwargs)
-    do_pickle(psf)
-    do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
+    check_pickle(psf)
+    check_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
     psf2 = atm2.makePSF(**kwargs)
     psf3 = atm3.makePSF(**kwargs)
@@ -580,8 +580,8 @@ def test_stepk_maxk():
     np.testing.assert_almost_equal(
             psf2.maxk, maxk2*2.0, decimal=7,
             err_msg="PhaseScreenPSF did not adopt forced value for maxk")
-    do_pickle(psf)
-    do_pickle(psf2)
+    check_pickle(psf)
+    check_pickle(psf2)
 
     # Try out non-geometric-shooting
     psf3 = atm.makePSF(lam=500.0, aper=aper, geometric_shooting=False)
@@ -890,7 +890,7 @@ def test_phase_gradient_shoot():
                                                      photon_ops=[pupil_sampler, time_sampler, psf])
         np.testing.assert_allclose(im_shoot3.array, im_shoot.array)
 
-        do_pickle(pupil_sampler)
+        check_pickle(pupil_sampler)
 
         # Quick check with PupilAnnulusSampler
         pupil_sampler2 = galsim.PupilAnnulusSampler(R_outer=diam/2)
@@ -907,7 +907,7 @@ def test_phase_gradient_shoot():
             err_msg='Annulus sampling not close to image sampling'
         )
 
-        do_pickle(pupil_sampler2)
+        check_pickle(pupil_sampler2)
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.
@@ -1108,10 +1108,10 @@ def test_withGSP():
     psfGSP2 = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
     assert psfGSP == psfGSP2
     # Don't worry about repr for DummyScreen
-    do_pickle(psf, irreprable=True)
-    do_pickle(psfGSP, irreprable=True)
+    check_pickle(psf, irreprable=True)
+    check_pickle(psfGSP, irreprable=True)
 
-    # We can't use do_pickle with func that involves a random number generator, so just hard-code
+    # We can't use check_pickle with func that involves a random number generator, so just hard-code
     # the equivalent here.
     try:
         import cPickle as pickle
@@ -1464,7 +1464,7 @@ def test_user_screen():
         np.testing.assert_allclose(Zimg.array, timg.array, rtol=0, atol=1e-10)
         print(np.max(Zimg.array))
 
-    do_pickle(
+    check_pickle(
         uscreen,
         lambda sc:
             (
@@ -1480,8 +1480,8 @@ def test_user_screen():
     )
     uscreen2 = galsim.UserScreen(table, diam=2)
     uscreen3 = galsim.UserScreen(table, diam=2, obscuration=0.5)
-    do_pickle(uscreen2)
-    do_pickle(uscreen3)
+    check_pickle(uscreen2)
+    check_pickle(uscreen3)
     all_obj_diff([uscreen, uscreen2, uscreen3])
 
 
@@ -1518,7 +1518,7 @@ def test_uv_persistence():
         vscale = aper.v[1,0] - aper.v[0,0]
         assert np.max(mindist) < np.hypot(uscale, vscale)*0.5
 
-        do_pickle(photons)
+        check_pickle(photons)
 
 
 def test_t_persistence():

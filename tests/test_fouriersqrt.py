@@ -82,8 +82,8 @@ def test_fourier_sqrt():
             err_msg="Fourier square root of expanded square disagrees with original")
 
     # Check picklability
-    do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(sqrt1)
+    check_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(sqrt1)
 
     # Should raise an exception for invalid arguments
     assert_raises(TypeError, galsim.FourierSqrt)

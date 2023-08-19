@@ -108,20 +108,20 @@ def test_add():
     do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
-    do_pickle(sum_gauss)
+    check_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
+    check_pickle(sum_gauss)
 
     # Sum of just one argument should be equivalent to that argument.
     single = galsim.Add(gauss1)
     gsobject_compare(single, gauss1)
     check_basic(single, "`sum' of 1 Gaussian")
-    do_pickle(single)
+    check_pickle(single)
     do_shoot(single, myImg, "Single Sum")
 
     single = galsim.Add([gauss1])
     gsobject_compare(single, gauss1)
     check_basic(single, "`sum' of 1 Gaussian")
-    do_pickle(single)
+    check_pickle(single)
 
     # Should raise an exception for invalid arguments
     assert_raises(TypeError, galsim.Add)
@@ -267,9 +267,9 @@ def test_sum_transform():
         np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
         np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
 
-        do_pickle(gal0)
-        do_pickle(gal1)
-        do_pickle(gal2)
+        check_pickle(gal0)
+        check_pickle(gal1)
+        check_pickle(gal2)
 
 @timer
 def test_sum_noise():

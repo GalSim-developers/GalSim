@@ -174,7 +174,7 @@ def test_shapelet_properties():
     np.testing.assert_almost_equal(shapelet.xValue(zero), 0.0653321217013, 10)
 
     # Check picklability
-    do_pickle(shapelet)
+    check_pickle(shapelet)
 
     assert_raises(TypeError, galsim.Shapelet, sigma=sigma)
     assert_raises(TypeError, galsim.Shapelet, sigma=sigma, bvec=bvec)

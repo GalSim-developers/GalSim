@@ -89,9 +89,9 @@ def test_spergel():
     check_basic(spergel, "Spergel")
 
     # Check picklability
-    do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(spergel)
-    do_pickle(galsim.Spergel(0,1))
+    check_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(spergel)
+    check_pickle(galsim.Spergel(0,1))
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     assert_raises(TypeError, galsim.Spergel, nu=0, scale_radius=3, half_light_radius=1)

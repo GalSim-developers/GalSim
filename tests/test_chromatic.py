@@ -132,26 +132,26 @@ def test_draw_add_commutativity():
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
     chromatic_gal = mono_gal * bulge_SED
-    do_pickle(bulge_SED)
-    do_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
+    check_pickle(bulge_SED)
+    check_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
                                                    nx=10, ny=10, scale=1))
-    do_pickle(chromatic_gal)
+    check_pickle(chromatic_gal)
 
     # Shear object
     chromatic_gal = chromatic_gal.shear(e1=bulge_e1, e2=bulge_e2)
     chromatic_gal = chromatic_gal.shear(g1=shear_g1, g2=shear_g2)
-    do_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
+    check_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
                                                    nx=10, ny=10, scale=1))
-    do_pickle(chromatic_gal)
+    check_pickle(chromatic_gal)
 
     # make chromatic PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     mono_PSF = mono_PSF.withGSParams(maxk_threshold=1.e-4)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticTransformation(mono_PSF, flux_ratio=1.0)
-    do_pickle(chromatic_PSF, lambda x: (x.evaluateAtWavelength(bandpass.effective_wavelength)
+    check_pickle(chromatic_PSF, lambda x: (x.evaluateAtWavelength(bandpass.effective_wavelength)
                                          .drawImage(method='no_pixel', nx=10, ny=10, scale=1)))
-    do_pickle(chromatic_PSF)
+    check_pickle(chromatic_PSF)
     chromatic_PSF = chromatic_PSF.dilate(dilate_fn)
     chromatic_PSF = chromatic_PSF.shift(shift_fn)
 
@@ -238,9 +238,9 @@ def test_ChromaticConvolution_InterpolatedImage():
     final = galsim.Convolve(star, PSF)
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-    do_pickle(star)
-    do_pickle(PSF)
-    do_pickle(final)
+    check_pickle(star)
+    check_pickle(PSF)
+    check_pickle(final)
 
     # draw image using speed tricks in ChromaticConvolution.draw
     # For this particular test, need to set iimult=4 in order to pass.
@@ -304,11 +304,11 @@ def test_chromatic_add():
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image = final.drawImage(bandpass, image=image)
 
-    do_pickle(bulge)
-    do_pickle(disk)
-    do_pickle(bdgal)
-    do_pickle(chromatic_PSF)
-    do_pickle(final)
+    check_pickle(bulge)
+    check_pickle(disk)
+    check_pickle(bdgal)
+    check_pickle(chromatic_PSF)
+    check_pickle(final)
 
     bulge_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     bulge_part = galsim.Convolve([bulge, chromatic_PSF])
@@ -606,7 +606,7 @@ def test_chromatic_flux():
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
-    do_pickle(PSF)
+    check_pickle(PSF)
 
     # Check option to not use exact SED
     PSF = PSF.deinterpolated
@@ -625,7 +625,7 @@ def test_chromatic_flux():
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
-    do_pickle(PSF)
+    check_pickle(PSF)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
     PSF = PSF.deinterpolated
@@ -739,7 +739,7 @@ def test_double_ChromaticSum():
     obj = galsim.Convolve(a+b, c+d)
     obj.drawImage(bandpass, image=image, method='no_pixel')
 
-    do_pickle(obj)
+    check_pickle(obj)
 
     image_a = galsim.ImageD(16, 16, scale=0.2)
     image_b = galsim.ImageD(16, 16, scale=0.2)
@@ -961,8 +961,8 @@ def test_ChromaticObject_expand():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.expand not equal to Chromatic.expand")
 
-    do_pickle(a)
-    do_pickle(b)
+    check_pickle(a)
+    check_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1074,8 +1074,8 @@ def test_ChromaticObject_rotate():
             im1.array, im2.array, 5,
             "ChromaticObject.rotate not equal to ChromaticTransformation.rotate")
 
-    do_pickle(a)
-    do_pickle(b)
+    check_pickle(a)
+    check_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1176,8 +1176,8 @@ def test_ChromaticObject_shear():
             im1.array, im2.array, 5,
             "ChromaticObject.shear not equal to ChromaticTransformation.shear")
 
-    do_pickle(a)
-    do_pickle(b)
+    check_pickle(a)
+    check_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1290,8 +1290,8 @@ def test_ChromaticObject_shift():
             im1.array, im2.array, 5,
             "ChromaticObject.shift not equal to ChromaticTransformation.shift")
 
-    do_pickle(a)
-    do_pickle(b)
+    check_pickle(a)
+    check_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1493,7 +1493,7 @@ def test_gsparams():
     assert final6.obj_list[0].gsparams == galsim.GSParams()
     assert final6.obj_list[1].gsparams == galsim.GSParams()
 
-    do_pickle(final1)
+    check_pickle(final1)
 
     # Repeat similar tests for ChromaticSum
     bulge = galsim.Gaussian(half_light_radius=1) * bulge_SED
@@ -1559,7 +1559,7 @@ def test_separable_ChromaticSum():
                                          "separable ChromaticSum not correctly drawn")
     np.testing.assert_array_almost_equal(kimg1.array, kimg1b.array, 5,
                                          "separable ChromaticSum not correctly k-drawn")
-    do_pickle(final1)
+    check_pickle(final1)
 
     # 2) Check flux scaling
     img2 = img1.copy()
@@ -1578,7 +1578,7 @@ def test_separable_ChromaticSum():
         flux2b, 2.*flux1, 5,
         err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
 
-    do_pickle(final2)
+    check_pickle(final2)
 
     # 3) check that 3 summands, 2 with the same SED, 1 with a different SED, make an
     # inseparable sum.
@@ -1595,7 +1595,7 @@ def test_separable_ChromaticSum():
     img3 = img1.copy()
     final3.drawImage(bandpass, image=img3)
 
-    do_pickle(final3)
+    check_pickle(final3)
 
 
     component3 = galsim.Convolve(mono_gal3*disk_SED, psf)
@@ -1607,7 +1607,7 @@ def test_separable_ChromaticSum():
     np.testing.assert_array_almost_equal(img3.array, img3b.array, 5,
                                          "inseparable ChromaticSum not correctly drawn")
 
-    do_pickle(component3)
+    check_pickle(component3)
 
     # 4) What about if we wrap mono_gal1 and mono_gal2 in a ChromaticObject?
     cgal4 = (galsim.ChromaticObject(mono_gal1) * bulge_SED
@@ -1953,7 +1953,7 @@ def test_ChromaticOpticalPSF():
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
-    do_pickle(psf)
+    check_pickle(psf)
 
     # Test some other valid initialization options
     pupil_plane_im = os.path.join('Optics_comparison_images', 'sample_pupil_rolled.fits')
@@ -1961,7 +1961,7 @@ def test_ChromaticOpticalPSF():
                                       astig1=0.2, astig2=-0.1, coma1=0.03, coma2=0.04,
                                       fft_sign='-', geometric_shooting=True,
                                       pupil_plane_im=pupil_plane_im)
-    do_pickle(psf2)
+    check_pickle(psf2)
 
     # And some invalid options.
     with assert_raises(galsim.GalSimIncompatibleValuesError):
@@ -2000,7 +2000,7 @@ def test_ChromaticOpticalPSF():
 
     if __name__ == '__main__':
         # This is slow, but it is worth testing the pickling of InterpolatedChromaticObjects.
-        do_pickle(psf)
+        check_pickle(psf)
     else:
         repr(psf)
 
@@ -2081,7 +2081,7 @@ def test_ChromaticAiry():
     scale = 0.02
 
     psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
-    do_pickle(psf)
+    check_pickle(psf)
 
     # Generate a reference image
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
@@ -2485,10 +2485,10 @@ def test_chromatic_invariant():
     chrom1 = galsim.ChromaticObject(gsobj) * bulge_SED
     chrom2 = gsobj * bulge_SED
     chrom3 = galsim.ChromaticObject(gsobj * bulge_SED)
-    do_pickle(chrom1)
-    do_pickle(chrom2)
-    do_pickle(chrom3)
-    do_pickle(galsim.ChromaticObject(gsobj))
+    check_pickle(chrom1)
+    check_pickle(chrom2)
+    check_pickle(chrom3)
+    check_pickle(galsim.ChromaticObject(gsobj))
     p1 = galsim.PhotonArray(1)
     p2 = galsim.PhotonArray(1)
     p2.wavelength = 500
@@ -2518,7 +2518,7 @@ def test_chromatic_invariant():
     chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees,
                                            pressure=70., temperature=285., H2O_pressure=1.05)
     check_chromatic_invariant(chrom_atm)
-    do_pickle(chrom_atm)
+    check_pickle(chrom_atm)
 
     assert_raises(TypeError, galsim.ChromaticAtmosphere, gsobj,
                   500.0, zenith_angle=20.0 * galsim.degrees, invalid=3)
@@ -2526,7 +2526,7 @@ def test_chromatic_invariant():
     # ChromaticTransformation formed from __mul__
     chrom = gsobj * bulge_SED
     check_chromatic_invariant(chrom)
-    do_pickle(chrom)
+    check_pickle(chrom)
 
     with assert_raises(galsim.GalSimError):
         chrom.noise
@@ -2535,12 +2535,12 @@ def test_chromatic_invariant():
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2,
                                            scale_unit='arcmin')
     check_chromatic_invariant(chrom_opt)
-    do_pickle(chrom_opt)
+    check_pickle(chrom_opt)
 
     # ChromaticAiry
     chrom_airy = galsim.ChromaticAiry(lam=500.0, diam=3.0, scale_unit=galsim.arcmin)
     check_chromatic_invariant(chrom_airy)
-    do_pickle(chrom_airy)
+    check_pickle(chrom_airy)
 
     # Now start testing compound objects...
     # ChromaticSum
@@ -2548,9 +2548,9 @@ def test_chromatic_invariant():
     check_chromatic_invariant(chrom_sum_noSED)
     # TODO: Seems like this should be picklable. Probably anything that doesn't include
     #       unpicklable user input should be picklable.
-    #       e.g. autoconv2 has no hope.  But there are a few do_pickle calls that are commented
+    #       e.g. autoconv2 has no hope.  But there are a few check_pickle calls that are commented
     #       out that we should probably try to make work.  A job for another day, though...
-    #do_pickle(chrom_sum_noSED)
+    #check_pickle(chrom_sum_noSED)
     repr(chrom_sum_noSED)
     str(chrom_sum_noSED)
     assert_raises(galsim.GalSimError, chrom_sum_noSED.applyTo, p1)
@@ -2558,14 +2558,14 @@ def test_chromatic_invariant():
 
     chrom_sum_SED = chrom + chrom  # also separable
     check_chromatic_invariant(chrom_sum_SED)
-    do_pickle(chrom_sum_SED)
+    check_pickle(chrom_sum_SED)
     assert chrom_sum_SED.separable
 
     gsobj2 = galsim.Kolmogorov(fwhm=0.7)
     chrom2 = gsobj2 * disk_SED
     chrom_sum_SED2 = chrom + chrom2
     check_chromatic_invariant(chrom_sum_SED2)
-    do_pickle(chrom_sum_SED2)
+    check_pickle(chrom_sum_SED2)
     assert not chrom_sum_SED2.separable
     assert_raises(galsim.GalSimError, chrom_sum_SED.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, chrom_sum_SED.applyTo, p2)
@@ -2573,14 +2573,14 @@ def test_chromatic_invariant():
     # ChromaticConvolution
     conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
     check_chromatic_invariant(conv1)
-    do_pickle(conv1)
+    check_pickle(conv1)
 
     with assert_raises(galsim.GalSimError):
         conv1.noise
 
     conv2 = galsim.Convolve(chrom_airy, chrom_opt)  # Non-SEDed
     check_chromatic_invariant(conv2)
-    do_pickle(conv2)
+    check_pickle(conv2)
     assert_raises(galsim.GalSimError, conv1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, conv1.applyTo, p2)
     assert_raises(galsim.GalSimError, conv2.applyTo, p1)
@@ -2589,8 +2589,8 @@ def test_chromatic_invariant():
     # ChromaticDeconvolution
     deconv = galsim.Deconvolve(chrom_airy)
     check_chromatic_invariant(deconv)
-    #do_pickle(deconv)
-    repr(deconv) # gratuitous coverage of repr until do_pickle works.
+    #check_pickle(deconv)
+    repr(deconv) # gratuitous coverage of repr until check_pickle works.
     str(deconv)
     assert_raises(galsim.GalSimError, deconv.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, deconv.applyTo, p2)
@@ -2600,7 +2600,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(autoconv1)
     autoconv2 = galsim.AutoConvolve(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autoconv2)
-    do_pickle(autoconv1)
+    check_pickle(autoconv1)
     assert_raises(galsim.GalSimError, autoconv1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, autoconv1.applyTo, p2)
 
@@ -2609,7 +2609,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(autocorr1)
     autocorr2 = galsim.AutoCorrelate(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autocorr2)
-    do_pickle(autocorr1)
+    check_pickle(autocorr1)
     assert_raises(galsim.GalSimError, autocorr1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, autocorr1.applyTo, p2)
 
@@ -2618,8 +2618,8 @@ def test_chromatic_invariant():
     check_chromatic_invariant(four1)
     four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
-    #do_pickle(four1)
-    repr(four1) # gratuitous coverage of repr until do_pickle works.
+    #check_pickle(four1)
+    repr(four1) # gratuitous coverage of repr until check_pickle works.
     str(four1)
     assert_raises(galsim.GalSimError, four1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, four1.applyTo, p2)
@@ -2628,18 +2628,18 @@ def test_chromatic_invariant():
     # ChromaticTransformation
     sheared_chrom = chrom.shear(g1=0.1)
     check_chromatic_invariant(sheared_chrom)
-    do_pickle(sheared_chrom)
+    check_pickle(sheared_chrom)
 
     scaled_chrom = 2 * chrom
     check_chromatic_invariant(scaled_chrom)
-    do_pickle(scaled_chrom)
+    check_pickle(scaled_chrom)
 
     complex_scaled_chrom = chrom * (lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_scaled_chrom)
 
     chrom_added_SED = chrom_airy * bulge_SED
     check_chromatic_invariant(chrom_added_SED)
-    do_pickle(chrom_added_SED)
+    check_pickle(chrom_added_SED)
 
     complex_expanded_chrom = chrom.expand(lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_expanded_chrom)
@@ -2658,7 +2658,7 @@ def test_chromatic_invariant():
     # ChromaticInterpolatedObject
     chrom_interp = chrom_airy.interpolate(waves=[400.0, 500.0, 600.0])
     check_chromatic_invariant(chrom_interp)
-    do_pickle(chrom_interp)
+    check_pickle(chrom_interp)
     assert_raises(galsim.GalSimError, chrom_interp.applyTo, p1)
 
 
@@ -2909,7 +2909,7 @@ def test_atredshift():
     image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image1.array, image2.array)
-    do_pickle(final1)
+    check_pickle(final1)
 
     # ChromaticSum
     gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED

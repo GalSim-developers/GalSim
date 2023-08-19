@@ -115,10 +115,10 @@ def test_table():
         table1(np.array(testargs1).reshape((2,3)))
 
         # Check picklability
-        do_pickle(table1, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
-        do_pickle(table2, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
-        do_pickle(table1)
-        do_pickle(table2)
+        check_pickle(table1, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
+        check_pickle(table2, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
+        check_pickle(table1)
+        check_pickle(table2)
 
         table3 = galsim._LookupTable(x=args1,f=vals1,interpolant=interp)
         assert table3 == table1
@@ -151,7 +151,7 @@ def test_init():
     # Make sure nothing bad happens when we try to read in a stored power spectrum and assume
     # we can use the default interpolant (spline).
     tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
-    do_pickle(tab_ps)
+    check_pickle(tab_ps)
 
     # Check for bad inputs
     assert_raises(TypeError, galsim.LookupTable, x='foo')
@@ -229,10 +229,10 @@ def test_log():
             tab_3(x_neg)
 
     # Check picklability
-    do_pickle(tab_1)
-    do_pickle(tab_2)
-    do_pickle(tab_3)
-    do_pickle(tab_4)
+    check_pickle(tab_1)
+    check_pickle(tab_2)
+    check_pickle(tab_3)
+    check_pickle(tab_4)
 
     # Check storage of args and vals for log vs. linear, which should be the same to high precision.
     np.testing.assert_array_almost_equal(tab_1.getArgs(), tab_3.getArgs(), decimal=12,
@@ -339,9 +339,9 @@ def test_from_func():
         np.testing.assert_almost_equal(f5/truth, 1.0, decimal=11)
         np.testing.assert_almost_equal(f6/truth, 1.0, 11,
                                        "LookupTable.from_func (log-log) gave wrong answer")
-    do_pickle(tab2)
-    do_pickle(tab4)
-    do_pickle(tab6)
+    check_pickle(tab2)
+    check_pickle(tab4)
+    check_pickle(tab6)
 
 
 @timer
@@ -369,7 +369,7 @@ def test_table_GSInterp():
         z = f(xx)
 
         tab = galsim.LookupTable(x, z[0,:], interpolant=interpolant)
-        do_pickle(tab)
+        check_pickle(tab)
 
         # Use InterpolatedImage to validate
         wcs = galsim.JacobianWCS(
@@ -418,7 +418,7 @@ def test_table2d():
     z = f(xx, yy)
 
     tab2d = galsim.LookupTable2D(x, y, z)
-    do_pickle(tab2d)
+    check_pickle(tab2d)
 
     np.testing.assert_array_equal(tab2d.getXArgs(), x)
     np.testing.assert_array_equal(tab2d.getYArgs(), y)
@@ -913,7 +913,7 @@ def test_table2d_GSInterp():
     for interpolant in interpolants:
         z = f(xx, yy)
         tab2d = galsim.LookupTable2D(x, y, z, interpolant=interpolant)
-        do_pickle(tab2d)
+        check_pickle(tab2d)
         # Make sure precomputed-hash gets covered
         hash(tab2d)
 

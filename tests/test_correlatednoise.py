@@ -92,12 +92,12 @@ def test_uncorrelated_noise_zero_lag():
             "provided to UncorrelatedNoise.")
 
         # Check picklability
-        do_pickle(ucn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
-        do_pickle(ucn, drawNoise)
-        do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
-        do_pickle(cn, drawNoise)
-        do_pickle(ucn)
-        do_pickle(cn)
+        check_pickle(ucn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        check_pickle(ucn, drawNoise)
+        check_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        check_pickle(cn, drawNoise)
+        check_pickle(ucn)
+        check_pickle(cn)
 
     assert_raises(TypeError, galsim.UncorrelatedNoise)
     assert_raises(ValueError, galsim.UncorrelatedNoise, variance = -1.0)
@@ -705,9 +705,9 @@ def test_copy():
         "despite sharing the same RNG (high precision test).")
 
     # Check picklability
-    do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
-    do_pickle(cn, drawNoise)
-    do_pickle(cn)
+    check_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+    check_pickle(cn, drawNoise)
+    check_pickle(cn)
 
 @timer
 def test_add():
@@ -1288,9 +1288,9 @@ def test_cosmos_wcs():
                     'recover correct covariance at positions '+str(pos))
 
         # Check picklability
-        do_pickle(cn_test, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
-        do_pickle(cn_test, drawNoise)
-        do_pickle(cn_test)
+        check_pickle(cn_test, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        check_pickle(cn_test, drawNoise)
+        check_pickle(cn_test)
 
 
 @timer
@@ -1305,16 +1305,16 @@ def test_covariance_spectrum():
     SEDs = [galsim.SED('1', 'nm', 'fphotons'), galsim.SED('wave', 'nm', 'fphotons')]
     covspec = galsim.CovarianceSpectrum(Sigma, SEDs)
 
-    do_pickle(covspec)
+    check_pickle(covspec)
 
     wcs = galsim.PixelScale(0.1)
     psf = galsim.Gaussian(fwhm=1)
     bp = galsim.Bandpass('1', 'nm', blue_limit=500.0, red_limit=600.0)
-    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+    check_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
 
     covspec = covspec.transform(1.1, 0.2, 0.1, 0.9)
-    do_pickle(covspec)
-    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+    check_pickle(covspec)
+    check_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
 
 @timer
 def test_gsparams():

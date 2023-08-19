@@ -119,7 +119,7 @@ def test_simple():
     print('max diff with manual pixel conv, no subsampling = ',np.max(np.abs(im6.array-im3.array)))
     np.testing.assert_almost_equal(im6.array, im3.array, decimal=12)
 
-    do_pickle(simple)
+    check_pickle(simple)
 
     
 @timer
@@ -323,9 +323,9 @@ def test_silicon():
         assert silicon != s
         assert s != s0
 
-    do_pickle(s0)
-    do_pickle(s1)
-    do_pickle(s7)
+    check_pickle(s0)
+    check_pickle(s1)
+    check_pickle(s7)
 
     assert_raises(OSError, galsim.SiliconSensor, name='junk')
     assert_raises(OSError, galsim.SiliconSensor, name='output')
@@ -553,7 +553,7 @@ def test_silicon_area():
     np.testing.assert_allclose((im2T(0,1) + im2T(0,-1))/2., 59179.0, rtol=1e-3)
     np.testing.assert_allclose((im2T(1,0) + im2T(-1,0))/2., 59351.0, rtol=1e-3)
 
-    do_pickle(siliconT)
+    check_pickle(siliconT)
 
     # Finally, the regular Sensor pixel areas are just 1.
     simple = galsim.Sensor()

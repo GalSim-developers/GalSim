@@ -550,7 +550,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     do_wcs_pos(wcs, ufunc, vfunc, name)
 
     # Check picklability
-    do_pickle(wcs)
+    check_pickle(wcs)
 
     # Test the transformation of a GSObject
     # These only work for local WCS projections!
@@ -747,7 +747,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
     do_wcs_pos(wcs, ufunc, vfunc, name, color=color)
 
     # Check picklability
-    if test_pickle: do_pickle(wcs)
+    if test_pickle: check_pickle(wcs)
 
     # The GSObject transformation tests are only valid for a local WCS.
     # But it should work for wcs.local()
@@ -918,7 +918,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
         atol = 1.e-6
 
     # Check picklability
-    if test_pickle: do_pickle(wcs)
+    if test_pickle: check_pickle(wcs)
 
     near_ra_list = []
     near_dec_list = []

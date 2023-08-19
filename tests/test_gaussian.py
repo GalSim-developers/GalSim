@@ -98,8 +98,8 @@ def test_gaussian():
     do_kvalue(gauss,myImg,"Gaussian")
 
     # Check picklability
-    do_pickle(galsim.GSParams())  # Check GSParams explicitly here too.
-    do_pickle(galsim.GSParams(
+    check_pickle(galsim.GSParams())  # Check GSParams explicitly here too.
+    check_pickle(galsim.GSParams(
         minimum_fft_size = 12,
         maximum_fft_size = 40,
         folding_threshold = 1.e-1,
@@ -111,8 +111,8 @@ def test_gaussian():
         realspace_abserr = 7.e-1,
         integration_relerr = 8.e-1,
         integration_abserr = 9.e-1))
-    do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(gauss)
+    check_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(gauss)
 
     # Should raise an exception if >=2 radii are provided.
     assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)

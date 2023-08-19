@@ -1919,7 +1919,7 @@ class single_threaded:
 # The rest of these are only used by the tests in GalSim.  But we make them available
 # for other code bases who may want to use them as well.
 
-def do_pickle(obj, func = lambda x : x, irreprable=False, random=None):
+def check_pickle(obj, func = lambda x : x, irreprable=False, random=None):
     """Check that the object is picklable.
 
     Also check some related desirable properties that we want for (almost) all galsim objects:

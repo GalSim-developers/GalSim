@@ -28,7 +28,7 @@ def test_galsim_error():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, RuntimeError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -44,7 +44,7 @@ def test_galsim_value_error():
     assert err.allowed_values == None
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
     err = galsim.GalSimValueError("Test", value, (0,1,2))
     print('str = ',str(err))
@@ -54,7 +54,7 @@ def test_galsim_value_error():
     assert err.allowed_values == (0,1,2)
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -69,7 +69,7 @@ def test_galsim_key_error():
     assert err.key == key
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, KeyError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -84,7 +84,7 @@ def test_galsim_index_error():
     assert err.index == index
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, IndexError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -101,7 +101,7 @@ def test_galsim_range_error():
     assert err.max == 1
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
     err = galsim.GalSimRangeError("Test", value, 10)
     print('str = ',str(err))
@@ -112,7 +112,7 @@ def test_galsim_range_error():
     assert err.max == None
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -129,7 +129,7 @@ def test_galsim_bounds_error():
     assert err.bounds == bounds
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -141,7 +141,7 @@ def test_galsim_undefined_bounds_error():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, galsim.GalSimError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -155,7 +155,7 @@ def test_galsim_immutable_error():
     assert str(err) == "Test Image: galsim.Image(bounds=galsim.BoundsI(1,1,1,1), wcs=None, dtype=numpy.float64)"
     assert err.image == im
     assert isinstance(err, galsim.GalSimError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -173,7 +173,7 @@ def test_galsim_incompatible_values_error():
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
     assert isinstance(err, TypeError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -188,7 +188,7 @@ def test_galsim_sed_error():
     assert err.sed == sed
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, TypeError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -200,7 +200,7 @@ def test_galsim_hsm_error():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, galsim.GalSimError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -216,7 +216,7 @@ def test_galsim_fft_size_error():
     assert err.size == 10240
     np.testing.assert_almost_equal(err.mem, 2.34375)
     assert isinstance(err, galsim.GalSimError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -229,7 +229,7 @@ def test_galsim_config_error():
     assert str(err) == "Test"
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -246,7 +246,7 @@ def test_galsim_config_value_error():
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, galsim.GalSimConfigError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
     err = galsim.GalSimConfigValueError("Test", value, (0,1,2))
     print('str = ',str(err))
@@ -257,7 +257,7 @@ def test_galsim_config_value_error():
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, galsim.GalSimConfigError)
     assert isinstance(err, ValueError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -270,7 +270,7 @@ def test_galsim_notimplemented_error():
     assert str(err) == "Test"
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, NotImplementedError)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -282,7 +282,7 @@ def test_galsim_warning():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, UserWarning)
-    do_pickle(err)
+    check_pickle(err)
 
 
 @timer
@@ -294,7 +294,7 @@ def test_galsim_deprecation_warning():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, UserWarning)
-    do_pickle(err)
+    check_pickle(err)
 
 
 if __name__ == "__main__":

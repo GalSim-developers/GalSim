@@ -67,8 +67,8 @@ def test_deviate_noise():
             err_msg="Wrong uniform randoms generated for Fortran-ordered Image")
 
     # Check picklability
-    do_pickle(noise, drawNoise)
-    do_pickle(noise)
+    check_pickle(noise, drawNoise)
+    check_pickle(noise)
 
     # Check copy, eq and ne
     noise2 = galsim.DeviateNoise(noise.rng.duplicate())  # Separate but equivalent rng chain.
@@ -247,9 +247,9 @@ def test_gaussian_noise():
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
 
     # Check picklability
-    do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
-    do_pickle(gn, drawNoise)
-    do_pickle(gn)
+    check_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
+    check_pickle(gn, drawNoise)
+    check_pickle(gn)
 
     # Check copy, eq and ne
     gn = gn.withVariance(gSigma**2)
@@ -344,9 +344,9 @@ def test_variable_gaussian_noise():
             err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
 
     # Check picklability
-    do_pickle(vgn, lambda x: (x.rng.serialize(), x.var_image))
-    do_pickle(vgn, drawNoise)
-    do_pickle(vgn)
+    check_pickle(vgn, lambda x: (x.rng.serialize(), x.var_image))
+    check_pickle(vgn, drawNoise)
+    check_pickle(vgn)
 
     # Check copy, eq and ne
     vgn2 = galsim.VariableGaussianNoise(vgn.rng.duplicate(), var_image)
@@ -510,9 +510,9 @@ def test_poisson_noise():
             err_msg="PoissonNoise().withScaledVariance results in wrong sky_level")
 
     # Check picklability
-    do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
-    do_pickle(pn, drawNoise)
-    do_pickle(pn)
+    check_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
+    check_pickle(pn, drawNoise)
+    check_pickle(pn)
 
     # Check copy, eq and ne
     pn = pn.withVariance(pMean)
@@ -774,9 +774,9 @@ def test_ccdnoise():
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")
 
     # Check picklability
-    do_pickle(ccdnoise, lambda x: (x.rng.serialize(), x.sky_level, x.gain, x.read_noise))
-    do_pickle(ccdnoise, drawNoise)
-    do_pickle(ccdnoise)
+    check_pickle(ccdnoise, lambda x: (x.rng.serialize(), x.sky_level, x.gain, x.read_noise))
+    check_pickle(ccdnoise, drawNoise)
+    check_pickle(ccdnoise)
 
     # Check copy, eq and ne
     ccdnoise = galsim.CCDNoise(rng, sky, gain, read_noise)

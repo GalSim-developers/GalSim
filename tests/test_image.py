@@ -372,19 +372,19 @@ def test_Image_basic():
         assert_raises(TypeError, im1.shift, dx, dy, invalid=True)
 
         # Check picklability
-        do_pickle(im1)
-        do_pickle(im1_view)
-        do_pickle(im2)
-        do_pickle(im2_view)
-        do_pickle(im2_cview)
-        do_pickle(im3_view)
-        do_pickle(im4_view)
+        check_pickle(im1)
+        check_pickle(im1_view)
+        check_pickle(im2)
+        check_pickle(im2_view)
+        check_pickle(im2_cview)
+        check_pickle(im3_view)
+        check_pickle(im4_view)
 
     # Also check picklability of Bounds, Position here.
-    do_pickle(galsim.PositionI(2,3))
-    do_pickle(galsim.PositionD(2.2,3.3))
-    do_pickle(galsim.BoundsI(2,3,7,8))
-    do_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
+    check_pickle(galsim.PositionI(2,3))
+    check_pickle(galsim.PositionD(2.2,3.3))
+    check_pickle(galsim.BoundsI(2,3,7,8))
+    check_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
 
 @timer
 def test_undefined_image():
@@ -471,10 +471,10 @@ def test_undefined_image():
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_fft)
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_inverse_fft)
 
-        do_pickle(im1.bounds)
-        do_pickle(im1)
-        do_pickle(im1.view())
-        do_pickle(im1.view(make_const=True))
+        check_pickle(im1.bounds)
+        check_pickle(im1)
+        check_pickle(im1.view())
+        check_pickle(im1.view(make_const=True))
 
 @timer
 def test_Image_FITS_IO():
@@ -2101,7 +2101,7 @@ def test_Image_subImage():
         np.testing.assert_array_equal(image.array, (2*ref_array**2),
             err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
 
-        do_pickle(image)
+        check_pickle(image)
 
     assert_raises(TypeError, image.subImage, bounds=None)
     assert_raises(TypeError, image.subImage, bounds=galsim.BoundsD(0,4,0,4))
@@ -2213,9 +2213,9 @@ def test_Image_resize():
             np.testing.assert_array_equal(
                 im3_full.array, 23, err_msg="im3_full changed")
 
-            do_pickle(im1)
-            do_pickle(im2)
-            do_pickle(im3)
+            check_pickle(im1)
+            check_pickle(im2)
+            check_pickle(im3)
 
     assert_raises(TypeError, im1.resize, bounds=None)
     assert_raises(TypeError, im1.resize, bounds=galsim.BoundsD(0,5,0,5))
@@ -2258,7 +2258,7 @@ def test_ConstImage_array_constness():
         assert_raises(galsim.GalSimImmutableError, image.setZero)
         assert_raises(galsim.GalSimImmutableError, image.invertSelf)
 
-        do_pickle(image)
+        check_pickle(image)
 
 
 @timer
@@ -2333,7 +2333,7 @@ def test_Image_constructor():
             test_arr, test_im.array,
             err_msg="Image constructor mangled input NumPy array (endian issues).")
 
-        do_pickle(test_im)
+        check_pickle(test_im)
 
         # Check that some invalid sets of construction args raise the appropriate errors
         # Invalid args
@@ -2393,7 +2393,7 @@ def test_Image_view():
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.
-    do_pickle(im)
+    check_pickle(im)
 
     # Test view with no arguments
     imv = im.view()
@@ -2402,8 +2402,8 @@ def test_Image_view():
     imv.setValue(11,19, 20)
     assert imv(11,19) == 20
     assert im(11,19) == 20
-    do_pickle(im)
-    do_pickle(imv)
+    check_pickle(im)
+    check_pickle(imv)
 
     # Test view with new origin
     imv = im.view(origin=(0,0))
@@ -2418,8 +2418,8 @@ def test_Image_view():
     imv2.setOrigin(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
-    do_pickle(imv)
-    do_pickle(imv2)
+    check_pickle(imv)
+    check_pickle(imv2)
 
     # Test view with new center
     imv = im.view(center=(0,0))
@@ -2436,8 +2436,8 @@ def test_Image_view():
     assert imv.wcs == imv2.wcs
     with assert_raises(galsim.GalSimError):
         imv.scale   # scale is invalid if wcs is not a PixelScale
-    do_pickle(imv)
-    do_pickle(imv2)
+    check_pickle(imv)
+    check_pickle(imv2)
 
     # Test view with new scale
     imv = im.view(scale=0.17)
@@ -2454,8 +2454,8 @@ def test_Image_view():
     imv2.scale = 0.17
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
-    do_pickle(imv)
-    do_pickle(imv2)
+    check_pickle(imv)
+    check_pickle(imv2)
 
     # Test view with new wcs
     imv = im.view(wcs=galsim.JacobianWCS(0., 0.23, -0.23, 0.))
@@ -2469,8 +2469,8 @@ def test_Image_view():
     imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
-    do_pickle(imv)
-    do_pickle(imv2)
+    check_pickle(imv)
+    check_pickle(imv2)
 
     # Go back to original value for that pixel and make sure all are still equal to 17
     im.setValue(11,19, 17)
@@ -2729,13 +2729,13 @@ def test_complex_image():
                 assert im4_view(x,y) == 10*x + y + 20j*x + 2j*y
 
         # Check picklability
-        do_pickle(im1)
-        do_pickle(im1_view)
-        do_pickle(im1_cview)
-        do_pickle(im2)
-        do_pickle(im2_view)
-        do_pickle(im3_view)
-        do_pickle(im4_view)
+        check_pickle(im1)
+        check_pickle(im1_view)
+        check_pickle(im1_cview)
+        check_pickle(im2)
+        check_pickle(im2_view)
+        check_pickle(im3_view)
+        check_pickle(im4_view)
 
 @timer
 def test_complex_image_arith():

@@ -130,8 +130,8 @@ def test_SED_basic():
         if isinstance(s._orig_spec, type(lambda: None)):
             print('\nSkip pickle test for k=%d, since spec is %s\n'%(k,s._spec))
         else:
-            do_pickle(s, lambda x: (x(470), x(490), x(910)) )
-            do_pickle(s)
+            check_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            check_pickle(s)
 
     # Check some dimensionless spectra
     d_list = [
@@ -160,8 +160,8 @@ def test_SED_basic():
 
         # Only the first one is not picklable
         if k > 0:
-            do_pickle(s, lambda x: (x(470), x(490), x(910)) )
-            do_pickle(s)
+            check_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            check_pickle(s)
 
 
 @timer
@@ -274,13 +274,13 @@ def test_SED_mul():
         d = a*4.2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        if sed is sed0: do_pickle(d)
+        if sed is sed0: check_pickle(d)
 
         # assignment multiplication
         d *= 2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        if sed is sed0: do_pickle(d)
+        if sed is sed0: check_pickle(d)
 
         # SED multiplied by dimensionless, constant SED
         e = galsim.SED(2.0, 'nm', '1')
@@ -341,7 +341,7 @@ def test_SED_div():
             np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
                                            err_msg="Found wrong value in SED.__div__")
             if a0 is a0_lt:
-                do_pickle(d)
+                check_pickle(d)
 
             # SED divided by dimensionless SED
             e = galsim.SED('wave', 'nm', '1')
