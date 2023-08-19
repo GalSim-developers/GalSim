@@ -1867,9 +1867,9 @@ def get_omp_threads():
     """
     # Some OMP implemenations have a bug where if omp_get_max_threads() is called
     # (which is what this function does), it sets something called thread affinity.
-    # The upshot of that is that multiprocessing (i.e. not even omp threading) is confined
-    # to a single thread.  Yeah, it's idiotic, but that seems to be the case.
-    # The only solution found by Eli, who looked into it prett hard, is to set the env
+    # The upshot of that is that multiprocessing (i.e. not even just omp threading) is confined
+    # to a single hardware thread.  Yeah, it's idiotic, but that seems to be the case.
+    # The only solution found by Eli, who looked into it pretty hard, is to set the env
     # variable OMP_PROC_BIND to "false".  This seems to stop the bad behavior.
     # So we do it here always before calling GetOMPThreads.
     # If this breaks someone valid use of this variable, let us know and we can try to

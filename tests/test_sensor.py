@@ -1208,6 +1208,17 @@ def test_omp():
         assert "OpenMP reports that it will use 1 threads" in cl.output
         assert "Unable to use multiple threads" in cl.output
 
+    # This is really just for coverage.  Check that OMP_PROC_BIND gets set properly.
+    with mock.patch('os.environ', {}):
+        assert os.environ.get('OMP_PROC_BIND') is None
+        galsim.get_omp_threads()
+        assert os.environ.get('OMP_PROC_BIND') == 'false'
+
+    with mock.patch('os.environ', {}):
+        assert os.environ.get('OMP_PROC_BIND') is None
+        galsim.set_omp_threads(4)
+        assert os.environ.get('OMP_PROC_BIND') == 'false'
+
 
 @timer
 def test_big_then_small():
