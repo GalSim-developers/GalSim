@@ -549,7 +549,7 @@ def test_ne():
             galsim.Sersic(n=1.1, half_light_radius=1.0, trunc=1.8),
             galsim.Sersic(n=1.1, half_light_radius=1.0, trunc=1.8, flux_untruncated=True),
             galsim.Sersic(n=1.1, half_light_radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # DeVaucouleurs.  Params include half_light_radius, scale_radius, flux, trunc, flux_untruncated,
     # and gsparams.
@@ -561,7 +561,7 @@ def test_ne():
             galsim.DeVaucouleurs(half_light_radius=1.0, trunc=2.0),
             galsim.DeVaucouleurs(half_light_radius=1.0, trunc=2.0, flux_untruncated=True),
             galsim.DeVaucouleurs(half_light_radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 @timer
 def test_near_05():

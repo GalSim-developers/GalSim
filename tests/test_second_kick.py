@@ -297,7 +297,7 @@ def test_sk_ne():
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, flux=2.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, scale_unit='arcmin'),
             galsim.SecondKick(lam=500.0, r0=0.2, diam=4.0, gsparams=gsp)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 if __name__ == '__main__':

@@ -337,7 +337,7 @@ def test_ne():
             galsim.Spergel(nu=0.0, scale_radius=1.0),
             galsim.Spergel(nu=0.0, half_light_radius=1.0, flux=1.1),
             galsim.Spergel(nu=0.0, half_light_radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 if __name__ == "__main__":

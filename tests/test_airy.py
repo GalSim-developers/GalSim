@@ -277,7 +277,7 @@ def test_ne():
             galsim.Airy(lam=1.0, diam=1.0, obscuration=0.1),
             galsim.Airy(lam_over_diam=1.0, flux=1.1),
             galsim.Airy(lam_over_diam=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 if __name__ == "__main__":

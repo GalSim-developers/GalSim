@@ -890,7 +890,7 @@ def test_ne():
             galsim.Transform(gal1, flux_ratio=flux_ratio),
             galsim.Transform(gal1, gsparams=gsp),
             galsim.Transform(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
     # A degenerate jacobian will raise an exception.
     with assert_raises(galsim.GalSimError):

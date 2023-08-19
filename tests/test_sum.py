@@ -226,7 +226,7 @@ def test_ne():
             galsim.Sum(galsim.Sum(gal1, gal2), gal2),
             galsim.Sum(gal1, gsparams=gsp),
             galsim.Sum(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 @timer

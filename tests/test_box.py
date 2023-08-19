@@ -297,7 +297,7 @@ def test_ne():
             galsim.Pixel(scale=1.1),
             galsim.Pixel(scale=1.0, flux=1.1),
             galsim.Pixel(scale=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # Box.  Params include width, height, flux, gsparams.
     # gsparams.
@@ -307,7 +307,7 @@ def test_ne():
             galsim.Box(width=1.0, height=1.1),
             galsim.Box(width=1.0, height=1.0, flux=1.1),
             galsim.Box(width=1.0, height=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # TopHat.  Params include radius, flux, gsparams.
     # gsparams.
@@ -316,7 +316,7 @@ def test_ne():
             galsim.TopHat(radius=1.1),
             galsim.TopHat(radius=1.0, flux=1.1),
             galsim.TopHat(radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

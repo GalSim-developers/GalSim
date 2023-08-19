@@ -383,7 +383,7 @@ def test_ne():
             galsim.Gaussian(sigma=1.2, flux=1.1),
             galsim.Gaussian(sigma=1.2, gsparams=gsp)]
     # Check that setifying doesn't remove any duplicate items.
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 if __name__ == "__main__":

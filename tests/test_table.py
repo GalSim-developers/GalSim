@@ -1006,7 +1006,7 @@ def test_ne():
             dfdx=ff, dfdy=ff, d2fdxdy=ff
         )
     ])
-    all_obj_diff(lts)
+    check_all_diff(lts)
 
 @timer
 def test_integrate():

@@ -238,7 +238,7 @@ def test_ne():
         galsim.zernike.Zernike([0, 1, 2, 3], R_outer=0.2),
         galsim.zernike.Zernike([0, 1, 2, 3], R_outer=0.2, R_inner=0.1),
     ]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 @timer

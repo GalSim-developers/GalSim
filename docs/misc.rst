@@ -83,7 +83,7 @@ Test Suite Helper Functions and Contexts
 
 .. autofunction:: galsim.utilities.check_pickle
 
-.. autofunction:: galsim.utilities.all_obj_diff
+.. autofunction:: galsim.utilities.check_all_diff
 
 .. autoclass:: galsim.utilities.CaptureLog
 

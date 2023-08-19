@@ -367,7 +367,7 @@ def test_ne():
             galsim.Kolmogorov(lam=1.0, r0_500=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 @timer
 def test_low_folding_threshold():

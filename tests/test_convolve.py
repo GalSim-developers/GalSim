@@ -739,28 +739,28 @@ def test_ne():
             galsim.Convolution(gal1, galsim.Convolution(gal2, gal2)),  # Not! associative.
             galsim.Convolution(gal1, gsparams=gsp),
             galsim.Convolution(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # Deconvolution.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.Deconvolution(gal1),
             galsim.Deconvolution(gal2),
             galsim.Deconvolution(gal1, gsparams=gsp),
             galsim.Deconvolution(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # AutoConvolution.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.AutoConvolution(gal1),
             galsim.AutoConvolution(gal2),
             galsim.AutoConvolution(gal1, gsparams=gsp),
             galsim.AutoConvolution(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # AutoCorrelation.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.AutoCorrelation(gal1),
             galsim.AutoCorrelation(gal2),
             galsim.AutoCorrelation(gal1, gsparams=gsp),
             galsim.AutoCorrelation(gal1, gsparams=gsp, propagate_gsparams=False)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 @timer

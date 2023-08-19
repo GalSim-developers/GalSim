@@ -624,7 +624,7 @@ def test_ne():
             galsim.Aperture(diam=1.0, pupil_plane_im=pupil_plane_im),
             galsim.Aperture(diam=1.0, pupil_plane_im=pupil_plane_im,
                             pupil_angle=10.0*galsim.degrees)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
     # Test AtmosphericScreen __ne__
     rng = galsim.BaseDeviate(1)
@@ -640,12 +640,12 @@ def test_ne():
             galsim.AtmosphericScreen(10.0, rng=rng, L0=10.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=10.0),
             ]
-    all_obj_diff(objs)
+    check_all_diff(objs)
     objs.append(galsim.AtmosphericScreen(10.0, rng=rng))
     objs[-1].instantiate()
     # Should still all be __ne__, but first and last will have the same hash this time.
     assert hash(objs[0]) == hash(objs[-1])
-    all_obj_diff(objs, check_hash=False)
+    check_all_diff(objs, check_hash=False)
 
     # Test OpticalScreen __ne__
     objs = [galsim.OpticalScreen(diam=1.0),
@@ -662,14 +662,14 @@ def test_ne():
             galsim.OpticalScreen(diam=1.0, spher=1.0, lam_0=100.0),
             galsim.OpticalScreen(diam=1.0, aberrations=[0,0,1.1]), # tip=1.1
             ]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
     # Test PhaseScreenList __ne__
     atm = galsim.Atmosphere(10.0, vx=1.0)
     objs = [galsim.PhaseScreenList(atm),
             galsim.PhaseScreenList(objs),  # Reuse list of OpticalScreens above
             galsim.PhaseScreenList(objs[0:2])]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
     # Test PhaseScreenPSF __ne__
     psl = galsim.PhaseScreenList(atm)
@@ -683,7 +683,7 @@ def test_ne():
     maxk = objs[0].maxk
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_stepk=stepk/1.5)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_maxk=maxk*2.0)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 @timer
@@ -1482,7 +1482,7 @@ def test_user_screen():
     uscreen3 = galsim.UserScreen(table, diam=2, obscuration=0.5)
     check_pickle(uscreen2)
     check_pickle(uscreen3)
-    all_obj_diff([uscreen, uscreen2, uscreen3])
+    check_all_diff([uscreen, uscreen2, uscreen3])
 
 
 @timer

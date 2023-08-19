@@ -2009,14 +2009,13 @@ def check_pickle(obj, func = lambda x : x, irreprable=False, random=None):
 
     # Historical note:
     # We used to have a test here where we perturbed the construction arguments to make sure
-    # that objects that should be different really are different.
-    # However, that used `__getinitargs__`, which we've moved away from using for pickle, so
-    # none of our classes get checked this way anymore.  So we removed this section.
-    # This means that this inequality test has to be done manually via all_obj_diff.
+    # that objects that should be different really are different.  However, that used
+    # `__getinitargs__`, which we don't use anymore, so we removed this section.
+    # This means that this inequality test has to be done manually via check_all_diff.
     # See releases v2.3 or earlier for the old way we did this.
 
 
-def all_obj_diff(objs, check_hash=True):
+def check_all_diff(objs, check_hash=True):
     """Test that all objects test as being unequal.
 
     It checks all pairs of objects in the list and asserts that obj1 != obj2.
