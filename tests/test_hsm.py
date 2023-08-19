@@ -592,8 +592,8 @@ def test_hsmparams():
     assert(equal_hsmshapedata(res, res_def)), 'Shear outputs differ when using default HSMParams'
     assert res == res_def, 'Shear outputs differ when using default HSMParams'
 
-    do_pickle(default_hsmparams)
-    do_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
+    check_pickle(default_hsmparams)
+    check_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
                                    nsig_rg2=1.6,
                                    regauss_too_small=0,
                                    adapt_order=0,
@@ -605,8 +605,8 @@ def test_hsmparams():
                                    max_ashift=5.,
                                    ksb_moments_max=2,
                                    failed_moments=99.))
-    do_pickle(res)
-    do_pickle(res2)
+    check_pickle(res)
+    check_pickle(res2)
 
     # Then check failure modes: force it to fail by changing HSMParams.
     new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)

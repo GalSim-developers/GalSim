@@ -258,10 +258,10 @@ def test_uniform():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(u, lambda x: x.serialize(), random=True)
-    do_pickle(u, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(u, random=True)
-    do_pickle(rng, random=True)
+    check_pickle(u, lambda x: x.serialize(), random=True)
+    check_pickle(u, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(u, random=True)
+    check_pickle(rng, random=True)
     assert 'UniformDeviate' in repr(u)
     assert 'UniformDeviate' in str(u)
     assert isinstance(eval(repr(u)), galsim.UniformDeviate)
@@ -466,9 +466,9 @@ def test_gaussian():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma), random=True)
-    do_pickle(g, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(g, random=True)
+    check_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma), random=True)
+    check_pickle(g, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(g, random=True)
     assert 'GaussianDeviate' in repr(g)
     assert 'GaussianDeviate' in str(g)
     assert isinstance(eval(repr(g)), galsim.GaussianDeviate)
@@ -627,9 +627,9 @@ def test_binomial():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(b, lambda x: (x.serialize(), x.n, x.p), random=True)
-    do_pickle(b, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(b, random=True)
+    check_pickle(b, lambda x: (x.serialize(), x.n, x.p), random=True)
+    check_pickle(b, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(b, random=True)
     assert 'BinomialDeviate' in repr(b)
     assert 'BinomialDeviate' in str(b)
     assert isinstance(eval(repr(b)), galsim.BinomialDeviate)
@@ -818,9 +818,9 @@ def test_poisson():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(p, lambda x: (x.serialize(), x.mean), random=True)
-    do_pickle(p, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(p, random=True)
+    check_pickle(p, lambda x: (x.serialize(), x.mean), random=True)
+    check_pickle(p, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(p, random=True)
     assert 'PoissonDeviate' in repr(p)
     assert 'PoissonDeviate' in str(p)
     assert isinstance(eval(repr(p)), galsim.PoissonDeviate)
@@ -954,7 +954,7 @@ def test_poisson_zeromean():
     p = galsim.PoissonDeviate(testseed, mean=0)
     p2 = p.duplicate()
     p3 = galsim.PoissonDeviate(p.serialize(), mean=0)
-    do_pickle(p, random=True)
+    check_pickle(p, random=True)
 
     # Test direct draws
     testResult = (p(), p(), p())
@@ -1133,9 +1133,9 @@ def test_weibull():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(w, lambda x: (x.serialize(), x.a, x.b), random=True)
-    do_pickle(w, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(w, random=True)
+    check_pickle(w, lambda x: (x.serialize(), x.a, x.b), random=True)
+    check_pickle(w, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(w, random=True)
     assert 'WeibullDeviate' in repr(w)
     assert 'WeibullDeviate' in str(w)
     assert isinstance(eval(repr(w)), galsim.WeibullDeviate)
@@ -1280,9 +1280,9 @@ def test_gamma():
             err_msg='Wrong gamma random number sequence from generate.')
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.k, x.theta), random=True)
-    do_pickle(g, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(g, random=True)
+    check_pickle(g, lambda x: (x.serialize(), x.k, x.theta), random=True)
+    check_pickle(g, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(g, random=True)
     assert 'GammaDeviate' in repr(g)
     assert 'GammaDeviate' in str(g)
     assert isinstance(eval(repr(g)), galsim.GammaDeviate)
@@ -1427,9 +1427,9 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence from generate.')
 
     # Check picklability
-    do_pickle(c, lambda x: (x.serialize(), x.n), random=True)
-    do_pickle(c, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(c, random=True)
+    check_pickle(c, lambda x: (x.serialize(), x.n), random=True)
+    check_pickle(c, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(c, random=True)
     assert 'Chi2Deviate' in repr(c)
     assert 'Chi2Deviate' in str(c)
     assert isinstance(eval(repr(c)), galsim.Chi2Deviate)
@@ -1647,8 +1647,8 @@ def test_distfunction():
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
-    do_pickle(d, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(d, random=True)
+    check_pickle(d, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(d, random=True)
     assert 'DistDeviate' in repr(d)
     assert 'DistDeviate' in str(d)
     assert isinstance(eval(repr(d)), galsim.DistDeviate)
@@ -1814,8 +1814,8 @@ def test_distLookupTable():
             err_msg='Two DistDeviates with near-flat probabilities generated different values.')
 
     # Check picklability
-    do_pickle(d, lambda x: (x(), x(), x(), x()), random=True)
-    do_pickle(d, random=True)
+    check_pickle(d, lambda x: (x(), x(), x(), x()), random=True)
+    check_pickle(d, random=True)
     assert 'DistDeviate' in repr(d)
     assert 'DistDeviate' in str(d)
     assert isinstance(eval(repr(d)), galsim.DistDeviate)

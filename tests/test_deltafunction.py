@@ -32,7 +32,7 @@ def test_deltaFunction():
     delta = galsim.DeltaFunction()
     np.testing.assert_almost_equal(delta.flux, 1.0)
     check_basic(delta, "DeltaFunction")
-    do_pickle(delta)
+    check_pickle(delta)
 
     # Check with default_params
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
@@ -42,7 +42,7 @@ def test_deltaFunction():
     delta = galsim.DeltaFunction(flux=test_flux)
     np.testing.assert_almost_equal(delta.flux, test_flux)
     check_basic(delta, "DeltaFunction")
-    do_pickle(delta)
+    check_pickle(delta)
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     delta2 = galsim.DeltaFunction(flux=test_flux, gsparams=gsp)

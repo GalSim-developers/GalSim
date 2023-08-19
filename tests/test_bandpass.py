@@ -111,8 +111,8 @@ def test_Bandpass_basic():
 
         # Only the first one is not picklable
         if k > 0:
-            do_pickle(b)
-            do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
+            check_pickle(b)
+            check_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
     assert_raises(ValueError, galsim.Bandpass, throughput="'eggs'", wave_type='nm',
                   blue_limit=400, red_limit=700)
@@ -183,7 +183,7 @@ def test_Bandpass_mul():
                                        err_msg="Found wrong value in Bandpass.__mul__")
         np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
-        do_pickle(f)
+        check_pickle(f)
 
         # scalar * Bandpass
         f = 1.21 * a
@@ -197,7 +197,7 @@ def test_Bandpass_mul():
                                              err_msg="wrong wave_list in Bandpass.__mul__")
 
         if a is a_lt:
-            do_pickle(f)
+            check_pickle(f)
 
 
 @timer
@@ -243,7 +243,7 @@ def test_Bandpass_div():
         if a is a_lt:
             np.testing.assert_array_almost_equal(f.wave_list, [1, 2, 3, 4, 5],
                                                  err_msg="wrong wave_list in Bandpass.__div__")
-            do_pickle(f)
+            check_pickle(f)
         else:
             np.testing.assert_array_almost_equal(f.wave_list, [],
                                                  err_msg="wrong wave_list in Bandpass.__div__")

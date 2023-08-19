@@ -588,17 +588,17 @@ def test_pickle():
 
         prof = get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                          scale_height=0.3)
-        do_pickle(prof)
+        check_pickle(prof)
 
-        do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
-        do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
+        check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
+        check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_h_over_r=0.2))
-        do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
+        check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0))
-        do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
+        check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_height=0.3,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
-        do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
+        check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 

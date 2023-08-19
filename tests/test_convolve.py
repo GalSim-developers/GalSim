@@ -110,23 +110,23 @@ def test_convolve():
     single = galsim.Convolve(psf)
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
-    do_pickle(single)
+    check_pickle(single)
     do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
-    do_pickle(single)
+    check_pickle(single)
 
     single = galsim.Convolution(psf)
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
-    do_pickle(single)
+    check_pickle(single)
 
     single = galsim.Convolution([psf])
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
-    do_pickle(single)
+    check_pickle(single)
 
     # Should raise an exception for invalid arguments
     assert_raises(TypeError, galsim.Convolve)
@@ -329,8 +329,8 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"Truncated Moffat*Box")
 
     # Check picklability
-    do_pickle(conv, lambda x: x.drawImage(method='sb'))
-    do_pickle(conv)
+    check_pickle(conv, lambda x: x.drawImage(method='sb'))
+    check_pickle(conv)
 
     # Check some warnings that should be raised
     # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
@@ -351,12 +351,12 @@ def test_realspace_convolve():
     conv = galsim.AutoConvolve(psf,real_space=True)
     check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
-    do_pickle(conv)
+    check_pickle(conv)
 
     conv = galsim.AutoCorrelate(psf,real_space=True)
     check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
-    do_pickle(conv)
+    check_pickle(conv)
 
     assert_warns(galsim.GalSimWarning, galsim.AutoConvolve, psf, real_space=False)
     assert_warns(galsim.GalSimWarning, galsim.AutoConvolve, d, real_space=True)
@@ -523,7 +523,7 @@ def test_deconvolve():
     check_basic(inv_obj, "Deconvolve(asym)", do_x=False)
 
     # Check picklability
-    do_pickle(inv_obj)
+    check_pickle(inv_obj)
 
     # And a significantly transformed deconvolve object
     jac = (0.3, -0.8, -0.7, 0.4)
@@ -547,7 +547,7 @@ def test_deconvolve():
     check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
 
     # Check picklability
-    do_pickle(transformed_inv_obj)
+    check_pickle(transformed_inv_obj)
 
     # Should raise an exception for invalid arguments
     assert_raises(TypeError, galsim.Deconvolve)
@@ -606,8 +606,8 @@ def test_autoconvolve():
     np.testing.assert_array_less(conv2.xValue(cen), conv2.max_sb)
 
     # Check picklability
-    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(conv2)
+    check_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(conv2)
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
@@ -706,8 +706,8 @@ def test_autocorrelate():
     do_shoot(corr,myImg2,"AutoCorrelate")
 
     # Check picklability
-    do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(corr)
+    check_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(corr)
 
     # Should raise an exception for invalid arguments
     assert_raises(TypeError, galsim.AutoCorrelate)

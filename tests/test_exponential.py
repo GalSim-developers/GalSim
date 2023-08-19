@@ -78,8 +78,8 @@ def test_exponential():
     do_kvalue(expon,myImg,"Exponential")
 
     # Check picklability
-    do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(expon)
+    check_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(expon)
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     assert_raises(TypeError, galsim.Exponential, scale_radius=3, half_light_radius=1)

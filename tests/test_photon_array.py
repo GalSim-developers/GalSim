@@ -58,7 +58,7 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.flux, 0.)
 
     # Check picklability
-    do_pickle(photon_array)
+    check_pickle(photon_array)
 
     # Check assignment via numpy [:]
     photon_array.x[:] = 5
@@ -100,7 +100,7 @@ def test_photon_array():
     np.testing.assert_almost_equal(photon_array.flux, orig_flux / 23.)
 
     # Check picklability again with non-zero values
-    do_pickle(photon_array)
+    check_pickle(photon_array)
 
     # Now assign to the optional arrays
     photon_array.dxdz = 0.17
@@ -270,7 +270,7 @@ def test_photon_array():
     assert_raises(galsim.GalSimUndefinedBoundsError, pa2.addTo, undef)
 
     # Check picklability again with non-zero values for everything
-    do_pickle(photon_array)
+    check_pickle(photon_array)
 
 @timer
 def test_convolve():
@@ -390,7 +390,7 @@ def test_wavelength_sampler():
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
 
-    do_pickle(sampler)
+    check_pickle(sampler)
 
     print('mean wavelength = ',np.mean(photon_array.wavelength))
     print('min wavelength = ',np.min(photon_array.wavelength))
@@ -477,7 +477,7 @@ def test_photon_angles():
         assigner = galsim.FRatioAngles(fratio, obscuration)
         assigner.applyTo(photon_array, rng=rng)
 
-        do_pickle(assigner)
+        check_pickle(assigner)
 
         dxdz = photon_array.dxdz
         dydz = photon_array.dydz
@@ -658,7 +658,7 @@ def test_dcr():
     photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im2, method='phot', rng=rng, photon_ops=photon_ops)
 
-    do_pickle(dcr)
+    check_pickle(dcr)
 
     # Repeat with config
     config = {
@@ -800,7 +800,7 @@ def test_dcr():
     rng = galsim.BaseDeviate(galsim.BaseDeviate(31415).raw()+1)
     achrom.drawImage(image=im5, method='phot', rng=rng, photon_ops=photon_ops)
 
-    do_pickle(dcr)
+    check_pickle(dcr)
 
     galsim.config.RemoveCurrent(config)
     config['psf']['fwhm'] = 0.9
@@ -1175,7 +1175,7 @@ def test_refract():
         refract = galsim.Refraction(index_ratio)
         refract.applyTo(photon_array)
 
-        do_pickle(refract)
+        check_pickle(refract)
 
         # Triangle is length 1 in the z direction and length sqrt(dxdz**2+dydz**2)
         # in the 'r' direction.
@@ -1285,7 +1285,7 @@ def test_focus_depth():
         fd2.applyTo(photon_array)
         fd3.applyTo(photon_array2)
 
-        do_pickle(fd1)
+        check_pickle(fd1)
 
         np.testing.assert_allclose(photon_array.x, photon_array2.x, rtol=0, atol=1e-15)
         np.testing.assert_allclose(photon_array.y, photon_array2.y, rtol=0, atol=1e-15)
@@ -1558,7 +1558,7 @@ def test_pupil_annulus_sampler():
     h, edges = np.histogram(phi, bins=10, range=(0.0, 2*np.pi))
     assert np.std(h)/np.mean(h) < 0.01
 
-    do_pickle(sampler)
+    check_pickle(sampler)
 
 
 def test_time_sampler():
@@ -1571,14 +1571,14 @@ def test_time_sampler():
     pa = galsim.PhotonArray(1_000_000)
     sampler.applyTo(pa, rng=seed)
     np.testing.assert_array_equal(pa.time, 0.0)
-    do_pickle(sampler)
+    check_pickle(sampler)
 
     sampler = galsim.TimeSampler(t0=1.0)
     assert sampler.t0 == 1
     assert sampler.exptime == 0
     sampler.applyTo(pa, rng=seed)
     np.testing.assert_array_equal(pa.time, 1.0)
-    do_pickle(sampler)
+    check_pickle(sampler)
 
     sampler = galsim.TimeSampler(exptime=30.0)
     assert sampler.t0 == 0
@@ -1586,7 +1586,7 @@ def test_time_sampler():
     sampler.applyTo(pa, rng=seed)
     np.testing.assert_array_less(pa.time, 30)
     np.testing.assert_array_less(-pa.time, 0)
-    do_pickle(sampler)
+    check_pickle(sampler)
 
     sampler = galsim.TimeSampler(t0=10, exptime=30.0)
     assert sampler.t0 == 10
@@ -1594,7 +1594,7 @@ def test_time_sampler():
     sampler.applyTo(pa, rng=seed)
     np.testing.assert_array_less(pa.time, 40)
     np.testing.assert_array_less(-pa.time, 10)
-    do_pickle(sampler)
+    check_pickle(sampler)
 
 def test_setFromImage_crash():
     """Geri Braunlich ran into a seg fault where the photon array was not allocated to be

@@ -49,7 +49,7 @@ def test_airy():
     np.testing.assert_array_equal(
             airy.obscuration, 0.1,
             err_msg="Airy obscuration returned wrong value")
-    do_pickle(airy)
+    check_pickle(airy)
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
@@ -101,10 +101,10 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.1")
 
     # Check picklability
-    do_pickle(airy0, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(airy0)
-    do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(airy)
+    check_pickle(airy0, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(airy0)
+    check_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(airy)
 
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
@@ -120,10 +120,10 @@ def test_airy():
     # arcsec is the default scale_unit, so can leave this off.
     airy4 = galsim.Airy(lam=lam, diam=0.3, obscuration=0.1, flux=1.7)
     gsobject_compare(airy,airy4)
-    do_pickle(airy)
-    do_pickle(airy2)
-    do_pickle(airy3)
-    do_pickle(airy4)
+    check_pickle(airy)
+    check_pickle(airy2)
+    check_pickle(airy3)
+    check_pickle(airy4)
 
     # Should raise an exception if both lam, lam_over_diam are provided
     assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)

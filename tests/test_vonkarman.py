@@ -60,7 +60,7 @@ def test_vk(slow=False):
                     assert vk2 == vk.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
                     check_basic(vk, "VonKarman")
-                    do_pickle(vk)
+                    check_pickle(vk)
 
                     img = galsim.Image(16, 16, scale=0.25)
                     if not do_delta:
@@ -83,7 +83,7 @@ def test_vk_delta():
 
     kwargs['suppress_warning'] = True
     vk = galsim.VonKarman(**kwargs)
-    do_pickle(vk)
+    check_pickle(vk)
 
     # This profile has more than 15% of its flux in the delta-function component.
     assert vk.delta_amplitude > 0.15 * vk.flux
@@ -91,7 +91,7 @@ def test_vk_delta():
     np.testing.assert_almost_equal(vk.kValue(1e10, 0).real, 0.0)
     # But if we use do_delta=True, then the asymptotic kValue should be that of the delta function.
     vkd = galsim.VonKarman(do_delta=True, **kwargs)
-    do_pickle(vkd)
+    check_pickle(vkd)
     np.testing.assert_almost_equal(vkd.kValue(1e10, 0).real, vkd.delta_amplitude)
 
     # Either way, the fluxes should be the same.
@@ -108,7 +108,7 @@ def test_vk_scale():
     kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'flux':2.2}
     vk_arcsec = galsim.VonKarman(scale_unit=galsim.arcsec, **kwargs)
     vk_arcmin = galsim.VonKarman(scale_unit='arcmin', **kwargs)
-    do_pickle(vk_arcmin)
+    check_pickle(vk_arcmin)
 
     np.testing.assert_almost_equal(vk_arcsec.flux, vk_arcmin.flux)
     np.testing.assert_almost_equal(vk_arcsec.kValue(0.0, 0.0), vk_arcmin.kValue(0.0, 0.0))
@@ -324,8 +324,8 @@ def test_vk_force_stepk():
     assert vk1.getGoodImageSize(0.2) != vk2.getGoodImageSize(0.2)
 
     # Can we pickle?
-    do_pickle(vk2)
-    do_pickle(vk2, lambda obj:obj.stepk)
+    check_pickle(vk2)
+    check_pickle(vk2, lambda obj:obj.stepk)
     check_basic(vk2, 'vk2', do_x=False)  # x fails b/c stamp size is bad
 
     img = galsim.Image(50, 50, scale=0.2)

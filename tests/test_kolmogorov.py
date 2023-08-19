@@ -78,8 +78,8 @@ def test_kolmogorov():
     do_kvalue(kolm,myImg, "Kolmogorov")
 
     # Check picklability
-    do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(kolm)
+    check_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(kolm)
 
     # Test initialization separately with lam and r0, in various units.  Since the above profiles
     # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e9 nm and r0=2.0 m,
@@ -320,7 +320,7 @@ def test_kolmogorov_folding_threshold():
     assert obj.fwhm == fwhm
     assert obj.gsparams.folding_threshold == folding_threshold
     check_basic(obj, 'Kolmogorov with low folding_threshold')
-    do_pickle(obj)
+    check_pickle(obj)
 
 
 @timer

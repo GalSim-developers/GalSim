@@ -156,8 +156,8 @@ def test_pos():
     assert_raises(TypeError, pi1.__mul__, None)
     assert_raises(TypeError, pi1.__div__, 11.5)
 
-    do_pickle(pi1)
-    do_pickle(pd1)
+    check_pickle(pi1)
+    check_pickle(pd1)
 
 @timer
 def test_bounds():
@@ -385,10 +385,10 @@ def test_bounds():
     assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'true_center')
     assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'true_center')
 
-    do_pickle(bi1)
-    do_pickle(bd1)
-    do_pickle(galsim.BoundsI())
-    do_pickle(galsim.BoundsD())
+    check_pickle(bi1)
+    check_pickle(bd1)
+    check_pickle(galsim.BoundsI())
+    check_pickle(galsim.BoundsD())
 
 
 @timer

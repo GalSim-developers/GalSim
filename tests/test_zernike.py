@@ -59,8 +59,8 @@ def test_Zernike_orthonormality():
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
 
-    do_pickle(Z1)
-    do_pickle(Z1, lambda z: tuple(z.evalCartesian(x, y)))
+    check_pickle(Z1)
+    check_pickle(Z1, lambda z: tuple(z.evalCartesian(x, y)))
 
     # Repeat for Annular Zernikes
     jmax = 22  # Going up to 22 annular Zernikes takes about ~1 sec on my laptop
@@ -90,8 +90,8 @@ def test_Zernike_orthonormality():
                 np.testing.assert_allclose(
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
-    do_pickle(Z1)
-    do_pickle(Z1, lambda z: tuple(z.evalCartesian(x, y)))
+    check_pickle(Z1)
+    check_pickle(Z1, lambda z: tuple(z.evalCartesian(x, y)))
 
     with assert_raises(ValueError):
         Z1 = galsim.zernike.Zernike([0]*4 + [0.1]*7, R_outer=R_inner, R_inner=R_outer)
@@ -123,11 +123,11 @@ def test_annular_Zernike_limit():
                 im1.array, im2.array, atol=1e-10,
                 err_msg="annular Zernike with 1e-5 obscuration not close to circular Zernike")
 
-    do_pickle(psf1._aper)
-    do_pickle(psf1)
-    do_pickle(psf1, lambda x: x.drawImage())
-    do_pickle(psf2)
-    do_pickle(psf2, lambda x: x.drawImage())
+    check_pickle(psf1._aper)
+    check_pickle(psf1)
+    check_pickle(psf1, lambda x: x.drawImage())
+    check_pickle(psf2)
+    check_pickle(psf2, lambda x: x.drawImage())
 
 
 @timer
@@ -204,7 +204,7 @@ def test_Zernike_rotate():
 
         coefs = [u() for _ in range(jmax+1)]
         Z = galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
-        do_pickle(Z)
+        check_pickle(Z)
 
         for theta in [0.0, 0.1, 1.0, np.pi, 4.0]:
             R = galsim.zernike.zernikeRotMatrix(jmax, theta)

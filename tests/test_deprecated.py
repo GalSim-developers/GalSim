@@ -156,9 +156,9 @@ def test_randwalk_defaults():
     im = galsim.ImageD(64,64, scale=0.5)
     do_shoot(conv1, im, "RandomWalk")
     do_kvalue(conv1, im, "RandomWalk")
-    do_pickle(rw)
-    do_pickle(conv1)
-    do_pickle(conv1, lambda x: x.drawImage(scale=1))
+    check_pickle(rw)
+    check_pickle(conv1)
+    check_pickle(conv1, lambda x: x.drawImage(scale=1))
 
 
 @timer

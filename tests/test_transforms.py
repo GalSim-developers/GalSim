@@ -85,11 +85,11 @@ def test_smallshear():
     do_kvalue(gauss,myImg,"sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss, lambda x: x.drawImage())
-    do_pickle(gauss)
+    check_pickle(gauss, lambda x: x.drawImage())
+    check_pickle(gauss)
 
     # Check really small shear  (This mostly tests a branch in the str function.)
-    do_pickle(galsim.Gaussian(sigma=2.3).shear(g1=1.e-13,g2=0))
+    check_pickle(galsim.Gaussian(sigma=2.3).shear(g1=1.e-13,g2=0))
 
     assert_raises(TypeError, gauss.shear)
     assert_raises(TypeError, gauss.shear, 0.3)
@@ -149,8 +149,8 @@ def test_largeshear():
     do_kvalue(gauss,myImg, "sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss, lambda x: x.drawImage())
-    do_pickle(gauss)
+    check_pickle(gauss, lambda x: x.drawImage())
+    check_pickle(gauss)
 
 
 @timer
@@ -199,8 +199,8 @@ def test_rotate():
     do_kvalue(gal,myImg,"rotated sheared Sersic")
 
     # Check picklability
-    do_pickle(gal, lambda x: x.drawImage())
-    do_pickle(gal)
+    check_pickle(gal, lambda x: x.drawImage())
+    check_pickle(gal)
 
     assert_raises(TypeError, gal.rotate)
     assert_raises(TypeError, gal.rotate, 34)
@@ -281,8 +281,8 @@ def test_mag():
     do_kvalue(gal,myImg,"dilated Exponential")
 
     # Check picklability
-    do_pickle(gal, lambda x: x.drawImage())
-    do_pickle(gal)
+    check_pickle(gal, lambda x: x.drawImage())
+    check_pickle(gal)
 
 
 @timer
@@ -362,8 +362,8 @@ def test_shift():
     do_kvalue(gauss,myImg, "shifted Gaussian")
 
     # Check picklability
-    do_pickle(gauss, lambda x: x.drawImage())
-    do_pickle(gauss)
+    check_pickle(gauss, lambda x: x.drawImage())
+    check_pickle(gauss)
 
 
 @timer
@@ -507,8 +507,8 @@ def test_rescale():
     do_kvalue(sersic2,myImg, "scaled Sersic")
 
     # Check picklability
-    do_pickle(sersic2, lambda x: x.drawImage())
-    do_pickle(sersic2)
+    check_pickle(sersic2, lambda x: x.drawImage())
+    check_pickle(sersic2)
 
 
 @timer
@@ -855,14 +855,14 @@ def test_flip():
                     image2_x2.array.max(), flip3.shear(s).max_sb*im.scale**2, rtol=0.2,
                     err_msg="max_sb did not match maximum pixel value")
 
-        do_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
-        do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
-        do_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
-        do_pickle(flip3, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
-        do_pickle(prof)
-        do_pickle(flip1)
-        do_pickle(flip2)
-        do_pickle(flip3)
+        check_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        check_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        check_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        check_pickle(flip3, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        check_pickle(prof)
+        check_pickle(flip1)
+        check_pickle(flip2)
+        check_pickle(flip3)
 
 
 @timer

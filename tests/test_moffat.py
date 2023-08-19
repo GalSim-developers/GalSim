@@ -81,8 +81,8 @@ def test_moffat():
     do_kvalue(moffat,myImg, "Moffat")
 
     # Check picklability
-    do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(moffat)
+    check_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(moffat)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:

@@ -68,9 +68,9 @@ def test_box():
     do_shoot(pixel,myImg,"Pixel")
 
     # Check picklability
-    do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(pixel)
-    do_pickle(galsim.Pixel(1))
+    check_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(pixel)
+    check_pickle(galsim.Pixel(1))
 
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
@@ -110,9 +110,9 @@ def test_box():
         assert box2.withGSParams(maximum_fft_size=30000) == box.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Check picklability
-    do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(box)
-    do_pickle(galsim.Box(1,1))
+    check_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(box)
+    check_pickle(galsim.Box(1,1))
 
     # Check sheared boxes the same way
     box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
@@ -121,8 +121,8 @@ def test_box():
     do_shoot(box,im, "Sheared Box")
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
-        do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(box)
+        check_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(box)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(box.centroid, cen)
     np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
@@ -135,8 +135,8 @@ def test_box():
         check_basic(conv, "Sheared Box convolved with pixel in real space",
                     approx_maxsb=True, scale=0.2)
         do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
-        do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
-        do_pickle(conv)
+        check_pickle(conv, lambda x: x.xValue(0.123,-0.456))
+        check_pickle(conv)
 
 
 @timer
@@ -213,9 +213,9 @@ def test_tophat():
         np.testing.assert_almost_equal(tophat.xValue(0., radius+0.001), 0.)
 
     # Check picklability
-    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(tophat)
-    do_pickle(galsim.TopHat(1))
+    check_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(tophat)
+    check_pickle(galsim.TopHat(1))
 
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
@@ -233,8 +233,8 @@ def test_tophat():
     np.testing.assert_almost_equal(tophat.xValue(cen), tophat.max_sb)
 
     # Check picklability
-    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(tophat)
+    check_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(tophat)
 
     # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)

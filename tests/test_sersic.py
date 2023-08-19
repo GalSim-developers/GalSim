@@ -73,8 +73,8 @@ def test_sersic():
     do_kvalue(sersic,myImg,"Sersic")
 
     # Check picklability
-    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(sersic)
+    check_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(sersic)
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -113,8 +113,8 @@ def test_sersic():
     do_kvalue(sersic,myImg, "Truncated Sersic")
 
     # Check picklability
-    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(sersic)
+    check_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(sersic)
 
     # n=4 is also called DeVaucouleurs
     sersic = galsim.Sersic(n=4, flux=1.7, half_light_radius=2.3, trunc=5.9)
@@ -199,9 +199,9 @@ def test_sersic_radii():
             gal_labels = ["Sersic", "truncated Sersic", "flux_untruncated Sersic"]
         gal_list = [test_gal1, test_gal2, test_gal3]
 
-        do_pickle(test_gal1)
-        do_pickle(test_gal2)
-        do_pickle(test_gal3)
+        check_pickle(test_gal1)
+        check_pickle(test_gal2)
+        check_pickle(test_gal3)
 
         # Check that the returned half-light radius is correct
         print('test_hlr = ',test_hlr)

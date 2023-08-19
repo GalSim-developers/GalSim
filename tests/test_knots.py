@@ -84,9 +84,9 @@ def test_knots_defaults():
     im = galsim.ImageD(64,64, scale=0.5)
     do_shoot(conv1, im, "RandomKnots")
     do_kvalue(conv1, im, "RandomKnots")
-    do_pickle(rw)
-    do_pickle(conv1)
-    do_pickle(conv1, lambda x: x.drawImage(scale=1))
+    check_pickle(rw)
+    check_pickle(conv1)
+    check_pickle(conv1, lambda x: x.drawImage(scale=1))
 
     # Check negative flux
     rw3 = rw.withFlux(-2.3)
@@ -421,8 +421,8 @@ def test_knots_sed():
     knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
     gal1 = galsim.ChromaticObject(knots) * sed
     gal2 = knots * sed  # This line used to fail.
-    do_pickle(gal1)
-    do_pickle(gal2)
+    check_pickle(gal1)
+    check_pickle(gal2)
 
     # They don't test as ==, since they are formed differently.  But they are functionally equal:
     bandpass = galsim.Bandpass('LSST_r.dat', 'nm')

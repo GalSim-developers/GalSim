@@ -117,8 +117,8 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(interp)
+        check_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(interp)
 
     # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
@@ -169,9 +169,9 @@ def test_interpolant():
     assert d.positive_flux == 1
     assert d.negative_flux == 0
     print(repr(d))
-    do_pickle(d, test_func)
-    do_pickle(galsim.Delta())
-    do_pickle(galsim.Interpolant.from_name('delta'))
+    check_pickle(d, test_func)
+    check_pickle(galsim.Delta())
+    check_pickle(galsim.Interpolant.from_name('delta'))
 
     true_xval = np.zeros_like(x)
     true_xval[np.abs(x) < d.gsparams.kvalue_accuracy/2] = 1./d.gsparams.kvalue_accuracy
@@ -188,9 +188,9 @@ def test_interpolant():
     assert np.isclose(n.krange, 2. / n.gsparams.kvalue_accuracy)
     assert n.positive_flux == 1
     assert n.negative_flux == 0
-    do_pickle(n, test_func)
-    do_pickle(galsim.Nearest())
-    do_pickle(galsim.Interpolant.from_name('nearest'))
+    check_pickle(n, test_func)
+    check_pickle(galsim.Nearest())
+    check_pickle(galsim.Interpolant.from_name('nearest'))
 
     true_xval = np.zeros_like(x)
     true_xval[np.abs(x) < 0.5] = 1
@@ -216,8 +216,8 @@ def test_interpolant():
     assert np.isclose(s.krange, 2.*np.pi * s._i.urange())
     assert np.isclose(s.positive_flux, 3.18726437) # Empirical -- this is a regression test
     assert np.isclose(s.negative_flux, s.positive_flux-1., rtol=1.e-4)
-    do_pickle(galsim.SincInterpolant())
-    do_pickle(galsim.Interpolant.from_name('sinc'))
+    check_pickle(galsim.SincInterpolant())
+    check_pickle(galsim.Interpolant.from_name('sinc'))
 
     true_xval = np.sinc(x)
     np.testing.assert_allclose(s.xval(x), true_xval)
@@ -242,9 +242,9 @@ def test_interpolant():
     assert np.isclose(l.krange, 2.*np.pi * l._i.urange())
     assert l.positive_flux == 1
     assert l.negative_flux == 0
-    do_pickle(l, test_func)
-    do_pickle(galsim.Linear())
-    do_pickle(galsim.Interpolant.from_name('linear'))
+    check_pickle(l, test_func)
+    check_pickle(galsim.Linear())
+    check_pickle(galsim.Interpolant.from_name('linear'))
 
     true_xval = np.zeros_like(x)
     true_xval[np.abs(x) < 1] = 1. - np.abs(x[np.abs(x) < 1])
@@ -267,9 +267,9 @@ def test_interpolant():
     assert np.isclose(c.krange, 2.*np.pi * c._i.urange())
     assert np.isclose(c.positive_flux, 13./12.)
     assert np.isclose(c.negative_flux, 1./12.)
-    do_pickle(c, test_func)
-    do_pickle(galsim.Cubic())
-    do_pickle(galsim.Interpolant.from_name('cubic'))
+    check_pickle(c, test_func)
+    check_pickle(galsim.Cubic())
+    check_pickle(galsim.Interpolant.from_name('cubic'))
 
     true_xval = np.zeros_like(x)
     ax = np.abs(x)
@@ -298,9 +298,9 @@ def test_interpolant():
     assert np.isclose(q.krange, 2.*np.pi * q._i.urange())
     assert np.isclose(q.positive_flux, (13018561. / 11595672.) + (17267. / 14494590.) * 31**0.5)
     assert np.isclose(q.negative_flux, q.positive_flux-1.)
-    do_pickle(q, test_func)
-    do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant.from_name('quintic'))
+    check_pickle(q, test_func)
+    check_pickle(galsim.Quintic())
+    check_pickle(galsim.Interpolant.from_name('quintic'))
 
     true_xval = np.zeros_like(x)
     ax = np.abs(x)
@@ -334,12 +334,12 @@ def test_interpolant():
     print(l3.positive_flux, l3.negative_flux)
     assert np.isclose(l3.positive_flux, 1.1793639)  # Empirical -- this is a regression test
     assert np.isclose(l3.negative_flux, l3.positive_flux-1., rtol=1.e-4)
-    do_pickle(l3, test_func)
-    do_pickle(galsim.Lanczos(n=7, conserve_dc=False))
-    do_pickle(galsim.Lanczos(3))
-    do_pickle(galsim.Interpolant.from_name('lanczos7'))
-    do_pickle(galsim.Interpolant.from_name('lanczos9F'))
-    do_pickle(galsim.Interpolant.from_name('lanczos8T'))
+    check_pickle(l3, test_func)
+    check_pickle(galsim.Lanczos(n=7, conserve_dc=False))
+    check_pickle(galsim.Lanczos(3))
+    check_pickle(galsim.Interpolant.from_name('lanczos7'))
+    check_pickle(galsim.Interpolant.from_name('lanczos9F'))
+    check_pickle(galsim.Interpolant.from_name('lanczos8T'))
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
@@ -464,8 +464,8 @@ def test_fluxnorm():
     im2 = interp.drawImage(scale = im_scale, method='no_pixel')
     np.testing.assert_almost_equal(total_flux, im2.array.sum(), decimal=9,
                                    err_msg='Drawn image does not have expected flux normalization')
-    do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(interp)
+    check_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(interp)
 
     # Now make an InterpolatedImage but tell it sb normalization
     interp_sb = galsim.InterpolatedImage(im, normalization = 'sb')
@@ -482,8 +482,8 @@ def test_fluxnorm():
             im4.array.max(), interp_sb.max_sb, 5,
             err_msg="InterpolatedImage max_sb did not match maximum pixel value")
 
-    do_pickle(interp_sb, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(interp_sb)
+    check_pickle(interp_sb, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(interp_sb)
 
     # Finally make an InterpolatedImage but give it some other flux value
     interp_flux = galsim.InterpolatedImage(im, flux=test_flux)
@@ -494,8 +494,8 @@ def test_fluxnorm():
     im5 = interp_flux.drawImage(scale = im_scale, method='no_pixel')
     np.testing.assert_almost_equal(test_flux/im5.array.sum(), 1.0, decimal=6,
                                    err_msg = 'Drawn image does not reflect flux keyword')
-    do_pickle(interp_flux, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(interp_flux)
+    check_pickle(interp_flux, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(interp_flux)
 
 
 @timer
@@ -626,12 +626,12 @@ def test_operations_simple():
     print('ref center = ',ref_im[ref_im.center])
     np.testing.assert_allclose(big_im_sub.array, ref_im_sub.array, rtol=0.01)
 
-    # The do_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
+    # The check_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
     # really long time, so we only do that if __name__ == "__main__".
     irreprable = not __name__ == "__main__"
-    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+    check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
-    do_pickle(test_int_im, irreprable=irreprable)
+    check_pickle(test_int_im, irreprable=irreprable)
 
     # Magnify it, and compare with expectations from GSObjects directly
     test_mag = 1.08
@@ -654,9 +654,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Magnified InterpolatedImage disagrees with reference')
-    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+    check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
-    do_pickle(test_int_im, irreprable=irreprable)
+    check_pickle(test_int_im, irreprable=irreprable)
 
     # Lens it (shear and magnify), and compare with expectations from GSObjects directly
     test_g1 = -0.03
@@ -681,9 +681,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Lensed InterpolatedImage disagrees with reference')
-    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+    check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
-    do_pickle(test_int_im, irreprable=irreprable)
+    check_pickle(test_int_im, irreprable=irreprable)
 
     # Rotate it, and compare with expectations from GSObjects directly
     test_rot_angle = 32.*galsim.degrees
@@ -706,9 +706,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Rotated InterpolatedImage disagrees with reference')
-    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+    check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
-    do_pickle(test_int_im, irreprable=irreprable)
+    check_pickle(test_int_im, irreprable=irreprable)
 
     # Shift it, and compare with expectations from GSObjects directly
     x_shift = -0.31
@@ -732,9 +732,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Shifted InterpolatedImage disagrees with reference')
-    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+    check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
-    do_pickle(test_int_im, irreprable=irreprable)
+    check_pickle(test_int_im, irreprable=irreprable)
 
 @timer
 def test_operations():
@@ -764,8 +764,8 @@ def test_operations():
     np.testing.assert_almost_equal(new_mom.observed_shape.e2, orig_mom.observed_shape.e2,
         test_decimal,
         err_msg = 'e2 of magnified InterpolatedImage from HST disagrees with expectations')
-    do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(new_int_im)
+    check_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(new_int_im)
 
     # Shift, make sure change in moments is as expected
     x_shift = 0.92
@@ -789,8 +789,8 @@ def test_operations():
     np.testing.assert_almost_equal(new_mom.observed_shape.e2, orig_mom.observed_shape.e2,
         test_decimal,
         err_msg = 'e2 of shifted InterpolatedImage from HST disagrees with expectations')
-    do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(new_int_im)
+    check_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(new_int_im)
 
 
 @timer
@@ -826,8 +826,8 @@ def test_uncorr_padding():
         np.var(big_img.array), big_var_expected, decimal=decimal_precise,
         err_msg='Variance not diluted by expected amount when zero-padding')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
@@ -843,8 +843,8 @@ def test_uncorr_padding():
         np.var(big_img.array), noise_var, decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with noise')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
     else:
         # On pytest runs, use a smaller noise_pad_size for the pickle tests so it doesn't take
         # so long to serialize.
@@ -852,7 +852,7 @@ def test_uncorr_padding():
                                           pad_factor=1,
                                           noise_pad_size=max(orig_nx+10,orig_ny+10),
                                           rng = galsim.GaussianDeviate(orig_seed))
-        do_pickle(int_im)
+        check_pickle(int_im)
 
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
@@ -866,8 +866,8 @@ def test_uncorr_padding():
         big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce noise-padded image with same choice of seed')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # Finally check inputs: what if we give it an input variance that is neg?  A list?
     with assert_raises(ValueError):
@@ -928,8 +928,8 @@ def test_pad_image():
             np.mean(big_img.array**2), var_expected, decimal=decimal,
             err_msg='Variance not correct when padding with image')
         if __name__ == '__main__':
-            do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-            do_pickle(int_im)
+            check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+            check_pickle(int_im)
 
         if pad_nx < big_nx and pad_ny < big_ny:
             # now also pad with noise_pad outside of the pad_image
@@ -944,8 +944,8 @@ def test_pad_image():
                 np.mean(big_img.array**2), var_expected, decimal=decimal,
                 err_msg='Variance not correct after padding with image and extra noise')
             if __name__ == '__main__':
-                do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-                do_pickle(int_im)
+                check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+                check_pickle(int_im)
 
 
 @timer
@@ -981,8 +981,8 @@ def test_corr_padding():
     np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
         err_msg='Variance not diluted by expected amount when zero-padding')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
@@ -997,8 +997,8 @@ def test_corr_padding():
         decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with correlated noise')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # Check the option to read the image from a file and also cache the resulting noise object
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
@@ -1035,8 +1035,8 @@ def test_corr_padding():
         decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with correlated noise')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
@@ -1048,8 +1048,8 @@ def test_corr_padding():
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce correlated noise-padded image with same choice of seed')
     if __name__ == '__main__':
-        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im)
+        check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im)
 
     # Finally, check inputs:
     # what if we give it a screwy way of defining the image padding?
@@ -1072,10 +1072,10 @@ def test_corr_padding():
     np.testing.assert_equal(big_img2.array, big_img3.array,
                             err_msg='Diff ways of specifying correlated noise give diff answers')
     if __name__ == '__main__':
-        do_pickle(int_im2, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im3, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
-        do_pickle(int_im2)
-        do_pickle(int_im3)
+        check_pickle(int_im2, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im3, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        check_pickle(int_im2)
+        check_pickle(int_im3)
 
 
 @timer
@@ -1146,10 +1146,10 @@ def test_realspace_conv():
         # expect these images to be equal to many decimal places.
         np.testing.assert_array_almost_equal(im3.array, im4.array, 5)
 
-        do_pickle(c1, lambda x: x.xValue(1.123,-0.179))
-        do_pickle(c3, lambda x: x.xValue(0.439,4.234))
-        do_pickle(c1)
-        do_pickle(c3)
+        check_pickle(c1, lambda x: x.xValue(1.123,-0.179))
+        check_pickle(c3, lambda x: x.xValue(0.439,4.234))
+        check_pickle(c1)
+        check_pickle(c3)
 
 
 @timer
@@ -1174,8 +1174,8 @@ def test_Cubic_ref():
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Cubic interpolant.")
 
-    do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(testobj)
+    check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(testobj)
 
 
 @timer
@@ -1199,8 +1199,8 @@ def test_Quintic_ref():
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Quintic interpolant.")
 
-    do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(testobj)
+    check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(testobj)
 
 
 @timer
@@ -1224,8 +1224,8 @@ def test_Lanczos5_ref():
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
 
-    do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(testobj)
+    check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(testobj)
 
 
 @timer
@@ -1249,8 +1249,8 @@ def test_Lanczos7_ref():
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
 
-    do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(testobj)
+    check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(testobj)
 
 
 @timer
@@ -1291,10 +1291,10 @@ def test_conserve_dc():
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
 
-        do_pickle(obj, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(obj2, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(obj)
-        do_pickle(obj2)
+        check_pickle(obj, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(obj2, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(obj)
+        check_pickle(obj2)
 
 
     for n in [3,4,5,6,7,8]:  # n=8 tests the generic formulae, since not specialized.
@@ -1316,10 +1316,10 @@ def test_conserve_dc():
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using uvals.'%n)
 
-        do_pickle(obj, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(obj2, lambda x: x.drawImage(method='no_pixel'))
-        do_pickle(obj)
-        do_pickle(obj2)
+        check_pickle(obj, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(obj2, lambda x: x.drawImage(method='no_pixel'))
+        check_pickle(obj)
+        check_pickle(obj2)
 
 
 @timer
@@ -1385,14 +1385,14 @@ def test_stepk_maxk():
         alt_int_im.maxk, mult_val*maxk_val, decimal=7,
         err_msg='_InterpolatedImage did not adopt forced value for maxk')
 
-    do_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(int_im)
-    do_pickle(new_int_im)
-    do_pickle(raw_int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(raw_int_im)
-    do_pickle(alt_int_im, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(alt_int_im)
+    check_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(int_im)
+    check_pickle(new_int_im)
+    check_pickle(raw_int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(raw_int_im)
+    check_pickle(alt_int_im, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(alt_int_im)
 
 
 @timer
@@ -1404,8 +1404,8 @@ def test_kroundtrip():
     b = galsim.InterpolatedKImage(kim_a)
 
     # Check picklability
-    do_pickle(b)
-    do_pickle(b, lambda x: x.drawImage())
+    check_pickle(b)
+    check_pickle(b, lambda x: x.drawImage())
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     b2 = galsim.InterpolatedKImage(kim_a, gsparams=gsp)
@@ -1440,8 +1440,8 @@ def test_kroundtrip():
     c = galsim.InterpolatedKImage(kim_c)
     d = galsim.InterpolatedKImage(galsim.ImageCD(kim_c.array))
     assert c == d, "Failed to construct InterpolatedKImage without wcs."
-    do_pickle(d)
-    do_pickle(d, lambda x: x.drawImage())
+    check_pickle(d)
+    check_pickle(d, lambda x: x.drawImage())
 
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
