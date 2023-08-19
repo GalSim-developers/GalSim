@@ -182,7 +182,7 @@ def test_vk_ne():
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, scale_unit=galsim.arcmin),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp, force_stepk=1.0)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 @timer

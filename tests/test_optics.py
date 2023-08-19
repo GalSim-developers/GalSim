@@ -858,7 +858,7 @@ def test_ne():
                                    suppress_warning=True),
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    pupil_angle=10*galsim.degrees, suppress_warning=True)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 @timer

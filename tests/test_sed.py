@@ -1004,7 +1004,7 @@ def test_ne():
             galsim.SED(spec1, 'nm', 'flambda', redshift=1.0),
             galsim.SED(spec2, 'nm', 'flambda'),
             galsim.SED(spec3, 'nm', 'flambda')]
-    all_obj_diff(seds)
+    check_all_diff(seds)
 
 
 @timer

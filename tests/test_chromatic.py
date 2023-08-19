@@ -2676,7 +2676,7 @@ def test_ne():
     # ChromaticObject.  Only param is the GSObject to chromaticize.
     # The following should test unequal:
     gals = [cgal1, cgal2]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # # Check that setifying doesn't remove any duplicate items.
     # assert len(gals) == len(set(gals))
@@ -2695,7 +2695,7 @@ def test_ne():
             galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50), oversample_fac=1.1),
             cgal1.interpolate(np.arange(500, 700, 10)),
             cgal1.interpolate(np.arange(500, 700, 10), oversample_fac=1.2)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticAtmosphere.  Params include base_obj, base_wavelength, scale_unit, alpha,
     # zenith_angle, parallactic_angle, obj_coord, zenith_coord, HA, latitude, pressure, temperature,
@@ -2727,7 +2727,7 @@ def test_ne():
                                        H2O_pressure=2.0),
             galsim.ChromaticAtmosphere(gal1, 500.0, obj_coord=m101, HA=HA, latitude=latitude),
             galsim.ChromaticAtmosphere(gal1, 500.0, obj_coord=m101, zenith_coord=zenith_coord)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # Chromatic.  Params are a gsobject and an SED.
     sed1 = galsim.SED(lambda w: w, 'nm', 'flambda')
@@ -2737,7 +2737,7 @@ def test_ne():
             gal1 * sed2,
             gal2 * sed1,
             gal2 * sed2]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticTransformation.  Params are an object (possibly chromatic), a jacobian jac, an
     # offset, a flux_ratio, and gsparams.  For coverage, test jac, offset, and flux_ratio as
@@ -2772,7 +2772,7 @@ def test_ne():
             galsim.ChromaticTransformation(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticTransformation(cgal3).withGSParams(gsp),
             galsim.ChromaticTransformation(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticSum.  Params are objs to add and potentially gsparams.
     # The following should test unequal.
@@ -2786,7 +2786,7 @@ def test_ne():
             galsim.ChromaticSum(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticSum(cgal3).withGSParams(gsp),
             galsim.ChromaticSum(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticConvolution.  Params are objs to convolve and potentially gsparams.
     # The following should test unequal
@@ -2803,7 +2803,7 @@ def test_ne():
             galsim.ChromaticConvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticConvolution(cgal3).withGSParams(gsp),
             galsim.ChromaticConvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticDeconvolution.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.ChromaticDeconvolution(cgal1),
@@ -2813,7 +2813,7 @@ def test_ne():
             galsim.ChromaticDeconvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticDeconvolution(cgal3).withGSParams(gsp),
             galsim.ChromaticDeconvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticAutoConvolution.
     gals = [galsim.ChromaticAutoConvolution(cgal1),
@@ -2823,7 +2823,7 @@ def test_ne():
             galsim.ChromaticAutoConvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticAutoConvolution(cgal3).withGSParams(gsp),
             galsim.ChromaticAutoConvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticAutoCorrelation.
     gals = [galsim.ChromaticAutoCorrelation(cgal1),
@@ -2833,7 +2833,7 @@ def test_ne():
             galsim.ChromaticAutoCorrelation(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticAutoCorrelation(cgal3).withGSParams(gsp),
             galsim.ChromaticAutoCorrelation(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticFourierSqrt.
     gals = [galsim.ChromaticFourierSqrtProfile(cgal1),
@@ -2843,7 +2843,7 @@ def test_ne():
             galsim.ChromaticFourierSqrtProfile(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticFourierSqrtProfile(cgal3).withGSParams(gsp),
             galsim.ChromaticFourierSqrtProfile(cgal3, propagate_gsparams=False).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticOpticalPSF.  Params include: lam, (diam or lam_over_diam), aberrations, nstruts,
     # strut_thick, strut_angle, obscuration, oversampling, pad_factor, flux, gsparams, ...
@@ -2860,7 +2860,7 @@ def test_ne():
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, flux=0.2),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, gsparams=gsp),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, flux=0.2).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # ChromaticAiry.  Params include: lam, diam, lam_over_diam, scale_unit, flux, obscuration,
     # gsparams.
@@ -2872,7 +2872,7 @@ def test_ne():
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1).withGSParams(gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # Check that all the various combinations are properly unequal
     gals = [cgal1,
@@ -2888,7 +2888,7 @@ def test_ne():
             galsim.ChromaticAutoCorrelation(cgal1),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 @timer
 def test_atredshift():

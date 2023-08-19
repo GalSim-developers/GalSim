@@ -517,7 +517,7 @@ def test_ne():
             galsim.Moffat(beta=3.0, scale_radius=1.1, trunc=2.0),
             galsim.Moffat(beta=3.0, scale_radius=1.0, flux=1.1),
             galsim.Moffat(beta=3.0, scale_radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 
 if __name__ == "__main__":

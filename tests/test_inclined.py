@@ -578,7 +578,7 @@ def test_eq_ne():
                   galsim.InclinedSersic(n=1.0, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                         scale_h_over_r=0.3)]
 
-    all_obj_diff(diff_gals)
+    check_all_diff(diff_gals)
 
 @timer
 def test_pickle():

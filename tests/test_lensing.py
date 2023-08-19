@@ -760,7 +760,7 @@ def test_shear_units():
                     galsim.PowerSpectrum('k', 'k', False, 'arcsec'),
                     galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
                     galsim.PowerSpectrum('k', 'k**2', False, 'arcmin')]
-    all_obj_diff(diff_ps_list)
+    check_all_diff(diff_ps_list)
 
 @timer
 def test_tabulated():
@@ -1368,7 +1368,7 @@ def test_psr():
                      galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, None),
                      galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, None, pb),
                      galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pb, pe)]
-    all_obj_diff(diff_psr_list)
+    check_all_diff(diff_psr_list)
 
     with assert_raises(TypeError):
         psr(gd=galsim.BaseDeviate(1234))

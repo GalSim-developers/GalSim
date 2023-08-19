@@ -596,7 +596,7 @@ def test_ne():
             galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, k_interpolant='Linear'),
             covspec1,
             covspec2]
-    all_obj_diff(objs)
+    check_all_diff(objs)
     for obj in objs[:-5]:
         check_pickle(obj)
 

@@ -301,7 +301,7 @@ def test_ne():
            galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('Vega'),
            galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(100.0),
            galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(sed)]
-    all_obj_diff(bps)
+    check_all_diff(bps)
 
     with assert_raises(galsim.GalSimValueError):
            galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('invalid')

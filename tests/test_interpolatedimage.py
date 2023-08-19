@@ -1684,14 +1684,14 @@ def test_ne():
             galsim.InterpolatedImage(ref_image, scale=0.2),
             galsim.InterpolatedImage(ref_image, use_true_center=False),
             galsim.InterpolatedImage(ref_image, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
     # And repeat for InterpolatedKImage
     gals = [galsim.InterpolatedKImage(kim),
             galsim.InterpolatedKImage(kim, k_interpolant='Linear'),
             galsim.InterpolatedKImage(kim, stepk=1.1),
             galsim.InterpolatedKImage(kim, gsparams=gsp)]
-    all_obj_diff(gals)
+    check_all_diff(gals)
 
 def test_quintic_glagn():
     """This is code that was giving a seg fault.  cf. Issue 1079.

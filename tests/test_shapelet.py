@@ -351,7 +351,7 @@ def test_ne():
             galsim.Shapelet(2., 2),
             galsim.Shapelet(1., 2, bvec=[1, 0, 0, 0.2, 0.3, -0.1]),
             galsim.Shapelet(1., 2, gsparams=gsp)]
-    all_obj_diff(objs)
+    check_all_diff(objs)
 
 
 if __name__ == "__main__":
