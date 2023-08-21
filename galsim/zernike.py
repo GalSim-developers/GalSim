@@ -504,8 +504,8 @@ class Zernike:
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
-    @staticmethod
-    def _from_coef_array_xy(coef_array_xy, R_outer=1.0, R_inner=0.0):
+    @classmethod
+    def _from_coef_array_xy(cls, coef_array_xy, R_outer=1.0, R_inner=0.0):
         """Construct a Zernike from a 2D array of Cartesian polynomial
         coefficients.
         """
@@ -1033,8 +1033,9 @@ class DoubleZernike:
         """Maximum radial degree of the pupil dependence."""
         return noll_to_zern(self._jmax)[0]
 
-    @staticmethod
+    @classmethod
     def _from_uvxy(
+        cls,
         uvxy,
         *,
         uv_outer=1.0,  # "field"
