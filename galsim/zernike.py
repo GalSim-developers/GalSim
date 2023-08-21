@@ -972,9 +972,9 @@ class DoubleZernike:
     where A1 and A2 are the areas of the two annuli.
 
     Double Zernikes series are useful for representing the field and pupil
-    dependent wavefronts of a telescope.  Typically, the first index (the `k`
-    index) corresponds to the field-dependence, while the second index (the
-    `j` index) corresponds to the pupil-dependence.
+    dependent wavefronts of a telescope.  We adopt the typical convention that
+    the first index (the `k` index) corresponds to the field-dependence, while
+    the second index (the `j` index) corresponds to the pupil-dependence.
 
     Parameters:
         coef:       [kmax, jmax] array of double Zernike coefficients.  Like the
