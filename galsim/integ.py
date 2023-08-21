@@ -337,7 +337,39 @@ class ContinuousIntegrator(ImageIntegrator):
 _leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
 
 
-def _gq_annulus_points(r_outer, r_inner, n_rings, n_spokes):
+def gq_annulus_points(r_outer, r_inner, n_rings, n_spokes):
+    """ Generate points and weights for Gaussian quadrature over an annulus.
+
+    Sample points are generated on a grid of rings (constant radius) and spokes
+    (constant azimuth).  The sample points with the weights can be used to
+    approximate an integral over an annulus as:
+
+        \Int_annulus f(x, y) dx dy = \Sum_{x, y, w} f(x, y) * w
+
+    To integrate a nth order 2d polynomial over an annulus exactly requires
+        n_rings = n//2+1
+        n_spokes = n+1
+
+    References:
+      - G. W. Forbes,
+        "Optical system assessment for design: numerical ray tracing in the Gaussian pupil,"
+        J. Opt. Soc. Am. A 5, 1943-1956 (1988)
+
+      - Brian J. Bauman, Hong Xiao,
+        "Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,"
+        Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773
+
+    Parameters:
+        r_outer: Outer radius of annulus
+        r_inner: Inner radius of annulus
+        n_rings: Number of sample rings to use in the Gaussian quadrature
+        n_spokes: Number of sample spokes to use in the Gaussian quadrature
+
+    Returns:
+        x, y: Cartesian coordinates of the sample points
+        weights: Weights to use for the Gaussian quadrature
+
+    """
     Li, w = _leggauss(n_rings)
     eps = r_inner/r_outer
     area = np.pi*(r_outer**2 - r_inner**2)
@@ -372,7 +404,7 @@ def gq_annulus(f, r_outer, r_inner, n_rings, n_spokes):
         n_rings = n//2+1
         n_spokes = n+1
 
-        Parameters:
+    Parameters:
         f: Function to integrate
         r_inner: Inner radius of annulus
         r_outer: Outer radius of annulus
@@ -382,6 +414,6 @@ def gq_annulus(f, r_outer, r_inner, n_rings, n_spokes):
     Returns:
         The integral of f over the annulus
     """
-    x, y, weights = _gq_annulus_points(r_outer, r_inner, n_rings, n_spokes)
+    x, y, weights = gq_annulus_points(r_outer, r_inner, n_rings, n_spokes)
     val = np.array([f(x_, y_) for x_, y_ in zip(x, y)])
     return np.sum(val*weights)

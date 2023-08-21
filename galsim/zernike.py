@@ -19,7 +19,7 @@
 import numpy as np
 
 from .utilities import LRU_Cache, binomial, horner2d, horner4d, nCr, lazy_property
-from .integ import _gq_annulus_points
+from .integ import gq_annulus_points
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 
 # Some utilities for working with Zernike polynomials
@@ -649,7 +649,7 @@ class Zernike:
 
         nRings = nTarget//2+1
         nSpokes = 2*nTarget+1
-        x, y, weights = _gq_annulus_points(self.R_outer, self.R_inner, nRings, nSpokes)
+        x, y, weights = gq_annulus_points(self.R_outer, self.R_inner, nRings, nSpokes)
         val = horner2d(x, y, xy, dtype=float)
         basis = zernikeBasis(
             jTarget, x, y, R_outer=self.R_outer, R_inner=self.R_inner
@@ -1101,8 +1101,8 @@ class DoubleZernike:
         xy_spokes = 2*self._nxy+1
 
         # Compute GQ points and weights on double annulus
-        u, v, uv_w = _gq_annulus_points(self.uv_outer, self.uv_inner, uv_rings, uv_spokes)
-        x, y, xy_w = _gq_annulus_points(self.xy_outer, self.xy_inner, xy_rings, xy_spokes)
+        u, v, uv_w = gq_annulus_points(self.uv_outer, self.uv_inner, uv_rings, uv_spokes)
+        x, y, xy_w = gq_annulus_points(self.xy_outer, self.xy_inner, xy_rings, xy_spokes)
         nu = len(u)
         nx = len(x)
         u = np.repeat(u, nx)
