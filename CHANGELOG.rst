@@ -64,3 +64,5 @@ Bug Fixes
 - Fixed some errors when drawing ChromaticTransformation objects with photon shooting. (#1229)
 - Fixed the flux drawn by ChromaticConvolution with photon shooting when poisson_flux=True. (#1229)
 - Fixed a slight inaccuracy in the FFT phase shifts for single-precision images. (#1231, #1234)
+- Fixed a bug that prevented a convolution of two PhaseScreenPSF objects from being drawn with
+  photon shooting. (#1242)

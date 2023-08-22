@@ -365,8 +365,15 @@ def test_convolve():
         np.testing.assert_array_equal(getattr(pa2, attr), data)
 
         # both have data now...
-        with assert_raises(galsim.GalSimIncompatibleValuesError):
-            pa1.convolve(pa2)
+        pa1.convolve(pa2)
+        np.testing.assert_array_equal(getattr(pa1, attr), data)
+        np.testing.assert_array_equal(getattr(pa2, attr), data)
+
+        # If the second one has different data, the first takes precedence.
+        setattr(pa2, attr, data * 2)
+        pa1.convolve(pa2)
+        np.testing.assert_array_equal(getattr(pa1, attr), data)
+        np.testing.assert_array_equal(getattr(pa2, attr), 2*data)
 
 
 @timer
