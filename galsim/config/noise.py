@@ -76,7 +76,7 @@ def AddNoise(config, im, current_var=0., logger=None):
     if 'noise' in config['image']:
         noise = config['image']['noise']
     else: # No noise.
-        return
+        return 0
     if not isinstance(noise, dict):
         raise GalSimConfigError("image.noise is not a dict.")
 
@@ -115,7 +115,10 @@ def CalculateNoiseVariance(config, full=False):
     Returns:
         the noise variance (units are ADU if gain != 1)
     """
-    noise = config['image']['noise']
+    if 'noise' in config['image']:
+        noise = config['image']['noise']
+    else: # No noise.
+        return 0
     if not isinstance(noise, dict):
         raise GalSimConfigError("image.noise is not a dict.")
 

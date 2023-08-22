@@ -862,6 +862,31 @@ def test_whiten():
         galsim.config.BuildStamp(config)
 
 
+@timer
+def test_no_noise():
+    """Test if there is no noise field in image.
+    """
+    scale = 0.3
+
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'pixel_scale' : scale,
+            'size' : 32,
+        },
+        'gal': { 'type': 'None' }
+    }
+
+    im = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im.array, 0)
+
+    assert galsim.config.CalculateNoiseVariance(config) == 0
+    assert galsim.config.AddNoise(config, im) == 0
+    assert galsim.config.AddNoiseVariance(config, im) == None  # No return value.
+    np.testing.assert_equal(im.array, 0)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
