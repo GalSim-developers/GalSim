@@ -1521,6 +1521,7 @@ def test_uv_persistence():
         check_pickle(photons)
 
 
+@timer
 def test_t_persistence():
     rng = galsim.BaseDeviate(10)
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2, rng=rng)
@@ -1531,6 +1532,21 @@ def test_t_persistence():
     assert np.min(photons.time) > 10.0
     assert np.max(photons.time) < 25.0
 
+@timer
+def test_convolve_phasepsf():
+    # This snippet didn't use to be allowed, since the two psfs populate different
+    # pupil angles.
+    star = galsim.DeltaFunction(flux=10)
+    psf1 = galsim.Atmosphere(screen_size=10).makePSF(lam=700, diam=8)
+    psf2 = galsim.OpticalPSF(lam=700, diam=8, geometric_shooting=True)
+    sed = galsim.SED('vega.txt', wave_type='nm', flux_type='fphotons')
+    obj = galsim.Convolve(star * sed, psf1, psf2)
+    bandpass = galsim.Bandpass('LSST_r.dat', wave_type='nm')
+    obj = obj.withFlux(10, bandpass)
+    im = obj.drawImage(bandpass, method='phot', n_photons=10)
+
+    # The main thing is that it works.  But check that flux makes sense.
+    assert im.array.sum() == 10
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

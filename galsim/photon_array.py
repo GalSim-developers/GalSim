@@ -465,44 +465,28 @@ class PhotonArray:
 
     def convolve(self, rhs, rng=None):
         """Convolve this `PhotonArray` with another.
+
+        ..note::
+
+            If both self and rhs have wavelengths, angles, pupil coordinates or times assigned,
+            then the values from the first array (i.e. self) take precedence.
         """
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
-        if rhs.hasAllocatedAngles():
-            if self.hasAllocatedAngles():
-                raise GalSimIncompatibleValuesError(
-                    "PhotonArray.convolve with doubly assigned angles"
-                )
-            else:
-                self.dxdz = rhs.dxdz
-                self.dydz = rhs.dydz
+        if rhs.hasAllocatedAngles() and not self.hasAllocatedAngles():
+            self.dxdz = rhs.dxdz
+            self.dydz = rhs.dydz
 
-        if rhs.hasAllocatedWavelengths():
-            if self.hasAllocatedWavelengths() and self._wave is not rhs._wave:
-                raise GalSimIncompatibleValuesError(
-                    "PhotonArray.convolve with doubly assigned wavelengths"
-                )
-            else:
-                self.wavelength = rhs.wavelength
+        if rhs.hasAllocatedWavelengths() and not self.hasAllocatedWavelengths():
+            self.wavelength = rhs.wavelength
 
-        if rhs.hasAllocatedPupil():
-            if self.hasAllocatedPupil() and (
-                    self._pupil_u is not rhs._pupil_u or self._pupil_v is not rhs._pupil_v):
-                raise GalSimIncompatibleValuesError(
-                    "PhotonArray.convolve with doubly assigned pupil coordinates"
-                )
-            else:
-                self.pupil_u = rhs.pupil_u
-                self.pupil_v = rhs.pupil_v
+        if rhs.hasAllocatedPupil() and not self.hasAllocatedPupil():
+            self.pupil_u = rhs.pupil_u
+            self.pupil_v = rhs.pupil_v
 
-        if rhs.hasAllocatedTimes():
-            if self.hasAllocatedTimes() and self._time is not rhs._time:
-                raise GalSimIncompatibleValuesError(
-                    "PhotonArray.convolve with doubly assigned time stamps"
-                )
-            else:
-                self.time = rhs.time
+        if rhs.hasAllocatedTimes() and not self.hasAllocatedTimes():
+            self.time = rhs.time
 
         rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
