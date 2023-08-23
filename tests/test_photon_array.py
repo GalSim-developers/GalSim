@@ -877,7 +877,7 @@ def test_dcr():
                                err_msg="base_psf + dcr in photon_ops didn't match")
 
     # Including the wavelength sampler with chromatic drawing is not necessary, but is allowed.
-    # (Mostly in case someone wants to do something a little different w.r.t. wavelenght sampling.
+    # (Mostly in case someone wants to do something a little different w.r.t. wavelength sampling.
     photon_ops = [wave_sampler, base_PSF, dcr]
     star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
     printval(im8, im6, show=False)
