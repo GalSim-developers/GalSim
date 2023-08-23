@@ -20,6 +20,7 @@ Config Updates
   stamp field, as it should.  (#1190)
 - Added a new ``initial_image`` input type that lets you read in an existing image file
   and draw onto it. (#1237)
+- Added skip_failures option in stamp fields.  (#1238)
 
 
 New Features
