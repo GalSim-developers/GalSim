@@ -52,6 +52,7 @@ namespace galsim {
     void pyExportSilicon(py::module&);
     void pyExportRealGalaxy(py::module&);
     void pyExportWCS(py::module&);
+    void pyExportUtilities(py::module&);
 
     namespace hsm {
         void pyExportHSM(py::module&);
@@ -101,6 +102,7 @@ PYBIND11_MODULE(_galsim, _galsim)
     galsim::pyExportSilicon(_galsim);
     galsim::pyExportRealGalaxy(_galsim);
     galsim::pyExportWCS(_galsim);
+    galsim::pyExportUtilities(_galsim);
 
     galsim::hsm::pyExportHSM(_galsim);
     galsim::integ::pyExportInteg(_galsim);

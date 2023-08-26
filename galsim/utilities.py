@@ -1302,6 +1302,32 @@ def structure_function(image):
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
+def merge_sorted(arrays):
+    r"""Merge 2 or more numpy arrays into a single merged array.
+
+    Each of the input arrays must be already sorted.
+
+    This is equivalent to np.unique(np.concatenate(arrays)), but much faster.
+
+    Parameters:
+        arrays:     A list of the arrays to merge.
+
+    Returns:
+        A single numpy.array with the merged values.
+    """
+    try:
+        return _galsim.MergeSorted(list(arrays))
+    except Exception as e:
+        # Probably the inputs are not sorted.  Try to give the user more information.
+        for i,a in enumerate(arrays):
+            if not np.all(np.diff(a)>=0):
+                raise GalSimValueError("Not all arrays input to merge_sorted are sorted." +
+                                       "The first such case is at index %s"%i,
+                                       value=a)
+        else:
+            # That wasn't it.  Just reraise the exception, converted to a GalSimError.
+            raise GalSimError(str(e)) from None
+
 def combine_wave_list(*args):
     """Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
     red_limit attributes.  Should work with any combination of `SED`, `Bandpass`, and
@@ -1313,10 +1339,6 @@ def combine_wave_list(*args):
     Returns:
         wave_list, blue_limit, red_limit
     """
-    from .sed import SED
-    from .bandpass import Bandpass
-    from .gsobject import GSObject
-    from .chromatic import ChromaticObject
     if len(args) == 1:
         if isinstance(args[0], (list, tuple)):
             args = args[0]
@@ -1337,12 +1359,11 @@ def combine_wave_list(*args):
 
     waves = [np.asarray(obj.wave_list) for obj in args]
     waves = [w[(blue_limit <= w) & (w <= red_limit)] for w in waves]
-    wave_list = np.union1d(waves[0], waves[1])
-    for w in waves[2:]:
-        wave_list = np.union1d(wave_list, w)
     # Make sure both limits are included in final list
-    if len(wave_list) > 0 and (wave_list[0] != blue_limit or wave_list[-1] != red_limit):
-        wave_list = np.union1d([blue_limit, red_limit], wave_list)
+    if any(len(w) > 0 for w in waves):
+        waves.append([blue_limit, red_limit])
+    wave_list = merge_sorted(waves)
+
     return wave_list, blue_limit, red_limit
 
 def functionize(f):
