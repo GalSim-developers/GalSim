@@ -1310,7 +1310,7 @@ def merge_sorted(arrays):
     This is equivalent to np.unique(np.concatenate(arrays)), but much faster.
 
     Parameters:
-        arrays:     A list of the arrays to merge.
+        arrays:     A list of arrays to merge.
 
     Returns:
         A single numpy.array with the merged values.
@@ -1323,7 +1323,7 @@ def merge_sorted(arrays):
             if not np.all(np.diff(a)>=0):
                 raise GalSimValueError("Not all arrays input to merge_sorted are sorted." +
                                        "The first such case is at index %s"%i,
-                                       value=a)
+                                       value=a) from None
         else:
             # That wasn't it.  Just reraise the exception, converted to a GalSimError.
             raise GalSimError(str(e)) from None

@@ -25,7 +25,7 @@
 
 namespace galsim {
 
-    static py::array_t<double> MergeSorted(py::list& arrays)
+    static py::array MergeSorted(py::list& arrays)
     {
         dbg<<"Start MergeSorted: "<<arrays.size()<<std::endl;
         const int n_arrays = arrays.size();
@@ -65,7 +65,8 @@ namespace galsim {
         if (max_ret_size == n0) {
             // Then arrays[0] already has all the values.  No need to merge.
             // (This is not terribly uncommon, and the early exit can save a lot of time!)
-            return a0;
+            dbg<<"Early exit.  a0 has everything.\n";
+            return arrays[0].cast<py::array>();
         }
 
         // We actually merge these 1 at a time, since that's much simpler (and maybe even faster?).
