@@ -31,6 +31,8 @@ New Features
   the option ``use_sky_coords=True`` to `FindAdaptiveMom` to apply this automatically. (#1219)
 - Added some utility functions that we have found useful in our test suite, and which other
   people might want to use to the installed galsim.utilities. (#1240)
+- Added `galsim.utilities.merge_sorted` which merges two or more sorted numpy arrays faster than
+  the available numpy options. (#1243)
 
 
 Performance Improvements
@@ -43,6 +45,8 @@ Performance Improvements
   Now it only adds it if there is not already one given by the user. (#1229)
 - Work around an OMP bug that disables multiprocessing on some systems when omp_get_max_threads
   is called. (#1241)
+- The `combine_wave_lists` function is faster now, using the new `merge_sorted` function.
+  (#1243)
 
 
 Bug Fixes

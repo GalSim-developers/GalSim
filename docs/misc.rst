@@ -77,6 +77,8 @@ Utilities Related to NumPy Functions
 
 .. autofunction:: galsim.utilities.kxky
 
+.. autofunction:: galsim.utilities.merge_sorted
+
 
 Test Suite Helper Functions and Contexts
 ----------------------------------------

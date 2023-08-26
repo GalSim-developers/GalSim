@@ -1366,6 +1366,47 @@ def test_horner_complex():
     result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
+def test_merge_sorted():
+    from galsim.utilities import merge_sorted
+
+    rng = galsim.BaseDeviate(1234)
+    arrays = [ np.sort(rng.np.uniform(0,1000, 100)) for _ in range(10) ]
+
+    # The documentation claims it is equivalent to np.unique(np.concatenate(arrays))
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    np.testing.assert_array_equal(merge, ref)
+
+    # For 2 inputs, it is equivalent to union1d
+    ref = np.union1d(*arrays[:2])
+    merge = merge_sorted(arrays[:2])
+    np.testing.assert_array_equal(merge, ref)
+
+    # Also works if the inputs are lists, rather than numpy arrays.
+    arrays = [a.tolist() for a in arrays]
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    np.testing.assert_array_equal(merge, ref)
+
+    # Also works if the inputs have a different dtype, although the returned dtype
+    # will always be float64.
+    arrays = [np.sort(rng.np.integers(0, 1000, 100)) for _ in range(10)]
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    assert ref.dtype == int
+    assert merge.dtype == float
+    np.testing.assert_array_equal(merge, ref)
+
+    # If the inputs are not sorted, it raises an exception.
+    arrays = [ rng.np.uniform(0,1000, 100) for _ in range(10) ]
+    with assert_raises(galsim.GalSimError):
+        merge_sorted(arrays)
+
+    # Also an exception if no arrays are provided.
+    with assert_raises(galsim.GalSimError):
+        merge_sorted([])
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
