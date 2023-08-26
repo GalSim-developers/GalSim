@@ -43,8 +43,8 @@ namespace galsim {
             py::array_t<double> ak = arrays[k].cast<py::array_t<double> >();
             int nk = ak.size();
             dbg<<"size of array "<<k<<" = "<<nk<<std::endl;
-            // Check how far into the array, this one is itentical to a0.
-            // Do this from both sizes.  Not least because in GalSim, the typical
+            // Check how far into the array, this one is identical to a0.
+            // Do this from both sides.  Not least because in GalSim, the typical
             // way with use this includes a 2-element array which is often just the
             // first and last values of other arrays.
             const double* a0_p1 = static_cast<const double*>(a0.data());
@@ -64,7 +64,7 @@ namespace galsim {
         dbg<<"max_ret_size = "<<max_ret_size<<std::endl;
         if (max_ret_size == n0) {
             // Then arrays[0] already has all the values.  No need to merge.
-            // (This is not terribly uncommon, and the early exit saves a lot of time!)
+            // (This is not terribly uncommon, and the early exit can save a lot of time!)
             return a0;
         }
 
@@ -96,13 +96,18 @@ namespace galsim {
             while (p0 != p0_end && p1 != p1_end) {
                 double x;
                 // Select the smaller one.
-                if (*p1 < *p0) {
+                // Consider everything to be < nan
+                if (*p1 < *p0 || std::isnan(*p0)) {
                     x = *p1++;
+                    if (std::isnan(*p0) && std::isnan(x)) ++p0;
                 } else {
                     x = *p0++;
-                    if (*p1 == x) ++p1;
+                    // If p1 is also == x, increment that too.
+                    // Note: !(*p1 != x) is so nan == nan here.
+                    if (!(*p1 != x)) ++p1;
                 }
-                if (x == prev) continue;  // skip duplicates
+                // skip duplicates (again, letting nan == nan here)
+                if (!(x != prev)) continue;
                 // Make sure the inputs make sense.
                 if (x < prev) {
                     throw std::runtime_error("Arrays are not sorted");
@@ -111,9 +116,9 @@ namespace galsim {
             }
 
             // Now at least one of the two arrays are exhausted.  Fill the rest of res.
-            while (p0 != p0_end) { 
+            while (p0 != p0_end) {
                 double x = *p0++;
-                if (x == prev) continue;
+                if (!(x != prev)) continue;
                 if (x < prev) {
                     throw std::runtime_error("Arrays are not sorted");
                 }
@@ -121,7 +126,7 @@ namespace galsim {
             }
             while (p1 != p1_end) {
                 double x = *p1++;
-                if (x == prev) continue;
+                if (!(x != prev)) continue;
                 if (x < prev) {
                     throw std::runtime_error("Arrays are not sorted");
                 }

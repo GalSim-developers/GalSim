@@ -1397,8 +1397,54 @@ def test_merge_sorted():
     assert merge.dtype == float
     np.testing.assert_array_equal(merge, ref)
 
+    # Check if all inputs are equal
+    arrays = [ range(100) for _ in range(10) ]
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    np.testing.assert_array_equal(merge, ref)
+
+    # Check if some but not all inputs are equal
+    # Also, mix of list and np.array
+    arrays = [ range(0,10,2), np.linspace(10,30,13), [] ] * 3
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    np.testing.assert_array_equal(merge, ref)
+
+    # Check if some arrays are 0 or 1 length.
+    # Also, if some are sorted, but have duplicates.
+    arrays += [ [],
+                np.array([23.]),
+                np.array([-2, -2, 23, 23, 23, 23, 99], dtype=np.int16),
+                [],
+                [-200, 9],
+                np.array([-2, np.inf])
+              ]
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    np.testing.assert_array_equal(merge, ref)
+
+    # Even works with nans, so long as the np.nan is last.  (That's where np.sort puts them.)
+    arrays = [ [5, 10, np.nan], range(10), [np.nan], [0, 10, np.inf, np.nan], np.arange(2, 13) ]
+    ref = np.unique(np.concatenate(arrays))
+    merge = merge_sorted(arrays)
+    print('ref = ',ref)
+    print('merge = ',merge)
+    index_nan_ref = np.where(np.isnan(ref))[0]
+    index_nan_merge = np.where(np.isnan(merge))[0]
+    print('ref has nans at ', index_nan_ref)
+    print('merge has nans at ', index_nan_merge)
+    assert np.sum(np.isnan(ref)) == 1
+    assert np.sum(np.isnan(ref)) == 1
+    np.testing.assert_array_equal(index_nan_ref, index_nan_merge)
+    np.testing.assert_array_equal(merge, ref)
+
     # If the inputs are not sorted, it raises an exception.
     arrays = [ rng.np.uniform(0,1000, 100) for _ in range(10) ]
+    with assert_raises(galsim.GalSimError):
+        merge_sorted(arrays)
+
+    # Even if only one of them is not sorted.
+    arrays = [ np.sort(rng.np.uniform(0,1000, 3)) for _ in range(10) ] + [ [0, 10, 5] ]
     with assert_raises(galsim.GalSimError):
         merge_sorted(arrays)
 
