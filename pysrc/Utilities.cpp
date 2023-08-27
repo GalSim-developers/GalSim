@@ -45,7 +45,7 @@ namespace galsim {
             dbg<<"size of array "<<k<<" = "<<nk<<std::endl;
             // Check how far into the array, this one is identical to a0.
             // Do this from both sides.  Not least because in GalSim, the typical
-            // way with use this includes a 2-element array which is often just the
+            // way we use this includes a 2-element array which is often just the
             // first and last values of other arrays.
             const double* a0_p1 = static_cast<const double*>(a0.data());
             const double* ak_p1 = static_cast<const double*>(ak.data());
