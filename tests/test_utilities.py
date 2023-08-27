@@ -1404,7 +1404,7 @@ def test_merge_sorted():
     np.testing.assert_array_equal(merge, ref)
     np.testing.assert_array_equal(merge, arrays[0])
 
-    # If all are equal and dtype=float, then result *is* the first array.
+    # If all are equal and are np.arrays, then result *is* the first array.
     arrays = [ np.arange(100, dtype=float) for _ in range(10) ]
     ref = np.unique(np.concatenate(arrays))
     merge = merge_sorted(arrays)
@@ -1413,22 +1413,24 @@ def test_merge_sorted():
     assert merge is arrays[0]
 
     # Check if not all equal, but a0 has everything
-    arrays = [ range(10), range(0,10,2), tuple(range(5,9)), [3], (0,3,8) ]
+    # Also, check mix of list, tuple, and np.array
+    arrays = [ range(10), np.arange(0,10,2), tuple(range(5,9)), [3], (0,3,8) ]
     ref = np.unique(np.concatenate(arrays))
     merge = merge_sorted(arrays)
     np.testing.assert_array_equal(merge, ref)
     np.testing.assert_array_equal(merge, arrays[0])
 
     # If all are equal to either the start or end of a0, then also get early exit.
+    # Note: the array doesn't have to have dtype=float for a0 to be the actual return value.
     arrays = [ np.arange(10), range(0,3), range(5,10), [0], (0,9), (0,1,2,8,9) ]
     ref = np.unique(np.concatenate(arrays))
     merge = merge_sorted(arrays)
     np.testing.assert_array_equal(merge, ref)
     np.testing.assert_array_equal(merge, arrays[0])
     assert merge is arrays[0]
+
     # The early exit happens regardless of what kind of object arrays[0] is.
     # But only if it's actually a numpy array do we end up with merge *is* arrays[0].
-    # Note: the array doesn't have to have dtype=float.
     arrays[0] = range(10)
     merge = merge_sorted(arrays)
     np.testing.assert_array_equal(merge, ref)
@@ -1436,7 +1438,6 @@ def test_merge_sorted():
     assert merge is not arrays[0]
 
     # Check if some but not all inputs are equal
-    # Also, mix of list and np.array
     arrays = [ range(0,10,2), np.linspace(10,30,13), [] ] * 3
     ref = np.unique(np.concatenate(arrays))
     merge = merge_sorted(arrays)
