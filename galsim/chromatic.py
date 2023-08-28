@@ -2079,46 +2079,25 @@ class ChromaticSum(ChromaticObject):
             raise GalSimIncompatibleValuesError(
                 "Cannot add dimensionless and spectral ChromaticObjects.", args=args)
 
-        # Sort arguments into inseparable objects and groups of separable objects.  Note that
-        # separable groups are only identified if the constituent objects have the *same* SED even
-        # though a proportional SED is mathematically sufficient for separability.  It's basically
-        # impossible to identify if two SEDs are proportional (or even equal) unless they point to
-        # the same memory, so we just accept this limitation.
+        # We always consider ChromaticSums to be inseparable.
+        # Note that separable groups can only be identified if the constituent objects have the
+        # *same* SED even though a proportional SED is mathematically sufficient for separability.
+        # It's basically impossible to identify if two SEDs are proportional (or even equal) unless
+        # they point to the same memory, and in practice any sums that are like this would
+        # almost certainly have different relative fluxes, so they would end up with different
+        # SED instances.  This implies that there is no point wasting time trying to pull out
+        # separable groups.
 
-        # Each input summand will either end up in SED_dict if it's separable, or in self._obj_list
-        # if it's inseparable.  Use an OrderedDict to ensure deterministic results.
-        SED_dict = {}
+        self.separable = False
         self._obj_list = []
         for obj in args:
             if self._propagate_gsparams:
                 obj = obj.withGSParams(self._gsparams)
-            if obj.separable:
-                if obj.SED not in SED_dict:
-                    SED_dict[obj.SED] = []
-                SED_dict[obj.SED].append(obj)
-            else:
-                self._obj_list.append(obj)
+            self._obj_list.append(obj)
 
-        # If everything ended up in a single SED_dict entry (and self._obj_list is empty) then this
-        # ChromaticSum is separable.
-        self.separable = (len(self._obj_list) == 0 and len(SED_dict) == 1)
-        if self.separable:
-            the_one_SED = list(SED_dict)[0]
-            self._obj_list = SED_dict[the_one_SED]
-            # Since we know that the chromatic objects' SEDs already include all relevant
-            # normalizations, we can just multiply the_one_SED by the number of objects.
-            self.SED = the_one_SED * len(SED_dict[the_one_SED])
-        else:
-            # Sum is not separable, put partial sums might be.  Search for them.
-            for v in SED_dict.values():
-                if len(v) == 1:
-                    self._obj_list.append(v[0])
-                else:
-                    self._obj_list.append(ChromaticSum(v))
-            # and assemble self normalization:
-            self.SED = self._obj_list[0].SED
-            for obj in self._obj_list[1:]:
-                self.SED += obj.SED
+        self.SED = self._obj_list[0].SED
+        for obj in self._obj_list[1:]:
+            self.SED += obj.SED
 
         self.wave_list, _, _ = utilities.combine_wave_list(self._obj_list)
 

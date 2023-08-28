@@ -77,7 +77,7 @@ def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
         # help preserve separability in many cases.
 
         # Don't transform ChromaticSum object, better to just transform the arguments.
-        if isinstance(obj, chrom.ChromaticSum) or isinstance(obj, Sum):
+        if isinstance(obj, chrom.ChromaticSum):
             new_obj = chrom.ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams,propagate_gsparams)
                   for o in obj.obj_list ])
