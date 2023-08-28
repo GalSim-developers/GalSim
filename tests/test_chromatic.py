@@ -1533,12 +1533,11 @@ def test_separable_ChromaticSum():
     mono_gal2 = galsim.Gaussian(fwhm=1.1)
     mono_gal3 = galsim.Gaussian(fwhm=1.2)
 
-    # 1) check that 2 summands with same SED make a separable sum.
+    # 1) check 2 summands with same SED.  (Used to be considered separable.)
     cgal1 = mono_gal1 * bulge_SED + mono_gal2 * bulge_SED
     img1 = galsim.ImageD(32, 32, scale=0.2)
     kimg1 = galsim.ImageCD(32, 32, scale=0.5)
-    if not cgal1.separable:
-        raise AssertionError("failed to identify separable ChromaticSum")
+    assert not cgal1.separable
 
     # check that drawing the profile works as expected
     final1 = galsim.Convolve(cgal1, psf)
@@ -1583,12 +1582,9 @@ def test_separable_ChromaticSum():
     # 3) check that 3 summands, 2 with the same SED, 1 with a different SED, make an
     # inseparable sum.
     cgal3 = galsim.Add(mono_gal1 * bulge_SED, mono_gal2 * bulge_SED, mono_gal3 * disk_SED)
-    if cgal3.separable:
-        raise AssertionError("failed to identify inseparable ChromaticSum")
-    # check that its objlist contains a separable Chromatic and a separable ChromaticSum
-    types = dict((o.__class__, o) for o in cgal3.obj_list)
-    if galsim.ChromaticTransformation not in types or galsim.ChromaticSum not in types:
-        raise AssertionError("failed to process list of objects with repeated SED")
+    assert not cgal3.separable
+    assert len(cgal3.obj_list) == 3
+    assert all([isinstance(obj, galsim.ChromaticTransformation) for obj in cgal3.obj_list])
 
     # check that drawing the profile works as expected
     final3 = galsim.Convolve(cgal3, psf)
@@ -1609,12 +1605,10 @@ def test_separable_ChromaticSum():
 
     check_pickle(component3)
 
-    # 4) What about if we wrap mono_gal1 and mono_gal2 in a ChromaticObject?
-    cgal4 = (galsim.ChromaticObject(mono_gal1) * bulge_SED
-             + galsim.ChromaticObject(mono_gal2) * bulge_SED)
+    # 4) What about if we add them first before applying the SED?
+    cgal4 = (mono_gal1 + mono_gal2) * bulge_SED
     img4 = img1.copy()
-    if not cgal4.separable:
-        raise AssertionError("failed to identify separable ChromaticSum")
+    assert cgal4.separable
 
     final4 = galsim.Convolve(cgal4, psf)
     final4.drawImage(bandpass, image=img4)
@@ -2556,10 +2550,10 @@ def test_chromatic_invariant():
     assert_raises(galsim.GalSimError, chrom_sum_noSED.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, chrom_sum_noSED.applyTo, p2)
 
-    chrom_sum_SED = chrom + chrom  # also separable
+    chrom_sum_SED = chrom + chrom  # used to be considered separable, but not anymore.
     check_chromatic_invariant(chrom_sum_SED)
     check_pickle(chrom_sum_SED)
-    assert chrom_sum_SED.separable
+    assert not chrom_sum_SED.separable
 
     gsobj2 = galsim.Kolmogorov(fwhm=0.7)
     chrom2 = gsobj2 * disk_SED
