@@ -78,16 +78,16 @@ class ChromaticObject:
     or, with `ChromaticSum`, to construct multi-component galaxies, each component with a different
     `SED`.  For example, a bulge+disk galaxy could be constructed::
 
-        >>> bulge_SED = user_function_to_get_bulge_spectrum()
-        >>> disk_SED = user_function_to_get_disk_spectrum()
+        >>> bulge_sed = user_function_to_get_bulge_spectrum()
+        >>> disk_sed = user_function_to_get_disk_spectrum()
         >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
         >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
-        >>> bulge = bulge_mono * bulge_SED
-        >>> disk = disk_mono * disk_SED
+        >>> bulge = bulge_mono * bulge_sed
+        >>> disk = disk_mono * disk_sed
         >>> gal = bulge + disk
 
-    The `SED` instances above describe the flux density in photons/nm/cm^2/s of an object, possibly
-    normalized with either the `SED.withFlux` or `SED.withMagnitude` methods (see their docstrings
+    The ``sed`` instances above describe the flux density in photons/nm/cm^2/s of an object, possibly
+    normalized with either the `sed.withFlux` or `sed.withMagnitude` methods (see their docstrings
     for details about these and other normalization options).  Note that for dimensional
     consistency, in this case, the ``flux`` attribute of the multiplied `GSObject` is interpreted
     as being dimensionless instead of in its normal units of [photons/s/cm^2].  The photons/s/cm^2
@@ -144,22 +144,22 @@ class ChromaticObject:
 
     # ChromaticObjects should adhere to the following invariants:
     # - Objects should define the attributes/properties:
-    #   * .SED, .separable, .wave_list, .interpolated, .deinterpolated, .spectral, .dimensionless
-    # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
+    #   * .sed, .separable, .wave_list, .interpolated, .deinterpolated, .spectral, .dimensionless
+    # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.sed(lam)
     #   == obj.evaluateAtWavelength(lam).flux
     # - if obj.spectral:
-    #       obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass)
+    #       obj.sed.calculateFlux(bandpass) == obj.calculateFlux(bandpass)
     #       == obj.drawImage(bandpass).array.sum()
     # - .separable is a boolean indicating whether or not the profile can be factored into a
     #   spatial part and a spectral part.
     # - .wave_list is a numpy array indicating wavelengths of particular interest, for instance, the
-    #   wavelengths at which the SED is explicitly defined via a LookupTable.  These are the
+    #   wavelengths at which the sed is explicitly defined via a LookupTable.  These are the
     #   wavelengths that will be used (in addition to those in bandpass.wave_list) when drawing an
     #   image of the chromatic profile.
     # - .interpolated is a boolean indicating whether any part of the object hierarchy includes an
     #   InterpolatedChromaticObject.
-    # - .spectral indicates obj.SED.spectral
-    # - .dimensionless indicates obj.SED.dimensionless
+    # - .spectral indicates obj.sed.spectral
+    # - .dimensionless indicates obj.sed.dimensionless
 
     def __init__(self, obj):
         self._obj = obj
@@ -171,12 +171,18 @@ class ChromaticObject:
         self.deinterpolated = obj.deinterpolated
 
     @property
+    def sed(self):
+        return self._obj.sed
+
+    @property
     def SED(self):
-        return self._obj.SED
+        from .deprecated import depr
+        depr('obj.SED', 2.5, 'obj.sed')
+        return self.sed
 
     @property
     def wave_list(self):
-        return self.SED.wave_list
+        return self.sed.wave_list
 
     @property
     def gsparams(self):
@@ -188,7 +194,7 @@ class ChromaticObject:
     def redshift(self):
         """The redshift of the object.
         """
-        return self.SED.redshift
+        return self.sed.redshift
 
     def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
@@ -291,7 +297,7 @@ class ChromaticObject:
         extrapolation beyond the originally-provided range of wavelengths is permitted.  However,
         the overall flux at each wavelength will use the exact `SED` at that wavelength to give
         more accurate final flux values.  You can disable this feature by setting
-        ``use_exact_SED = False``.
+        ``use_exact_sed = False``.
 
         The speedup involved in using interpolation depends in part on the bandpass used for
         rendering (since that determines how many full profile evaluations are involved in rendering
@@ -345,7 +351,7 @@ class ChromaticObject:
                                 whichever wavelength has the highest Nyquist frequency.
                                 ``oversample_fac``>1 results in higher accuracy but costlier
                                 pre-computations (more memory and time). [default: 1]
-            use_exact_SED:      If true, then rescale the interpolated image for a given wavelength
+            use_exact_sed:      If true, then rescale the interpolated image for a given wavelength
                                 by the ratio of the exact `SED` at that wavelength to the linearly
                                 interpolated `SED` at that wavelength.  Thus, the flux of the
                                 interpolated object should be correct, at the possible expense of
@@ -355,19 +361,23 @@ class ChromaticObject:
             the version of the Chromatic object that uses interpolation
             (This will be an `InterpolatedChromaticObject` instance.)
         """
+        if 'use_exact_SED' in kwargs:
+            from .deprecated import depr
+            depr('use_exact_SED', 2.5, 'use_exact_sed')
+            kwargs['use_exact_sed'] = kwargs.pop('use_exact_SED')
         return InterpolatedChromaticObject(self, waves, **kwargs)
 
     @property
     def spectral(self):
         """Boolean indicating if the `ChromaticObject` has units compatible with a spectral density.
         """
-        return self.SED.spectral
+        return self.sed.spectral
 
     @property
     def dimensionless(self):
         """Boolean indicating if the `ChromaticObject` is dimensionless.
         """
-        return self.SED.dimensionless
+        return self.sed.dimensionless
 
     @staticmethod
     def _get_integrator(integrator, wave_list):
@@ -407,7 +417,7 @@ class ChromaticObject:
         first method (non-interpolated integration).  By default, `galsim.integ.SampleIntegrator`
         will be used if either ``bandpass.wave_list`` or ``self.wave_list`` have len() > 0.
 
-        If lengths of both are zero, which may happen if both the bandpass throughput and the `SED`
+        If lengths of both are zero, which may happen if both the bandpass throughput and the SED
         associated with ``self`` are analytic python functions for example, then
         `galsim.integ.ContinuousIntegrator` will be used instead.  This latter case by default will
         evaluate the integrand at 250 equally-spaced wavelengths between ``bandpass.blue_limit``
@@ -423,7 +433,7 @@ class ChromaticObject:
             >>> image = chromatic_obj.drawImage(bandpass, integrator=integrator)
 
         Finally, this method uses a cache to avoid recomputing the integral over the product of
-        the bandpass and object `SED` when possible (i.e., for separable profiles).  Because the
+        the bandpass and object SED when possible (i.e., for separable profiles).  Because the
         cache size is finite, users may find that it is more efficient when drawing many images
         to group images using the same SEDs and bandpasses together in order to hit the cache more
         often.  The default cache size is 10, but may be resized using the
@@ -449,8 +459,8 @@ class ChromaticObject:
 
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
 
         # setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
@@ -464,12 +474,12 @@ class ChromaticObject:
         # WavelengthSampler as the first op in the list (if one isn't already present).
         if (kwargs.get('photon_ops', None)
             and not any([isinstance(p,WavelengthSampler) for p in kwargs['photon_ops']])):
-            wave_sampler = WavelengthSampler(self.SED, bandpass)
+            wave_sampler = WavelengthSampler(self.sed, bandpass)
             kwargs['photon_ops'] = [wave_sampler] + kwargs['photon_ops']
 
         if self.separable:
-            multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.SED(wave0)
+            multiplier = ChromaticObject._multiplier_cache(self.sed, bandpass, tuple(wave_list))
+            prof0 *= multiplier/self.sed(wave0)
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
@@ -480,7 +490,7 @@ class ChromaticObject:
             if len(wave_list) < 2:
                 raise GalSimIncompatibleValuesError(
                     "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
-                    integrator=integrator, bandpass=bandpass, sed=self.SED)
+                    integrator=integrator, bandpass=bandpass, sed=self.sed)
             bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
@@ -530,8 +540,8 @@ class ChromaticObject:
         Returns:
             a complex `Image` instance (created if necessary)
         """
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only drawK ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only drawK ChromaticObjects with spectral SEDs.", self.sed)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
@@ -542,8 +552,8 @@ class ChromaticObject:
         wave_list, _ , _ = utilities.combine_wave_list(self, bandpass)
 
         if self.separable:
-            multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            multiplier = ChromaticObject._multiplier_cache(self.sed, bandpass, tuple(wave_list))
+            prof0 *= multiplier/self.sed(bandpass.effective_wavelength)
             image = prof0.drawKImage(image=image, **kwargs)
             return image
 
@@ -619,13 +629,13 @@ class ChromaticObject:
         """Scale the flux of the object by the given flux ratio, which may be an `SED`, a float, or
         a univariate callable function (of wavelength in nanometers) that returns a float.
 
-        The normalization of a `ChromaticObject` is tracked through its ``.SED`` attribute, which
+        The normalization of a `ChromaticObject` is tracked through its ``.sed`` attribute, which
         may have dimensions of either [photons/wavelength-interval/area/time/solid-angle] or
         [1/solid-angle].
 
-        If ``flux_ratio`` is a spectral `SED` (i.e., ``flux_ratio.spectral==True``), then self.SED
+        If ``flux_ratio`` is a spectral `SED` (i.e., ``flux_ratio.spectral==True``), then self.sed
         must be dimensionless for dimensional consistency.  The returned object will have a
-        spectral SED attribute.  On the other hand, if ``flux_ratio`` is a dimensionless `SED`,
+        spectral sed attribute.  On the other hand, if ``flux_ratio`` is a dimensionless `SED`,
         float, or univariate callable function, then the returned object will have ``.spectral``
         and ``.dimensionless`` matching ``self.spectral`` and ``self.dimensionless``.
 
@@ -713,10 +723,10 @@ class ChromaticObject:
             raise GalSimSEDError("Cannot set flux density of dimensionless ChromaticObject.", self)
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
-            current_flux_density = self.SED(wavelength_nm.value)
+            current_flux_density = self.sed(wavelength_nm.value)
         else:
             wavelength_nm = wavelength * units.nm
-            current_flux_density = self.SED(wavelength)
+            current_flux_density = self.sed(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
                     _photons, units.spectral_density(wavelength_nm)).value
@@ -787,10 +797,10 @@ class ChromaticObject:
         Returns:
             the flux through the bandpass.
         """
-        if self.SED.dimensionless:
+        if self.sed.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless ChromaticObject.",
-                                 self.SED)
-        return self.SED.calculateFlux(bandpass)
+                                 self.sed)
+        return self.sed.calculateFlux(bandpass)
 
     def calculateMagnitude(self, bandpass):
         """Return the `ChromaticObject` magnitude through a `Bandpass` ``bandpass``.
@@ -809,10 +819,10 @@ class ChromaticObject:
         Returns:
             the bandpass magnitude.
         """
-        if self.SED.dimensionless:
+        if self.sed.dimensionless:
             raise GalSimSEDError("Cannot calculate magnitude of dimensionless ChromaticObject.",
-                                 self.SED)
-        return self.SED.calculateMagnitude(bandpass)
+                                 self.sed)
+        return self.sed.calculateMagnitude(bandpass)
 
     # Add together ChromaticObjects and/or GSObjects
     def __add__(self, other):
@@ -1189,17 +1199,22 @@ class InterpolatedChromaticObject(ChromaticObject):
                         whichever wavelength has the highest Nyquist frequency.
                         ``oversample_fac``>1 results in higher accuracy but costlier
                         pre-computations (more memory and time). [default: 1]
-        use_exact_SED:  If true, then rescale the interpolated image for a given wavelength by
+        use_exact_sed:  If true, then rescale the interpolated image for a given wavelength by
                         the ratio of the exact `SED` at that wavelength to the linearly
                         interpolated `SED` at that wavelength.  Thus, the flux of the interpolated
                         object should be correct, at the possible expense of other features.
                         [default: True]
     """
-    def __init__(self, original, waves, oversample_fac=1.0, use_exact_SED=True):
+    def __init__(self, original, waves, oversample_fac=1.0, use_exact_sed=True,
+                 use_exact_SED=None):
+        if use_exact_SED is not None:
+            from .deprecated import depr
+            depr('use_exact_SED', 2.5, 'use_exact_sed')
+            use_exact_sed = use_exact_SED
 
         self.waves = np.sort(np.array(waves))
         self.oversample = oversample_fac
-        self.use_exact_SED = use_exact_SED
+        self.use_exact_sed = use_exact_sed
 
         self.separable = original.separable
         self.interpolated = True
@@ -1208,8 +1223,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.deinterpolated = original.deinterpolated
 
     @property
-    def SED(self):
-        return self.deinterpolated.SED
+    def sed(self):
+        return self.deinterpolated.sed
 
     # Note: We don't always need all of these, so only calculate them if needed.
     # E.g. if photon shooting, pretty much only need objs.
@@ -1264,18 +1279,18 @@ class InterpolatedChromaticObject(ChromaticObject):
                  self.deinterpolated == other.deinterpolated and
                  np.array_equal(self.waves, other.waves) and
                  self.oversample == other.oversample and
-                 self.use_exact_SED == other.use_exact_SED))
+                 self.use_exact_sed == other.use_exact_sed))
 
     def __hash__(self):
         return hash(("galsim.InterpolatedChromaticObject", self.deinterpolated, tuple(self.waves),
-                     self.oversample, self.use_exact_SED))
+                     self.oversample, self.use_exact_sed))
 
     def __repr__(self):
         s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.deinterpolated, self.waves)
         if self.oversample != 1.0:
             s += ', oversample_fac=%r'%self.oversample
-        if not self.use_exact_SED:
-            s += ', use_exact_SED=False'
+        if not self.use_exact_sed:
+            s += ', use_exact_sed=False'
         s += ')'
         return s
 
@@ -1309,9 +1324,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         maxk = _linearInterp(self.maxk_vals, frac, lower_idx)
 
         # Rescale to use the exact flux or normalization if requested.
-        if self.use_exact_SED:
+        if self.use_exact_sed:
             interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-            exact_norm = self.SED(wave)
+            exact_norm = self.sed(wave)
             im *= exact_norm/interp_norm
 
         return im, stepk, maxk
@@ -1427,9 +1442,9 @@ class InterpolatedChromaticObject(ChromaticObject):
             assert 0 <= lower_idx < len(self.waves)-1
 
             # Rescale to use the exact flux or normalization if requested.
-            if self.use_exact_SED:
+            if self.use_exact_sed:
                 interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-                exact_norm = self.SED(w)
+                exact_norm = self.sed(w)
                 wt *= exact_norm/interp_norm
 
             im_weights[lower_idx] += (1.-frac) * wt * _flux_ratio(w)
@@ -1467,8 +1482,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
 
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
@@ -1560,8 +1575,8 @@ class ChromaticAtmosphere(ChromaticObject):
                                                   **self.kw)
 
     @property
-    def SED(self):
-        return self.base_obj.SED
+    def sed(self):
+        return self.base_obj.sed
 
     @property
     def gsparams(self):
@@ -1764,8 +1779,8 @@ class ChromaticTransformation(ChromaticObject):
             self.deinterpolated = self
 
     @lazy_property
-    def SED(self):
-        sed = self._original.SED * self._flux_ratio
+    def sed(self):
+        sed = self._original.sed * self._flux_ratio
 
         if self._redshift is not None:
             sed = sed.atRedshift(self._redshift)
@@ -1975,8 +1990,8 @@ class ChromaticTransformation(ChromaticObject):
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
         if isinstance(self.original, InterpolatedChromaticObject):
             # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
             # where it will be used to reweight the stored images.
@@ -2106,10 +2121,10 @@ class ChromaticSum(ChromaticObject):
             self._obj_list.append(obj)
 
     @lazy_property
-    def SED(self):
-        sed = self._obj_list[0].SED
+    def sed(self):
+        sed = self._obj_list[0].sed
         for obj in self._obj_list[1:]:
-            sed += obj.SED
+            sed += obj.sed
         return sed
 
     @property
@@ -2201,8 +2216,8 @@ class ChromaticSum(ChromaticObject):
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
         add_to_image = kwargs.pop('add_to_image', False)
 
         n_photons = kwargs.pop('n_photons', None)
@@ -2328,7 +2343,7 @@ class ChromaticConvolution(ChromaticObject):
         if kwargs:
             raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        # Accumulate convolutant .SEDs.  Check if more than one is spectral.
+        # Accumulate convolutant .seds.  Check if more than one is spectral.
         nspectral = sum(arg.spectral for arg in args)
         if nspectral > 1:
             raise GalSimIncompatibleValuesError(
@@ -2370,10 +2385,10 @@ class ChromaticConvolution(ChromaticObject):
                 "interpolation-related optimization.  Will use full profile evaluation.")
 
     @lazy_property
-    def SED(self):
-        sed = self._obj_list[0].SED
+    def sed(self):
+        sed = self._obj_list[0].sed
         for obj in self._obj_list[1:]:
-            sed *= obj.SED
+            sed *= obj.sed
         return sed
 
     @property
@@ -2525,8 +2540,8 @@ class ChromaticConvolution(ChromaticObject):
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
-        if self.SED.dimensionless:
-            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
             image = ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
@@ -2657,11 +2672,11 @@ class ChromaticConvolution(ChromaticObject):
             if not obj.separable:
                 continue
             wave0, prof0 = obj._fiducial_profile(bandpass)
-            sep_profs.append(prof0 / obj.SED(wave0))
-            insep_obj *= obj.SED
+            sep_profs.append(prof0 / obj.sed(wave0))
+            insep_obj *= obj.sed
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
-        # Note that at this point, insep_obj.SED should *not* be None.
+        # Note that at this point, insep_obj.sed should *not* be None.
         effective_prof = ChromaticConvolution._effective_prof_cache(
                 insep_obj, bandpass, iimult, integrator, self._gsparams)
 
@@ -2717,8 +2732,8 @@ class ChromaticDeconvolution(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, gsparams=None, propagate_gsparams=True):
-        if not obj.SED.dimensionless:
-            raise GalSimSEDError("Cannot deconvolve by spectral ChromaticObject.", obj.SED)
+        if not obj.sed.dimensionless:
+            raise GalSimSEDError("Cannot deconvolve by spectral ChromaticObject.", obj.sed)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
         if self._propagate_gsparams:
@@ -2734,8 +2749,8 @@ class ChromaticDeconvolution(ChromaticObject):
             self.deinterpolated = self
 
     @property
-    def SED(self):
-        return self._obj.SED
+    def sed(self):
+        return self._obj.sed
 
     @property
     def gsparams(self):
@@ -2807,8 +2822,8 @@ class ChromaticAutoConvolution(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
-        if not obj.SED.dimensionless:
-            raise GalSimSEDError("Cannot autoconvolve spectral ChromaticObject.", obj.SED)
+        if not obj.sed.dimensionless:
+            raise GalSimSEDError("Cannot autoconvolve spectral ChromaticObject.", obj.sed)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
         if self._propagate_gsparams:
@@ -2825,8 +2840,8 @@ class ChromaticAutoConvolution(ChromaticObject):
             self.deinterpolated = self
 
     @lazy_property
-    def SED(self):
-        return self._obj.SED * self._obj.SED
+    def sed(self):
+        return self._obj.sed * self._obj.sed
 
     @property
     def gsparams(self):
@@ -2903,8 +2918,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
-        if not obj.SED.dimensionless:
-            raise GalSimSEDError("Cannot autocorrelate spectral ChromaticObject.", obj.SED)
+        if not obj.sed.dimensionless:
+            raise GalSimSEDError("Cannot autocorrelate spectral ChromaticObject.", obj.sed)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
         if self._propagate_gsparams:
@@ -2922,8 +2937,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
             self.deinterpolated = self
 
     @lazy_property
-    def SED(self):
-        return self._obj.SED * self._obj.SED
+    def sed(self):
+        return self._obj.sed * self._obj.sed
 
     @property
     def gsparams(self):
@@ -3002,8 +3017,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, gsparams=None, propagate_gsparams=True):
-        if not obj.SED.dimensionless:
-            raise GalSimSEDError("Cannot take Fourier sqrt of spectral ChromaticObject.", obj.SED)
+        if not obj.sed.dimensionless:
+            raise GalSimSEDError("Cannot take Fourier sqrt of spectral ChromaticObject.", obj.sed)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
         if self._propagate_gsparams:
@@ -3019,8 +3034,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
             self.deinterpolated = self
 
     @property
-    def SED(self):
-        return self._obj.SED
+    def sed(self):
+        return self._obj.sed
 
     @property
     def gsparams(self):
@@ -3212,7 +3227,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         self.deinterpolated = self
 
     @property
-    def SED(self):
+    def sed(self):
         return SED(1, 'nm', '1')
 
     @property
@@ -3445,7 +3460,7 @@ class ChromaticAiry(ChromaticObject):
         self.deinterpolated = self
 
     @property
-    def SED(self):
+    def sed(self):
         return SED(1, 'nm', '1')
 
     @property

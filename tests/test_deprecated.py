@@ -603,6 +603,39 @@ def test_photon_array_depr():
     u[:] = 6.0
     np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
 
+@timer
+def test_chromatic_flux():
+    # This is based on a snippet of test_chromatic_flux in test_chromatic.py.
+
+    bulge_SED = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda')
+    star = galsim.Gaussian(fwhm=1e-8) * bulge_SED
+    mono_PSF = galsim.Gaussian(half_light_radius=0.8)
+    zenith_angle = 20 * galsim.degrees
+    bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
+                                     zenith_angle=zenith_angle)
+    PSF = PSF * 1.0
+    PSF1 = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                          use_exact_sed=False)
+
+    # Check deprecated use_exact_SED kwarg
+    PSF2 = check_dep(PSF.interpolate,
+                     waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                     use_exact_SED=False)
+    assert PSF2 == PSF1
+
+    # Also do this manually with the InterpolatedChromaticObject class
+    PSF3 = check_dep(galsim.InterpolatedChromaticObject, PSF,
+                     waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                     use_exact_SED=False)
+    assert PSF3 == PSF1
+
+    # And check deprecated SED attribute.
+    sed = check_dep(getattr, PSF, 'SED')
+    assert sed == PSF.sed
+    sed1 = check_dep(getattr, PSF1, 'SED')
+    assert sed1 == PSF1.sed
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
