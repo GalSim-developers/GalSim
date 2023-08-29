@@ -176,7 +176,7 @@ class ChromaticObject:
 
     @property
     def wave_list(self):
-        return self._obj.wave_list
+        return self.SED.wave_list
 
     @property
     def gsparams(self):
@@ -1211,10 +1211,6 @@ class InterpolatedChromaticObject(ChromaticObject):
     def SED(self):
         return self.deinterpolated.SED
 
-    @property
-    def wave_list(self):
-        return self.deinterpolated.wave_list
-
     # Note: We don't always need all of these, so only calculate them if needed.
     # E.g. if photon shooting, pretty much only need objs.
     @lazy_property
@@ -1568,10 +1564,6 @@ class ChromaticAtmosphere(ChromaticObject):
         return self.base_obj.SED
 
     @property
-    def wave_list(self):
-        return self.base_obj.wave_list
-
-    @property
     def gsparams(self):
         """The `GSParams` for this object.
         """
@@ -1774,11 +1766,9 @@ class ChromaticTransformation(ChromaticObject):
     @lazy_property
     def SED(self):
         sed = self._original.SED * self._flux_ratio
-        self._wave_list, _, _ = utilities.combine_wave_list(self._original, sed)
 
         if self._redshift is not None:
             sed = sed.atRedshift(self._redshift)
-            self._wave_list *= (1.+self._redshift)
 
         # Need to account for non-unit determinant jacobian in normalization.
         if hasattr(self._jac, '__call__'):
@@ -1790,11 +1780,6 @@ class ChromaticTransformation(ChromaticObject):
             sed *= np.linalg.det(np.asarray(self._jac).reshape(2,2))
 
         return sed
-
-    @property
-    def wave_list(self):
-        self.SED  # Make sure this is made.
-        return self._wave_list
 
     @property
     def gsparams(self):
@@ -2127,10 +2112,6 @@ class ChromaticSum(ChromaticObject):
             sed += obj.SED
         return sed
 
-    @lazy_property
-    def wave_list(self):
-        return utilities.combine_wave_list(self._obj_list)[0]
-
     @property
     def gsparams(self):
         """The `GSParams` for this object.
@@ -2394,10 +2375,6 @@ class ChromaticConvolution(ChromaticObject):
         for obj in self._obj_list[1:]:
             sed *= obj.SED
         return sed
-
-    @lazy_property
-    def wave_list(self):
-        return utilities.combine_wave_list(self._obj_list)[0]
 
     @property
     def gsparams(self):
@@ -2761,10 +2738,6 @@ class ChromaticDeconvolution(ChromaticObject):
         return self._obj.SED
 
     @property
-    def wave_list(self):
-        return self._obj.wave_list
-
-    @property
     def gsparams(self):
         """The `GSParams` for this object.
         """
@@ -2854,10 +2827,6 @@ class ChromaticAutoConvolution(ChromaticObject):
     @lazy_property
     def SED(self):
         return self._obj.SED * self._obj.SED
-
-    @property
-    def wave_list(self):
-        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -2957,10 +2926,6 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return self._obj.SED * self._obj.SED
 
     @property
-    def wave_list(self):
-        return self._obj.wave_list
-
-    @property
     def gsparams(self):
         """The `GSParams` for this object.
         """
@@ -3056,10 +3021,6 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     @property
     def SED(self):
         return self._obj.SED
-
-    @property
-    def wave_list(self):
-        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -3253,10 +3214,6 @@ class ChromaticOpticalPSF(ChromaticObject):
     @property
     def SED(self):
         return SED(1, 'nm', '1')
-
-    @property
-    def wave_list(self):
-        return np.array([], dtype=float)
 
     @property
     def gsparams(self):
@@ -3490,10 +3447,6 @@ class ChromaticAiry(ChromaticObject):
     @property
     def SED(self):
         return SED(1, 'nm', '1')
-
-    @property
-    def wave_list(self):
-        return np.array([], dtype=float)
 
     @property
     def gsparams(self):
