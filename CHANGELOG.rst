@@ -12,6 +12,7 @@ API Changes
   if the angle arrays have not been either set or explicitly allocated.  One should be sure
   to either set them (e.g. using ``photon_array.dxdz = [...]``) or explicitly allocate
   them (using ``photon_array.allocateAngles()``).  (#1191)
+- Changed the ``.SED`` attribute name of `ChromaticObject`s to lowercase ``.sed``. (#1245)
 
 
 Config Updates

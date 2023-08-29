@@ -612,7 +612,7 @@ def test_chromatic_flux():
     PSF = PSF.deinterpolated
     PSF = PSF * 1.0
     PSF = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
-                          use_exact_SED=False)
+                          use_exact_sed=False)
     final_int = galsim.Convolve([star, PSF])
     image3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     final_int.drawImage(bandpass, image=image3)
@@ -715,8 +715,8 @@ def test_chromatic_flux():
     np.testing.assert_almost_equal(image.array.sum(), 5.0, 4,
                                    err_msg="Drawn ChromaticConvolve flux density doesn't match "
                                    "using ChromaticObject.withFluxDensity(5.0, 500)")
-    np.testing.assert_almost_equal(5.0, final.SED(500), 7,
-                                   err_msg="ChromaticObject.SED(500) doesn't match "
+    np.testing.assert_almost_equal(5.0, final.sed(500), 7,
+                                   err_msg="ChromaticObject.sed(500) doesn't match "
                                    "withFluxDensity.")
     from astropy import units
     star8 = star.withFluxDensity(5.0, 5000*units.AA)
@@ -1663,7 +1663,7 @@ def test_interpolated_ChromaticObject():
             self.deinterpolated = self
 
         @property
-        def SED(self):
+        def sed(self):
             return galsim.SED(1, 'nm', '1')
 
         @property
@@ -2212,7 +2212,7 @@ def test_phot():
             # This is the old way that photon shooting used to work.  The new way will be tested
             # below.  But since it now uses photon_ops, we'll wait to test that last.
             effective_psf = galsim.ChromaticConvolution._get_effective_prof(
-                    psf*gal.SED, bandpass, integrator='trapezoidal', gsparams=psf.gsparams,
+                    psf*gal.sed, bandpass, integrator='trapezoidal', gsparams=psf.gsparams,
                     iimult=None)
             temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
             im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
@@ -2401,7 +2401,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     assert isinstance(obj.deinterpolated, (galsim.ChromaticObject, galsim.GSObject))
 
     for wave in waves:
-        desired = obj.SED(wave)
+        desired = obj.sed(wave)
         # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
         # image, which implies flux can be lost off of the edges of the image, we don't expect
         # its accuracy to be nearly as good as for other objects.
@@ -2416,10 +2416,10 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
                 desired,
                 rtol=1e-2)
 
-    if obj.SED.spectral:
+    if obj.sed.spectral:
         for bp in bps:
             calc_flux = obj.calculateFlux(bp)
-            np.testing.assert_equal(obj.SED.calculateFlux(bp), calc_flux)
+            np.testing.assert_equal(obj.sed.calculateFlux(bp), calc_flux)
             np.testing.assert_allclose(calc_flux,
                                        obj.drawImage(bp).array.sum(dtype=float), rtol=1e-2)
             # Also try manipulating exptime and area.
@@ -2434,7 +2434,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
 
         try:
             obj = copy.copy(obj)
-            obj.SED = galsim.SED('1', 'nm', '1')
+            obj.sed = galsim.SED('1', 'nm', '1')
         except AttributeError:
             return
     if isinstance(obj, galsim.GSObject): return
@@ -2501,7 +2501,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(chrom2)
     check_chromatic_invariant(chrom3)
     # also check that these end up with the same SED
-    assert chrom1.SED == chrom2.SED == chrom3.SED
+    assert chrom1.sed == chrom2.sed == chrom3.sed
 
     # And that they make the same image through a given bandpass
     bp = galsim.Bandpass('0.8 + wave/800*0.1', 'nm', blue_limit=700, red_limit=900)

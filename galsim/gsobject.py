@@ -435,7 +435,7 @@ class GSObject:
     @property
     def deinterpolated(self): return self
     @property
-    def SED(self):
+    def sed(self):
         return sed.SED(self.flux, 'nm', '1')
     @property
     def spectral(self): return False
