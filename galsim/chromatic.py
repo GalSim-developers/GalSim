@@ -163,17 +163,20 @@ class ChromaticObject:
 
     def __init__(self, obj):
         self._obj = obj
-        if isinstance(obj, GSObject):
-            self.SED = SED(obj.flux, 'nm', '1')
-        elif isinstance(obj, ChromaticObject):
-            self.SED = obj.SED
-        else:
+        if not isinstance(obj, GSObject) and not isinstance(obj, ChromaticObject):
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "
                             "or ChromaticObject argument.")
         self.separable = obj.separable
         self.interpolated = obj.interpolated
-        self.wave_list = obj.wave_list
         self.deinterpolated = obj.deinterpolated
+
+    @property
+    def SED(self):
+        return self._obj.SED
+
+    @property
+    def wave_list(self):
+        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -1200,11 +1203,17 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         self.separable = original.separable
         self.interpolated = True
-        self.SED = original.SED
-        self.wave_list = original.wave_list
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.deinterpolated = original.deinterpolated
+
+    @property
+    def SED(self):
+        return self.deinterpolated.SED
+
+    @property
+    def wave_list(self):
+        return self.deinterpolated.wave_list
 
     # Note: We don't always need all of these, so only calculate them if needed.
     # E.g. if photon shooting, pretty much only need objs.
@@ -1532,8 +1541,6 @@ class ChromaticAtmosphere(ChromaticObject):
         self.separable = False
         self.interpolated = False
         self.deinterpolated = self
-        self.SED = SED(base_obj.flux, 'nm', '1')
-        self.wave_list = np.array([], dtype=float)
 
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
@@ -1555,6 +1562,14 @@ class ChromaticAtmosphere(ChromaticObject):
 
         self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,
                                                   **self.kw)
+
+    @property
+    def SED(self):
+        return self.base_obj.SED
+
+    @property
+    def wave_list(self):
+        return self.base_obj.wave_list
 
     @property
     def gsparams(self):
@@ -1700,29 +1715,13 @@ class ChromaticTransformation(ChromaticObject):
         # but we'll ignore that here.
         self.separable = obj.separable and not self.chromatic
 
-        self.SED = obj.SED * flux_ratio
-        self.wave_list, _, _ = utilities.combine_wave_list(obj, self.SED)
-
-        self._redshift = redshift
-        if redshift is not None:
-            self.SED = self.SED.atRedshift(redshift)
-            self.wave_list *= (1.+redshift)
-
-        # Need to account for non-unit determinant jacobian in normalization.
-        if hasattr(jac, '__call__'):
-            @np.vectorize
-            def detjac(w):
-                return np.linalg.det(np.asarray(jac(w)).reshape(2,2))
-            self.SED *= detjac
-        elif jac is not None:
-            self.SED *= np.linalg.det(np.asarray(jac).reshape(2,2))
-
         if obj.interpolated and self.chromatic:
             galsim_warn("Cannot render image with chromatic transformation applied to it "
                         "using interpolation between stored images.  Reverting to "
                         "non-interpolated version.")
             obj = obj.deinterpolated
         self.interpolated = obj.interpolated
+        self._redshift = redshift
 
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
@@ -1746,7 +1745,8 @@ class ChromaticTransformation(ChromaticObject):
             else:
                 self._jac = jac if obj._jac is None else jac.dot(obj._jac)
                 self._offset = jac.dot(obj._offset) + offset
-            if hasattr(flux_ratio, '__call__') or hasattr(obj._flux_ratio, '__call__'):
+            if (not isinstance(flux_ratio, SED) and
+                    (hasattr(flux_ratio, '__call__') or hasattr(obj._flux_ratio, '__call__'))):
                 self._flux_ratio = SED(flux_ratio, 'nm', '1') * obj._flux_ratio
             else:
                 self._flux_ratio = obj._flux_ratio * flux_ratio
@@ -1770,6 +1770,31 @@ class ChromaticTransformation(ChromaticObject):
                     propagate_gsparams = self._propagate_gsparams)
         else:
             self.deinterpolated = self
+
+    @lazy_property
+    def SED(self):
+        sed = self._original.SED * self._flux_ratio
+        self._wave_list, _, _ = utilities.combine_wave_list(self._original, sed)
+
+        if self._redshift is not None:
+            sed = sed.atRedshift(self._redshift)
+            self._wave_list *= (1.+self._redshift)
+
+        # Need to account for non-unit determinant jacobian in normalization.
+        if hasattr(self._jac, '__call__'):
+            @np.vectorize
+            def detjac(w):
+                return np.linalg.det(np.asarray(self._jac(w)).reshape(2,2))
+            sed *= detjac
+        elif self._jac is not None:
+            sed *= np.linalg.det(np.asarray(self._jac).reshape(2,2))
+
+        return sed
+
+    @property
+    def wave_list(self):
+        self.SED  # Make sure this is made.
+        return self._wave_list
 
     @property
     def gsparams(self):
@@ -2095,11 +2120,16 @@ class ChromaticSum(ChromaticObject):
                 obj = obj.withGSParams(self._gsparams)
             self._obj_list.append(obj)
 
-        self.SED = self._obj_list[0].SED
+    @lazy_property
+    def SED(self):
+        sed = self._obj_list[0].SED
         for obj in self._obj_list[1:]:
-            self.SED += obj.SED
+            sed += obj.SED
+        return sed
 
-        self.wave_list, _, _ = utilities.combine_wave_list(self._obj_list)
+    @lazy_property
+    def wave_list(self):
+        return utilities.combine_wave_list(self._obj_list)[0]
 
     @property
     def gsparams(self):
@@ -2322,9 +2352,6 @@ class ChromaticConvolution(ChromaticObject):
         if nspectral > 1:
             raise GalSimIncompatibleValuesError(
                 "Cannot convolve more than one spectral ChromaticObject.", args=args)
-        self.SED = args[0].SED
-        for obj in args[1:]:
-            self.SED *= obj.SED
 
         self._obj_list = []
         # Unfold convolution of convolution.
@@ -2361,14 +2388,23 @@ class ChromaticConvolution(ChromaticObject):
                 "Image rendering for this convolution cannot take advantage of "
                 "interpolation-related optimization.  Will use full profile evaluation.")
 
-        # Assemble wave_lists
-        self.wave_list, _, _ = utilities.combine_wave_list(self._obj_list)
+    @lazy_property
+    def SED(self):
+        sed = self._obj_list[0].SED
+        for obj in self._obj_list[1:]:
+            sed *= obj.SED
+        return sed
+
+    @lazy_property
+    def wave_list(self):
+        return utilities.combine_wave_list(self._obj_list)[0]
 
     @property
     def gsparams(self):
         """The `GSParams` for this object.
         """
         return self._gsparams
+
     @property
     def obj_list(self):
         """The list of objects being convolved.
@@ -2719,8 +2755,14 @@ class ChromaticDeconvolution(ChromaticObject):
                                                          self._propagate_gsparams)
         else:
             self.deinterpolated = self
-        self.SED = SED(lambda w: 1./obj.SED(w), 'nm', '1')
-        self.wave_list = obj.wave_list
+
+    @property
+    def SED(self):
+        return self._obj.SED
+
+    @property
+    def wave_list(self):
+        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -2808,8 +2850,14 @@ class ChromaticAutoConvolution(ChromaticObject):
                                                            self._gsparams, self._propagate_gsparams)
         else:
             self.deinterpolated = self
-        self.SED = obj.SED * obj.SED
-        self.wave_list = obj.wave_list
+
+    @lazy_property
+    def SED(self):
+        return self._obj.SED * self._obj.SED
+
+    @property
+    def wave_list(self):
+        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -2903,8 +2951,14 @@ class ChromaticAutoCorrelation(ChromaticObject):
                                                            self._propagate_gsparams)
         else:
             self.deinterpolated = self
-        self.SED = obj.SED * obj.SED
-        self.wave_list = obj.wave_list
+
+    @lazy_property
+    def SED(self):
+        return self._obj.SED * self._obj.SED
+
+    @property
+    def wave_list(self):
+        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -2998,8 +3052,14 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
                     self._obj.deinterpolated, self._gsparams, self._propagate_gsparams)
         else:
             self.deinterpolated = self
-        self.SED = SED(lambda w:math.sqrt(obj.SED(w)), 'nm', '1')
-        self.wave_list = obj.wave_list
+
+    @property
+    def SED(self):
+        return self._obj.SED
+
+    @property
+    def wave_list(self):
+        return self._obj.wave_list
 
     @property
     def gsparams(self):
@@ -3189,8 +3249,14 @@ class ChromaticOpticalPSF(ChromaticObject):
         self.separable = False
         self.interpolated = False
         self.deinterpolated = self
-        self.SED = SED(1, 'nm', '1')
-        self.wave_list = np.array([], dtype=float)
+
+    @property
+    def SED(self):
+        return SED(1, 'nm', '1')
+
+    @property
+    def wave_list(self):
+        return np.array([], dtype=float)
 
     @property
     def gsparams(self):
@@ -3420,8 +3486,14 @@ class ChromaticAiry(ChromaticObject):
         self.separable = False
         self.interpolated = False
         self.deinterpolated = self
-        self.SED = SED(1, 'nm', '1')
-        self.wave_list = np.array([], dtype=float)
+
+    @property
+    def SED(self):
+        return SED(1, 'nm', '1')
+
+    @property
+    def wave_list(self):
+        return np.array([], dtype=float)
 
     @property
     def gsparams(self):

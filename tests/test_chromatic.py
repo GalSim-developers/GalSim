@@ -1640,7 +1640,8 @@ def test_centroid():
     np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
 
     # Now check the centroid sampling integrator...
-    gal.wave_list = np.linspace(0.0, 1.0, 500)
+    # (Writing to the dict is a quick and dirty way to overwrite an attribute that is a property.)
+    gal.__dict__['wave_list'] = np.linspace(0.0, 1.0, 500)
     cen = gal.calculateCentroid(bp)
     np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.calculateCentroid() failed")
     np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
@@ -1660,8 +1661,14 @@ def test_interpolated_ChromaticObject():
             self.separable = False
             self.interpolated = False
             self.deinterpolated = self
-            self.SED = galsim.SED(1, 'nm', '1')
-            self.wave_list = np.array([], dtype=float)
+
+        @property
+        def SED(self):
+            return galsim.SED(1, 'nm', '1')
+
+        @property
+        def wave_list(self):
+            return np.array([], dtype=float)
 
         def evaluateAtWavelength(self, wave):
             this_sigma = self.sigma * (wave / 500.)

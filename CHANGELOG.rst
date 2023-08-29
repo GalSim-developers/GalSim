@@ -49,6 +49,9 @@ Performance Improvements
   is called. (#1241)
 - The `combine_wave_lists` function is faster now, using the new `merge_sorted` function.
   (#1243)
+- Delayed the calculation of the `sed` attributes of `ChromaticObject`s until they are actually
+  needed.  Since sometimes they aren't needed, this is a performance improvement in those cases.
+  (#1245)
 
 
 Bug Fixes
