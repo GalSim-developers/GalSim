@@ -131,7 +131,7 @@ class SED:
     _dimensionless = units.dimensionless_unscaled
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
-                 _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
+                 _blue_limit=0.0, _red_limit=np.inf, _wave_list=None):
         self._flux_type = flux_type  # Need to save the original for repr
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
@@ -497,10 +497,10 @@ class SED:
             spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
         else:
             spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
-        _spectral = self.spectral or other.spectral
-        return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
-                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                   _spectral=_spectral)
+        spectral = self.spectral or other.spectral
+        flux_type = 'fphotons' if spectral else '1'
+        return SED(spec, 'nm', flux_type, redshift=redshift, fast=fast,
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list)
 
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
@@ -519,8 +519,7 @@ class SED:
         else:
             spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
         return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
-                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                   _spectral=self.spectral)
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list)
 
 
     def _mul_scalar(self, other, spectral):
@@ -546,8 +545,7 @@ class SED:
                 spec = lambda w: self(w*(1.0+self.redshift)) * other
         return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit,
-                   _wave_list=self.wave_list,
-                   _spectral=self.spectral)
+                   _wave_list=self.wave_list)
 
 
     def __mul__(self, other):
@@ -601,8 +599,7 @@ class SED:
             flux_type = 'fphotons' if self.spectral else '1'
             return SED(spec, 'nm', flux_type, redshift=self.redshift, fast=self.fast,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
-                       _wave_list=self.wave_list,
-                       _spectral=self.spectral)
+                       _wave_list=self.wave_list)
 
         elif isinstance(other, (int, float)):
             return self._mul_scalar(other, self.spectral)
@@ -652,10 +649,8 @@ class SED:
 
         if self.dimensionless and other.dimensionless:
             flux_type = '1'
-            _spectral = False
         elif self.spectral and other.spectral:
             flux_type = 'fphotons'
-            _spectral = True
         else:
             raise GalSimIncompatibleValuesError(
                 "Cannot add SEDs with incompatible dimensions.", self_sed=self, other=other)
@@ -686,8 +681,7 @@ class SED:
 
         return SED(spec, wave_type='nm', flux_type=flux_type,
                    redshift=self.redshift, fast=self.fast, _wave_list=wave_list,
-                   _blue_limit=blue_limit, _red_limit=red_limit,
-                   _spectral=_spectral)
+                   _blue_limit=blue_limit, _red_limit=red_limit)
 
     def __sub__(self, other):
         # Subtract two SEDs, with the same caveats as adding two SEDs.
