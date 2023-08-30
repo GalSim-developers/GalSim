@@ -724,6 +724,22 @@ def test_chromatic_flux():
     star9 = star.withFluxDensity(0.5*units.astrophys.photon/(units.s*units.cm**2*units.AA), 500)
     assert star7 == star9
 
+    # Test with non-unit initial flux
+    star9 = galsim.Gaussian(fwhm=1e-8, flux=flux_ratio) * bulge_SED
+    final = galsim.Convolve([star9, PSF])
+    final.drawImage(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
+                                   err_msg="obj * SED doesn't respect obj.flux")
+
+    # Check withFlux again
+    print('star9 flux = ',star9.calculateFlux(bandpass))
+    star10 = star9.withFlux(1.0, bandpass)
+    print('star10 flux = ',star10.calculateFlux(bandpass))
+    final = galsim.Convolve([star10, PSF])
+    final.drawImage(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 5,
+                                   err_msg="withFlux doesn't work when obj has flux.")
+
 
 @timer
 def test_double_ChromaticSum():
@@ -1334,13 +1350,16 @@ def test_ChromaticObject_compound_affine_transformation():
     # Include a few gratuitous combinations of functional and static values.
     pshift = galsim.PositionD(*shift)
     c = galsim.Gaussian(fwhm=1.0) * sed
-    c = c.shear(shear).shift(lambda w: shift).rotate(theta).dilate(lambda w: scale)
+    c = galsim.Transform(c, flux_ratio=lambda w:1, jac=shear.getMatrix())
+    c = c.shift(lambda w: shift).rotate(theta).dilate(lambda w: scale)
     c = c.shear(shear).shift(lambda w: pshift).rotate(theta).expand(scale)
     c = c.lens(g1=lambda w:0.1, g2=0.1, mu=lambda w:1.1).shift(shift).rotate(theta).magnify(scale)
 
-    d = galsim.Gaussian(fwhm=1.0) * sed
-    d = d.shear(lambda w: shear).shift(pshift).rotate(lambda w: theta).dilate(scale)
-    d = d.shear(shear).shift(shift).rotate(theta).transform(scale, lambda w:0, lambda w:0, scale)
+    d = galsim.Gaussian(fwhm=1.0)
+    d = galsim.Transform(d, flux_ratio=sed, jac=shear.getMatrix())
+    d = d.shift(pshift).rotate(lambda w: theta).dilate(scale)
+    d = d.shear(lambda w: shear).shift(shift).rotate(theta)
+    d = d.transform(scale, lambda w:0, lambda w:0, scale)
     d = d.lens(g1=0.1, g2=lambda w:0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
 
     im1 = galsim.ImageD(32, 32, scale=0.2)
@@ -1349,15 +1368,10 @@ def test_ChromaticObject_compound_affine_transformation():
     im3 = c.drawImage(bandpass, image=im1.copy(), method='no_pixel')
     im4 = d.drawImage(bandpass, image=im1.copy(), method='no_pixel')
     printval(im1, im2)
-    np.testing.assert_array_almost_equal(im2.array, im1.array, 5,
-                                         "ChromaticObject affine transformation not equal to "
-                                         "GSObject affine transformation")
-    np.testing.assert_array_almost_equal(im3.array, im1.array, 5,
-                                         "ChromaticObject affine transformation not equal to "
-                                         "GSObject affine transformation")
-    np.testing.assert_array_almost_equal(im4.array, im1.array, 5,
-                                         "ChromaticObject affine transformation not equal to "
-                                         "GSObject affine transformation")
+    for test_im in (im2, im3, im4):
+        np.testing.assert_array_almost_equal(test_im.array, im1.array, 5,
+                                            "ChromaticObject affine transformation not equal to "
+                                            "GSObject affine transformation")
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -2437,7 +2451,10 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
             obj.sed = galsim.SED('1', 'nm', '1')
         except AttributeError:
             return
-    if isinstance(obj, galsim.GSObject): return
+    if isinstance(obj, galsim.GSObject):
+        with assert_raises(galsim.GalSimSEDError):
+            (obj * galsim.SED(1, 'nm', '1')).drawImage(bps[0])
+        return
 
     # When made with the same gsparams, it returns itself
     print('obj = ',obj)
@@ -2772,7 +2789,10 @@ def test_ne():
             galsim.ChromaticTransformation(cgal1, gsparams=gsp),
             galsim.ChromaticTransformation(cgal1, gsparams=gsp, propagate_gsparams=False),
             galsim.ChromaticTransformation(cgal3).withGSParams(gsp),
-            galsim.ChromaticTransformation(cgal3, propagate_gsparams=False).withGSParams(gsp)]
+            galsim.ChromaticTransformation(cgal3, propagate_gsparams=False).withGSParams(gsp),
+            galsim.SimpleChromaticTransformation(gal1),
+            galsim.SimpleChromaticTransformation(gal1, gsparams=gsp),
+            galsim.SimpleChromaticTransformation(gal1, gsparams=gsp, propagate_gsparams=False)]
     check_all_diff(gals)
 
     # ChromaticSum.  Params are objs to add and potentially gsparams.

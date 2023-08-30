@@ -66,11 +66,57 @@ def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
     Returns:
         a `Transformation` or `ChromaticTransformation` instance as appropriate.
     """
-    if not (isinstance(obj, GSObject) or isinstance(obj, chrom.ChromaticObject)):
+    # Usual cases are a bit simpler to handle, so check for them first.
+    if (isinstance(obj, (GSObject, chrom.SimpleChromaticTransformation))
+        and not hasattr(jac,'__call__') and not hasattr(offset,'__call__')):
+
+        if isinstance(obj, GSObject) :
+            if not hasattr(flux_ratio,'__call__'):
+                # This is the usual achromatic case, so check for this first.
+                return Transformation(obj, jac, offset, flux_ratio, gsparams, propagate_gsparams)
+
+            elif jac is None and offset == (0.,0.):
+                # This is obj * SED.  Return a SimpleChromaticTransformation.
+                if not isinstance(flux_ratio, SED):
+                    flux_ratio = SED(flux_ratio, 'nm', '1')
+                return chrom.SimpleChromaticTransformation(obj, flux_ratio, gsparams=gsparams,
+                                                           propagate_gsparams=propagate_gsparams)
+
+            else:
+                # Too complicated for simple.
+                return chrom.ChromaticTransformation(obj, jac, offset, flux_ratio,
+                                                     gsparams=gsparams,
+                                                     propagate_gsparams=propagate_gsparams)
+
+        else:
+            # obj is a SimpleChromaticTransformation
+            # Try to keep it that way if possible.
+            if not hasattr(flux_ratio,'__call__'):
+                # Then transformations are all achromatic.  Apply to original.
+                new_obj = Transformation(obj.original, jac, offset, flux_ratio, gsparams,
+                                         propagate_gsparams)
+                return chrom.SimpleChromaticTransformation(new_obj, obj._flux_ratio,
+                                                           gsparams=gsparams,
+                                                           propagate_gsparams=propagate_gsparams)
+
+            elif jac is None and offset == (0.,0.):
+                # Just a flux_ratio.  Apply to SED.
+                new_sed = obj._flux_ratio * flux_ratio
+                return chrom.SimpleChromaticTransformation(obj.original, new_sed,
+                                                           gsparams=gsparams,
+                                                           propagate_gsparams=propagate_gsparams)
+
+            else:
+                # Too complicated for simple.
+                return chrom.ChromaticTransformation(obj, jac, offset, flux_ratio,
+                                                     gsparams=gsparams,
+                                                     propagate_gsparams=propagate_gsparams)
+
+    elif not isinstance(obj, (GSObject, chrom.ChromaticObject)):
         raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
 
-    elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
-          hasattr(flux_ratio,'__call__') or isinstance(obj, chrom.ChromaticObject)):
+    else:
+        # Now we know we are dealing with a more complicated chromatic transformation.
 
         # Sometimes for Chromatic compound types, it is more efficient to apply the
         # transformation to the components rather than the whole.  In particular, this can
@@ -101,8 +147,6 @@ def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
         else:
             return chrom.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams=gsparams,
                                                  propagate_gsparams=propagate_gsparams)
-    else:
-        return Transformation(obj, jac, offset, flux_ratio, gsparams, propagate_gsparams)
 
 
 class Transformation(GSObject):

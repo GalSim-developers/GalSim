@@ -19,8 +19,9 @@
 __all__ = [ 'ChromaticObject', 'ChromaticAtmosphere', 'ChromaticSum',
             'ChromaticConvolution', 'ChromaticDeconvolution',
             'ChromaticAutoConvolution', 'ChromaticAutoCorrelation',
-            'ChromaticTransformation', 'ChromaticFourierSqrtProfile',
-            'ChromaticOpticalPSF', 'ChromaticAiry', 'InterpolatedChromaticObject', ]
+            'ChromaticTransformation', 'SimpleChromaticTransformation',
+            'ChromaticFourierSqrtProfile', 'ChromaticOpticalPSF',
+            'ChromaticAiry', 'InterpolatedChromaticObject', ]
 
 import math
 import numpy as np
@@ -2028,6 +2029,106 @@ class ChromaticTransformation(ChromaticObject):
         flux_ratio = self._flux_ratio
         noise_prof = transform._Transform(noise._profile, jac, flux_ratio=flux_ratio**2)
         return BaseCorrelatedNoise(noise.rng, noise_prof, noise.wcs)
+
+
+class SimpleChromaticTransformation(ChromaticTransformation):
+    """A class for the simplest kind of chromatic object -- a GSObject times and SED.
+
+    This is a subclass of ChromaticTransformation, which just skips some calculations
+    that are unnecessary in this simple, but fairly common special case.
+
+    Parameters:
+        obj:                The object to be transformed.
+        sed:                An `SED` instance.
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
+                            details. [default: None]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
+    """
+    def __init__(self, obj, sed=1., gsparams=None, propagate_gsparams=True):
+        self.chromatic = False
+        self.separable = True
+        self.interpolated = False
+        self._redshift = None
+
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        self._propagate_gsparams = propagate_gsparams
+
+        self._original = obj
+        self._jac = None
+        self._offset = (0.,0.)
+        self._flux_ratio = sed
+
+        if self._propagate_gsparams:
+            self._original = self._original.withGSParams(self._gsparams)
+        self.deinterpolated = self
+
+    @property
+    def sed(self):
+        return self._flux_ratio * self.original.flux
+
+    def __hash__(self):
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.SimpleChromaticTransformation", self.original,
+                               self._flux_ratio, self._gsparams, self._propagate_gsparams))
+        return self._hash
+
+    def __repr__(self):
+        return ('galsim.SimpleChromaticTransformation(%r, sed=%r, '
+                'gsparams=%r, propagate_gsparams=%r)')%(
+            self.original, self._flux_ratio,
+            self._gsparams, self._propagate_gsparams)
+
+    def __str__(self):
+        return str(self.original) + ' * ' + str(self.sed)
+
+    def _getTransformations(self, wave):
+        flux_ratio = self._flux_ratio(wave)
+        return self._jac, self._offset, flux_ratio
+
+    def _shoot(self, photons, rng):
+        self._original._shoot(photons, rng)
+        wave = photons.wavelength
+        flux_ratio = self._flux_ratio(wave)
+        photons.flux *= flux_ratio
+
+    def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
+        """
+        See `ChromaticObject.drawImage` for a full description.
+
+        This version usually just calls that one, but if the transformed object (self.original) is
+        an `InterpolatedChromaticObject`, and the transformation is achromatic, then it will still
+        be able to use the interpolation.
+
+        Parameters:
+            bandpass:       A `Bandpass` object representing the filter against which to
+                            integrate.
+            image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
+                            for details.)  [default: None]
+            integrator:     When doing the exact evaluation of the profile, this argument should
+                            be one of the image integrators from galsim.integ, or a string
+                            'trapezoidal', 'midpoint', 'quadratic', in which case the routine will
+                            use a `SampleIntegrator` or `ContinuousIntegrator` depending on whether
+                            or not the object has a ``wave_list``.  [default: 'quadratic',
+                            which will try to select an appropriate integrator using the
+                            quadratic integration rule automatically.]
+                            If the object being transformed is an `InterpolatedChromaticObject`,
+                            then ``integrator`` can only be a string, either 'midpoint',
+                            'trapezoidal', or 'quadratic'.
+            **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
+
+        Returns:
+            the drawn `Image`.
+        """
+        from .transform import Transform
+        # Store the last bandpass used.
+        self._last_bp = bandpass
+        if self.sed.dimensionless:
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
+        image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
+        self._last_wcs = image.wcs
+        return image
 
 
 class ChromaticSum(ChromaticObject):
