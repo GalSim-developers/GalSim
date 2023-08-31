@@ -2541,13 +2541,51 @@ def test_chromatic_invariant():
     assert_raises(TypeError, galsim.ChromaticAtmosphere, gsobj,
                   500.0, zenith_angle=20.0 * galsim.degrees, invalid=3)
 
-    # ChromaticTransformation formed from __mul__
+    # SimpleChromaticTransformation
     chrom = gsobj * bulge_SED
     check_chromatic_invariant(chrom)
     check_pickle(chrom)
 
     with assert_raises(galsim.GalSimError):
         chrom.noise
+
+    # Still Simple
+    chrom = (gsobj * bulge_SED).shear(g1=0.2).shift((0.1,0.2))
+    assert isinstance(chrom, galsim.SimpleChromaticTransformation)
+    check_chromatic_invariant(chrom)
+    check_pickle(chrom)
+
+    chrom = (gsobj * bulge_SED) * (lambda w: w**1.03)
+    assert isinstance(chrom, galsim.SimpleChromaticTransformation)
+    check_chromatic_invariant(chrom)
+    # Not picklable, but run str, repr
+    str(chrom)
+    repr(chrom)
+
+    # ChromaticTransformation
+    chrom = galsim.Transform(gsobj, offset=(0.1, 0.3), flux_ratio=bulge_SED)
+    assert isinstance(chrom, galsim.ChromaticTransformation)
+    assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
+    check_chromatic_invariant(chrom)
+    check_pickle(chrom)
+
+    with assert_raises(galsim.GalSimError):
+        chrom.noise
+
+    chrom = galsim.Transform(gsobj, jac=galsim.Shear(g1=0.1).getMatrix(), flux_ratio=bulge_SED)
+    assert isinstance(chrom, galsim.ChromaticTransformation)
+    assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
+    check_chromatic_invariant(chrom)
+    check_pickle(chrom)
+
+    scaling = galsim.SED(lambda w: w**1.03, 'nm', '1')
+    chrom = galsim.Transform(gsobj * bulge_SED, offset=(0.1, 0.3), flux_ratio=scaling)
+    assert isinstance(chrom, galsim.ChromaticTransformation)
+    assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
+    check_chromatic_invariant(chrom)
+    # Not picklable, but run str, repr
+    str(chrom)
+    repr(chrom)
 
     # ChromaticOpticalPSF
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2,
@@ -2574,6 +2612,7 @@ def test_chromatic_invariant():
     assert_raises(galsim.GalSimError, chrom_sum_noSED.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, chrom_sum_noSED.applyTo, p2)
 
+    chrom = gsobj * bulge_SED
     chrom_sum_SED = chrom + chrom  # used to be considered separable, but not anymore.
     check_chromatic_invariant(chrom_sum_SED)
     check_pickle(chrom_sum_SED)

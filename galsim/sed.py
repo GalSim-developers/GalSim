@@ -582,7 +582,7 @@ class SED:
             else:
                 return self._mul_sed(other)
 
-        # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
+        # Product of SED and achromatic GSObject is a SimpleChromaticTransformation.
         elif isinstance(other, gsobject.GSObject):
             return other * self
 
