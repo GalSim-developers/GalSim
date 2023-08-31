@@ -18,6 +18,7 @@
 
 import os
 import logging
+import time
 
 from .output import OutputBuilder, RegisterOutputType
 from .util import CopyConfig
@@ -51,7 +52,6 @@ class DataCubeBuilder(OutputBuilder):
         Returns:
             a list of the images built
         """
-        import time
         nimages = self.getNImages(config, base, file_num, logger=logger)
 
         # The above call sets up a default nimages if appropriate.  Now, check that there are no

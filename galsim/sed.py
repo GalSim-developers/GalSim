@@ -16,18 +16,22 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'SED' ]
+
 import numpy as np
 from astropy import units
 from astropy import constants
+from numbers import Real
 
-from .gsobject import GSObject
 from .table import LookupTable, _LookupTable
+from ._utilities import WeakMethod, lazy_property, basestring
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
+from .errors import GalSimIncompatibleValuesError
+from .random import DistDeviate
 from . import utilities
 from . import integ
 from . import dcr
-from .utilities import WeakMethod, lazy_property, combine_wave_list, basestring
-from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
-from .errors import GalSimIncompatibleValuesError
+from . import gsobject
 
 class SED:
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -341,7 +345,6 @@ class SED:
                         "String spec must either be a valid filename or something that "
                         "can eval to a function of wave.\n"
                         "Caught error: {0}".format(e), self._orig_spec)
-                from numbers import Real
                 if not isinstance(test_value, Real):
                     raise GalSimValueError("The given SED function did not return a valid number "
                                            "at test wavelength %s: got %s"%(700.0, test_value),
@@ -487,7 +490,7 @@ class SED:
 
         fast = self.fast and other.fast
 
-        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
         if fast:
             zfactor1 = (1.+redshift) / (1.+self.redshift)
             zfactor2 = (1.+redshift) / (1.+other.redshift)
@@ -501,7 +504,7 @@ class SED:
 
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
-        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
         zfactor = (1.0+self.redshift) / other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, LookupTable)
@@ -558,8 +561,6 @@ class SED:
         4. SED * callable function -> SED (treating function as dimensionless SED)
         5. SED * scalar -> SED
         """
-        from .transform import Transform
-        from .bandpass import Bandpass
         # Watch out for 5 types of `other`:
         # 1.  SED: Check that not both spectral densities.
         # 2.  GSObject: return a ChromaticObject().
@@ -584,8 +585,8 @@ class SED:
                 return self._mul_sed(other)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
-        elif isinstance(other, GSObject):
-            return Transform(other, flux_ratio=self)
+        elif isinstance(other, gsobject.GSObject):
+            return other * self
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         elif isinstance(other, Bandpass):
@@ -659,7 +660,7 @@ class SED:
             raise GalSimIncompatibleValuesError(
                 "Cannot add SEDs with incompatible dimensions.", self_sed=self, other=other)
 
-        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
 
         # If both SEDs are `fast`, and both `_fast_spec`s are LookupTables, then make a new
         # LookupTable instead and preserve picklability.
@@ -792,7 +793,6 @@ class SED:
         Returns:
             the flux through the bandpass.
         """
-        from . import integ
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless SED.", self)
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
@@ -812,7 +812,7 @@ class SED:
                 wmax *= bandpass.wave_factor
                 return self._fast_spec.integrate_product(bandpass._tp, wmin, wmax, wf) * ff
             else:
-                w, _, _ = combine_wave_list(self, bandpass)
+                w, _, _ = utilities.combine_wave_list(self, bandpass)
                 if not self.fast and self.flux_type != 'fphotons':
                     # When not fast, the SED definition is not linear between the wave_list
                     # points, so this can be slightly inaccurate if the waves are too far apart.
@@ -920,11 +920,10 @@ class SED:
             - The first element is the vector of DCR first moment shifts
             - The second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
-        from .dcr import parse_dcr_angles
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate DCR shifts of dimensionless SED.", self)
 
-        zenith_angle, parallactic_angle, kwargs = parse_dcr_angles(**kwargs)
+        zenith_angle, parallactic_angle, kwargs = dcr.parse_dcr_angles(**kwargs)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
@@ -936,7 +935,7 @@ class SED:
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(self.wave_list) > 0 or len(bandpass.wave_list) > 0:
-            w, _, _ = combine_wave_list(self, bandpass)
+            w, _, _ = utilities.combine_wave_list(self, bandpass)
             bp = _LookupTable(w,bandpass(w),'linear')
             R = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
             Rbar = bp.integrate_product(lambda w: self(w) * R(w)) / flux
@@ -983,7 +982,7 @@ class SED:
             # So make sure to include a uniform density of points along with the native sed and
             # bandpass points. The error goes like dx**3, so 100 points should give relative
             # errors of order ~few e-6.
-            w, _, _ = combine_wave_list([self, bandpass])
+            w, _, _ = utilities.combine_wave_list([self, bandpass])
             w = np.union1d(w, np.linspace(w[0], w[-1], 100))
             bp = _LookupTable(w,bandpass(w),'linear')
             return bp.integrate_product(lambda w: self(w) * (w/base_wavelength)**(2*alpha)) / flux
@@ -1011,7 +1010,6 @@ class SED:
             npoints:     Number of points `DistDeviate` should use for its internal interpolation
                          tables. [default: None, which uses the `DistDeviate` default]
         """
-        from .random import DistDeviate
         nphotons=int(nphotons)
 
         key = (bandpass,npoints)
@@ -1102,3 +1100,6 @@ class SED:
         if '_spec' not in d:
             self._initialize_spec()
         self._setup_funcs()
+
+# Put this at the bottom to avoid circular import errors.
+from .bandpass import Bandpass

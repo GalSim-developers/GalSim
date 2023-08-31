@@ -19,6 +19,7 @@
 import numpy as np
 import sys
 import os
+import time
 
 from ..errors import GalSimValueError, GalSimError, GalSimConfigError
 from ..wcs import UniformWCS, AffineTransform
@@ -28,6 +29,7 @@ from ..position import PositionD
 from ..config import OutputBuilder, ExtraOutputBuilder, BuildImages, GetFinalExtraOutput
 from ..config import ParseValue, GetAllParams, GetCurrentValue
 from ..config import RegisterOutputType, RegisterExtraOutput
+from .._pyfits import pyfits
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -193,8 +195,6 @@ def WriteMEDS(obj_list, file_name, clobber=True):
        clobber:     Setting ``clobber=True`` when ``file_name`` is given will silently overwrite
                     existing files. [default True]
     """
-
-    from .._pyfits import pyfits
 
     # initialise the catalog
     cat = {}
@@ -464,7 +464,6 @@ class MEDSBuilder(OutputBuilder):
            A list of MultiExposureObjects.
 
         """
-        import time
         t1 = time.time()
 
         if base.get('image',{}).get('type', 'Single') != 'Single':

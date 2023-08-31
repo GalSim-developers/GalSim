@@ -16,12 +16,16 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'BaseNoise', 'GaussianNoise', 'PoissonNoise', 'CCDNoise',
+            'DeviateNoise', 'VariableGaussianNoise', ]
+
 import numpy as np
 import math
 
 from .image import Image, ImageD
-from .utilities import doc_inherit
+from ._utilities import doc_inherit
 from .errors import GalSimError, GalSimIncompatibleValuesError
+from .random import BaseDeviate, GaussianDeviate, PoissonDeviate
 
 
 def addNoise(self, noise):
@@ -116,7 +120,6 @@ class BaseNoise:
         >>> isinstance(noise, galsim.BaseNoise)
     """
     def __init__(self, rng=None):
-        from .random import BaseDeviate
         if rng is None:
             self._rng = BaseDeviate()
         else:
@@ -243,7 +246,6 @@ class GaussianNoise(BaseNoise):
         sigma:      The value of the constructor parameter sigma (read-only)
     """
     def __init__(self, rng=None, sigma=1.):
-        from .random import GaussianDeviate
         BaseNoise.__init__(self, rng)
         self._sigma = sigma
         self._gd = GaussianDeviate(self.rng, sigma=sigma)
@@ -316,7 +318,6 @@ class PoissonNoise(BaseNoise):
         sky_level:  The value of the constructor parameter sky_level (read-only)
     """
     def __init__(self, rng=None, sky_level=0.):
-        from .random import PoissonDeviate
         BaseNoise.__init__(self, rng)
         self._sky_level = sky_level
         self._pd = PoissonDeviate(self.rng)
@@ -431,7 +432,6 @@ class CCDNoise(BaseNoise):
         read_noise:     The value of the constructor parameter read_noise (read-only)
     """
     def __init__(self, rng=None, sky_level=0., gain=1., read_noise=0.):
-        from .random import PoissonDeviate, GaussianDeviate
         BaseNoise.__init__(self, rng)
         self._sky_level = float(sky_level)
         self._gain = float(gain)
@@ -606,7 +606,6 @@ class VariableGaussianNoise(BaseNoise):
         var_image:  The value of the constructor parameter var_image (read-only)
     """
     def __init__(self, rng, var_image):
-        from .random import GaussianDeviate
         BaseNoise.__init__(self, rng)
         self._gd = GaussianDeviate(rng)
 

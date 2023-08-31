@@ -16,15 +16,22 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numpy as np
+__all__ = [ 'BaseWCS', 'PixelScale', 'ShearWCS', 'JacobianWCS',
+            'OffsetWCS', 'OffsetShearWCS', 'AffineTransform', 
+            'UVFunction', 'RaDecFunction', ]
 
-from .gsobject import GSObject
+import numpy as np
+import math
+import pickle
+import types, marshal, base64
+
 from .position import Position, PositionD, _PositionI, _PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
 from .errors import GalSimValueError
-from .utilities import doc_inherit, lazy_property
+from ._utilities import doc_inherit, lazy_property, math_eval
+from .angle import AngleUnit, radians, arcsec
 
 class BaseWCS:
     """The base class for all other kinds of WCS transformations.
@@ -215,9 +222,8 @@ class BaseWCS:
 
            Equivalent to `shearToWorld`.
         """
-        from .chromatic import ChromaticObject
         if len(args) == 1:
-            if isinstance(args[0], (GSObject, ChromaticObject)):
+            if isinstance(args[0], (gsobject.GSObject, chrom.ChromaticObject)):
                 return self.profileToWorld(*args, **kwargs)
             elif isinstance(args[0], Shear):
                 return self.shearToWorld(*args, **kwargs)
@@ -346,9 +352,8 @@ class BaseWCS:
 
            Equivalent to `shearToImage`.
         """
-        from .chromatic import ChromaticObject
         if len(args) == 1:
-            if isinstance(args[0], (GSObject, ChromaticObject)):
+            if isinstance(args[0], (gsobject.GSObject, chrom.ChromaticObject)):
                 return self.profileToImage(*args, **kwargs)
             elif isinstance(args[0], Shear):
                 return self.shearToImage(*args, **kwargs)
@@ -745,7 +750,6 @@ class BaseWCS:
             header:     A FitsHeader (or dict-like) object to write the data to.
             bounds:     The bounds of the image.
         """
-        from . import fits
         # First write the XMIN, YMIN values
         header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
         header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
@@ -852,10 +856,10 @@ def readFromFitsHeader(header, suppress_warning=True):
     Returns:
         a tuple (wcs, origin) of the wcs from the header and the image origin.
     """
-    from . import fits
+    from .fits import FitsHeader
     from .fitswcs import FitsWCS
-    if not isinstance(header, fits.FitsHeader):
-        header = fits.FitsHeader(header)
+    if not isinstance(header, FitsHeader):
+        header = FitsHeader(header)
     xmin = header.get("GS_XMIN", 1)
     ymin = header.get("GS_YMIN", 1)
     origin = _PositionI(xmin, ymin)
@@ -943,7 +947,6 @@ class EuclideanWCS(BaseWCS):
         Returns:
             ra, dec
         """
-        from .angle import AngleUnit
         if color is None: color = self._color
         return self._xyTouv(x, y, color=color)
 
@@ -1288,7 +1291,6 @@ class CelestialWCS(BaseWCS):
         Returns:
             ra, dec
         """
-        from .angle import AngleUnit
         if color is None: color = self._color
         if units is None:
             raise TypeError("units is required for CelestialWCS types")
@@ -1315,7 +1317,6 @@ class CelestialWCS(BaseWCS):
             units:      The units to use for the input ra, dec values.
             color:      For color-dependent WCS's, the color term to use. [default: None]
         """
-        from .angle import AngleUnit
         if color is None: color = self._color
         if isinstance(units, str):
             units = AngleUnit.from_name(units)
@@ -1346,7 +1347,6 @@ class CelestialWCS(BaseWCS):
     # version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given
     # position.
     def _local(self, image_pos, color):
-        from .angle import radians, arcsec
 
         if image_pos is None:
             raise TypeError("origin must be a PositionD or PositionI argument")
@@ -1378,7 +1378,6 @@ class CelestialWCS(BaseWCS):
     # This is similar to the version for EuclideanWCS, but uses dra, ddec.
     # Again, it is much faster if the _radec function works with numpy arrays.
     def _makeSkyImage(self, image, sky_level, color):
-        from .angle import radians, arcsec
         b = image.bounds
         nx = b.xmax-b.xmin+1 + 2  # +2 more than in image to get row/col off each edge.
         ny = b.ymax-b.ymin+1 + 2
@@ -1413,7 +1412,6 @@ class CelestialWCS(BaseWCS):
 
     # Simple.  Just call _radec.
     def _posToWorld(self, image_pos, color, project_center=None, projection='gnomonic'):
-        from .angle import radians, arcsec
         x = image_pos.x - self.x0
         y = image_pos.y - self.y0
         ra, dec = self._radec(x,y,color)
@@ -1425,7 +1423,6 @@ class CelestialWCS(BaseWCS):
             return _PositionD(u/arcsec, v/arcsec)
 
     def _xyToradec(self, x, y, units, color):
-        from .angle import radians
         x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
         y = y - self.y0
         ra, dec = self._radec(x,y,color)
@@ -1441,7 +1438,6 @@ class CelestialWCS(BaseWCS):
         return _PositionD(x,y) + self.origin
 
     def _radecToxy(self, ra, dec, units, color):
-        from .angle import radians
         ra = ra * (units / radians)
         dec = dec * (units / radians)
         x, y = self._xy(ra,dec,color)
@@ -1537,10 +1533,10 @@ class PixelScale(LocalWCS):
         return v * self._invscale
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
-        from .transform import _Transform, Transform
         # In the usual case of GSObject, it's more efficient to use the _Transform version.
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
-        Transform = _Transform if isinstance(image_profile, GSObject) else Transform
+        Transform = (transform._Transform if isinstance(image_profile, gsobject.GSObject)
+                     else transform.Transform)
         if self._scale == 1.:
             j = None
         else:
@@ -1549,8 +1545,8 @@ class PixelScale(LocalWCS):
                          offset=(offset.x, offset.y))
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
-        from .transform import _Transform, Transform
-        Transform = _Transform if isinstance(world_profile, GSObject) else Transform
+        Transform = (transform._Transform if isinstance(world_profile, gsobject.GSObject)
+                     else transform.Transform)
         if self._scale == 1.:
             j = None
         else:
@@ -1640,7 +1636,6 @@ class ShearWCS(LocalWCS):
         self._g1 = shear.g1
         self._g2 = shear.g2
         self._gsq = self._g1**2 + self._g2**2
-        import math
         self._gfactor = 1. / math.sqrt(1. - self._gsq)
 
     # Help make sure ShearWCS is read-only.
@@ -1694,12 +1689,10 @@ class ShearWCS(LocalWCS):
 
     def _minScale(self):
         # min stretch is (1-|g|) / sqrt(1-|g|^2)
-        import math
         return self._scale * (1. - math.sqrt(self._gsq)) * self._gfactor
 
     def _maxScale(self):
         # max stretch is (1+|g|) / sqrt(1-|g|^2)
-        import math
         return self._scale * (1. + math.sqrt(self._gsq)) * self._gfactor
 
     def _inverse(self):
@@ -1824,17 +1817,17 @@ class JacobianWCS(LocalWCS):
         return (-self._dvdx * u + self._dudx * v)*self._invdet
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
-        from .transform import _Transform, Transform
         # In the usual case of GSObject, it's more efficient to use the _Transform version.
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
-        Transform = _Transform if isinstance(image_profile, GSObject) else Transform
+        Transform = (transform._Transform if isinstance(image_profile, gsobject.GSObject)
+                     else transform.Transform)
         j = np.array(((self._dudx, self._dudy), (self._dvdx, self._dvdy)))
         return Transform(image_profile, j, flux_ratio=flux_ratio*abs(self._invdet),
                          offset=(offset.x, offset.y))
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
-        from .transform import _Transform, Transform
-        Transform = _Transform if isinstance(world_profile, GSObject) else Transform
+        Transform = (transform._Transform if isinstance(world_profile, gsobject.GSObject)
+                     else transform.Transform)
         j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
         return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det),
                          offset=(offset.x, offset.y))
@@ -1907,8 +1900,6 @@ class JacobianWCS(LocalWCS):
         The decomposition is returned as a tuple: (scale, shear, theta, flip), where scale is a
         float, shear is a `Shear`, theta is an `Angle`, and flip is a bool.
         """
-        import math
-        from .angle import radians
         # First we need to see whether or not the transformation includes a flip.  The evidence
         # for a flip is that the determinant is negative.
         if self._det == 0.:
@@ -1953,7 +1944,6 @@ class JacobianWCS(LocalWCS):
         return scale, Shear(g1=g1, g2=g2), theta, flip
 
     def _minScale(self):
-        import math
         # min scale is scale * (1-|g|) / sqrt(1-|g|^2)
         # We could get this from the decomposition, but some algebra finds that this
         # reduces to the following calculation:
@@ -1963,7 +1953,6 @@ class JacobianWCS(LocalWCS):
         return 0.5 * abs(h1 - h2)
 
     def _maxScale(self):
-        import math
         # min scale is scale * (1+|g|) / sqrt(1-|g|^2)
         # which is equivalent to the following:
         # NB: The unit tests test for the equivalence with the above formula.
@@ -2391,8 +2380,6 @@ def _writeFuncToHeader(func, letter, header):
         # I got the starting point for this code from:
         #     http://stackoverflow.com/questions/1253528/
         # In particular, marshal can serialize arbitrary code. (!)
-        import pickle
-        import types, marshal, base64
         if type(func) == types.FunctionType:
             code = marshal.dumps(func.__code__)
             name = func.__name__
@@ -2403,10 +2390,9 @@ def _writeFuncToHeader(func, letter, header):
             # to include them as well.  Help for this part came from:
             # http://stackoverflow.com/questions/573569/
             if closure:
-                from types import ModuleType
                 closure_list = []
                 for c in closure:
-                    if isinstance(c.cell_contents, ModuleType):
+                    if isinstance(c.cell_contents, types.ModuleType):
                         # Can't really pickle the modules.  e.g. math if they use math functions.
                         # The modules just need to be loaded on the other side.  But we still need
                         # to make a cell for the module closure item, so just use its name and
@@ -2460,8 +2446,6 @@ def _makecell(value):  # pragma: no cover
 
 def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
-    import pickle
-    import types, marshal, base64
     if 'GS_'+letter+'_STR' in header:
         # Read in a regular string
         n = header["GS_" + letter + "_N"]
@@ -2562,36 +2546,35 @@ class UVFunction(EuclideanWCS):
     def _initialize_funcs(self):
         global galsim  # Because if a user's function used galsim, it's probably at global scope.
         import galsim
-        from . import utilities
         if isinstance(self._orig_ufunc, str):
             if self._uses_color:
-                self._ufunc = utilities.math_eval('lambda x,y,c : ' + self._orig_ufunc)
+                self._ufunc = math_eval('lambda x,y,c : ' + self._orig_ufunc)
             else:
-                self._ufunc = utilities.math_eval('lambda x,y : ' + self._orig_ufunc)
+                self._ufunc = math_eval('lambda x,y : ' + self._orig_ufunc)
         else:
             self._ufunc = self._orig_ufunc
 
         if isinstance(self._orig_vfunc, str):
             if self._uses_color:
-                self._vfunc = utilities.math_eval('lambda x,y,c : ' + self._orig_vfunc)
+                self._vfunc = math_eval('lambda x,y,c : ' + self._orig_vfunc)
             else:
-                self._vfunc = utilities.math_eval('lambda x,y : ' + self._orig_vfunc)
+                self._vfunc = math_eval('lambda x,y : ' + self._orig_vfunc)
         else:
             self._vfunc = self._orig_vfunc
 
         if isinstance(self._orig_xfunc, str):
             if self._uses_color:
-                self._xfunc = utilities.math_eval('lambda u,v,c : ' + self._orig_xfunc)
+                self._xfunc = math_eval('lambda u,v,c : ' + self._orig_xfunc)
             else:
-                self._xfunc = utilities.math_eval('lambda u,v : ' + self._orig_xfunc)
+                self._xfunc = math_eval('lambda u,v : ' + self._orig_xfunc)
         else:
             self._xfunc = self._orig_xfunc
 
         if isinstance(self._orig_yfunc, str):
             if self._uses_color:
-                self._yfunc = utilities.math_eval('lambda u,v,c : ' + self._orig_yfunc)
+                self._yfunc = math_eval('lambda u,v,c : ' + self._orig_yfunc)
             else:
-                self._yfunc = utilities.math_eval('lambda u,v : ' + self._orig_yfunc)
+                self._yfunc = math_eval('lambda u,v : ' + self._orig_yfunc)
         else:
             self._yfunc = self._orig_yfunc
 
@@ -2835,19 +2818,18 @@ class RaDecFunction(CelestialWCS):
     def _initialize_funcs(self):
         global galsim  # Because if a user's function used galsim, it's probably at global scope.
         import galsim
-        from . import utilities
         if self._orig_dec_func is None:
             if isinstance(self._orig_ra_func, str):
-                self._radec_func = utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
+                self._radec_func = math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 self._radec_func = self._orig_ra_func
         else:
             if isinstance(self._orig_ra_func, str):
-                ra_func = utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
+                ra_func = math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 ra_func = self._orig_ra_func
             if isinstance(self._orig_dec_func, str):
-                dec_func = utilities.math_eval('lambda x,y : ' + self._orig_dec_func)
+                dec_func = math_eval('lambda x,y : ' + self._orig_dec_func)
             else:
                 dec_func = self._orig_dec_func
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
@@ -2936,3 +2918,9 @@ def compatible(wcs1, wcs2):
         return wcs1.jacobian() == wcs2.jacobian()
     else:
         return wcs1 == wcs2.shiftOrigin(wcs1.origin, wcs1.world_origin)
+
+
+# Put these at the bottom to avoid circular import errors.
+from . import transform
+from . import gsobject
+from . import chromatic as chrom

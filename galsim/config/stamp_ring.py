@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+import math
+
 from .stamp import StampBuilder, RegisterStampType
 from .value import ParseValue, GetAllParams, SetDefaultIndex
 from .gsobject import BuildGSObject, TransformObject
@@ -69,7 +71,6 @@ class RingBuilder(StampBuilder):
 
         # Set the default full_rotation to pi radians
         if 'full_rotation' not in params:
-            import math
             config['full_rotation'] = math.pi * radians
 
         # Now go on and do the base class setup.

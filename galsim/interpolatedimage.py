@@ -16,8 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'InterpolatedImage', '_InterpolatedImage',
+            'InterpolatedKImage', '_InterpolatedKImage' ]
+
 import numpy as np
 import math
+import copy
 
 from .gsobject import GSObject
 from .gsparams import GSParams
@@ -31,6 +35,9 @@ from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
+from .wcs import BaseWCS, PixelScale
+from .noise import GaussianNoise
+
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an `Image`, which can be
@@ -299,9 +306,6 @@ class InterpolatedImage(GSObject):
                  use_cache=True, use_true_center=True, depixelize=False, offset=None,
                  gsparams=None, _force_stepk=0., _force_maxk=0., hdu=None):
 
-        from .wcs import BaseWCS, PixelScale
-        from .random import BaseDeviate
-
         # If the "image" is not actually an image, try to read the image as a file.
         if isinstance(image, str):
             image = fits.read(image, hdu=hdu)
@@ -381,8 +385,7 @@ class InterpolatedImage(GSObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         ret._x_interpolant = self._x_interpolant.withGSParams(ret._gsparams, **kwargs)
         ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams, **kwargs)
@@ -519,10 +522,7 @@ class InterpolatedImage(GSObject):
         """A helper function that builds the ``pad_image`` from the given ``noise_pad``
         specification.
         """
-        from .random import BaseDeviate
-        from .noise import GaussianNoise
         from .correlatednoise import BaseCorrelatedNoise, CorrelatedNoise
-
         # Make sure we make rng a BaseDeviate if rng is None
         rng1 = BaseDeviate(rng)
 
@@ -992,8 +992,7 @@ class InterpolatedKImage(GSObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams, **kwargs)
         return ret

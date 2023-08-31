@@ -16,5 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'AngleUnit', 'Angle', '_Angle',
+            'radians', 'hours', 'degrees', 'arcmin', 'arcsec' ]
+
 from coord import AngleUnit, Angle, _Angle
 from coord import radians, hours, degrees, arcmin, arcsec

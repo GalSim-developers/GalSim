@@ -16,12 +16,20 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Catalog', 'Dict', 'OutputCatalog' ]
+
 import os
 import numpy as np
 import pickle
+import yaml
+import json
 
 from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
-from .utilities import lazy_property
+from ._utilities import lazy_property
+from ._pyfits import pyfits
+from .angle import Angle
+from .position import PositionD, PositionI
+from .shear import Shear
 
 class Catalog:
     """A class storing the data from an input catalog.
@@ -55,11 +63,9 @@ class Catalog:
         # First build full file_name
         self.file_name = file_name.strip()
         if dir is not None:
-            import os
             self.file_name = os.path.join(dir,self.file_name)
 
         if file_type is None:
-            import os
             name, ext = os.path.splitext(file_name)
             if ext.lower().startswith('.fit'):
                 file_type = 'FITS'
@@ -134,7 +140,6 @@ class Catalog:
     def readFits(self):
         """Read in an input catalog from a FITS file.
         """
-        from ._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
             self._data = fits[self.hdu].data.copy()
         self.names = self._data.columns.names
@@ -244,11 +249,9 @@ class Dict:
         # First build full file_name
         self.file_name = file_name.strip()
         if dir is not None:
-            import os
             self.file_name = os.path.join(dir,self.file_name)
 
         if file_type is None:
-            import os
             name, ext = os.path.splitext(self.file_name)
             if ext.lower().startswith('.p'):
                 file_type = 'PICKLE'
@@ -271,11 +274,9 @@ class Dict:
             with open(self.file_name, 'rb') as f:
                 self.dict = pickle.load(f)
         elif file_type == 'YAML':
-            import yaml
             with open(self.file_name, 'r') as f:
                 self.dict = yaml.safe_load(f)
         else:  # JSON
-            import json
             with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
 
@@ -444,12 +445,10 @@ class OutputCatalog:
             prec:       Output precision for ASCII. [default: 8]
         """
         if dir is not None:
-            import os
             file_name = os.path.join(dir,file_name)
 
         # Figure out which file type the catalog is
         if file_type is None:
-            import os
             name, ext = os.path.splitext(file_name)
             if ext.lower().startswith('.fit'):
                 file_type = 'FITS'
@@ -467,9 +466,6 @@ class OutputCatalog:
     def makeData(self):
         """Returns a numpy array of the data as it should be written to an output file.
         """
-        from .angle import Angle
-        from .position import PositionD, PositionI
-        from .shear import Shear
 
         cols = zip(*self.rows)
 
@@ -561,7 +557,6 @@ class OutputCatalog:
         # Note to developers: Because of problems with pickling in older pyfits versions, this
         # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change
         # this function, you should update BuildTruthHDU as well.
-        from ._pyfits import pyfits
 
         data = self.makeData()
 
@@ -594,4 +589,3 @@ class OutputCatalog:
     def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
-

@@ -29,7 +29,7 @@ from ..interpolant import Lanczos
 from ..gsparams import GSParams
 from ..config import InputLoader, RegisterInputType, RegisterObjectType
 from ..config import GetAllParams, GetInputObj
-
+from .._pyfits import pyfits
 
 class DES_PSFEx:
     r"""Class that handles DES files describing interpolated principal component images
@@ -130,7 +130,6 @@ class DES_PSFEx:
         self.read()
 
     def read(self):
-        from .._pyfits import pyfits
         if isinstance(self.file_name, str):
             hdu_list = pyfits.open(self.file_name)
             hdu = hdu_list[1]

@@ -19,9 +19,11 @@
 import os
 import logging
 import inspect
+from multiprocessing.managers import ListProxy, DictProxy
 
 from .util import LoggerWrapper, SetDefaultExt, RetryIO, SafeManager
 from .value import ParseValue
+from .image import GetNObjForImage
 from ..utilities import ensure_dir
 from ..errors import GalSimConfigValueError, GalSimConfigError
 from ..fits import writeMulti
@@ -61,7 +63,6 @@ def SetupExtraOutput(config, logger=None):
             ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
 
     if use_manager and 'output_manager' not in config:
-        from multiprocessing.managers import ListProxy, DictProxy
         class OutputManager(SafeManager): pass
 
         # We'll use a list and a dict as work space to do the extra output processing.
@@ -157,7 +158,6 @@ def ProcessExtraOutputsForImage(config, logger=None):
         config:     The configuration dict.
         logger:     If given, a logger object to log progress. [default: None]
     """
-    from .image import GetNObjForImage
     if 'output' in config:
         obj_nums = None
         for key, builder in config.get('extra_builder',{}).items():

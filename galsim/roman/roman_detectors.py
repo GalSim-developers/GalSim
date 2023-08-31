@@ -26,6 +26,14 @@ import numpy as np
 import os
 
 from . import exptime, persistence_coefficients, nonlinearity_beta
+from . import dark_current, read_noise, gain
+from . import reciprocity_alpha
+from . import ipc_kernel
+from . import persistence_fermi_parameters
+
+from .. import BaseDeviate, PoissonNoise, DeviateNoise, GaussianNoise, PoissonDeviate
+from .. import GalSimValueError
+
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
@@ -47,7 +55,6 @@ def applyNonlinearity(img):
     img.applyNonlinearity(NLfunc=NLfunc)
 
 def addReciprocityFailure(img, exptime=exptime):
-    from . import reciprocity_alpha
     img.addReciprocityFailure(exp_time=exptime, alpha=reciprocity_alpha, base_flux=1.0)
 
 # Note: Formatted doc strings don't work if put in the normal place.  Unless the function is
@@ -89,12 +96,9 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
                             original pixel values are retained at the edges. If
                             edge_treatment is not 'crop', then this is ignored.
     """
-    from . import ipc_kernel
     img.applyIPC(ipc_kernel, edge_treatment=edge_treatment, fill_value=fill_value)
 
 def applyPersistence(img, prev_exposures, method='fermi'):
-    from .. import GalSimValueError
-
     if not hasattr(prev_exposures,'__iter__'):
         raise TypeError("In roman.applyPersistence, prev_exposures must be a list of Image instances")
 
@@ -162,8 +166,6 @@ def fermi_linear(x, t):
     Returns:
         The persistence signal of the input exposure x.
     """
-    from . import persistence_fermi_parameters
-
     x = np.asarray(x)
     y = np.zeros_like(x)
 
@@ -181,9 +183,6 @@ def fermi_linear(x, t):
 
 # Again, need to put the doc outside the function to get formatting to work.
 def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=exptime):
-    from . import exptime, dark_current, read_noise, gain
-    from .. import BaseDeviate, PoissonNoise, DeviateNoise, GaussianNoise, PoissonDeviate
-
     # Make sure we don't have any negative values.
     img.replaceNegative(0.)
 

@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'VonKarman' ]
+
 import numpy as np
 
 from . import _galsim

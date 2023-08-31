@@ -20,6 +20,7 @@ import re
 
 from .util import PropagateIndexKeyRNGNum
 from .value import GetCurrentValue, GetAllParams, RegisterValueType
+from .value import standard_ignore
 from .process import ImportModules
 from ..errors import GalSimConfigError
 from ..angle import Angle
@@ -60,7 +61,6 @@ eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin'
                         'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num',
                         'world_center', 'sky_pos', 'uv_pos', 'bandpass' ]
 
-from .value import standard_ignore
 eval_ignore = ['str','_fn'] + standard_ignore
 
 def _isWordInString(w, s):

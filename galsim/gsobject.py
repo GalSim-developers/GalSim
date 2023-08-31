@@ -16,15 +16,26 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'GSObject' ]
+
 import numpy as np
 import math
+import copy
 
 from . import _galsim
 from .gsparams import GSParams
-from .position import _PositionD, _PositionI, Position
-from .utilities import lazy_property, parse_pos_args
+from .position import _PositionD, _PositionI, Position, parse_pos_args
+from ._utilities import lazy_property
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
+from .image import Image, ImageD, ImageF, ImageCD, ImageCF
+from .shear import Shear, _Shear
+from .angle import Angle
+from .bounds import BoundsI, _BoundsI
+from .random import BaseDeviate
+from .sensor import Sensor
+from .random import PoissonDeviate
+from .wcs import BaseWCS, PixelScale
 
 
 class GSObject:
@@ -425,8 +436,7 @@ class GSObject:
     def deinterpolated(self): return self
     @property
     def SED(self):
-        from .sed import SED
-        return SED(self.flux, 'nm', '1')
+        return sed.SED(self.flux, 'nm', '1')
     @property
     def spectral(self): return False
     @property
@@ -450,8 +460,7 @@ class GSObject:
 
         Equivalent to Add(self, other)
         """
-        from .sum import Add
-        return Add([self, other])
+        return _sum.Add([self, other])
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
@@ -459,8 +468,7 @@ class GSObject:
 
         Equivalent to Add(self, -1 * other)
         """
-        from .sum import Add
-        return Add([self, (-1. * other)])
+        return _sum.Add([self, (-1. * other)])
 
     # Make op* work to adjust the flux of an object
     def __mul__(self, other):
@@ -765,8 +773,7 @@ class GSObject:
         # attribute that depends on the details of gsparams.  If there are stored calculations
         # aside from these, you should also clear them as well, or update them.
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
@@ -820,16 +827,14 @@ class GSObject:
         Returns:
             the object with the new flux.
         """
-        from .sed import SED
-        from .transform import Transform
         # Prohibit non-SED callable flux_ratio here as most likely an error.
-        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, SED):
+        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, sed.SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
         if flux_ratio == 1:
             return self
         else:
-            return Transform(self, flux_ratio=flux_ratio)
+            return transform.Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given ``scale`` factor, while preserving
@@ -853,8 +858,7 @@ class GSObject:
         Returns:
             the expanded object.
         """
-        from .transform import Transform
-        return Transform(self, jac=[scale, 0., 0., scale])
+        return transform.Transform(self, jac=[scale, 0., 0., scale])
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given ``scale`` factor, while preserving
@@ -871,9 +875,8 @@ class GSObject:
         Returns:
             the dilated object.
         """
-        from .transform import Transform
         # equivalent to self.expand(scale) * (1./scale**2)
-        return Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
+        return transform.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -915,8 +918,6 @@ class GSObject:
         Returns:
             the sheared object.
         """
-        from .transform import Transform
-        from .shear import Shear
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
@@ -929,7 +930,7 @@ class GSObject:
             raise TypeError("Error, shear argument is required")
         else:
             shear = Shear(**kwargs)
-        return Transform(self, shear.getMatrix())
+        return transform.Transform(self, shear.getMatrix())
 
     def _shear(self, shear):
         """Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other
@@ -943,8 +944,7 @@ class GSObject:
         Returns:
             the sheared object.
         """
-        from .transform import _Transform
-        return _Transform(self, shear.getMatrix())
+        return transform._Transform(self, shear.getMatrix())
 
     def lens(self, g1, g2, mu):
         """Create a version of the current object with both a lensing shear and magnification
@@ -967,10 +967,8 @@ class GSObject:
         Returns:
             the lensed object.
         """
-        from .transform import Transform
-        from .shear import Shear
         shear = Shear(g1=g1, g2=g2)
-        return Transform(self, shear.getMatrix() * math.sqrt(mu))
+        return transform.Transform(self, shear.getMatrix() * math.sqrt(mu))
 
     def _lens(self, g1, g2, mu):
         """Equivalent to `GSObject.lens`, but without the overhead of some of the sanity checks.
@@ -987,10 +985,8 @@ class GSObject:
         Returns:
             the lensed object.
         """
-        from .shear import _Shear
-        from .transform import _Transform
         shear = _Shear(g1 + 1j*g2)
-        return _Transform(self, shear.getMatrix() * math.sqrt(mu))
+        return transform._Transform(self, shear.getMatrix() * math.sqrt(mu))
 
     def rotate(self, theta):
         """Rotate this object by an `Angle` ``theta``.
@@ -1001,12 +997,10 @@ class GSObject:
         Returns:
             the rotated object.
         """
-        from .angle import Angle
-        from .transform import Transform
         if not isinstance(theta, Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
-        return Transform(self, jac=[c, -s, s, c])
+        return transform.Transform(self, jac=[c, -s, s, c])
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -1036,8 +1030,7 @@ class GSObject:
         Returns:
             the transformed object
         """
-        from .transform import Transform
-        return Transform(self, jac=[dudx, dudy, dvdx, dvdy])
+        return transform.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
@@ -1078,9 +1071,8 @@ class GSObject:
         Returns:
             the shifted object.
         """
-        from .transform import Transform
         offset = parse_pos_args(args, kwargs, 'dx', 'dy')
-        return Transform(self, offset=offset)
+        return transform.Transform(self, offset=offset)
 
     def _shift(self, dx, dy):
         """Equivalent to `shift`, but without the overhead of sanity checks or option
@@ -1095,8 +1087,7 @@ class GSObject:
         Returns:
             the shifted object.
         """
-        from .transform import _Transform
-        new_obj = _Transform(self, offset=(dx,dy))
+        new_obj = transform._Transform(self, offset=(dx,dy))
         return new_obj
 
     def atRedshift(self, redshift):
@@ -1109,16 +1100,12 @@ class GSObject:
         Returns:
             the object with the new redshift
         """
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._redshift = redshift
         return ret
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, center, odd=False):
-        from .image import Image
-        from .bounds import _BoundsI
-
         # If image is given, check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -1221,7 +1208,6 @@ class GSObject:
             return _PositionD(center[0], center[1])
 
     def _get_new_bounds(self, image, nx, ny, bounds, center):
-        from .bounds import BoundsI
         if image is not None and image.bounds.isDefined():
             return image.bounds
         elif nx is not None and ny is not None:
@@ -1257,7 +1243,6 @@ class GSObject:
         return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
-        from .wcs import BaseWCS, PixelScale
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
@@ -1644,13 +1629,6 @@ class GSObject:
         Returns:
             the drawn `Image`.
         """
-        from .image import Image, ImageD
-        from .convolve import Convolve, Convolution, Deconvolve
-        from .box import Pixel
-        from .wcs import PixelScale
-        from .photon_array import PhotonArray
-        from .sensor import Sensor
-
         if surface_ops is not None:
             from .deprecated import depr
             depr('surface_ops', 2.3, 'photon_ops')
@@ -1673,8 +1651,8 @@ class GSObject:
                                    ('auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb'))
 
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
-        if method == 'auto' and isinstance(self, Convolution):
-            if any([ isinstance(obj, Pixel) for obj in self.obj_list ]):
+        if method == 'auto' and isinstance(self, convolve.Convolution):
+            if any([ isinstance(obj, box.Pixel) for obj in self.obj_list ]):
                 galsim_warn(
                     "You called drawImage with ``method='auto'`` "
                     "for an object that includes convolution by a Pixel.  "
@@ -1772,8 +1750,8 @@ class GSObject:
             else:
                 real_space = True
             prof_no_pixel = prof
-            prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
-                            real_space=real_space, gsparams=self.gsparams)
+            prof = convolve.Convolve(prof, box.Pixel(scale=1.0, gsparams=self.gsparams),
+                                     real_space=real_space, gsparams=self.gsparams)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, center)
@@ -1804,18 +1782,15 @@ class GSObject:
                 draw_image._shift(-draw_image.center)  # eqiv. to setCenter(0,0)
                 if method in ('auto', 'fft', 'real_space'):
                     # Need to reconvolve by the new smaller pixel instead
-                    prof = Convolve(
-                            prof_no_pixel,
-                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
-                            real_space=real_space, gsparams=self.gsparams)
+                    pix = box.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams)
+                    prof = convolve.Convolve(prof_no_pixel, pix, real_space=real_space,
+                                             gsparams=self.gsparams)
                 elif n_subsample != 1:
                     # We can't just pull off the pixel-free version, so we need to deconvolve
                     # by the original pixel and reconvolve by the smaller one.
-                    prof = Convolve(
-                            prof,
-                            Deconvolve(Pixel(scale=1.0, gsparams=self.gsparams)),
-                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
-                            gsparams=self.gsparams)
+                    dec = convolve.Deconvolve(box.Pixel(scale=1.0, gsparams=self.gsparams))
+                    pix = box.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams)
+                    prof = convolve.Convolve(prof, dec, pix, gsparams=self.gsparams)
                 add = False
                 if not add_to_image: imview.setZero()
             else:
@@ -1837,7 +1812,7 @@ class GSObject:
                 added_photons = 0
                 resume = False
                 for it in range(niter):
-                    photons = PhotonArray.makeFromImage(draw_image, rng=rng)
+                    photons = pa.PhotonArray.makeFromImage(draw_image, rng=rng)
 
                     for op in photon_ops:
                         op.applyTo(photons, local_wcs, rng)
@@ -1884,7 +1859,6 @@ class GSObject:
         Returns:
             The total flux drawn inside the image bounds.
         """
-        from .image import ImageD, ImageF
         if image.wcs is None or not image.wcs._isPixelScale:
             raise GalSimValueError("drawReal requires an image with a PixelScale wcs", image)
 
@@ -1955,8 +1929,6 @@ class GSObject:
             (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
             the result should be wrapped before doing the inverse fft.
         """
-        from .bounds import _BoundsI
-        from .image import ImageCD, ImageCF
         # Start with what this profile thinks a good size would be given the image's pixel scale.
         N = self.getGoodImageSize(image.scale)
 
@@ -2008,8 +1980,6 @@ class GSObject:
         Returns:
             The total flux drawn inside the image bounds.
         """
-        from .bounds import _BoundsI
-        from .image import Image
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
@@ -2073,7 +2043,6 @@ class GSObject:
         Returns:
             n_photons, g
         """
-        from .random import PoissonDeviate
         # For profiles that are positive definite, then N = flux. Easy.
         #
         # However, some profiles shoot some of their photons with negative flux. This means that
@@ -2342,9 +2311,6 @@ class GSObject:
             - added_flux is the total flux of photons that landed inside the image bounds, and
             - photons is the `PhotonArray` that was applied to the image.
         """
-        from .sensor import Sensor
-        from .image import ImageD
-
         if surface_ops is not None:
             from .deprecated import depr
             depr('surface_ops', 2.3, 'photon_ops')
@@ -2438,10 +2404,7 @@ class GSObject:
         Returns:
             A `PhotonArray`.
         """
-        from .random import BaseDeviate
-        from .photon_array import PhotonArray
-
-        photons = PhotonArray(n_photons)
+        photons = pa.PhotonArray(n_photons)
         if n_photons == 0:
             # It's ok to shoot 0, but downstream can have problems with it, so just stop now.
             return photons
@@ -2475,8 +2438,7 @@ class GSObject:
             rng:            A random number generator to use to effect the convolution.
                             [default: None]
         """
-        from .photon_array import PhotonArray
-        p1 = PhotonArray(len(photon_array))
+        p1 = pa.PhotonArray(len(photon_array))
         if photon_array.hasAllocatedWavelengths():
             p1._wave = photon_array._wave
         if photon_array.hasAllocatedPupil():
@@ -2538,8 +2500,6 @@ class GSObject:
         Returns:
             an `Image` instance (created if necessary)
         """
-        from .wcs import PixelScale
-        from .image import Image
         # Make sure provided image is complex
         if image is not None:
             if not isinstance(image, Image):
@@ -2628,3 +2588,11 @@ class GSObject:
 
     # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)
+
+# Put these at the bottom to avoid circular import errors.
+from . import convolve
+from . import sum as _sum
+from . import transform
+from . import box
+from . import photon_array as pa
+from . import sed

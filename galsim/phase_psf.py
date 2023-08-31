@@ -16,9 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Aperture', 'PhaseScreenList', 'PhaseScreenPSF', 'OpticalPSF' ]
+
 from heapq import heappush, heappop
 import numpy as np
+import copy
 
+from . import fits
+from . import fft
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .angle import radians, degrees, arcsec, Angle, AngleUnit
@@ -29,7 +34,10 @@ from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property, basestring
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, galsim_warn
-from .photon_array import TimeSampler
+from .photon_array import TimeSampler, PhotonArray
+from .airy import Airy
+from .second_kick import SecondKick
+from .random import UniformDeviate
 
 
 class Aperture:
@@ -253,7 +261,6 @@ class Aperture:
     def good_pupil_scale(self):
         """An estimate of a good pupil-plane image scale.
         """
-        from .airy import Airy
         # For the pupil plane sampling interval, details like the obscuration and GSParams *are*
         # important as they affect the amount of aliasing encountered.  (An Airy profile has an
         # infinite extent in real space, so it *always* aliases at some level, more so with an
@@ -358,7 +365,6 @@ class Aperture:
         4.  Check that the pupil plane sampling interval is at least as small as requested.
         5.  Optionally rotate pupil plane.
         """
-        from . import fits
         # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
         # image.
         if isinstance(self._pupil_plane_im, np.ndarray):
@@ -452,8 +458,7 @@ class Aperture:
         """Create a version of the current aperture with the given gsparams
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
@@ -624,8 +629,6 @@ class Aperture:
     def samplePupil(self, photons, rng):
         """Set the pupil_u and pupil_v values in the PhotonArray by sampling the current aperture.
         """
-        from .random import UniformDeviate
-
         n_photons = len(photons)
         u = self.u_illuminated
         v = self.v_illuminated
@@ -725,7 +728,6 @@ class PhaseScreenList:
         layers:     Sequence of phase screens.
     """
     def __init__(self, *layers):
-        from .phase_screens import AtmosphericScreen, OpticalScreen
         if len(layers) == 1:
             # First check if layers[0] is a PhaseScreenList, so we avoid nesting.
             if isinstance(layers[0], PhaseScreenList):
@@ -1386,8 +1388,6 @@ class PhaseScreenPSF(GSObject):
     def second_kick(self):
         """Make a SecondKick object based on contents of screen_list and aper.
         """
-        from .airy import Airy
-        from .second_kick import SecondKick
         if self._second_kick is None:
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
@@ -1475,7 +1475,6 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        from . import fft
         u = self.aper.u_illuminated
         v = self.aper.v_illuminated
         # This is where I need to make sure the screens are instantiated for FFT.
@@ -1566,8 +1565,6 @@ class PhaseScreenPSF(GSObject):
         self._ii._drawReal(image, jac, offset, flux_scaling)
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
-
         if not self._geometric_shooting:
             self._prepareDraw()
             return self._ii._shoot(photons, rng)
@@ -1855,7 +1852,6 @@ class OpticalPSF(GSObject):
                  pupil_angle=0.*radians, scale_unit=arcsec, fft_sign='+', gsparams=None,
                  _force_stepk=0., _force_maxk=0.,
                  suppress_warning=False, geometric_shooting=False):
-        from .phase_screens import OpticalScreen
         if fft_sign not in ['+', '-']:
             raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
         if isinstance(scale_unit, str):
@@ -2070,3 +2066,6 @@ class OpticalPSF(GSObject):
                 flux=flux, _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 ii_pad_factor=self._ii_pad_factor, fft_sign=self._fft_sign,
                 gsparams=self._gsparams)
+
+# Put this at the bottom to avoid circular import errors.
+from .phase_screens import AtmosphericScreen, OpticalScreen

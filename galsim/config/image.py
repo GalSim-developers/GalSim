@@ -18,15 +18,16 @@
 
 import logging
 import numpy as np
+import math
 
 from .util import LoggerWrapper, UpdateNProc, MultiProcess, SetupConfigRNG
 from .input import SetupInput, SetupInputsForImage
-from .extra import SetupExtraOutputsForImage, ProcessExtraOutputsForImage
 from .value import ParseValue, GetAllParams
 from .wcs import BuildWCS
 from .sensor import BuildSensor
 from .bandpass import BuildBandpass
 from .stamp import BuildStamp, MakeStampTasks, ParseDType
+from .stamp import stamp_image_keys
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionI, PositionD
 from ..bounds import BoundsI
@@ -235,7 +236,6 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
 
 
 # Ignore these when parsing the parameters for specific Image types:
-from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
                  'world_center', 'index_convention', 'nproc', 'timeout', 'bandpass', 'sensor',
                  'use_flux_sky_areas'
@@ -254,6 +254,8 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     Returns:
         the final image
     """
+    from .extra import SetupExtraOutputsForImage, ProcessExtraOutputsForImage
+
     logger = LoggerWrapper(logger)
     logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 

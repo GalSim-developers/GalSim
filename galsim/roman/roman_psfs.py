@@ -18,7 +18,23 @@
 
 import numpy as np
 import os
+
+from . import pixel_scale, n_pix, pixel_scale_mm
+from . import n_pix, n_sca, longwave_bands, shortwave_bands
+from . import diameter, obscuration
+from .roman_bandpass import getBandpasses
+
 from ..utilities import LRU_Cache
+from ..position import PositionD
+from ..errors import GalSimValueError, GalSimRangeError
+from ..bandpass import Bandpass
+from ..wcs import PixelScale
+from ..gsparams import GSParams
+from ..phase_psf import Aperture
+from .. import OpticalPSF, ChromaticOpticalPSF
+from .. import fits
+from .. import meta_data
+
 
 """
 @file roman_psfs.py
@@ -183,17 +199,11 @@ def getPSF(SCA, bandpass,
         inputs).
 
     """
-    from ..position import PositionD
-    from ..errors import GalSimValueError, GalSimRangeError
-    from ..bandpass import Bandpass
-    from ..wcs import PixelScale
-    from . import n_pix, n_sca, longwave_bands, shortwave_bands, pixel_scale, pixel_scale_mm
 
     # Deprecated options
     if high_accuracy:
         if approximate_struts:
             from ..deprecated import depr
-            from ..gsparams import GSParams
             depr('high_accuracy=True,approximate_struts=True', 2.3,
                  'pupil_bin=4, gsparams=galsim.GSParams(folding_threshold=2.e-3)',
                  'Note: this is not actually equivalent to the old behavior, but it should '
@@ -203,7 +213,6 @@ def getPSF(SCA, bandpass,
             pupil_bin = 4
         else:
             from ..deprecated import depr
-            from ..gsparams import GSParams
             depr('high_accuracy=True', 2.3,
                  'pupil_bin=1, gsparams=galsim.GSParams(folding_threshold=2.e-3)',
                  'Note: this is not actually equivalent to the old behavior, but it should '
@@ -213,7 +222,6 @@ def getPSF(SCA, bandpass,
             pupil_bin = 1
     elif approximate_struts:
         from ..deprecated import depr
-        from ..gsparams import GSParams
         depr('approximate_struts=True', 2.3, 'pupil_bin=8',
              'Note: this is not actually equivalent to the old behavior, but it should '
              'be both faster and more accurate than the corresponding PSF in v2.2.')
@@ -221,7 +229,6 @@ def getPSF(SCA, bandpass,
     elif approximate_struts is False or high_accuracy is False:
         # If they are explicitly given, rather than default (None), then trigger this.
         from ..deprecated import depr
-        from ..gsparams import GSParams
         depr('approximate_struts=False, high_accuracy=False', 2.3, 'pupil_bin=4',
              'Note: this is not actually equivalent to the old behavior, but it should '
              'be both faster and more accurate than the corresponding PSF in v2.2.')
@@ -270,11 +277,6 @@ def getPSF(SCA, bandpass,
     return psf
 
 def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
-    from . import diameter, obscuration
-    from .. import fits
-    from .. import meta_data
-    from ..phase_psf import Aperture
-
     # Load the pupil plane image.
     if pupil_plane_type == 'long':
         pupil_plane_im = os.path.join(meta_data.share_dir, 'roman',
@@ -306,11 +308,6 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
-    from .. import OpticalPSF, ChromaticOpticalPSF
-    from . import diameter
-    from ..bandpass import Bandpass
-    from .roman_bandpass import getBandpasses
-
     if wavelength is None:
         wave = zemax_wavelength
     elif isinstance(wavelength, Bandpass):
@@ -364,9 +361,6 @@ def _read_aberrations(SCA):
     Returns:
         NumPy arrays containing the aberrations, and x and y field positions.
     """
-    from .. import meta_data
-    from . import pixel_scale, n_pix, pixel_scale_mm
-
     # Construct filename.
     sca_str = '_%02d'%SCA
     infile = os.path.join(meta_data.share_dir, 'roman',

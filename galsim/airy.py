@@ -16,14 +16,17 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Airy' ]
+
 import numpy as np
 import math
 
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .utilities import lazy_property, doc_inherit
+from ._utilities import lazy_property, doc_inherit
 from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError
+from .angle import arcsec, radians, AngleUnit
 
 
 class Airy(GSObject):
@@ -101,7 +104,6 @@ class Airy(GSObject):
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
                  scale_unit=None, gsparams=None):
-        from .angle import arcsec, radians, AngleUnit
 
         self._obscuration = float(obscuration)
         self._flux = float(flux)

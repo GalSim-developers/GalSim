@@ -16,22 +16,33 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'RealGalaxy', 'RealGalaxyCatalog', 'ChromaticRealGalaxy', ]
+
 import os
 import numpy as np
+import copy
+from multiprocessing import Lock
 
+from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .chromatic import ChromaticSum
 from .position import PositionD
+from .bounds import BoundsI
 from .utilities import lazy_property, doc_inherit, convert_interpolant
 from .interpolant import Quintic
 from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
 from .convolve import Convolve, Deconvolve
-from .image import ImageCD
-from .correlatednoise import CovarianceSpectrum
-from . import _galsim
+from .image import Image, ImageCD
+from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise, CovarianceSpectrum
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimIndexError
+from .table import LookupTable
+from .random import BaseDeviate, UniformDeviate
+from .sed import SED
+from .bandpass import Bandpass
+from .chromatic import ChromaticSum
+from . import meta_data
+from ._pyfits import pyfits
 
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
@@ -184,12 +195,6 @@ class RealGalaxy(GSObject):
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None, logger=None):
-        from .random import BaseDeviate, UniformDeviate
-        from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise
-        from .interpolatedimage import InterpolatedImage
-        from .convolve import Convolve, Deconvolve
-        from .config import LoggerWrapper
-
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
@@ -319,8 +324,7 @@ class RealGalaxy(GSObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, **kwargs)
         ret.original_gal = self.original_gal.withGSParams(ret._gsparams, **kwargs)
         ret.original_psf = self.original_psf.withGSParams(ret._gsparams, **kwargs)
@@ -530,10 +534,6 @@ class RealGalaxyCatalog:
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name=None, sample=None, dir=None, preload=False, logger=None):
-        from ._pyfits import pyfits
-        from .config import LoggerWrapper
-        from multiprocessing import Lock
-
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
@@ -687,7 +687,6 @@ class RealGalaxyCatalog:
         There are memory implications to this, so we don't do this by default.  However, it can be
         a big speedup if memory isn't an issue.
         """
-        from ._pyfits import pyfits
         with self.loaded_lock:
             for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
                 # numpy sometimes add a space at the end of the string that is not present in
@@ -707,7 +706,6 @@ class RealGalaxyCatalog:
                         hdu.data
 
     def _getFile(self, file_name):
-        from ._pyfits import pyfits
         self._maybe_preload()
         if file_name in self.loaded_files:
             f = self.loaded_files[file_name]
@@ -724,7 +722,6 @@ class RealGalaxyCatalog:
     def getBandpass(self):
         """Returns a `Bandpass` object for the catalog.
         """
-        from .bandpass import Bandpass
         try:
             bp = real_galaxy_bandpasses[self.band[0].upper()]
         except KeyError:
@@ -736,7 +733,6 @@ class RealGalaxyCatalog:
     def getGalImage(self, i):
         """Returns the galaxy at index ``i`` as an `Image` object.
         """
-        from .image import Image
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
@@ -748,7 +744,6 @@ class RealGalaxyCatalog:
     def getPSFImage(self, i):
         """Returns the PSF at index ``i`` as an `Image` object.
         """
-        from .image import Image
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
@@ -759,7 +754,6 @@ class RealGalaxyCatalog:
     def getPSF(self, i, x_interpolant=None, k_interpolant=None, gsparams=None):
         """Returns the PSF at index ``i`` as a `GSObject`.
         """
-        from .interpolatedimage import InterpolatedImage
         psf_image = self.getPSFImage(i)
         return InterpolatedImage(psf_image,
                                  x_interpolant=x_interpolant, k_interpolant=k_interpolant,
@@ -770,7 +764,6 @@ class RealGalaxyCatalog:
            Specifically, the noise image (or None), the pixel_scale, and the noise variance,
            as a tuple (im, scale, var).
         """
-        from .image import Image
         if self.noise_file_name is None:
             im = None
         else:
@@ -784,7 +777,6 @@ class RealGalaxyCatalog:
                     if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
                         im = self.saved_noise_im[self.noise_file_name[i]]
                     else:
-                        from ._pyfits import pyfits
                         with pyfits.open(self.noise_file_name[i]) as fits:
                             array = fits[0].data
                         im = Image(np.ascontiguousarray(array.astype(np.float64)),
@@ -796,8 +788,6 @@ class RealGalaxyCatalog:
     def getNoise(self, i, rng=None, gsparams=None):
         """Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.
         """
-        from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise
-        from .interpolatedimage import InterpolatedImage
         im, scale, var = self.getNoiseProperties(i)
         if im is None:
             cf = UncorrelatedNoise(var, rng=rng, scale=scale, gsparams=gsparams)
@@ -832,7 +822,6 @@ class RealGalaxyCatalog:
         return d
 
     def __setstate__(self, d):
-        from multiprocessing import Lock
         self.__dict__ = d
         self.gal_lock = Lock()
         self.psf_lock = Lock()
@@ -841,7 +830,6 @@ class RealGalaxyCatalog:
         pass
 
 def _parse_files_dirs(file_name, image_dir, sample):
-    from . import meta_data
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
@@ -1028,12 +1016,6 @@ class ChromaticRealGalaxy(ChromaticSum):
 
     def __init__(self, real_galaxy_catalogs, index=None, id=None, random=False, rng=None,
                  gsparams=None, logger=None, **kwargs):
-        from .random import BaseDeviate, UniformDeviate
-        from .bounds import BoundsI
-        from .interpolatedimage import InterpolatedImage
-        from .correlatednoise import BaseCorrelatedNoise
-        from .config import LoggerWrapper
-
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
@@ -1149,7 +1131,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 them.  [default: None]
 
         """
-        from .random import BaseDeviate
         if not hasattr(PSFs, '__iter__'):
             PSFs = [PSFs]*len(images)
         obj = cls.__new__(cls)
@@ -1307,8 +1288,6 @@ class ChromaticRealGalaxy(ChromaticSum):
 
     @staticmethod
     def _poly_SEDs(bands):
-        from .sed import SED
-        from .table import LookupTable
         # Use polynomial SEDs by default; up to the number of bands provided.
         waves = []
         for bp in bands:
@@ -1342,3 +1321,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, k_interpolant=%r, "
                 "area_norm=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
                                               self._k_interpolant, self._area_norm, self._gsparams))
+
+# Put this at the bottom to avoid circular import error.
+from .config import LoggerWrapper
+

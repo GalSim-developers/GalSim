@@ -198,7 +198,7 @@ def test_fits():
 
     # Not sure if this is possible, but we have a check in case cpu_count fails, so
     # mock this up to make sure we handle it properly (by reverting to nproc = 1.
-    with mock.patch('multiprocessing.cpu_count', side_effect=RuntimeError()):
+    with mock.patch('galsim.config.util.cpu_count', side_effect=RuntimeError()):
         config = galsim.config.CopyConfig(config1)
         with CaptureLog() as cl:
             galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : -1})

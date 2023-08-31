@@ -25,6 +25,10 @@ Roman ST bandpasses.
 import numpy as np
 import os
 
+from .. import meta_data
+from ..errors import galsim_warn
+from .. import Bandpass, LookupTable
+
 def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
@@ -85,10 +89,6 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
 
     @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
-    from .. import meta_data
-    from ..errors import galsim_warn
-    from .. import Bandpass, LookupTable
-
     # Begin by reading in the file containing the info.
     datafile = os.path.join(meta_data.share_dir, "roman", "afta_throughput.txt")
     # One line with the column headings, and the rest as a NumPy array.

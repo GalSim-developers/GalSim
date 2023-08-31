@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'InclinedExponential', 'InclinedSersic', ]
+
 import math
 
 from . import _galsim

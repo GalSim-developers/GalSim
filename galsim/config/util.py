@@ -19,8 +19,15 @@
 import logging
 import copy
 import sys
+import time
+import json
+from io import StringIO
+import cProfile, pstats, io
 from collections import OrderedDict
 from multiprocessing.managers import BaseManager
+from multiprocessing import current_process, get_context, cpu_count
+from queue import Empty
+import traceback
 
 from ..utilities import SimpleGenerator, single_threaded
 from ..random import BaseDeviate
@@ -110,7 +117,6 @@ def ReadJson(config_file):
     Returns:
         [config_dict]
     """
-    import json
 
     with open(config_file) as f:
         # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
@@ -243,7 +249,6 @@ class SafeManager(BaseManager):
     only have one place to change this is there is a different strategy that works better.
     """
     def __init__(self):
-        from multiprocessing import get_context
         super(SafeManager, self).__init__(ctx=get_context('fork'))
 
 
@@ -345,7 +350,6 @@ def UpdateNProc(nproc, ntot, config, logger=None):
     if nproc <= 0:
         # Try to figure out a good number of processes to use
         try:
-            from multiprocessing import cpu_count
             nproc = cpu_count()
             logger.debug("ncpu = %d.",nproc)
         except Exception as e:
@@ -689,8 +693,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     Returns:
         a list of the outputs from job_func for each job
     """
-    import time
-    import traceback
     from .input import worker_init_fns, worker_initargs_fns
 
     # The worker function will be run once in each process.
@@ -700,8 +702,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     # with the kwargs from the list of jobs.
     # Each job also carries with it its index in the original list of all jobs.
     def worker(task_queue, results_queue, config, logger, initializers, initargs):
-        from io import StringIO
-
         proc = current_process().name
 
         for init, args in zip(initializers, initargs):
@@ -717,7 +717,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
         logger = LoggerWrapper(logger)
 
         if 'profile' in config and config['profile']:
-            import cProfile, pstats, io
             pr = cProfile.Profile()
             pr.enable()
         else:
@@ -755,8 +754,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     if nproc > 1:
         logger.warning("Using %d processes for %s processing",nproc,item)
 
-        from multiprocessing import current_process, get_context
-        from queue import Empty
         ctx = get_context('fork')
         Process = ctx.Process
         Queue = ctx.Queue
@@ -1037,7 +1034,6 @@ def RetryIO(func, args, ntries, file_name, logger):
                 logger.warning('File %s: Caught OSError: %s',file_name,str(e))
                 logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
                                itry,ntries,itry)
-                import time
                 time.sleep(itry * _sleep_mult)
                 continue
         else:

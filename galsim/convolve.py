@@ -16,14 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Convolve', 'Convolution', 'Deconvolve', 'Deconvolution',
+            'AutoConvolve', 'AutoConvolution', 'AutoCorrelate', 'AutoCorrelation', ]
+
 import numpy as np
+import copy
 
 from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
-from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property
 from .errors import GalSimError, galsim_warn
+from . import chromatic as chrom
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.
@@ -45,12 +49,11 @@ def Convolve(*args, **kwargs):
     Returns:
         a `Convolution` or `ChromaticConvolution` instance as appropriate.
     """
-    from .chromatic import ChromaticConvolution
     # First check for number of arguments != 0
     if len(args) == 0:
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
-        if isinstance(args[0], (GSObject, ChromaticObject)):
+        if isinstance(args[0], (GSObject, chrom.ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
@@ -59,8 +62,8 @@ def Convolve(*args, **kwargs):
                             + "or a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, ChromaticObject) for a in args]):
-        return ChromaticConvolution(*args, **kwargs)
+    if any([isinstance(a, chrom.ChromaticObject) for a in args]):
+        return chrom.ChromaticConvolution(*args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
 
@@ -255,8 +258,7 @@ class Convolution(GSObject):
             of each object being convolved.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
@@ -409,8 +411,6 @@ class Convolution(GSObject):
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
-
         self.obj_list[0]._shoot(photons, rng)
         # It may be necessary to shuffle when convolving because we do not have a
         # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
@@ -456,9 +456,9 @@ def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
     Returns:
         a `Deconvolution` or `ChromaticDeconvolution` instance as appropriate.
     """
-    from .chromatic import ChromaticDeconvolution
-    if isinstance(obj, ChromaticObject):
-        return ChromaticDeconvolution(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
+    if isinstance(obj, chrom.ChromaticObject):
+        return chrom.ChromaticDeconvolution(obj, gsparams=gsparams,
+                                            propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
         return Deconvolution(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
     else:
@@ -526,8 +526,7 @@ class Deconvolution(GSObject):
             of the wrapped component object.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
@@ -638,10 +637,9 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     Returns:
         a `AutoConvolution` or `ChromaticAutoConvolution` instance as appropriate.
     """
-    from .chromatic import ChromaticAutoConvolution
-    if isinstance(obj, ChromaticObject):
-        return ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams,
-                                        propagate_gsparams=propagate_gsparams)
+    if isinstance(obj, chrom.ChromaticObject):
+        return chrom.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams,
+                                              propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
         return AutoConvolution(obj, real_space=real_space, gsparams=gsparams,
                                propagate_gsparams=propagate_gsparams)
@@ -738,8 +736,7 @@ class AutoConvolution(Convolution):
             of the wrapped component object.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
@@ -773,7 +770,6 @@ class AutoConvolution(Convolution):
         self.orig_obj._prepareDraw()
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
         self.orig_obj._shoot(photons2, rng)
@@ -800,10 +796,9 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     Returns:
         an `AutoCorrelation` or `ChromaticAutoCorrelation` instance as appropriate.
     """
-    from .chromatic import ChromaticAutoCorrelation
-    if isinstance(obj, ChromaticObject):
-        return ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams,
-                                        propagate_gsparams=propagate_gsparams)
+    if isinstance(obj, chrom.ChromaticObject):
+        return chrom.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams,
+                                              propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
         return AutoCorrelation(obj, real_space=real_space, gsparams=gsparams,
                                propagate_gsparams=propagate_gsparams)
@@ -906,8 +901,7 @@ class AutoCorrelation(Convolution):
             of the wrapped component object.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
@@ -941,7 +935,6 @@ class AutoCorrelation(Convolution):
         self._orig_obj._prepareDraw()
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
         self.orig_obj._shoot(photons2, rng)
@@ -950,3 +943,6 @@ class AutoCorrelation(Convolution):
         photons2.scaleXY(-1)
 
         photons.convolve(photons2, rng)
+
+# Put this at the bottom to avoid circular import errors.
+from .photon_array import PhotonArray

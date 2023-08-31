@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Spergel' ]
+
 import numpy as np
 import math
 

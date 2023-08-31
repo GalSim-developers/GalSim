@@ -18,6 +18,7 @@
 
 import logging
 import numpy as np
+import math
 
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import ParseValue, GetCurrentValue, GetAllParams
@@ -334,7 +335,6 @@ class GaussianNoiseBuilder(NoiseBuilder):
             var -= current_var
 
         # Now apply the noise.
-        import math
         sigma = math.sqrt(var)
         im.addNoise(GaussianNoise(rng,sigma=sigma))
 
@@ -493,7 +493,6 @@ class CCDNoiseBuilder(NoiseBuilder):
                     "Whitening already added more noise than the requested CCD noise.")
             if read_noise_var_adu >= current_var:
                 # First try to take away from the read_noise, since this one is actually Gaussian.
-                import math
                 read_noise_var -= current_var * gain**2
                 read_noise = math.sqrt(read_noise_var)
             else:

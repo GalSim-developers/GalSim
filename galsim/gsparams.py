@@ -16,6 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'GSParams' ]
+
+import copy
+
 from . import _galsim
 
 class GSParams:
@@ -190,7 +194,6 @@ class GSParams:
         """Return a `GSParams` that is identical to the current one except for any keyword
         arguments given here, which supersede the current value.
         """
-        import copy
         if len(kwargs) == 0:
             return self
         else:

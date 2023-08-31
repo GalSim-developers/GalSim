@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Position', 'PositionI', 'PositionD', '_PositionI', '_PositionD', ]
+
 from . import _galsim
 
 class Position:
@@ -125,8 +127,7 @@ class Position:
         return self.__class__(-self.x, -self.y)
 
     def __add__(self, other):
-        from .bounds import Bounds
-        if isinstance(other,Bounds):
+        if isinstance(other, Bounds):
             return other + self
         elif not isinstance(other,Position):
             raise TypeError("Can only add a Position to a %s"%self.__class__.__name__)
@@ -251,3 +252,90 @@ def _PositionI(x, y):
     ret.x = int(x)
     ret.y = int(y)
     return ret
+
+def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
+    """Parse the args and kwargs of a function call to be some kind of position.
+
+    We allow four options:
+
+        f(x,y)
+        f(galsim.PositionD(x,y)) or f(galsim.PositionI(x,y))
+        f( (x,y) )  (or any indexable thing)
+        f(name1=x, name2=y)
+
+    If the inputs must be integers, set ``integer=True``.
+    If there are other args/kwargs to parse after these, then their names should be
+    be given as the parameter ``others``, which are passed back in a tuple after the position.
+
+    Parameters:
+        args:       The args of the original function.
+        kwargs:     The kwargs of the original function.
+        name1:      The allowed kwarg for the first coordinate.
+        name2:      The allowed kwarg for the second coordinate.
+        integer:    Whether to return a `PositionI` rather than a `PositionD`. [default: False]
+        others:     If given, other values to also parse and return from the kwargs. [default: []]
+
+    Returns:
+        a `Position` instance, possibly also with other values if ``others`` is given.
+    """
+    def canindex(arg):
+        try: arg[0], arg[1]
+        except (TypeError, IndexError): return False
+        else: return True
+
+    other_vals = []
+    if len(args) == 0:
+        # Then name1,name2 need to be kwargs
+        try:
+            x = kwargs.pop(name1)
+            y = kwargs.pop(name2)
+        except KeyError:
+            raise TypeError(
+                'Expecting kwargs %s, %s.  Got %s'%(name1, name2, kwargs.keys())) from None
+    elif ( ( isinstance(args[0], PositionI) or
+             (not integer and isinstance(args[0], PositionD)) ) and
+           len(args) <= 1+len(others) ):
+        x = args[0].x
+        y = args[0].y
+        for arg in args[1:]:
+            other_vals.append(arg)
+            others.pop(0)
+    elif canindex(args[0]) and len(args) <= 1+len(others):
+        x = args[0][0]
+        y = args[0][1]
+        for arg in args[1:]:
+            other_vals.append(arg)
+            others.pop(0)
+    elif len(args) == 1:
+        if integer:
+            raise TypeError("Cannot parse argument %s as a PositionI"%(args[0]))
+        else:
+            raise TypeError("Cannot parse argument %s as a PositionD"%(args[0]))
+    elif len(args) <= 2 + len(others):
+        x = args[0]
+        y = args[1]
+        for arg in args[2:]:
+            other_vals.append(arg)
+            others.pop(0)
+    else:
+        raise TypeError("Too many arguments supplied")
+    # Read any remaining other kwargs
+    if others:
+        for name in others:
+            val = kwargs.pop(name)
+            other_vals.append(val)
+    if kwargs:
+        raise TypeError("Received unexpected keyword arguments: %s",kwargs)
+
+    if integer:
+        pos = _PositionI(int(x),int(y))
+    else:
+        pos = _PositionD(float(x),float(y))
+    if other_vals:
+        return (pos,) + tuple(other_vals)
+    else:
+        return pos
+
+
+# Put this at the bottom to avoid circular import error
+from .bounds import Bounds

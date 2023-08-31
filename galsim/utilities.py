@@ -20,31 +20,40 @@ from contextlib import contextmanager
 import weakref
 import os
 import numpy as np
+import pstats
+import math
+import heapq
+import multiprocessing
+import cProfile, pstats
+from io import StringIO
+import logging
+import time
+from collections.abc import Hashable
+from collections import Counter
+from numbers import Integral, Real, Complex
+import pickle
+import copy
+from distutils.version import LooseVersion
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
+from .position import Position, PositionD, PositionI, _PositionD, _PositionI
+from .angle import AngleUnit, arcsec
+from .image import Image
+from .table import trapz, LookupTable2D
+from .wcs import JacobianWCS, PixelScale
+from .position import _PositionD
+from .random import BaseDeviate, UniformDeviate
+from . import meta_data
 
-# Python 2/3 compatible definition of basestring without past.builtins
-# (Based on this SO answer: https://stackoverflow.com/a/33699705/1332281)
-basestring = ("".__class__, u"".__class__, b"".__class__)
+# A couple things are documented as galsim.utilties.* functions, but live in other files.
+# Bring them into scope here.
+from .interpolant import convert_interpolant
+from .table import find_out_of_bounds_position
+from .position import parse_pos_args
+from ._utilities import *
 
-
-def isinteger(value):
-    """Check if a value is an integer type (including np.int64, long, etc.)
-
-    Specifically, it checks whether value == int(value).
-
-    Parameter:
-        value:      The value to be checked whether it is an integer
-
-    Returns:
-        True if the value is an integer type, False otherwise.
-    """
-    try:
-        return value == int(value)
-    except TypeError:
-        return False
 
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
@@ -133,90 +142,6 @@ def rotate_xy(x, y, theta):
     y_rot = x * sint + y * cost
     return x_rot, y_rot
 
-def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
-    """Parse the args and kwargs of a function call to be some kind of position.
-
-    We allow four options:
-
-        f(x,y)
-        f(galsim.PositionD(x,y)) or f(galsim.PositionI(x,y))
-        f( (x,y) )  (or any indexable thing)
-        f(name1=x, name2=y)
-
-    If the inputs must be integers, set ``integer=True``.
-    If there are other args/kwargs to parse after these, then their names should be
-    be given as the parameter ``others``, which are passed back in a tuple after the position.
-
-    Parameters:
-        args:       The args of the original function.
-        kwargs:     The kwargs of the original function.
-        name1:      The allowed kwarg for the first coordinate.
-        name2:      The allowed kwarg for the second coordinate.
-        integer:    Whether to return a `PositionI` rather than a `PositionD`. [default: False]
-        others:     If given, other values to also parse and return from the kwargs. [default: []]
-
-    Returns:
-        a `Position` instance, possibly also with other values if ``others`` is given.
-    """
-    from .position import PositionD, PositionI, _PositionD, _PositionI
-    def canindex(arg):
-        try: arg[0], arg[1]
-        except (TypeError, IndexError): return False
-        else: return True
-
-    other_vals = []
-    if len(args) == 0:
-        # Then name1,name2 need to be kwargs
-        try:
-            x = kwargs.pop(name1)
-            y = kwargs.pop(name2)
-        except KeyError:
-            raise TypeError(
-                'Expecting kwargs %s, %s.  Got %s'%(name1, name2, kwargs.keys())) from None
-    elif ( ( isinstance(args[0], PositionI) or
-             (not integer and isinstance(args[0], PositionD)) ) and
-           len(args) <= 1+len(others) ):
-        x = args[0].x
-        y = args[0].y
-        for arg in args[1:]:
-            other_vals.append(arg)
-            others.pop(0)
-    elif canindex(args[0]) and len(args) <= 1+len(others):
-        x = args[0][0]
-        y = args[0][1]
-        for arg in args[1:]:
-            other_vals.append(arg)
-            others.pop(0)
-    elif len(args) == 1:
-        if integer:
-            raise TypeError("Cannot parse argument %s as a PositionI"%(args[0]))
-        else:
-            raise TypeError("Cannot parse argument %s as a PositionD"%(args[0]))
-    elif len(args) <= 2 + len(others):
-        x = args[0]
-        y = args[1]
-        for arg in args[2:]:
-            other_vals.append(arg)
-            others.pop(0)
-    else:
-        raise TypeError("Too many arguments supplied")
-    # Read any remaining other kwargs
-    if others:
-        for name in others:
-            val = kwargs.pop(name)
-            other_vals.append(val)
-    if kwargs:
-        raise TypeError("Received unexpected keyword arguments: %s",kwargs)
-
-    if integer:
-        pos = _PositionI(int(x),int(y))
-    else:
-        pos = _PositionD(float(x),float(y))
-    if other_vals:
-        return (pos,) + tuple(other_vals)
-    else:
-        return pos
-
 
 class SimpleGenerator:
     """A simple class that is constructed with an arbitrary object.
@@ -246,22 +171,6 @@ def rand_arr(shape, deviate):
     deviate.generate(tmp.ravel())
     return tmp
 
-def convert_interpolant(interpolant):
-    """Convert a given interpolant to an `Interpolant` if it is given as a string.
-
-    Parameter:
-        interpolant:    Either an `Interpolant` or a string to convert.
-
-    Returns:
-        an `Interpolant`
-    """
-    from .interpolant import Interpolant
-    if isinstance(interpolant, Interpolant):
-        return interpolant
-    else:
-        # Will raise an appropriate exception if this is invalid.
-        return Interpolant.from_name(interpolant)
-
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
     """Convert ``pos`` from the valid ways to input positions to two NumPy arrays
@@ -269,8 +178,6 @@ def _convertPositions(pos, units, func):
     This is used by the functions getShear(), getConvergence(), getMagnification(), and
     getLensing() for both PowerSpectrum and NFWHalo.
     """
-    from .position import Position
-    from .angle import AngleUnit, arcsec
     # Check for PositionD or PositionI:
     if isinstance(pos, Position):
         pos = [ pos.x, pos.y ]
@@ -320,7 +227,6 @@ def _lin_approx_err(x, f, i):
     r"""Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation.
     """
-    from .table import trapz
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
     xi, fi = x[i], f[i]
@@ -397,9 +303,6 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     Returns:
         a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
-    from heapq import heappush, heappop
-    from .table import trapz
-
     split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
 
     x = np.asarray(x, dtype=float)
@@ -468,10 +371,10 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
              0,          # first index of interval
              len(x)-1)]  # last index of interval
     while (-sum(h[0] for h in heap) > thresh):
-        _, left, right = heappop(heap)
+        _, left, right = heapq.heappop(heap)
         i, (errleft, errright) = split_fn(x[left:right+1], f[left:right+1])
-        heappush(heap, (-errleft, left, i+left))
-        heappush(heap, (-errright, i+left, right))
+        heapq.heappush(heap, (-errleft, left, i+left))
+        heapq.heappush(heap, (-errright, i+left, right))
     splitpoints = sorted([0]+[h[2] for h in heap])
     return x[splitpoints], f[splitpoints]
 
@@ -506,7 +409,6 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     Returns:
         a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
-    from .table import trapz
     x = np.asarray(x, dtype=float)
     f = np.asarray(f, dtype=float)
 
@@ -798,9 +700,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         a list of images (`Image`) and offsets (`PositionD`) to reconstruct the input image using
         `interleaveImages`.
     """
-    from .image import Image
-    from .position import _PositionD
-    from .wcs import JacobianWCS, PixelScale
     if isinstance(N,int):
         n1,n2 = N,N
     else:
@@ -931,9 +830,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     Returns:
         the interleaved `Image`
     """
-    from .position import PositionD
-    from .image import Image
-    from .wcs import PixelScale, JacobianWCS
     if isinstance(N,int):
         n1,n2 = N,N
     else:
@@ -1038,111 +934,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
                         "origin of the first Image instance in im_list to the interleaved image.")
 
     return img
-
-class LRU_Cache:
-    """Simplified Least Recently Used Cache.
-
-    Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,
-    but added a method for dynamic resizing.  The least recently used cached item is
-    overwritten on a cache miss.
-
-    Parameters:
-        user_function:  A python function to cache.
-        maxsize:        Maximum number of inputs to cache.  [Default: 1024]
-
-    Example::
-
-        >>> def slow_function(*args) # A slow-to-evaluate python function
-        >>>    ...
-        >>>
-        >>> v1 = slow_function(*k1)  # Calling function is slow
-        >>> v1 = slow_function(*k1)  # Calling again with same args is still slow
-        >>> cache = galsim.utilities.LRU_Cache(slow_function)
-        >>> v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time
-        >>> v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.
-    """
-    def __init__(self, user_function, maxsize=1024):
-        # Link layout:     [PREV, NEXT, KEY, RESULT]
-        self.root = [None, None, None, None]
-        self.user_function = user_function
-        self.cache = {}
-        self.maxsize = maxsize
-        self.clear()
-
-    def clear(self):
-        self.root = [None, None, None, None]
-        root = self.root
-        cache = self.cache
-        cache.clear()
-        maxsize = self.maxsize
-        last = root
-        for i in range(maxsize):
-            key = object()
-            cache[key] = last[1] = last = [last, root, key, None]
-        root[0] = last
-
-    def __call__(self, *key):
-        cache = self.cache
-        root = self.root
-        link = cache.get(key)
-        if link is not None:
-            # Cache hit: move link to last position
-            link_prev, link_next, _, result = link
-            link_prev[1] = link_next
-            link_next[0] = link_prev
-            last = root[0]
-            last[1] = root[0] = link
-            link[0] = last
-            link[1] = root
-            return result
-        # Cache miss: evaluate and insert new key/value at root, then increment root
-        #             so that just-evaluated value is in last position.
-        result = self.user_function(*key)
-        root = self.root  # re-establish root in case user_function modified it due to recursion
-        root[2] = key
-        root[3] = result
-        oldroot = root
-        root = self.root = root[1]
-        root[2], oldkey = None, root[2]
-        root[3], oldvalue = None, root[3]
-        del cache[oldkey]
-        cache[key] = oldroot
-        return result
-
-    def resize(self, maxsize):
-        """Resize the cache.
-
-        Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain
-        in the cache.  Decreasing the size of the cache will necessarily remove items from the
-        cache if the cache is already filled.  Items are removed in least recently used order.
-
-        Parameters:
-            maxsize:    The new maximum number of inputs to cache.
-        """
-        oldsize = self.maxsize
-        if maxsize == oldsize:
-            return
-        else:
-            root = self.root
-            cache = self.cache
-            if maxsize <= 0:
-                raise GalSimValueError("Invalid maxsize", maxsize)
-            if maxsize < oldsize:
-                for i in range(oldsize - maxsize):
-                    # Delete root.next
-                    current_next_link = root[1]
-                    new_next_link = root[1] = root[1][1]
-                    new_next_link[0] = root
-                    del cache[current_next_link[2]]
-            else: #  maxsize > oldsize:
-                for i in range(maxsize - oldsize):
-                    # Insert between root and root.next
-                    key = object()
-                    cache[key] = link = [root, root[1], key, None]
-                    root[1][0] = link
-                    root[1] = link
-        self.maxsize = maxsize
-
 
 @contextmanager
 def printoptions(*args, **kwargs):
@@ -1281,7 +1072,6 @@ def structure_function(image):
         A python callable mapping a separation length r to the estimate of the structure
         function D(r).
     """
-    from .table import LookupTable2D
     array = image.array
     ny, nx = array.shape
     scale = image.scale
@@ -1427,34 +1217,6 @@ def functionize(f):
             return fff
     return ff
 
-def math_eval(str, other_modules=()):
-    """Evaluate a string that may include numpy, np, or math commands.
-
-    Parameters:
-        str:            The string to evaluate
-        other_modules.  Other modules in addition to numpy, np, math to import as well.
-                        Should be given as a list of strings.  [default: None]
-
-    Returns:
-        Whatever the string evaluates to.
-    """
-    gdict = globals().copy()
-    exec('import galsim', gdict)
-    exec('import numpy', gdict)
-    exec('import numpy as np', gdict)
-
-    exec('import math', gdict)
-    exec('import coord', gdict)
-    for m in other_modules:  # pragma: no cover  (We don't use this.)
-        exec('import ' + m, gdict)
-
-    # A few other things that show up in reprs, so useful to import here.
-    exec('from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray',
-         gdict)
-    exec('from astropy.units import Unit', gdict)
-
-    return eval(str, gdict)
-
 def binomial(a, b, n):
     """Return xy coefficients of (ax + by)^n ordered by descending powers of a.
 
@@ -1498,7 +1260,6 @@ def unweighted_moments(image, origin=None):
     Returns:
         Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
     """
-    from .position import _PositionD
     if origin is None:
         origin = _PositionD(0,0)
     a = image.array.astype(float)
@@ -1529,7 +1290,6 @@ def unweighted_shape(arg):
     Returns:
         Dict with entries for [rsqr, e1, e2]
     """
-    from .image import Image
     if isinstance(arg, Image):
         arg = unweighted_moments(arg)
     rsqr = arg['Mxx'] + arg['Myy']
@@ -1553,7 +1313,6 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     Returns:
         a NumPy array of length n containing the integer-valued indices that were selected.
     """
-    from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
     if not isinstance(rng, BaseDeviate):
         raise TypeError("The rng provided to rand_with_replacement() must be a BaseDeviate")
@@ -1632,9 +1391,6 @@ def check_share_file(filename, subdir):
         True, correct_filename      if the file was found
         False, ''                   if not
     """
-    from . import meta_data
-    import os
-
     if os.path.isfile(filename):
         return True, filename
 
@@ -1644,98 +1400,6 @@ def check_share_file(filename, subdir):
     else:
         return False, ''
 
-
-class lazy_property:
-    """
-    This decorator will act similarly to @property, but will be efficient for multiple access
-    to values that require some significant calculation.
-
-    It works by replacing the attribute with the computed value, so after the first access,
-    the property (an attribute of the class) is superseded by the new attribute of the instance.
-
-    Note that is should only be used for non-mutable data, since the calculation will not be
-    repeated if anything about the instance changes.
-
-    Usage::
-
-        @lazy_property
-        def slow_function_to_be_used_as_a_property(self):
-            x =  ...  # Some slow calculation.
-            return x
-
-    Base on an answer from http://stackoverflow.com/a/6849299
-    """
-    def __init__(self, fget):
-        self.fget = fget
-        self.func_name = fget.__name__
-
-    def __get__(self, obj, cls):
-        if obj is None:
-            return self
-        value = self.fget(obj)
-        setattr(obj, self.func_name, value)
-        return value
-
-class doc_inherit:
-    '''
-    This decorator will grab a doc string from a base class version of a method.
-    Useful if the subclass doesn't change anything about the method API, but just has
-    a specialized implementation.  This lets the documentation live only in one place.
-
-    Usage::
-
-        class Base:
-            def some_method(self):
-                """A nice description of the functionality
-                """
-                pass
-
-        class Sub(Base):
-
-            @doc_inherit
-            def some_method(self):
-                # Don't bother with any doc string here.
-                pass
-
-    Based on the Docstring Inheritance Decorator at:
-
-    https://github.com/ActiveState/code/wiki/Python_index_1
-
-    Although I (MJ) modified it slightly, since the original recipe there had a bug that made it
-    not work properly with 2 levels of sub-classing (e.g. Pixel <- Box <- GSObject).
-    '''
-    def __init__(self, mthd):
-        self.mthd = mthd
-        self.name = mthd.__name__
-
-    def __get__(self, obj, cls):
-        for parent in cls.__bases__: # pragma: no branch
-            parfunc = getattr(parent, self.name, None)
-            if parfunc and getattr(parfunc, '__doc__', None): # pragma: no branch
-                break
-
-        if obj:
-            return self.get_with_inst(obj, cls, parfunc)
-        else:
-            return self.get_no_inst(cls, parfunc)
-
-    def get_with_inst(self, obj, cls, parfunc):
-        @functools.wraps(self.mthd, assigned=('__name__','__module__'))
-        def f(*args, **kwargs):
-            return self.mthd(obj, *args, **kwargs)
-        return self.use_parent_doc(f, parfunc)
-
-    def get_no_inst(self, cls, parfunc):
-        @functools.wraps(self.mthd, assigned=('__name__','__module__'))
-        def f(*args, **kwargs): # pragma: no cover (without inst, this is not normally called.)
-            return self.mthd(*args, **kwargs)
-        return self.use_parent_doc(f, parfunc)
-
-    def use_parent_doc(self, func, source):
-        if source is None: # pragma: no cover
-            raise NameError("Can't find '%s' in parents"%self.name)
-        func.__doc__ = source.__doc__
-        return func
 
 class OrderedWeakRef(weakref.ref):
     """Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.
@@ -1762,97 +1426,10 @@ def nCr(n, r):
         faster.  This function uses the direct method for both -- we don't bother to check the
         version of Python to potentially select a different algorithm in the two cases.
     """
-    from math import factorial
     if 0 <= r <= n:
-        return factorial(n) // (factorial(r) * factorial(n-r))
+        return math.factorial(n) // (math.factorial(r) * math.factorial(n-r))
     else:
         return 0
-
-class WeakMethod:
-    """Wrap a method in a weakref.
-
-    This is useful if you want to specialize a function if certain conditions hold.
-    You can check those conditions and return one of several possible implementations as
-    a `lazy_property`.
-
-    Using just a normal ``weakref`` doesn't work, but this class will work.
-
-    From http://code.activestate.com/recipes/81253-weakmethod/
-    """
-    def __init__(self, f):
-        self.f = f.__func__
-        self.c = weakref.ref(f.__self__)
-    def __call__(self, *args):
-        try:
-            # If the reference is dead, self.c() will be None, so this will raise an
-            # AttributeError: 'NoneType' object has no attribute ...
-            # Hopefully the method itself won't raise an AttributeError for anything else.
-            return self.f(self.c(), *args)
-        except AttributeError:  # pragma: no cover
-            raise GalSimError('Method called on dead object')
-
-def ensure_dir(target):
-    """
-    Make sure the directory for the target location exists, watching for a race condition
-
-    In particular check if the OS reported that the directory already exists when running
-    makedirs, which can happen if another process creates it before this one can
-
-    Parameter:
-        target:     The file name for which to ensure that all necessary directories exist.
-    """
-    _ERR_FILE_EXISTS=17
-    dir = os.path.dirname(target)
-    if dir == '': return
-
-    exists = os.path.exists(dir)
-    if not exists:
-        try:
-            os.makedirs(dir)
-        except OSError as err:  # pragma: no cover
-            # check if the file now exists, which can happen if some other
-            # process created the directory between the os.path.exists call
-            # above and the time of the makedirs attempt.  This is OK
-            if err.errno != _ERR_FILE_EXISTS:
-                raise err
-
-    elif exists and not os.path.isdir(dir):
-        raise OSError("tried to make directory '%s' "
-                      "but a non-directory file of that "
-                      "name already exists" % dir)
-
-
-def find_out_of_bounds_position(x, y, bounds, grid=False):
-    """Given arrays of x and y values that are known to contain at least one
-    position that is out-of-bounds of the given bounds instance, return one
-    such PositionD.
-
-    Parameters:
-        x:          Array of x values
-        y:          Array of y values
-        bounds:     `Bounds` instance
-        grid:       Bool indicating whether to check the outer product of x and y
-                    (grid=True), or each sequential pair of x and y (grid=False).
-                    If the latter, then x and y should have the same shape.
-
-    Returns:
-        a `PositionD` from x and y that is out-of-bounds of bounds.
-    """
-    from .position import _PositionD
-    if grid:
-        # It's enough to check corners for grid input
-        for x_ in (np.min(x), np.max(x)):
-            for y_ in (np.min(y), np.max(y)):
-                if (x_ < bounds.xmin or x_ > bounds.xmax or
-                    y_ < bounds.ymin or y_ > bounds.ymax):
-                    return _PositionD(x_, y_)
-    else:
-        # Faster to check all points than to iterate through them one-by-one?
-        w = np.where((x < bounds.xmin) | (x > bounds.xmax) |
-                     (y < bounds.ymin) | (y > bounds.ymax))
-        if len(w[0]) > 0:
-            return _PositionD(x[w[0][0]], y[w[0][0]])
-    raise GalSimError("No out-of-bounds position")
 
 def set_omp_threads(num_threads, logger=None):
     """Set the number of OpenMP threads to use in the C++ layer.
@@ -1871,7 +1448,6 @@ def set_omp_threads(num_threads, logger=None):
 
     # If num_threads is auto, get it from cpu_count
     if num_threads is None or num_threads <= 0:
-        import multiprocessing
         num_threads = multiprocessing.cpu_count()
         if logger:
             logger.debug('multiprocessing.cpu_count() = %d',num_threads)
@@ -1993,10 +1569,6 @@ def check_pickle(obj, func = lambda x : x, irreprable=False, random=None):
         random:         Whether the obj has some intrinsic randomness. [default: False, unless
                         it has an rng attribute or it is a galsim.BaseDeviate]
     """
-    from numbers import Integral, Real, Complex
-    import pickle
-    import copy
-    from .random import BaseDeviate
     # In case the repr uses these:
     import galsim
     import coord
@@ -2004,8 +1576,6 @@ def check_pickle(obj, func = lambda x : x, irreprable=False, random=None):
     from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
     import astropy.io.fits
-    from distutils.version import LooseVersion
-    from collections.abc import Hashable
 
     print('Try pickling ',str(obj))
 
@@ -2080,8 +1650,6 @@ def check_all_diff(objs, check_hash=True):
         objs:           A list of objects to test.
         check_hash:     Whether to also check the hash values.
     """
-    from collections.abc import Hashable
-    from collections import Counter
     # Check that all objects are unique.
     # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
     # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
@@ -2119,11 +1687,8 @@ def timer(f):
 
     In GalSim we decorate all of our tests with this to try to watch for long-running tests.
     """
-    import functools
-
     @functools.wraps(f)
     def f2(*args, **kwargs):
-        import time
         t0 = time.time()
         result = f(*args, **kwargs)
         t1 = time.time()
@@ -2147,9 +1712,6 @@ class CaptureLog:
 
     """
     def __init__(self, level=3):
-        from io import StringIO
-        import logging
-
         logging_levels = { 0: logging.CRITICAL,
                            1: logging.WARNING,
                            2: logging.INFO,
@@ -2193,13 +1755,11 @@ class Profile:
         self.filename = filename
 
     def __enter__(self):
-        import cProfile, pstats
         self.pr = cProfile.Profile()
         self.pr.enable()
         return self
 
     def __exit__(self, type, value, traceback):
-        import pstats
         self.pr.disable()
         if self.filename:  # pragma: no cover
             self.pr.dump_stats(self.filename)

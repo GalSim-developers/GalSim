@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'RandomKnots' ]
+
 import numpy as np
 
 from . import _galsim
@@ -25,6 +27,8 @@ from .position import PositionD
 from .utilities import lazy_property, doc_inherit
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .gaussian import Gaussian
+from .random import BaseDeviate
+
 
 class RandomKnots(GSObject):
     """
@@ -94,7 +98,6 @@ class RandomKnots(GSObject):
 
     def __init__(self, npoints, half_light_radius=None, flux=None, profile=None, rng=None,
                  gsparams=None):
-        from .random import BaseDeviate
 
         self._npoints=npoints
         self._half_light_radius = half_light_radius
@@ -187,8 +190,6 @@ class RandomKnots(GSObject):
         """
         type and range checking on the inputs
         """
-        from .random import BaseDeviate
-
         try:
             self._npoints = int(self._npoints)
         except ValueError as err:

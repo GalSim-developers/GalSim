@@ -16,13 +16,16 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Image', '_Image',
+            'ImageS', 'ImageI', 'ImageF', 'ImageD',
+            'ImageCF', 'ImageCD', 'ImageUS', 'ImageUI', ]
+
 import numpy as np
 
 from . import _galsim
-from .position import PositionI, _PositionD
+from .position import PositionI, _PositionD, parse_pos_args
 from .bounds import BoundsI, BoundsD, _BoundsI
-from .wcs import BaseWCS, PixelScale, JacobianWCS
-from .utilities import lazy_property, parse_pos_args
+from ._utilities import lazy_property
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
 from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
 
@@ -352,7 +355,7 @@ class Image:
                     "Cannot provide both scale and wcs to Image constructor", wcs=wcs, scale=scale)
             self.wcs = PixelScale(float(scale))
         else:
-            if wcs is not None and not isinstance(wcs,BaseWCS):
+            if wcs is not None and not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
 
@@ -813,7 +816,6 @@ class Image:
         Returns:
             a new `Image`
         """
-        from .wcs import JacobianWCS
         ncol = self.xmax - self.xmin + 1
         nrow = self.ymax - self.ymin + 1
         nbins_x = (ncol-1) // nx + 1
@@ -1065,7 +1067,7 @@ class Image:
                     "Cannot provide both scale and wcs", scale=scale, wcs=wcs)
             wcs = PixelScale(scale)
         elif wcs is not None:
-            if not isinstance(wcs,BaseWCS):
+            if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
             wcs = self.wcs
@@ -2033,3 +2035,6 @@ def ImageCD(*args, **kwargs):
     """
     kwargs['dtype'] = np.complex128
     return Image(*args, **kwargs)
+
+# Put this at the end to avoid circular imports
+from .wcs import BaseWCS, PixelScale, JacobianWCS

@@ -17,7 +17,7 @@
 #
 
 import galsim
-
+from ..config.gsobject import RegisterObjectType
 
 def RandomWalk(*args, **kwargs):
     from . import depr
@@ -32,5 +32,4 @@ def BuildRandomWalk(config, base, ignore, gsparams, logger):
     return galsim.config.gsobject._BuildSimple(galsim.RandomKnots,
                                                config, base, ignore, gsparams, logger)
 
-from ..config.gsobject import RegisterObjectType
 RegisterObjectType('RandomWalk', BuildRandomWalk)

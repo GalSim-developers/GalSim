@@ -18,7 +18,7 @@
 import logging
 import inspect
 
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
+from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params, CleanConfig
 from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from .sed import BuildSED
@@ -33,6 +33,8 @@ from ..gsobject import GSObject
 from ..chromatic import ChromaticObject, ChromaticOpticalPSF
 from ..gsparams import GSParams
 from ..utilities import basestring
+from ..chromatic import ChromaticAtmosphere
+from ..celestial import CelestialCoord
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
@@ -451,10 +453,6 @@ def _BuildChromaticOpticalPSF(config, base, ignore, gsparams, logger):
 def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
     """Build a ChromaticAtmosphere.
     """
-    from ..chromatic import ChromaticAtmosphere
-    from ..celestial import CelestialCoord
-    from .util import CleanConfig
-
     req = {'base_wavelength' : float}
     opt = {
            'alpha' : float,

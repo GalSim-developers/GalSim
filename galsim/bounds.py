@@ -16,10 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Bounds', 'BoundsI', 'BoundsD', '_BoundsI', '_BoundsD', ]
+
 import math
 
 from . import _galsim
-from .position import Position, PositionI, PositionD, _PositionD, _PositionI
+from .position import *
 from .errors import GalSimUndefinedBoundsError
 
 class Bounds:
@@ -330,7 +332,7 @@ class Bounds:
                 return self.__class__(other)
         else:
             raise TypeError("other must be either a %s or a %s"%(
-                            self.__class__.__name__,self._pos_class.__name__))
+                            self.__class__.__name__, self._pos_class.__name__))
 
     def __repr__(self):
         if self.isDefined():
@@ -449,8 +451,8 @@ class BoundsI(Bounds):
         # e.g. (1,10,1,10) -> (6,6)
         #      (-10,-1,-10,-1) -> (-5,-5)
         # Just up and to the right of the true center in both cases.
-        return _PositionI( self.xmin + (self.xmax - self.xmin + 1)//2,
-                           self.ymin + (self.ymax - self.ymin + 1)//2 )
+        return _PositionI(self.xmin + (self.xmax - self.xmin + 1)//2,
+                          self.ymin + (self.ymax - self.ymin + 1)//2)
 
 
 def _BoundsD(xmin, xmax, ymin, ymax):

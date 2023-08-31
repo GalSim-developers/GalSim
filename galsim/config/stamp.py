@@ -19,11 +19,11 @@
 import logging
 import numpy as np
 import math
+import traceback
 
 from .util import LoggerWrapper, GetRNG, UpdateNProc, MultiProcess, SetupConfigRNG, RemoveCurrent
 from .input import SetupInput
 from .gsobject import UpdateGSParams, SkipThisObject
-from .extra import ProcessExtraOutputsForStamp
 from .gsobject import BuildGSObject
 from .value import ParseValue, CheckAllParams
 from .noise import CalculateNoiseVariance, AddSky, AddNoise
@@ -257,6 +257,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     Returns:
         the tuple (image, current_var)
     """
+    from .extra import ProcessExtraOutputsForStamp
+
     logger = LoggerWrapper(logger)
     SetupConfigObjNum(config, obj_num, logger)
 
@@ -400,7 +402,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         except Exception as e:
             if skip_failures:
                 logger.info('Object %d: Caught exception %s',obj_num,str(e))
-                import traceback
                 tr = traceback.format_exc()
                 logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 logger.info('Skipping this object')
@@ -419,7 +420,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             else:
                 logger.info('Object %d: Caught exception %s',obj_num,str(e))
                 logger.info('This is try %d/%d, so trying again.',itry,ntries)
-                import traceback
                 tr = traceback.format_exc()
                 logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current"s from the config dict.  Otherwise,

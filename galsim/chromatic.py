@@ -16,20 +16,37 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'ChromaticObject', 'ChromaticAtmosphere', 'ChromaticSum',
+            'ChromaticConvolution', 'ChromaticDeconvolution',
+            'ChromaticAutoConvolution', 'ChromaticAutoCorrelation',
+            'ChromaticTransformation', 'ChromaticFourierSqrtProfile',
+            'ChromaticOpticalPSF', 'ChromaticAiry', 'InterpolatedChromaticObject', ]
+
+import math
 import numpy as np
+from astropy import units
+import copy
 
 from .gsobject import GSObject
 from .sed import SED
 from .bandpass import Bandpass
 from .position import Position, _PositionD
-from .utilities import lazy_property, doc_inherit
+from ._utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
 from .phase_psf import OpticalPSF, Aperture
 from .table import _LookupTable
-from . import utilities
-from . import integ
+from .sum import Add
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, galsim_warn
+from .photon_array import WavelengthSampler, PhotonArray
+from .random import BaseDeviate, UniformDeviate, BinomialDeviate, PoissonDeviate
+from .shear import Shear, _Shear
+from .interpolatedimage import InterpolatedImage
+from .angle import Angle, _Angle, AngleUnit, arcsec, radians
+from .airy import Airy
+from . import utilities
+from . import integ
+from . import dcr
 
 class ChromaticObject:
     """Base class for defining wavelength-dependent objects.
@@ -177,8 +194,7 @@ class ChromaticObject:
         those component objects will also have their gsparams updated to the new value.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._obj = self._obj.withGSParams(gsparams, **kwargs)
         return ret
 
@@ -427,7 +443,6 @@ class ChromaticObject:
         Returns:
             the drawn `Image`.
         """
-        from .photon_array import WavelengthSampler
 
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
@@ -582,8 +597,6 @@ class ChromaticObject:
             rng:            A random number generator to use to effect the convolution.
                             [default: None]
         """
-        from .photon_array import PhotonArray
-        from .random import BaseDeviate
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
@@ -644,8 +657,7 @@ class ChromaticObject:
         Returns:
             a new object with scaled flux.
         """
-        from .transform import Transform
-        return Transform(self, flux_ratio=flux_ratio)
+        return transform.Transform(self, flux_ratio=flux_ratio)
 
     def withFlux(self, target_flux, bandpass):
         """Return a new `ChromaticObject` with flux through the `Bandpass` ``bandpass`` set to
@@ -692,7 +704,6 @@ class ChromaticObject:
         Returns:
             the new normalized `SED`.
         """
-        from astropy import units
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
         if self.dimensionless:
@@ -836,7 +847,6 @@ class ChromaticObject:
         Returns:
             the expanded object
         """
-        from .transform import Transform
         if hasattr(scale, '__call__'):
             def buildScaleJac(w):
                 s = scale(w)
@@ -844,7 +854,7 @@ class ChromaticObject:
             jac = buildScaleJac
         else:
             jac = None if scale == 1 else np.diag([scale, scale])
-        return Transform(self, jac=jac)
+        return transform.Transform(self, jac=jac)
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given (possibly wavelength-dependent)
@@ -887,7 +897,6 @@ class ChromaticObject:
         Returns:
             the magnified object.
         """
-        import math
         if hasattr(mu, '__call__'):
             return self.expand(lambda w: np.sqrt(mu(w)))
         else:
@@ -918,8 +927,6 @@ class ChromaticObject:
         Returns:
             the sheared object.
         """
-        from .transform import Transform
-        from .shear import Shear
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Gave both unnamed and named arguments!")
@@ -944,7 +951,7 @@ class ChromaticObject:
                              else np.array([shear(ww).getMatrix() for ww in w])).T
         else:
             jac = shear.getMatrix()
-        return Transform(self, jac=jac)
+        return transform.Transform(self, jac=jac)
 
     def _shear(self, shear):
         """Equivalent to `ChromaticObject.shear`, but only valid for a galsim.Shear object,
@@ -956,8 +963,7 @@ class ChromaticObject:
         Returns:
             the sheared object.
         """
-        from .transform import Transform
-        return Transform(self, shear.getMatrix())
+        return transform.Transform(self, shear.getMatrix())
 
     def lens(self, g1, g2, mu):
         """Apply a lensing shear and magnification to this object.
@@ -984,7 +990,6 @@ class ChromaticObject:
         Returns:
             the lensed object.
         """
-        from .shear import Shear
         if any(hasattr(g, '__call__') for g in (g1,g2)):
             _g1 = g1
             _g2 = g2
@@ -1010,11 +1015,8 @@ class ChromaticObject:
         Returns:
             the lensed object.
         """
-        from .shear import _Shear
-        from .transform import Transform
-        import math
         shear = _Shear(g1 + 1j*g2)
-        return Transform(self, shear.getMatrix() * math.sqrt(mu))
+        return transform.Transform(self, shear.getMatrix() * math.sqrt(mu))
 
     def rotate(self, theta):
         """Rotate this object by an `Angle` ``theta``.
@@ -1028,7 +1030,6 @@ class ChromaticObject:
         Returns:
             the rotated object.
         """
-        from .transform import Transform
         if hasattr(theta, '__call__'):
             def buildRMatrix(w):
                 sth = np.sin(theta(w))
@@ -1041,7 +1042,7 @@ class ChromaticObject:
             sth, cth = theta.sincos()
             jac = np.array([[cth, -sth],
                             [sth,  cth]], dtype=float)
-        return Transform(self, jac=jac)
+        return transform.Transform(self, jac=jac)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
@@ -1062,7 +1063,6 @@ class ChromaticObject:
         Returns:
             the transformed object.
         """
-        from .transform import Transform
         if any(hasattr(dd, '__call__') for dd in (dudx, dudy, dvdx, dvdy)):
             _dudx = dudx
             _dudy = dudy
@@ -1077,7 +1077,7 @@ class ChromaticObject:
         else:
             jac = np.array([[dudx, dudy],
                             [dvdx, dvdy]], dtype=float)
-        return Transform(self, jac=jac)
+        return transform.Transform(self, jac=jac)
 
     def shift(self, *args, **kwargs):
         """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
@@ -1096,7 +1096,6 @@ class ChromaticObject:
         Returns:
             the shifted object.
         """
-        from .transform import Transform
         # This follows along the galsim.utilities.pos_args function, but has some
         # extra bits to account for the possibility of dx,dy being functions.
         # First unpack args/kwargs
@@ -1141,7 +1140,7 @@ class ChromaticObject:
         if offset is None:
             offset = utilities.functionize(lambda x,y:(x,y))(dx, dy)
 
-        return Transform(self, offset=offset)
+        return transform.Transform(self, offset=offset)
 
     def _shift(self, dx, dy):
         """Equivalent to `ChromaticObject.shift`, but only valid for a scalar shift (dx, dy)
@@ -1154,8 +1153,7 @@ class ChromaticObject:
         Returns:
             the shifted object.
         """
-        from .transform import Transform
-        return Transform(self, offset=_PositionD(dx,dy))
+        return transform.Transform(self, offset=_PositionD(dx,dy))
 
 ChromaticObject._multiplier_cache = utilities.LRU_Cache(
     ChromaticObject._get_multiplier, maxsize=10)
@@ -1251,8 +1249,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret.deinterpolated = self.deinterpolated.withGSParams(gsparams, **kwargs)
         return ret
 
@@ -1331,14 +1328,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength, as a `GSObject`.
         """
-        from .interpolatedimage import InterpolatedImage
         im, stepk, maxk = self._imageAtWavelength(wave)
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
-        from .random import UniformDeviate
-
         w = photons.wavelength
         if np.any((w < self.waves[0]) | (w > self.waves[-1])):
             bad_waves = [w for w in photons.wavelength if w < self.waves[0] or w > self.waves[-1]]
@@ -1382,7 +1375,6 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
-        from .interpolatedimage import InterpolatedImage
         if integrator == 'quadratic':
             rule = integ.quadRule
         elif integrator == 'trapezoidal':
@@ -1537,9 +1529,6 @@ class ChromaticAtmosphere(ChromaticObject):
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     def __init__(self, base_obj, base_wavelength, scale_unit=None, **kwargs):
-        from .angle import Angle, _Angle, AngleUnit, arcsec
-        from . import dcr
-
         self.separable = False
         self.interpolated = False
         self.deinterpolated = self
@@ -1576,8 +1565,7 @@ class ChromaticAtmosphere(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret.base_obj = self.base_obj.withGSParams(gsparams, **kwargs)
         return ret
 
@@ -1618,8 +1606,6 @@ class ChromaticAtmosphere(ChromaticObject):
         Building this is quite fast, so we do it on the fly in `evaluateAtWavelength` and
         `ChromaticObject.drawImage`.
         """
-        from . import dcr
-        from .angle import radians
         def shift_fn(w):
             shift_magnitude = dcr.get_refraction(w, self.zenith_angle, **self.kw)
             shift_magnitude -= self.base_refraction
@@ -1638,9 +1624,6 @@ class ChromaticAtmosphere(ChromaticObject):
                                        flux_ratio=flux_ratio)
 
     def _shoot(self, photons, rng):
-        from . import dcr
-        from .angle import radians
-
         # Start with the base PSF
         self.base_obj._shoot(photons, rng)
 
@@ -1797,8 +1780,7 @@ class ChromaticTransformation(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._original = self._original.withGSParams(ret._gsparams)
@@ -1871,12 +1853,11 @@ class ChromaticTransformation(ChromaticObject):
             self._gsparams, self._propagate_gsparams)
 
     def __str__(self):
-        from .transform import Transformation
         s = str(self.original)
         if hasattr(self._jac, '__call__'):
             s += '.transform(%s)'%self._jac
         elif self._jac is not None:
-            s += Transformation._str_from_jac(self._jac)
+            s += transform.Transformation._str_from_jac(self._jac)
         if hasattr(self._offset, '__call__'):
             s += '.shift(%s)'%self._offset
         elif not np.array_equal(self._offset,(0,0)):
@@ -1904,15 +1885,14 @@ class ChromaticTransformation(ChromaticObject):
 
     def _approxWavelength(self, wave):
         # Same as evaluateAtWavelength, except the starting point is also _approxWavelength
-        from .transform import Transformation
         wave1 = wave / (1.+self._redshift) if self._redshift is not None else wave
         wave2, ret = self.original._approxWavelength(wave1)
         wave = wave2 * (1.+self._redshift) if self._redshift is not None else wave2
         jac, offset, flux_ratio = self._getTransformations(wave)
         offset = _PositionD(*offset)
-        return wave, Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
-                                    gsparams=self._gsparams,
-                                    propagate_gsparams=self._propagate_gsparams)
+        return wave, transform.Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
+                                              gsparams=self._gsparams,
+                                              propagate_gsparams=self._propagate_gsparams)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1923,7 +1903,6 @@ class ChromaticTransformation(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .transform import Transformation
         if self._redshift is not None:
             wave1 = wave / (1.+self._redshift)
         else:
@@ -1931,8 +1910,9 @@ class ChromaticTransformation(ChromaticObject):
         ret = self.original.evaluateAtWavelength(wave1)
         jac, offset, flux_ratio = self._getTransformations(wave)
         offset = _PositionD(*offset)
-        return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
-                              gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
+        return transform.Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
+                                        gsparams=self._gsparams,
+                                        propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         self._original._shoot(photons, rng)
@@ -1983,7 +1963,6 @@ class ChromaticTransformation(ChromaticObject):
         Returns:
             the drawn `Image`.
         """
-        from .transform import Transform
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -1997,8 +1976,8 @@ class ChromaticTransformation(ChromaticObject):
             # matter where you get them).
             jac, offset, _ = self._getTransformations(bandpass.red_limit)
             offset = _PositionD(*offset)
-            int_im = Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
-                               propagate_gsparams=self._propagate_gsparams)
+            int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
+                                         propagate_gsparams=self._propagate_gsparams)
             image = int_im.drawImage(image=image, **kwargs)
             self._last_wcs = image.wcs
             return image
@@ -2011,7 +1990,6 @@ class ChromaticTransformation(ChromaticObject):
     def noise(self):
         """An estimate of the noise already in the profile.
         """
-        from .transform import _Transform
         from .correlatednoise import BaseCorrelatedNoise
         # Condition for being able to propagate noise:
         # 1) All transformations are achromatic.
@@ -2023,9 +2001,8 @@ class ChromaticTransformation(ChromaticObject):
         noise = self.original.noise
         jac = self._jac
         flux_ratio = self._flux_ratio
-        return BaseCorrelatedNoise(noise.rng,
-                                   _Transform(noise._profile, jac, flux_ratio=flux_ratio**2),
-                                   noise.wcs)
+        noise_prof = transform._Transform(noise._profile, jac, flux_ratio=flux_ratio**2)
+        return BaseCorrelatedNoise(noise.rng, noise_prof, noise.wcs)
 
 
 class ChromaticSum(ChromaticObject):
@@ -2110,8 +2087,7 @@ class ChromaticSum(ChromaticObject):
 
         # Each input summand will either end up in SED_dict if it's separable, or in self._obj_list
         # if it's inseparable.  Use an OrderedDict to ensure deterministic results.
-        from collections import OrderedDict
-        SED_dict = OrderedDict()
+        SED_dict = {}
         self._obj_list = []
         for obj in args:
             if self._propagate_gsparams:
@@ -2160,8 +2136,7 @@ class ChromaticSum(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
@@ -2169,8 +2144,7 @@ class ChromaticSum(ChromaticObject):
 
     @doc_inherit
     def atRedshift(self, redshift):
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._obj_list = [ obj.atRedshift(redshift) for obj in self.obj_list ]
         return ret
 
@@ -2202,7 +2176,6 @@ class ChromaticSum(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .sum import Add
         return Add([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                    gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
@@ -2236,7 +2209,6 @@ class ChromaticSum(ChromaticObject):
         Returns:
             the drawn `Image`.
         """
-        from .random import BaseDeviate, BinomialDeviate, PoissonDeviate
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -2427,8 +2399,7 @@ class ChromaticConvolution(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
@@ -2436,7 +2407,6 @@ class ChromaticConvolution(ChromaticObject):
 
     @staticmethod
     def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
-        from .interpolatedimage import InterpolatedImage
         # Find scale at which to draw effective profile
         # Use smallest nyquist scale among the fiducial profile and at the two limits of the bp.
         _, prof0 = insep_obj._fiducial_profile(bandpass)
@@ -2497,7 +2467,6 @@ class ChromaticConvolution(ChromaticObject):
         return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
 
     def _approxWavelength(self, wave):
-        from .convolve import Convolve
         # If any of the components prefer a different wavelength, use that for all.
         achrom_objs = []
         for k, obj in enumerate(self.obj_list):
@@ -2511,8 +2480,8 @@ class ChromaticConvolution(ChromaticObject):
             else:
                 achrom_objs.append(aobj)
 
-        return new_wave, Convolve(achrom_objs, gsparams=self._gsparams,
-                                  propagate_gsparams=self._propagate_gsparams)
+        return new_wave, convolve.Convolve(achrom_objs, gsparams=self._gsparams,
+                                           propagate_gsparams=self._propagate_gsparams)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
@@ -2523,9 +2492,8 @@ class ChromaticConvolution(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .convolve import Convolve
-        return Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
-                        gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
+        return convolve.Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
+                                 gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         raise GalSimNotImplementedError("ChromaticConvolution cannot be used as a PhotonOp")
@@ -2563,8 +2531,6 @@ class ChromaticConvolution(ChromaticObject):
         Returns:
             the drawn `Image`.
         """
-        from .convolve import Convolve
-        from .random import BaseDeviate
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -2691,8 +2657,8 @@ class ChromaticConvolution(ChromaticObject):
         if len(insep_obj) == 1:
             insep_obj = insep_obj[0]
         else:
-            insep_obj = Convolve(insep_obj, gsparams=self._gsparams,
-                                 propagate_gsparams=self._propagate_gsparams)
+            insep_obj = convolve.Convolve(insep_obj, gsparams=self._gsparams,
+                                          propagate_gsparams=self._propagate_gsparams)
 
         sep_profs = []
         for obj in self.obj_list:
@@ -2710,8 +2676,8 @@ class ChromaticConvolution(ChromaticObject):
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
-        final_prof = Convolve(sep_profs, gsparams=self._gsparams,
-                              propagate_gsparams=self._propagate_gsparams)
+        final_prof = convolve.Convolve(sep_profs, gsparams=self._gsparams,
+                                       propagate_gsparams=self._propagate_gsparams)
         image = final_prof.drawImage(image=image, **kwargs)
         self._last_wcs = image.wcs
         return image
@@ -2720,7 +2686,6 @@ class ChromaticConvolution(ChromaticObject):
     def noise(self):
         """An estimate of the noise already in the profile.
         """
-        from .convolve import Convolve
         # Condition for being able to propagate noise:
         # Exactly one of the convolutants has a .covspec attribute.
         covspecs = [ obj.covspec for obj in self.obj_list if hasattr(obj, 'covspec') ]
@@ -2731,7 +2696,7 @@ class ChromaticConvolution(ChromaticObject):
             raise GalSimError("Cannot compute noise for ChromaticConvolution until after drawImage "
                               "has been called.")
         covspec = covspecs[0]
-        other = Convolve([obj for obj in self.obj_list if not hasattr(obj, 'covspec')])
+        other = convolve.Convolve([obj for obj in self.obj_list if not hasattr(obj, 'covspec')])
         return covspec.toNoise(self._last_bp, other, self._last_wcs)  # rng=?
 
 
@@ -2787,8 +2752,7 @@ class ChromaticDeconvolution(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj = self._obj.withGSParams(ret._gsparams)
@@ -2821,9 +2785,8 @@ class ChromaticDeconvolution(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .convolve import Deconvolve
-        return Deconvolve(self._obj.evaluateAtWavelength(wave), gsparams=self.gsparams,
-                          propagate_gsparams=self._propagate_gsparams)
+        return convolve.Deconvolve(self._obj.evaluateAtWavelength(wave), gsparams=self.gsparams,
+                                   propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         raise GalSimNotImplementedError("ChromaticDeconvolution cannot use method='phot'")
@@ -2878,8 +2841,7 @@ class ChromaticAutoConvolution(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj = self._obj.withGSParams(ret._gsparams)
@@ -2914,9 +2876,8 @@ class ChromaticAutoConvolution(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .convolve import AutoConvolve
-        return AutoConvolve(self._obj.evaluateAtWavelength(wave), self._real_space, self._gsparams,
-                            self._propagate_gsparams)
+        return convolve.AutoConvolve(self._obj.evaluateAtWavelength(wave), self._real_space,
+                                     self._gsparams, self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         raise GalSimNotImplementedError("ChromaticAutoConvolution cannot be used as a PhotonOp")
@@ -2975,8 +2936,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj = self._obj.withGSParams(ret._gsparams)
@@ -3011,9 +2971,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .convolve import AutoCorrelate
-        return AutoCorrelate(self._obj.evaluateAtWavelength(wave), self._real_space, self.gsparams,
-                             self._propagate_gsparams)
+        return convolve.AutoCorrelate(self._obj.evaluateAtWavelength(wave), self._real_space,
+                                      self.gsparams, self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         raise GalSimNotImplementedError("ChromaticAutoCorrelation cannot be used as a PhotonOp")
@@ -3045,7 +3004,6 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, gsparams=None, propagate_gsparams=True):
-        import math
         if not obj.SED.dimensionless:
             raise GalSimSEDError("Cannot take Fourier sqrt of spectral ChromaticObject.", obj.SED)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
@@ -3073,8 +3031,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj = self._obj.withGSParams(ret._gsparams)
@@ -3107,9 +3064,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        from .fouriersqrt import FourierSqrt
-        return FourierSqrt(self._obj.evaluateAtWavelength(wave), self.gsparams,
-                           self._propagate_gsparams)
+        return fouriersqrt.FourierSqrt(self._obj.evaluateAtWavelength(wave), self.gsparams,
+                                       self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
         raise GalSimNotImplementedError("ChromaticFourierSqrtProfile cannot use method='phot'")
@@ -3186,7 +3142,6 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=None, gsparams=None, **kwargs):
-        from .angle import AngleUnit, arcsec, radians
         # First, take the basic info.
         if scale_unit is None:
             scale_unit = arcsec
@@ -3267,8 +3222,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
@@ -3292,7 +3246,6 @@ class ChromaticOpticalPSF(ChromaticObject):
                      frozenset(self._kwargs.items())))
 
     def __repr__(self):
-        from .angle import arcsec
         s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r'%(
                 self.lam, self.lam_over_diam, self.aberrations.tolist())
         if self.scale_unit != arcsec:
@@ -3359,9 +3312,6 @@ class ChromaticOpticalPSF(ChromaticObject):
             return ret
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
-        from .random import UniformDeviate
-
         if self.geometric_shooting:
             # In the geometric shooting approximation, the lambda factors out, and this
             # becomes the same kind of calculation we did for ChromaticAiry.
@@ -3465,7 +3415,6 @@ class ChromaticAiry(ChromaticObject):
 
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=None, gsparams=None,
                  **kwargs):
-        from .angle import AngleUnit, arcsec, radians
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
         if scale_unit is None:
@@ -3504,8 +3453,7 @@ class ChromaticAiry(ChromaticObject):
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
@@ -3523,7 +3471,6 @@ class ChromaticAiry(ChromaticObject):
                      self.gsparams, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        from .angle import arcsec
         s = 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r'%(self.lam, self.lam_over_diam)
         if self.scale_unit != arcsec:
             s += ', scale_unit=%r'%self.scale_unit
@@ -3543,7 +3490,6 @@ class ChromaticAiry(ChromaticObject):
         Parameters:
              wave:  Wavelength in nanometers.
         """
-        from .airy import Airy
         # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
         # wavelength.
         ret = Airy(
@@ -3552,7 +3498,6 @@ class ChromaticAiry(ChromaticObject):
         return ret
 
     def _shoot(self, photons, rng):
-        from .airy import Airy
         # Start with the convolution at the reference wavelength
         obj = Airy(lam_over_diam=self.lam_over_diam, scale_unit=self.scale_unit,
                    gsparams=self.gsparams, **self.kwargs)
@@ -3591,3 +3536,8 @@ def _remove_setup_kwargs(kwargs):
     kwargs.pop('nx', None)
     kwargs.pop('ny', None)
     kwargs.pop('bounds', None)
+
+# Put these at the bottom to avoid circular import errors.
+from . import convolve
+from . import fouriersqrt
+from . import transform

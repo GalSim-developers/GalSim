@@ -17,6 +17,8 @@
 #
 
 from .errors import GalSimIncompatibleValuesError
+from .celestial import CelestialCoord
+from .angle import degrees, Angle
 
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
     """Return the refractive index of air as function of wavelength.
@@ -90,8 +92,6 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     Returns:
         the tuple (zenith_angle, parallactic_angle), each of which is an `Angle`.
     """
-    from .celestial import CelestialCoord
-    from .angle import degrees
     if zenith_coord is None:
         if HA is None or latitude is None:
             raise GalSimIncompatibleValuesError(
@@ -128,7 +128,6 @@ def parse_dcr_angles(**kwargs):
     Returns:
         zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren't relevant.
     """
-    from .angle import degrees, Angle
     if 'zenith_angle' in kwargs:
         zenith_angle = kwargs.pop('zenith_angle')
         parallactic_angle = kwargs.pop('parallactic_angle', 0.0*degrees)

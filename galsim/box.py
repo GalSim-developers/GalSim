@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Pixel', 'Box', 'TopHat' ]
+
 import numpy as np
 import math
 

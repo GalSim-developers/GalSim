@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Kolmogorov' ]
+
 import numpy as np
 import math
 
@@ -24,6 +26,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .angle import arcsec, radians, AngleUnit
 
 
 class Kolmogorov(GSObject):
@@ -159,8 +162,6 @@ class Kolmogorov(GSObject):
 
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, lam=None, r0=None,
                  r0_500=None, flux=1., scale_unit=None, gsparams=None):
-
-        from .angle import arcsec, radians, AngleUnit
 
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)

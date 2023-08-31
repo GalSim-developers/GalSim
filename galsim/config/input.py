@@ -22,10 +22,10 @@ import types
 
 from multiprocessing.managers import NamespaceProxy
 
-from .value import RegisterValueType
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
 from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
+from .value import RegisterValueType
 from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
 from ..catalog import Catalog, Dict
 

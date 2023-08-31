@@ -19,6 +19,15 @@
 # Define the class hierarchy for errors and warnings emitted by GalSim that aren't
 # obviously one of the standard python errors.
 
+__all__ = [ 'GalSimError', 'GalSimValueError', 'GalSimKeyError', 'GalSimIndexError',
+            'GalSimRangeError', 'GalSimBoundsError', 'GalSimUndefinedBoundsError',
+            'GalSimImmutableError', 'GalSimIncompatibleValuesError',
+            'GalSimSEDError', 'GalSimHSMError', 'GalSimFFTSizeError',
+            'GalSimConfigError', 'GalSimConfigValueError',
+            'GalSimNotImplementedError',
+            'GalSimWarning', 'GalSimDeprecationWarning',
+            'convert_cpp_errors', 'galsim_warn', ]
+
 import warnings
 from contextlib import contextmanager
 

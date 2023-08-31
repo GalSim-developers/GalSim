@@ -16,9 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'AtmosphericScreen', 'Atmosphere', 'OpticalScreen', 'UserScreen', ]
+
 import sys
 import numpy as np
 import multiprocessing
+from numbers import Real
 
 from .random import BaseDeviate, GaussianDeviate
 from .image import Image
@@ -28,20 +31,20 @@ from . import utilities
 from . import fft
 from . import zernike
 from .utilities import LRU_Cache, lazy_property
-from .errors import (GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn,
-    GalSimNotImplementedError, GalSimError)
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import galsim_warn, GalSimNotImplementedError, GalSimError
+from .kolmogorov import Kolmogorov
+from .airy import Airy
 
 
 # Two helper functions to cache the calculation required for _getStepK
 def __calcAtmStepK(lam, r0_500, gsparams):
-    from .kolmogorov import Kolmogorov
     # Use a Kolmogorov to get appropriate stepk.
     obj = Kolmogorov(lam=lam, r0_500=r0_500, gsparams=gsparams)
     return obj.stepk
 _calcAtmStepK = LRU_Cache(__calcAtmStepK)
 
 def __calcOptStepK(lam, diam, obscuration, gsparams):
-    from .airy import Airy
     # Use an Airy to get appropriate stepk.
     obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
     return obj.stepk
@@ -649,7 +652,6 @@ class AtmosphericScreen:
         if t is None:
             t = self._time
 
-        from numbers import Real
         if isinstance(t, Real):
             tmp = np.empty_like(u)
             tmp.fill(t)
@@ -714,7 +716,6 @@ class AtmosphericScreen:
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
 
-        from numbers import Real
         if isinstance(t, Real):
             tmp = np.empty_like(u)
             tmp.fill(t)
@@ -875,7 +876,6 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         rng:            Random number generator as a `BaseDeviate`.  If None, then use the
                         clock time or system entropy to seed a new generator.  [default: None]
     """
-    from .phase_psf import PhaseScreenList
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
     kwargs['screen_size'] = utilities.listify(screen_size)
 
@@ -1231,3 +1231,7 @@ class UserScreen:
 
     def _wavefront_gradient(self, u, v, t, theta):
         return self.table.gradient(u, v)
+
+# Put this at the end to avoid circular imports
+from .phase_psf import PhaseScreenList
+

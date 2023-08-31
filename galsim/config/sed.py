@@ -21,6 +21,7 @@ import logging
 from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
 from .input import RegisterInputConnectedType
+from .bandpass import BuildBandpass
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..sed import SED
 from ..bandpass import Bandpass
@@ -131,7 +132,6 @@ class FileSEDBuilder(SEDBuilder):
         Returns:
             the constructed SED object.
         """
-        from .bandpass import BuildBandpass
         logger = LoggerWrapper(logger)
 
         req = {'file_name': str, 'wave_type': str, 'flux_type': str}

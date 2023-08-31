@@ -18,6 +18,7 @@
 
 import os
 import logging
+import time
 
 from .util import LoggerWrapper, UpdateNProc, CopyConfig, MultiProcess, SetupConfigRNG
 from .util import RetryIO, SetDefaultExt
@@ -57,7 +58,6 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         the final config dict that was used.
     """
     logger = LoggerWrapper(logger)
-    import time
     t1 = time.time()
 
     # The next line relies on getting errors when the rng is undefined.  However, the default
@@ -203,7 +203,6 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
         Note: t==0 indicates that this file was skipped.
     """
     logger = LoggerWrapper(logger)
-    import time
     t1 = time.time()
 
     SetupConfigFileNum(config, file_num, image_num, obj_num, logger)

@@ -17,6 +17,7 @@
 #
 
 import sys
+import math
 
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
@@ -557,7 +558,6 @@ def _GenerateFromRTheta(config, base, value_type):
     kwargs, safe = GetAllParams(config, base, req=req)
     r = kwargs['r']
     theta = kwargs['theta']
-    import math
     #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
     return PositionD(r*theta.cos(), r*theta.sin()), safe
 
@@ -814,6 +814,7 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
                         [default: None]
     """
     from .input import RegisterInputConnectedType
+
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
     RegisterInputConnectedType(input_type, type_name)
     if len(valid_types) > 1:

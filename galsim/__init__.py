@@ -94,94 +94,76 @@ from . import _galsim
 lib_file = os.path.abspath(_galsim.__file__)
 
 # Import things from other files we want to be in the galsim namespace
+# More or less the order here is to import things after other modules they depend on.
 
 # First some basic building blocks that don't usually depend on anything else
-from .position import Position, PositionI, PositionD, _PositionI, _PositionD
-from .bounds import Bounds, BoundsI, BoundsD, _BoundsI, _BoundsD
-from .shear import Shear, _Shear
-from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec
-from .catalog import Catalog, Dict, OutputCatalog
-from .galaxy_sample import GalaxySample, COSMOSCatalog
-from .table import LookupTable, LookupTable2D, _LookupTable, _LookupTable2D, trapz
-
-# Exception and Warning classes
-from .errors import GalSimError, GalSimRangeError, GalSimValueError
-from .errors import GalSimKeyError, GalSimIndexError, GalSimNotImplementedError
-from .errors import GalSimBoundsError, GalSimUndefinedBoundsError, GalSimImmutableError
-from .errors import GalSimIncompatibleValuesError, GalSimSEDError, GalSimHSMError
-from .errors import GalSimFFTSizeError
-from .errors import GalSimConfigError, GalSimConfigValueError
-from .errors import GalSimWarning, GalSimDeprecationWarning
+from .errors import *
+from .position import *
+from .bounds import *
+from .angle import *
+from .celestial import *
+from .shear import *
+from .catalog import *
+from .table import *
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
-
-# PhotonArray
-from .photon_array import PhotonArray, PhotonOp, WavelengthSampler, FRatioAngles, PhotonDCR
-from .photon_array import Refraction, FocusDepth, PupilImageSampler, PupilAnnulusSampler
-from .photon_array import TimeSampler
-
-# Noise
-from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
-from .random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
-from .noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
-from .noise import DeviateNoise, VariableGaussianNoise
-from .correlatednoise import BaseCorrelatedNoise, CorrelatedNoise, UncorrelatedNoise
-from .correlatednoise import getCOSMOSNoise, CovarianceSpectrum
-
-# GSObject
-from .gsobject import GSObject
-from .gsparams import GSParams
-from .gaussian import Gaussian
-from .moffat import Moffat
-from .airy import Airy
-from .kolmogorov import Kolmogorov
-from .box import Pixel, Box, TopHat
-from .exponential import Exponential
-from .sersic import Sersic, DeVaucouleurs
-from .spergel import Spergel
-from .deltafunction import DeltaFunction
-from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
-from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
-from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, UserScreen
-from .shapelet import Shapelet
-from .inclined import InclinedExponential, InclinedSersic
-from .interpolant import Interpolant
-from .interpolant import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from .interpolatedimage import InterpolatedImage, _InterpolatedImage
-from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
-from .sum import Add, Sum
-from .convolve import Convolve, Convolution, Deconvolve, Deconvolution
-from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from .fouriersqrt import FourierSqrt, FourierSqrtProfile
-from .knots import RandomKnots
-from .transform import Transform, Transformation, _Transform
-from .vonkarman import VonKarman
-from .second_kick import SecondKick
-
-# Chromatic
-from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
-from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
-from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
-from .chromatic import ChromaticFourierSqrtProfile
-from .chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
-from .sed import SED
-from .bandpass import Bandpass
+from .image import *
 
 # WCS
-from .fits import FitsHeader
-from .celestial import CelestialCoord
-from .wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
-from .wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
-from .fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWCS
-from .fitswcs import FittedSIPWCS
+from .wcs import *
+from .fits import *
+from .fitswcs import *
+
+# Noise
+from .random import *
+from .noise import *
+from .correlatednoise import *
+
+# PhotonArray
+from .photon_array import *
+
+# GSObject
+from .gsobject import *
+from .gsparams import *
+from .gaussian import *
+from .moffat import *
+from .airy import *
+from .kolmogorov import *
+from .vonkarman import *
+from .box import *
+from .exponential import *
+from .sersic import *
+from .spergel import *
+from .deltafunction import *
+from .shapelet import *
+from .inclined import *
+from .knots import *
+
+from .sum import *
+from .convolve import *
+from .transform import *
+from .fouriersqrt import *
+
+from .interpolant import *
+from .interpolatedimage import *
+from .real import *
+from .galaxy_sample import *
+
+from .phase_screens import *
+from .second_kick import *
+from .phase_psf import *
+
+# Chromatic
+from .sed import *
+from .bandpass import *
+from .chromatic import *
 
 # Lensing stuff
-from .lensing_ps import PowerSpectrum
-from .nfw_halo import NFWHalo, Cosmology
+from .lensing_ps import *
+from .nfw_halo import *
 
 # Detector effects
-from .sensor import Sensor, SiliconSensor
+from .sensor import *
 from . import detectors  # Everything here is a method of Image, so nothing to import by name.
 from .utilities import set_omp_threads, get_omp_threads  # These we bring into the main scope.
 

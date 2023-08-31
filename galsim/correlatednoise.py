@@ -16,17 +16,30 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'BaseCorrelatedNoise', 'CorrelatedNoise', 'UncorrelatedNoise',
+            'getCOSMOSNoise', 'CovarianceSpectrum', ]
+
 import numpy as np
 import os
+import math
 
 from .image import Image
 from .random import BaseDeviate
-from .gsobject import GSObject
 from .gsparams import GSParams
-from .wcs import PixelScale
+from .wcs import PixelScale, BaseWCS, compatible
 from . import utilities
+from . import fits
+from . import meta_data
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, galsim_warn
+from .interpolant import Linear
+from .position import _PositionD
+from .angle import radians
+from .random import GaussianDeviate
+from .box import Pixel
+from .convolve import Convolve, AutoCorrelate, AutoConvolve
+from .interpolatedimage import InterpolatedImage, InterpolatedKImage
+
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -184,9 +197,6 @@ class BaseCorrelatedNoise:
         Returns:
             a `BaseCorrelatedNoise` instance
         """
-        from . import fits
-        from .interpolant import Linear
-        from .interpolatedimage import InterpolatedImage
         if not os.path.isfile(file_name):
             raise OSError("The file %r does not exist."%(file_name))
         try:
@@ -249,15 +259,13 @@ class BaseCorrelatedNoise:
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        from . import wcs
-        if not wcs.compatible(self.wcs, other.wcs):
+        if not compatible(self.wcs, other.wcs):
             galsim_warn("Adding two CorrelatedNoise objects with incompatible WCS. "
                         "The result will have the WCS of the first object.")
         return BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
-        from . import wcs
-        if not wcs.compatible(self.wcs, other.wcs):
+        if not compatible(self.wcs, other.wcs):
             galsim_warn("Subtracting two CorrelatedNoise objects with incompatible WCS. "
                         "The result will have the WCS of the first object.")
         return BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
@@ -660,7 +668,6 @@ class BaseCorrelatedNoise:
 
         This is the variance of values in an image filled with noise according to this model.
         """
-        from .position import _PositionD
         # Test whether we can simply return the zero-lag correlation function value, which gives the
         # variance of an image of noise generated according to this model
         if self._profile.is_analytic_x:
@@ -760,7 +767,6 @@ class BaseCorrelatedNoise:
         Returns:
             the new `BaseCorrelatedNoise` of the convolved profile.
         """
-        from .convolve import Convolve, AutoCorrelate
         conv = Convolve([self._profile, AutoCorrelate(gsobject,gsparams=gsparams)],
                         gsparams=gsparams)
         return BaseCorrelatedNoise(self.rng, conv, self.wcs)
@@ -987,8 +993,6 @@ class BaseCorrelatedNoise:
         # possible to generate noise with power equal to the difference between the two power
         # spectra.
 
-        from .interpolatedimage import InterpolatedImage
-        from .angle import radians
         # Initialize a temporary copy of the original PS array, expanded to full size rather than
         # the compact halfcomplex format that the PS is supplied in, which we will turn into an
         # InterpolatedImage
@@ -1060,7 +1064,6 @@ def _generate_noise_from_rootps(rng, shape, rootps):
 
     # Returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
 
-    from .random import GaussianDeviate
     # Quickest to create Gaussian rng each time needed, so do that here...
     # Note sigma scaling: 1/sqrt(2) needed so <|gaussvec|**2> = product(shape)
     # shape needed because of the asymmetry in the 1/N^2 division in the NumPy FFT/iFFT
@@ -1282,9 +1285,6 @@ class CorrelatedNoise(BaseCorrelatedNoise):
     """
     def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
                  correct_periodicity=True, subtract_mean=False, gsparams=None):
-        from .wcs import BaseWCS
-        from .interpolant import Linear
-        from .interpolatedimage import InterpolatedImage
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, Image):
@@ -1522,7 +1522,6 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     The FITS file ``out.fits`` should then contain an image of randomly-generated, COSMOS-like noise.
     """
-    from . import meta_data
     if file_name is None:
         file_name = os.path.join(meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
 
@@ -1559,9 +1558,7 @@ class UncorrelatedNoise(BaseCorrelatedNoise):
         gsparams:       An optional `GSParams` argument. [default: None]
     """
     def __init__(self, variance, rng=None, scale=None, wcs=None, gsparams=None):
-        from .wcs import BaseWCS, PixelScale
-        from .box import Pixel
-        from .convolve import AutoConvolve
+
         if variance < 0:
             raise GalSimRangeError("Specified variance must be zero or positive.",
                                    variance, 0, None)
@@ -1585,7 +1582,6 @@ class UncorrelatedNoise(BaseCorrelatedNoise):
 
         # Need variance == xvalue(0,0) after autoconvolution
         # So the Pixel needs to have an amplitude of sigma at (0,0)
-        import math
         sigma = math.sqrt(variance)
         pix = Pixel(scale=1.0, flux=sigma, gsparams=gsparams)
         cf = AutoConvolve(pix, real_space=True, gsparams=gsparams)
@@ -1658,10 +1654,6 @@ class CovarianceSpectrum:
         Returns:
             CorrelatedNoise object.
         """
-        import numpy as np
-        from .convolve import Convolve
-        from .box import Pixel
-        from .interpolatedimage import InterpolatedKImage
         NSED = len(self.SEDs)
         maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxk,
                        PSF.evaluateAtWavelength(bandpass.red_limit).maxk])

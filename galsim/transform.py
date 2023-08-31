@@ -16,16 +16,26 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Transform', 'Transformation', '_Transform', ]
+
 import numpy as np
 import math
 import cmath
+import copy
 
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, WeakMethod
-from .position import PositionD, _PositionD
+from .position import PositionD, _PositionD, parse_pos_args
 from .errors import GalSimError
+from .sum import Sum
+from .sed import SED
+from .wcs import JacobianWCS
+from .shear import Shear, _Shear
+from .angle import Angle
+from . import convolve
+from . import chromatic as chrom
 
 def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
               propagate_gsparams=True):
@@ -56,23 +66,19 @@ def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
     Returns:
         a `Transformation` or `ChromaticTransformation` instance as appropriate.
     """
-    from .sum import Sum
-    from .convolve import Convolution
-    from .chromatic import ChromaticObject
-    from .chromatic import ChromaticSum, ChromaticConvolution, ChromaticTransformation
-    if not (isinstance(obj, GSObject) or isinstance(obj, ChromaticObject)):
+    if not (isinstance(obj, GSObject) or isinstance(obj, chrom.ChromaticObject)):
         raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
 
     elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
-          hasattr(flux_ratio,'__call__') or isinstance(obj, ChromaticObject)):
+          hasattr(flux_ratio,'__call__') or isinstance(obj, chrom.ChromaticObject)):
 
         # Sometimes for Chromatic compound types, it is more efficient to apply the
         # transformation to the components rather than the whole.  In particular, this can
         # help preserve separability in many cases.
 
         # Don't transform ChromaticSum object, better to just transform the arguments.
-        if isinstance(obj, ChromaticSum) or isinstance(obj, Sum):
-            new_obj = ChromaticSum(
+        if isinstance(obj, chrom.ChromaticSum) or isinstance(obj, Sum):
+            new_obj = chrom.ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams,propagate_gsparams)
                   for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
@@ -86,15 +92,15 @@ def Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1., gsparams=None,
         # If we are just flux scaling, then a Convolution can do that to the first element.
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
-        elif (isinstance(obj, ChromaticConvolution or isinstance(obj, Convolution))
+        elif (isinstance(obj, chrom.ChromaticConvolution or isinstance(obj, convolve.Convolution))
               and jac is None and offset == (0.,0.)):
             first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams,
                               propagate_gsparams=propagate_gsparams)
-            return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
+            return chrom.ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
-            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams=gsparams,
-                                           propagate_gsparams=propagate_gsparams)
+            return chrom.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams=gsparams,
+                                                 propagate_gsparams=propagate_gsparams)
     else:
         return Transformation(obj, jac, offset, flux_ratio, gsparams, propagate_gsparams)
 
@@ -216,7 +222,6 @@ class Transformation(GSObject):
 
     @lazy_property
     def _noise(self):
-        from .correlatednoise import BaseCorrelatedNoise
         if self.original.noise is None:
             return None
         else:
@@ -235,8 +240,7 @@ class Transformation(GSObject):
             of the wrapped component object.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._original = self._original.withGSParams(ret._gsparams)
@@ -265,7 +269,6 @@ class Transformation(GSObject):
 
     @classmethod
     def _str_from_jac(cls, jac):
-        from .wcs import JacobianWCS
         dudx, dudy, dvdx, dvdy = jac.ravel()
         # Figure out the shear/rotate/dilate calls that are equivalent.
         jac = JacobianWCS(dudx,dudy,dvdx,dvdy)
@@ -593,3 +596,6 @@ def _Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1.):
         ret._original = obj
     ret._has_offset = (ret._dx != 0. or ret._dy != 0.)
     return ret
+
+# Put this at the bottom to avoid circular import error.
+from .correlatednoise import BaseCorrelatedNoise

@@ -17,6 +17,7 @@
 #
 
 import numpy as np
+import os
 
 from ..errors import GalSimBoundsError, GalSimConfigError
 from ..position import PositionD
@@ -25,6 +26,7 @@ from ..shapelet import Shapelet
 from ..gsparams import GSParams
 from ..config import InputLoader, RegisterInputType, RegisterObjectType
 from ..config import GetAllParams, GetInputObj, SkipThisObject
+from .._pyfits import pyfits
 
 class DES_Shapelet:
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -72,7 +74,6 @@ class DES_Shapelet:
 
     def __init__(self, file_name, dir=None):
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
         self.read_fits()
@@ -80,7 +81,6 @@ class DES_Shapelet:
     def read_fits(self):
         """Read in a DES_Shapelet stored in FITS file.
         """
-        from .._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
             cat = fits[1].data
         # These fields each only contain one element, hence the [0]'s.

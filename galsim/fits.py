@@ -16,12 +16,26 @@
 #    and/or other materials provided with the distribution.
 #
 
+# Most things require the full specification, e.g. galsim.fits.read.
+# Only FitsHeader is brought into the main galsim namespace.
+
+__all__ = [ 'FitsHeader' ]
+
 import os
+import io
 import numpy as np
+import copy
+import subprocess
+import gzip
+import bz2
+from io import BytesIO
 
 from .image import Image
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
-from .utilities import basestring
+from ._utilities import basestring, ensure_dir
+from ._pyfits import pyfits
+from .bounds import BoundsI
+from .wcs import readFromFitsHeader
 
 
 ##############################################################################################
@@ -69,9 +83,6 @@ class _ReadFile:
 
     def gunzip_call(self, file):
         # cf. http://bugs.python.org/issue7471
-        import subprocess
-        from io import BytesIO
-        from ._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
         # Also, I'd rather all these use `with subprocess.Popen(...) as p:`, but that's not
@@ -98,8 +109,6 @@ class _ReadFile:
         return hdu_list, fin
 
     def gzip_in_mem(self, file): # pragma: no cover
-        import gzip
-        from ._pyfits import pyfits
         fin = gzip.open(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
         # pyfits doesn't actually read the file yet, so we can't close fin here.
@@ -108,9 +117,6 @@ class _ReadFile:
         return hdu_list, fin
 
     def bunzip2_call(self, file):
-        import subprocess
-        from io import BytesIO
-        from ._pyfits import pyfits
         try:
             p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, close_fds=True)
@@ -133,8 +139,6 @@ class _ReadFile:
         return hdu_list, fin
 
     def bz2_in_mem(self, file): # pragma: no cover
-        import bz2
-        from ._pyfits import pyfits
         fin = bz2.BZ2File(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
@@ -152,7 +156,6 @@ class _ReadFile:
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, file_compress):
-        from ._pyfits import pyfits
         if dir:
             file = os.path.join(dir,file)
 
@@ -214,7 +217,6 @@ class _WriteFile:
 
     # No longer used, but preserved for timing tests to see if we should revisit this.
     def gzip_call(self, hdu_list, file):  # pragma: no cover
-        import subprocess
         with open(file, 'wb') as fout:
             try:
                 p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout,
@@ -231,8 +233,6 @@ class _WriteFile:
             p.wait()
 
     def gzip_in_mem(self, hdu_list, file):
-        import gzip
-        import io
         # The compression routines work better if we first write to an internal buffer
         # and then output that to a file.
         buf = io.BytesIO()
@@ -244,7 +244,6 @@ class _WriteFile:
             fout.write(data)
 
     def bzip2_call(self, hdu_list, file):  # pragma: no cover
-        import subprocess
         with open(file, 'wb') as fout:
             try:
                 p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
@@ -260,8 +259,6 @@ class _WriteFile:
             p.wait()
 
     def bz2_in_mem(self, hdu_list, file):
-        import bz2
-        import io
         buf = io.BytesIO()
         hdu_list.writeto(buf, **self.kw)
         data = buf.getvalue()
@@ -269,7 +266,6 @@ class _WriteFile:
             fout.write(data)
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
-        from .utilities import ensure_dir
         if dir:
             file = os.path.join(dir,file)
 
@@ -292,7 +288,6 @@ class _WriteFile:
 _write_file = _WriteFile()
 
 def _add_hdu(hdu_list, data, pyfits_compress):
-    from ._pyfits import pyfits
     if pyfits_compress:
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
@@ -316,7 +311,6 @@ def _add_to_header(hdu, image):
 def _check_hdu(hdu, pyfits_compress, header_only=False):
     """Check that an input ``hdu`` is valid
     """
-    from ._pyfits import pyfits
     # Check for fixable verify errors
     # Astropy will automatically fix any errors it finds by just accessing the header and data.
     hdu.header
@@ -340,7 +334,6 @@ def _check_hdu(hdu, pyfits_compress, header_only=False):
 
 
 def _get_hdu(hdu_list, hdu, pyfits_compress, header_only=False):
-    from ._pyfits import pyfits
     if isinstance(hdu_list, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
@@ -426,8 +419,6 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
 
                         [default: 'auto']
     """
-    from ._pyfits import pyfits
-
     if image.iscomplex:
         raise GalSimValueError("Cannot write complex Images to a fits file. "
                                "Write image.real and image.imag separately.", image)
@@ -504,8 +495,6 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
                         [default: 'auto']
     """
-    from ._pyfits import pyfits
-
     if any(image.iscomplex for image in image_list if isinstance(image, Image)):
         raise GalSimValueError("Cannot write complex Images to a fits file. "
                                "Write image.real and image.imag separately.", image_list)
@@ -588,9 +577,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
 
                         [default: 'auto']
     """
-    from ._pyfits import pyfits
-    from .bounds import BoundsI
-
     if isinstance(image_list, np.ndarray):
         is_all_numpy = True
         if image_list.dtype.kind == 'c':
@@ -773,7 +759,6 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto',
     Returns:
         the image as an `Image` instance.
     """
-    from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -792,7 +777,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto',
         if hdu.data is None:
             raise OSError("HDU is empty.  (data is None)")
 
-        wcs, origin = wcs.readFromFitsHeader(hdu.header, suppress_warning)
+        wcs, origin = readFromFitsHeader(hdu.header, suppress_warning)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
             data = hdu.data
@@ -880,8 +865,6 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto',
     Returns:
         a Python list of `Image` instances.
     """
-    from ._pyfits import pyfits
-
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -970,7 +953,6 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     Returns:
         a Python list of `Image` instances.
     """
-    from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -989,7 +971,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
         if hdu.data is None:
             raise OSError("HDU is empty.  (data is None)")
 
-        wcs, origin = wcs.readFromFitsHeader(hdu.header, suppress_warning)
+        wcs, origin = readFromFitsHeader(hdu.header, suppress_warning)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
             data = hdu.data
@@ -1172,8 +1154,6 @@ class FitsHeader:
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
                  compression='auto', text_file=False):
-        from ._pyfits import pyfits
-
         if header and file_name:
            raise GalSimIncompatibleValuesError(
                "Cannot provide both file_name and header", file_name=file_name, header=header)
@@ -1228,7 +1208,6 @@ class FitsHeader:
             # Also need to make a copy of the header to keep it available.
             # If we construct a FitsHeader from an hdu_list, then we don't want to do this,
             # since we want the header to remain attached to the original hdu.
-            import copy
             self.header = copy.copy(header)
             closeHDUList(hdu_list, fin)
         elif isinstance(header, pyfits.Header):

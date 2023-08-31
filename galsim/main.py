@@ -25,6 +25,8 @@ import os
 import logging
 import json
 import argparse
+import cProfile, pstats, io
+from io import StringIO
 
 from ._version import __version__ as version
 from .config import ReadConfig, Process
@@ -122,7 +124,6 @@ def parse_variables(variables, logger):
                 value = yaml.safe_load(value)
             except ImportError:
                 # Don't require yaml.  json usually works for these.
-                import json
                 value = json.loads(value)
         except Exception as e:
             logger.debug('Caught exception: %s'%e)
@@ -169,11 +170,8 @@ def make_logger(args):
 def process_config(all_config, args, logger):
     """Process the config dict according to the command-line specifications.
     """
-    from io import StringIO
-
     # If requested, load the profiler
     if args.profile:
-        import cProfile, pstats, io
         pr = cProfile.Profile()
         pr.enable()
 

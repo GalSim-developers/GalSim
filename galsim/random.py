@@ -16,12 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'BaseDeviate', 'UniformDeviate', 'GaussianDeviate', 'PoissonDeviate', 'DistDeviate',
+            'BinomialDeviate', 'Chi2Deviate', 'GammaDeviate', 'WeibullDeviate', ]
+
 import numpy as np
+import os
 
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import galsim_warn
-from .utilities import isinteger
+from ._utilities import isinteger, math_eval
+from .table import LookupTable
+from . import integ
 
 class BaseDeviate:
     """Base class for all the various random deviates.
@@ -766,9 +772,6 @@ class DistDeviate(BaseDeviate):
     """
     def __init__(self, seed=None, function=None, x_min=None,
                  x_max=None, interpolant=None, npoints=None):
-        from .table import LookupTable
-        from . import utilities
-        from . import integ
 
         # Set up the PRNG
         self._rng_type = _galsim.UniformDeviateImpl
@@ -787,7 +790,6 @@ class DistDeviate(BaseDeviate):
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             self._function = function # Save the inputs to be used in repr
-            import os.path
             if os.path.isfile(function):
                 if interpolant is None:
                     interpolant='linear'
@@ -800,7 +802,7 @@ class DistDeviate(BaseDeviate):
                 x_max = function.x_max
             else:
                 try:
-                    function = utilities.math_eval('lambda x : ' + function)
+                    function = math_eval('lambda x : ' + function)
                     if x_min is not None: # is not None in case x_min=0.
                         function(x_min)
                     else:
@@ -953,7 +955,6 @@ def permute(rng, *args):
         rng:    The random number generator to use. (This will be converted to a `UniformDeviate`.)
         args:   Any number of lists to be permuted.
     """
-    from .random import UniformDeviate
     ud = UniformDeviate(rng)
     if len(args) == 0:
         raise TypeError("permute called with no lists to permute")

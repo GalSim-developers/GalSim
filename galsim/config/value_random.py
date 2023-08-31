@@ -15,6 +15,9 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+import math
+
 from .util import GetRNG
 from .value import GetAllParams, CheckAllParams, RegisterValueType
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -36,7 +39,6 @@ def _GenerateFromRandom(config, base, value_type):
 
     # Each value_type works a bit differently:
     if value_type is Angle:
-        import math
         CheckAllParams(config)
         val = ud() * 2 * math.pi * radians
         #print(base['obj_num'],'Random angle = ',val)
@@ -57,7 +59,6 @@ def _GenerateFromRandom(config, base, value_type):
         max = kwargs['max']
 
         if value_type is int:
-            import math
             val = int(math.floor(ud() * (max-min+1))) + min
             # In case ud() == 1
             if val > max: val = max
@@ -115,7 +116,6 @@ def _GenerateFromRandomGaussian(config, base, value_type):
             hi = max - mean
 
         # Emulate a do-while loop
-        import math
         while True:
             val = gd()
             if do_abs: val = math.fabs(val)

@@ -16,16 +16,20 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numpy as np
-from astropy import units
+__all__ = [ 'Bandpass' ]
 
-from .table import LookupTable
-from .sed import SED
-from . import utilities
+import numpy as np
+import os
+from astropy import units
+from numbers import Real
+
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .table import LookupTable, _LookupTable
+from ._utilities import WeakMethod, basestring
 from . import integ
 from . import meta_data
-from .utilities import WeakMethod, combine_wave_list, basestring
-from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from . import utilities
+from .sed import SED
 
 class Bandpass:
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -233,7 +237,6 @@ class Bandpass:
                         "String throughput must either be a valid filename or something that "
                         "can eval to a function of wave.\n Caught error: %s."%(e),
                         self._orig_tp)
-                from numbers import Real
                 if not isinstance(test_value, Real):
                     raise GalSimValueError(
                         "The given throughput function did not return a valid "
@@ -255,7 +258,7 @@ class Bandpass:
 
         # Bandpass * Bandpass -> Bandpass
         if isinstance(other, Bandpass):
-            wave_list, blue_limit, red_limit = combine_wave_list([self, other])
+            wave_list, blue_limit, red_limit = utilities.combine_wave_list([self, other])
             tp = lambda w: self(w) * other(w)
             return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
                             _wave_list=wave_list)
@@ -294,7 +297,7 @@ class Bandpass:
 
         # Bandpass / Bandpass -> Bandpass
         if isinstance(other, Bandpass):
-            wave_list, blue_limit, red_limit = combine_wave_list([self, other])
+            wave_list, blue_limit, red_limit = utilities.combine_wave_list([self, other])
             tp = lambda w: self(w) / other(w)
             return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
                             _wave_list=wave_list)
@@ -413,7 +416,6 @@ class Bandpass:
                 sed = SED(lambda wave: ST_flambda, wave_type='nm', flux_type='flambda')
             elif zeropoint.upper()=='VEGA':
                 # Use vega spectrum for SED
-                import os
                 vegafile = os.path.join(meta_data.share_dir, "SEDs", "vega.txt")
                 sed = SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
@@ -581,7 +583,6 @@ class Bandpass:
         Returns:
             the thinned `Bandpass`.
         """
-        from .table import _LookupTable
         if len(self.wave_list) > 0:
             x = self.wave_list
             f = self(x)

@@ -16,4 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'CelestialCoord' ]
+
 from coord import CelestialCoord

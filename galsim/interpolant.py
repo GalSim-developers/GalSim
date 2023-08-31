@@ -16,13 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Interpolant', 'Nearest', 'Linear', 'Cubic', 'Quintic',
+            'Lanczos', 'SincInterpolant', 'Delta', ]
+
 import math
 import numpy as np
+import copy
 
 from . import _galsim
 from .gsparams import GSParams
-from .utilities import lazy_property
+from ._utilities import lazy_property
 from .errors import GalSimValueError
+from .integ import int1d
+from .bessel import si
 
 class Interpolant:
     """A base class that defines how interpolation should be done.
@@ -62,7 +68,7 @@ class Interpolant:
             gsparams:   An optional `GSParams` argument. [default: None]
         """
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         gsparams = GSParams.check(gsparams)
@@ -114,7 +120,7 @@ class Interpolant:
 
     @property
     def tol(self):
-        from galsim.deprecated import depr
+        from .deprecated import depr
         depr('interpolant.tol', 2.2, 'interpolant.gsparams.kvalue_accuracy')
         return self._gsparams.kvalue_accuracy
 
@@ -122,8 +128,7 @@ class Interpolant:
         """Create a version of the current interpolant with the given gsparams
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
@@ -201,7 +206,6 @@ class Interpolant:
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        from .integ import int1d
         n = self.ixrange//2 + 1
         n = n if max_len is None else min(n, max_len)
         if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
@@ -229,7 +233,7 @@ class Delta(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -293,7 +297,7 @@ class Nearest(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -358,7 +362,7 @@ class SincInterpolant(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -403,7 +407,6 @@ class SincInterpolant(Interpolant):
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        from .bessel import si
         n = self.ixrange//2 + 1
         n = n if max_len is None else min(n, max_len)
         if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
@@ -427,7 +430,7 @@ class Linear(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -494,7 +497,7 @@ class Cubic(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -563,7 +566,7 @@ class Quintic(Interpolant):
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
@@ -619,7 +622,7 @@ class Lanczos(Interpolant):
     """
     def __init__(self, n, conserve_dc=True, tol=None, gsparams=None):
         if tol is not None:
-            from galsim.deprecated import depr
+            from .deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._n = int(n)
@@ -665,3 +668,18 @@ class Lanczos(Interpolant):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels).
         """
         return 2. * math.pi * self._i.urange()
+
+def convert_interpolant(interpolant):
+    """Convert a given interpolant to an `Interpolant` if it is given as a string.
+
+    Parameter:
+        interpolant:    Either an `Interpolant` or a string to convert.
+
+    Returns:
+        an `Interpolant`
+    """
+    if isinstance(interpolant, Interpolant):
+        return interpolant
+    else:
+        # Will raise an appropriate exception if this is invalid.
+        return Interpolant.from_name(interpolant)

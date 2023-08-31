@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Shear', '_Shear' ]
+
 import numpy as np
 
 from .angle import Angle, _Angle, radians

@@ -25,6 +25,9 @@ background level, for which the main contribution is zodiacal light.
 import numpy as np
 import os
 
+from .. import degrees, radians, CelestialCoord
+from .. import GalSimValueError
+from . import diameter, obscuration
 
 def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """
@@ -77,10 +80,6 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     Returns:
         the expected sky level in e-/arcsec^2.
     """
-    from .. import degrees, radians, CelestialCoord
-    from .. import GalSimValueError
-    from . import diameter, obscuration
-
     if exptime is None:
         from . import exptime
 

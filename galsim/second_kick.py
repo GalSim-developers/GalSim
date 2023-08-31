@@ -15,6 +15,9 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+__all__ = [ 'SecondKick' ]
+
 import numpy as np
 
 from . import _galsim

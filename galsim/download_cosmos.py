@@ -24,13 +24,6 @@ import argparse
 import logging
 from urllib.request import urlopen
 
-try:
-    # Python 2 version
-    input = raw_input
-except NameError:
-    # Python 3 calls the same functionality input
-    pass
-
 from ._version import __version__ as version
 from .meta_data import share_dir
 from .utilities import ensure_dir

@@ -16,10 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 
-import warnings
-import numpy as np
+__all__ = [ 'AstropyWCS', 'PyAstWCS', 'WcsToolsWCS', 'GSFitsWCS',
+            'FitsWCS', 'TanWCS', 'FittedSIPWCS', ]
 
-from .wcs import CelestialWCS
+import warnings
+import os
+import numpy as np
+from scipy.optimize import least_squares
+import astropy.wcs
+import subprocess
+import copy
+
+from .wcs import CelestialWCS, JacobianWCS, AffineTransform, PixelScale, OffsetWCS
 from .position import PositionD, _PositionD
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
@@ -27,6 +35,9 @@ from . import fits
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, convert_cpp_errors, galsim_warn
 from .utilities import horner2d
+from .celestial import CelestialCoord
+from ._pyfits import pyfits
+
 
 #########################################################################################
 #
@@ -100,7 +111,6 @@ class AstropyWCS(CelestialWCS):
                  wcs=None, origin=None):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
             import scipy.optimize # Check this too, since it's actually what we need from scipy.
 
@@ -111,7 +121,6 @@ class AstropyWCS(CelestialWCS):
         # Read the file if given.
         if file_name is not None:
             if dir is not None:
-                import os
                 self._tag = repr(os.path.join(dir,file_name))
             else:
                 self._tag = repr(file_name)
@@ -182,7 +191,6 @@ class AstropyWCS(CelestialWCS):
         self._wcs = wcs
 
     def _load_from_header(self, header):
-        import astropy.wcs
         if 'TAN' in header.get('CTYPE1','') and 'PV1_1' in header:
             header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
@@ -354,7 +362,6 @@ class PyAstWCS(CelestialWCS):
         # Read the file if given.
         if file_name is not None:
             if dir is not None:
-                import os
                 self._tag = repr(os.path.join(dir,file_name))
             else:
                 self._tag = repr(file_name)
@@ -418,7 +425,6 @@ class PyAstWCS(CelestialWCS):
         # It turns out there are subtle differences between this and using the original FITS
         # file hdu that we read in above.  So there is a slight inefficiency here in creating
         # a new blank PrimaryHDU for this.  But in return we gain more reliable serializability.
-        from ._pyfits import pyfits
         hdu = pyfits.PrimaryHDU()
         fits.FitsHeader(hdu_list=hdu).update(header)
 
@@ -504,11 +510,9 @@ class PyAstWCS(CelestialWCS):
         return ret
 
     def _writeHeader(self, header, bounds):
+        import starlink.Atl
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from
         # David Berry, who assisted me in getting this working.
-
-        from ._pyfits import pyfits
-        import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
         with warnings.catch_warnings():
@@ -616,7 +620,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         self._color = None
         self._set_origin(origin)
 
-        import os
         if dir:
             file_name = os.path.join(dir, file_name)
         if not os.path.isfile(file_name):
@@ -624,7 +627,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         self._file_name = file_name
 
         # Check wcstools is installed and that it can read the file.
-        import subprocess
         # If xy2sky is not installed, this will raise an OSError
         p = subprocess.Popen(['xy2sky', '-d', '-n', '10', file_name, '0', '0'],
                              stdout=subprocess.PIPE)
@@ -652,9 +654,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         return self._origin
 
     def _radec(self, x, y, color=None):
-        import subprocess
-        import os
-
         # Need this to look like
         #    [ x1, y1, x2, y2, ... ]
         # if input is either scalar x,y or two arrays.
@@ -731,9 +730,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             return np.array(ra)*factor, np.array(dec)*factor
 
     def _xy(self, ra, dec, color=None):
-        import subprocess
-        import os
-
         rd = np.array([ra, dec], dtype=float).transpose().ravel()
         rd *= radians / degrees
 
@@ -801,7 +797,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
         # We also copy over some of the fields we need.  wcstools doesn't seem to have something
         # that lists _all_ the keys that define the WCS.  This just gets the approximate WCS.
-        import subprocess
         p = subprocess.Popen(['wcshead', self._file_name], stdout=subprocess.PIPE)
         results = p.communicate()[0].decode()
         p.stdout.close()
@@ -826,7 +821,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
     def copy(self):
         # The copy module version of copying the dict works fine here.
-        import copy
         return copy.copy(self)
 
     def __eq__(self, other):
@@ -919,7 +913,6 @@ class GSFitsWCS(CelestialWCS):
         # Read the file if given.
         if file_name is not None:
             if dir is not None:
-                import os
                 self._tag = repr(os.path.join(dir,file_name))
             else:
                 self._tag = repr(file_name)
@@ -961,8 +954,6 @@ class GSFitsWCS(CelestialWCS):
         return _PositionD(0.,0.)
 
     def _read_header(self, header):
-        from .angle import AngleUnit
-        from .celestial import CelestialCoord
         # Start by reading the basic WCS stuff that most types have.
         ctype1 = header.get('CTYPE1','')
         ctype2 = header.get('CTYPE2','')
@@ -1411,7 +1402,6 @@ class GSFitsWCS(CelestialWCS):
 
     # Override the version in CelestialWCS, since we can do this more efficiently.
     def _local(self, image_pos, color=None):
-        from .wcs import JacobianWCS
 
         if image_pos is None:
             raise TypeError("origin must be a PositionD or PositionI argument")
@@ -1565,7 +1555,6 @@ class GSFitsWCS(CelestialWCS):
 
     def copy(self):
         # The copy module version of copying the dict works fine here.
-        import copy
         return copy.copy(self)
 
     def __eq__(self, other):
@@ -1715,8 +1704,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           (Note: this is (by default) set to True when this function is implicitly
                           called from one of the galsim.fits.read* functions.)
     """
-    from .wcs import AffineTransform, PixelScale, OffsetWCS
-
     if file_name is not None:
         if header is not None:
             raise GalSimIncompatibleValuesError(
@@ -1756,7 +1743,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             # Give it a better tag for the repr if appropriate.
             if hasattr(wcs,'_tag') and file_name != 'header':
                 if dir is not None:
-                    import os
                     wcs._tag = repr(os.path.join(dir,file_name))
                 else:
                     wcs._tag = repr(file_name)
@@ -1798,9 +1784,6 @@ def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
                    the tangent plane is centered.  [default: None, which means
                    use the average position of the list of reference stars]
     """
-    from scipy.optimize import least_squares
-    from .celestial import CelestialCoord
-
     if order < 1:
         raise GalSimValueError("Illegal SIP order", order)
 

@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import sys
 import os
 import logging
 import copy
@@ -82,7 +83,6 @@ def ReadConfig(config_file, file_type=None, logger=None):
     logger.warning('Reading config file %s', config_file)
     # Determine the file type from the extension if necessary:
     if file_type is None:
-        import os
         name, ext = os.path.splitext(config_file)
         if ext.lower().startswith('.j'):
             file_type = 'json'
@@ -115,7 +115,6 @@ def ImportModules(config, gdict=None):
     Parameters:
         config:     The configuration dict.
     """
-    import sys
     if gdict is None:
         gdict = globals()
     if 'modules' in config:

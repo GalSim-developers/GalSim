@@ -17,6 +17,7 @@
 #
 
 import numpy as np
+from numbers import Real
 
 from .utilities import LRU_Cache, binomial, horner2d, horner4d, nCr, lazy_property
 from .integ import gq_annulus_points
@@ -573,7 +574,6 @@ class Zernike:
         If both operands are Zernikes, then the ``R_outer`` and ``R_inner`` attributes of each must
         be the same.
         """
-        from numbers import Real
         if isinstance(rhs, Real):
             if 'coef' in self.__dict__:
                 ret = Zernike(rhs*self.coef, self.R_outer, self.R_inner)
@@ -620,7 +620,6 @@ class Zernike:
         return self*rhs
 
     def __truediv__(self, rhs):
-        from numbers import Real
         if not isinstance(rhs, Real):
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
         return self*(1./rhs)
@@ -1286,7 +1285,6 @@ class DoubleZernike:
         If both operands are DoubleZernikes, then the domains for both annuli
         must be the same.
         """
-        from numbers import Real
         if isinstance(rhs, Real):
             if 'coef' in self.__dict__:
                 ret = DoubleZernike(
@@ -1335,7 +1333,6 @@ class DoubleZernike:
         return self*rhs
 
     def __truediv__(self, rhs):
-        from numbers import Real
         if not isinstance(rhs, Real):
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
         return self*(1./rhs)

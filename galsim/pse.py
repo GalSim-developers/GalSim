@@ -28,6 +28,7 @@ import os
 import sys
 
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .table import LookupTable
 
 
 class PowerSpectrumEstimator:
@@ -197,7 +198,6 @@ class PowerSpectrumEstimator:
                             value of power at each point on the grid, and then see what results
                             it gives for our chosen ell binning. [default: None]
         """
-        from .table import LookupTable
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:
             raise GalSimIncompatibleValuesError(

@@ -16,6 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'PowerSpectrum' ]
+
+import os
 import numpy as np
 
 from .angle import arcsec, AngleUnit
@@ -29,6 +32,7 @@ from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, galsim_warn
+from .bessel import j0, jn
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -591,7 +595,6 @@ class PowerSpectrum:
         # Convert string inputs to either a lambda function or LookupTable
         if isinstance(pf,str):
             origpf = pf
-            import os
             if os.path.isfile(pf):
                 pf = LookupTable.from_file(pf)
             else:
@@ -1280,7 +1283,6 @@ class PowerSpectrumRealizer:
             P_k[self.ny//2,self.nx//2] = np.real(P_k[self.ny//2,self.nx//2])
 
     def _generate_power_array(self, power_function):
-        from .table import LookupTable
         # Internal function to generate the result of a power function evaluated on a grid,
         # taking into account the symmetries.
         power_array = np.empty((self.ny, self.nx//2+1))
@@ -1391,7 +1393,6 @@ class xip_integrand:
         self.pk = pk
         self.r = r
     def __call__(self, k):
-        from .bessel import j0
         return k * self.pk(k) * j0(self.r*k)
 
 class xim_integrand:
@@ -1401,5 +1402,4 @@ class xim_integrand:
         self.pk = pk
         self.r = r
     def __call__(self, k):
-        from .bessel import jn
         return k * self.pk(k) * jn(4,self.r*k)

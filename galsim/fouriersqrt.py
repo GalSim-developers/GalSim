@@ -16,14 +16,17 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'FourierSqrt', 'FourierSqrtProfile' ]
+
 import numpy as np
+import copy
 
 from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
-from .chromatic import ChromaticObject
 from .utilities import lazy_property
 from .errors import galsim_warn
+from . import chromatic as chrom
 
 
 def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
@@ -49,10 +52,10 @@ def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
     Returns:
         a `FourierSqrtProfile` or `ChromaticFourierSqrtProfile` instance as appropriate.
     """
-    from .chromatic import ChromaticFourierSqrtProfile
-    if isinstance(obj, ChromaticObject):
-        return ChromaticFourierSqrtProfile(obj, gsparams=gsparams,
-                                           propagate_gsparams=propagate_gsparams)
+
+    if isinstance(obj, chrom.ChromaticObject):
+        return chrom.ChromaticFourierSqrtProfile(obj, gsparams=gsparams,
+                                                 propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
         return FourierSqrtProfile(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
     else:
@@ -120,8 +123,7 @@ class FourierSqrtProfile(GSObject):
             of the wrapped component object.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)

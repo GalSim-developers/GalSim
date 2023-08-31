@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'NFWHalo', 'Cosmology' ]
+
 import numpy as np
 
 from .position import PositionD

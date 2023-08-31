@@ -26,9 +26,16 @@ Definition Review.
 import numpy as np
 import os
 import coord
+import datetime
 
 from . import n_sca
+from . import n_pix
 from .. import meta_data
+from .. import GSFitsWCS, FitsHeader
+from .. import PositionD
+from .. import BoundsI
+from .. import GalSimRangeError, GalSimError
+
 
 # Basic Roman reference info, with lengths in mm.
 pixel_size_mm = 0.01
@@ -122,8 +129,6 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     Returns:
         A dict of WCS objects for each SCA.
     """
-    from .. import GSFitsWCS, FitsHeader
-
     # First just parse the input quantities.
     date, SCAs, pa_fpa, pa_obsy = _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs)
 
@@ -300,9 +305,6 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*c
     Returns:
         A CelestialCoord object indicating the center of the focal plane array.
     """
-    from .. import PositionD
-    from . import n_pix
-
     if not isinstance(SCA, int):
         raise TypeError("Must pass in an int corresponding to the SCA")
     if not isinstance(tol, coord.Angle):
@@ -358,8 +360,6 @@ def findSCA(wcs_dict, world_pos, include_border=False):
         on any SCA.
 
     """
-    from .. import BoundsI
-
     # Sanity check args.
     if not isinstance(wcs_dict, dict):
         raise TypeError("wcs_dict should be a dict containing WCS output by galsim.roman.getWCS.")
@@ -397,8 +397,6 @@ def _calculate_minmax_pix(include_border=False):
         a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y
         pixel value, and maximum y pixel value for each SCA.
     """
-    from . import n_pix
-
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
     min_x_pix = np.ones(n_sca+1).astype(int)
@@ -467,8 +465,6 @@ def _populate_required_fields(header):
     Utility routine to do populate some of the basic fields for the WCS headers for Roman that
     don't require any interesting calculation.
     """
-    from . import n_pix
-
     header.extend([
         ('EQUINOX', 2000.0, "equinox of celestial coordinate system"),
         ('WCSAXES', 2, "number of World Coordinate System axes"),
@@ -577,8 +573,6 @@ def _get_sca_center_pos(i_sca, world_pos, pa_fpa):
     return crval, u, v
 
 def _parse_SCAs(SCAs):
-    from .. import GalSimRangeError
-
     # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
     # convenient format.  It is used in roman_wcs.py.
     #
@@ -604,7 +598,6 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
     This routine parses the various input options to getWCS() and returns what the routine needs to
     do its job.  The reason to pull this out is so other helper routines can use it.
     """
-    from .. import GalSimError
 
     # Parse input position
     if not isinstance(world_pos, coord.CelestialCoord):
@@ -613,7 +606,6 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
     # Get the date. (Vernal equinox in 2025, taken from
     # http://www.astropixels.com/ephemeris/soleq2001.html, if none was supplied.)
     if date is None:
-        import datetime
         date = datetime.datetime(2025,3,20,9,2,0)
 
     # Are we allowed to look here?

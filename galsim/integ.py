@@ -20,7 +20,7 @@ import numpy as np
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, convert_cpp_errors
-from .utilities import LRU_Cache, horner2d
+from ._utilities import LRU_Cache
 
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):

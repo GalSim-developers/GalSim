@@ -16,13 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'Add', 'Sum', ]
+
 import numpy as np
+import copy
 
 from .gsparams import GSParams
 from .gsobject import GSObject
-from .chromatic import ChromaticObject, ChromaticSum
 from .utilities import lazy_property
 from . import _galsim
+from .photon_array import PhotonArray
+from .random import BinomialDeviate
+from . import chromatic as chrom
+
 
 def Add(*args, **kwargs):
     """A function for adding 2 or more `GSObject` or `ChromaticObject` instances.
@@ -57,7 +63,7 @@ def Add(*args, **kwargs):
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], (GSObject, ChromaticObject)):
+        if isinstance(args[0], (GSObject, chrom.ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
@@ -66,8 +72,8 @@ def Add(*args, **kwargs):
                             + "a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, ChromaticObject) for a in args]):
-        return ChromaticSum(*args, **kwargs)
+    if any([isinstance(a, chrom.ChromaticObject) for a in args]):
+        return chrom.ChromaticSum(*args, **kwargs)
     else:
         return Sum(*args, **kwargs)
 
@@ -205,8 +211,7 @@ class Sum(GSObject):
             of each object being added.
         """
         if gsparams == self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
+        ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
@@ -305,9 +310,6 @@ class Sum(GSObject):
                 image += im1
 
     def _shoot(self, photons, rng):
-        from .photon_array import PhotonArray
-        from .random import BinomialDeviate
-
         remainingAbsoluteFlux = self.positive_flux + self.negative_flux
         fluxPerPhoton = remainingAbsoluteFlux / len(photons)
 
@@ -357,3 +359,4 @@ class Sum(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
+

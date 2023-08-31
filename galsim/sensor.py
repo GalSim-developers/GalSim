@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 
+__all__ = [ 'Sensor', 'SiliconSensor' ]
+
 import numpy as np
 import glob
 import os
@@ -26,6 +28,7 @@ from .table import LookupTable
 from .random import UniformDeviate
 from . import meta_data
 from .errors import GalSimUndefinedBoundsError, GalSimError
+from .wcs import PixelScale
 
 class Sensor:
     """
@@ -390,7 +393,6 @@ class SiliconSensor(Sensor):
         Returns:
             an `Image` with the pixel areas
         """
-        from .wcs import PixelScale
         area_image = image.copy()
         area_image.wcs = PixelScale(1.0)
         self._silicon.fill_with_pixel_areas(area_image._image, orig_center._p, use_flux)

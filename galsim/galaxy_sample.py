@@ -16,14 +16,24 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'GalaxySample', 'COSMOSCatalog', ]
+
 import numpy as np
 import math
 import os
 
-from .real import RealGalaxy, RealGalaxyCatalog
+from .real import RealGalaxy, RealGalaxyCatalog, _parse_files_dirs
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, galsim_warn
 from .utilities import lazy_property
+from ._pyfits import pyfits
+from .random import BaseDeviate
+from . import utilities
+from .bandpass import Bandpass
+from .sed import SED
+from .angle import radians
+from .exponential import Exponential
+from .sersic import DeVaucouleurs, Sersic
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -131,9 +141,6 @@ class GalaxySample:
                  min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10., min_mask_dist=11,
                  exptime=None, area=None, _use_sample=None):
 
-        from ._pyfits import pyfits
-        from .real import _parse_files_dirs
-
         self.use_real = use_real
         self.preload = preload
         self.cut_ratio = cut_ratio
@@ -191,7 +198,6 @@ class GalaxySample:
             return None
 
     def _apply_exclusion(self, exclusion_level, min_hlr=0, max_hlr=0, min_flux=0, max_flux=0):
-        from ._pyfits import pyfits
         mask = np.ones(len(self.orig_index), dtype=bool)
         if exclusion_level in ('marginal', 'bad_stamp'):
             # First, read in what we need to impose selection criteria, if the appropriate
@@ -391,7 +397,6 @@ class GalaxySample:
     def _makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
                     deep=False, sersic_prec=0.05, exptime=None, area=None,
                     rng=None, n_random=None, gsparams=None):
-        from .random import BaseDeviate
         if not self.canMakeReal():
             if gal_type is None:
                 gal_type = 'parametric'
@@ -507,8 +512,6 @@ class GalaxySample:
             A single index if n_random==1 or a NumPy array containing the randomly-selected
             indices if n_random>1.
         """
-        from .random import BaseDeviate
-        from . import utilities
         # Set up the random number generator.
         if rng is None:
             rng = BaseDeviate()
@@ -539,7 +542,6 @@ class GalaxySample:
                 return index[0]
 
     def getBandpass(self):
-        from .bandpass import Bandpass
         # Defer making the Bandpass and reading in SEDs until we actually are going to use them.
         # It's not a huge calculation, but the thin() call especially isn't trivial.
 
@@ -558,7 +560,6 @@ class GalaxySample:
         return self._bandpass
 
     def getSED(self):
-        from .sed import SED
         if self._sed is None:
             # Read in some SEDs.  We are using some fairly truncated and thinned ones, because
             # in any case the SED assignment here is somewhat arbitrary and should not be taken
@@ -579,9 +580,6 @@ class GalaxySample:
 
     @staticmethod
     def _buildParametric(record, sersic_prec, gsparams, chromatic, bandpass=None, sed=None):
-        from .angle import radians
-        from .exponential import Exponential
-        from .sersic import DeVaucouleurs, Sersic
         # Get fit parameters.  For 'sersicfit', the result is an array of 8 numbers for each
         # galaxy:
         #     SERSICFIT[0]: intensity of light profile at the half-light radius.
@@ -878,9 +876,6 @@ class COSMOSCatalog(GalaxySample):
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
                 sample=sample, file_name=file_name)
-
-        from ._pyfits import pyfits
-        from .real import _parse_files_dirs
 
         # Parse the file name
         file_name, _, use_sample = _parse_files_dirs(file_name, dir, sample)

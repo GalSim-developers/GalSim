@@ -16,17 +16,21 @@
 #    and/or other materials provided with the distribution.
 #
 
+__all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles', 
+            'PhotonDCR', 'Refraction', 'FocusDepth',
+            'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler', ]
+
 import numpy as np
 
 from . import _galsim
-from .random import UniformDeviate, BaseDeviate
-from .sed import SED
-from .bandpass import Bandpass
+from .random import BaseDeviate
 from .celestial import CelestialCoord
-from .utilities import lazy_property
+from ._utilities import lazy_property
 from .angle import radians, arcsec, Angle, AngleUnit
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, galsim_warn
+from ._pyfits import pyfits
+from . import dcr
 
 # Add on more methods in the python layer
 
@@ -650,9 +654,6 @@ class PhotonArray:
         Parameters:
             file_name:  The file name of the output FITS file.
         """
-        from ._pyfits import pyfits
-        from . import fits
-
         cols = []
         cols.append(pyfits.Column(name='id', format='J', array=range(self.size())))
         cols.append(pyfits.Column(name='x', format='D', array=self.x))
@@ -690,7 +691,6 @@ class PhotonArray:
         Parameters:
             file_name:  The file name of the input FITS file.
         """
-        from ._pyfits import pyfits
         with pyfits.open(file_name) as fits:
             data = fits[1].data
         N = len(data)
@@ -927,8 +927,6 @@ class PhotonDCR(PhotonOp):
     _single_params = [ { 'zenith_angle' : Angle, 'HA' : Angle, 'zenith_coord' : CelestialCoord } ]
 
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
-        from . import dcr
-
         # This matches the code in ChromaticAtmosphere.
         self.base_wavelength = base_wavelength
 
@@ -957,7 +955,6 @@ class PhotonDCR(PhotonOp):
                             bundle in case the operator needs this information.  [default: None]
             rng:            A random number generator to use if needed. [default: None]
         """
-        from . import dcr
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("PhotonDCR requires that wavelengths be set")
         if local_wcs is None:
@@ -1265,3 +1262,6 @@ class TimeSampler(PhotonOp):
                 s += "exptime=%r"%self.exptime
         s += ")"
         return s
+
+# Put these at the end to avoid circular imports
+from . import fits
