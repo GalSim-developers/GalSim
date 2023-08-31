@@ -338,12 +338,13 @@ _leggauss = LRU_Cache(np.polynomial.legendre.leggauss)
 
 
 def gq_annulus_points(r_outer, r_inner, n_rings, n_spokes):
-    """ Generate points and weights for Gaussian quadrature over an annulus.
+    r""" Generate points and weights for Gaussian quadrature over an annulus.
 
     Sample points are generated on a grid of rings (constant radius) and spokes
     (constant azimuth).  The sample points with the weights can be used to
-    approximate an integral over an annulus as:
+    approximate an integral over an annulus as
 
+    .. math::
         \Int_annulus f(x, y) dx dy = \Sum_{x, y, w} f(x, y) * w
 
     To integrate a nth order 2d polynomial over an annulus exactly requires
