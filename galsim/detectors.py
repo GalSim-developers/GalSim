@@ -17,6 +17,7 @@
 
 import numpy as np
 import sys
+import warnings
 
 from .image import Image
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
@@ -142,7 +143,11 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 
     p0 = exp_time*base_flux
     a = alpha/np.log(10)
-    self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
+    with warnings.catch_warnings():
+        # If self.array has negative values, then this might raise a RuntimeWarning.
+        # We already gave a more useful warning above, so ignore it here.
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+        self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
 def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_nonnegativity=True,
     kernel_normalization=True):
