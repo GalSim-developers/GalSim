@@ -1543,7 +1543,8 @@ def test_convolve_phasepsf():
     obj = galsim.Convolve(star * sed, psf1, psf2)
     bandpass = galsim.Bandpass('LSST_r.dat', wave_type='nm')
     obj = obj.withFlux(10, bandpass)
-    im = obj.drawImage(bandpass, method='phot', n_photons=10)
+    rng = galsim.BaseDeviate(1234)
+    im = obj.drawImage(bandpass, method='phot', n_photons=10, rng=rng)
 
     # The main thing is that it works.  But check that flux makes sense.
     assert im.array.sum() == 10
