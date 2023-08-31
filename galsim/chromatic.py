@@ -49,6 +49,7 @@ from . import utilities
 from . import integ
 from . import dcr
 
+
 class ChromaticObject:
     """Base class for defining wavelength-dependent objects.
 
@@ -2032,7 +2033,7 @@ class ChromaticTransformation(ChromaticObject):
 
 
 class SimpleChromaticTransformation(ChromaticTransformation):
-    """A class for the simplest kind of chromatic object -- a GSObject times and SED.
+    """A class for the simplest kind of chromatic object -- a GSObject times an SED.
 
     This is a subclass of ChromaticTransformation, which just skips some calculations
     that are unnecessary in this simple, but fairly common special case.
@@ -2097,10 +2098,6 @@ class SimpleChromaticTransformation(ChromaticTransformation):
         """
         See `ChromaticObject.drawImage` for a full description.
 
-        This version usually just calls that one, but if the transformed object (self.original) is
-        an `InterpolatedChromaticObject`, and the transformation is achromatic, then it will still
-        be able to use the interpolation.
-
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
                             integrate.
@@ -2121,7 +2118,6 @@ class SimpleChromaticTransformation(ChromaticTransformation):
         Returns:
             the drawn `Image`.
         """
-        from .transform import Transform
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.sed.dimensionless:
