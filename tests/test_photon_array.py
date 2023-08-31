@@ -350,18 +350,26 @@ def test_convolve():
 
     # Check propagation of dxdz, dydz, wavelength, pupil_u, pupil_v
     for attr, checkFn in zip(
-        ['dxdz', 'wavelength', 'pupil_u', 'time'],
-        ['hasAllocatedAngles', 'hasAllocatedWavelengths', 'hasAllocatedPupil',
+        ['dxdz', 'dydz', 'wavelength', 'pupil_u', 'pupil_v', 'time'],
+        ['hasAllocatedAngles', 'hasAllocatedAngles',
+         'hasAllocatedWavelengths', 'hasAllocatedPupil', 'hasAllocatedPupil',
          'hasAllocatedTimes']
     ):
         pa1 = obj.shoot(nphotons, rng)
         pa2 = obj.shoot(nphotons, rng)
+        assert not getattr(pa1, checkFn)()
+        assert not getattr(pa1, checkFn)()
         data = np.linspace(-0.1, 0.1, nphotons)
         setattr(pa1, attr, data)
-        pa1.convolve(pa2)
-        np.testing.assert_array_equal(getattr(pa1, attr), data)
+        assert getattr(pa1, checkFn)()
         assert not getattr(pa2, checkFn)()
+        pa1.convolve(pa2)
+        assert getattr(pa1, checkFn)()
+        assert not getattr(pa2, checkFn)()
+        np.testing.assert_array_equal(getattr(pa1, attr), data)
         pa2.convolve(pa1)
+        assert getattr(pa1, checkFn)()
+        assert getattr(pa2, checkFn)()
         np.testing.assert_array_equal(getattr(pa2, attr), data)
 
         # both have data now...
