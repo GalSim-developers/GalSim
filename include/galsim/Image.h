@@ -736,10 +736,16 @@ namespace galsim {
          *  share data with each other, but the tie to this ImageAlloc is severed.
          *
          *  This typically allocates new memory for the array.  The only
-         *  exception is if the new size is _smaller_ than currently and there
-         *  are no other views of the data.
+         *  exception is if the new size is the same as the current size and
+         *  are there are no other views of the data.  Then it just updates the
+         *  bounds to the new bounds and keeps the current array.
+         *
+         *  You can also optionally keep the current array if you are shrinking the
+         *  bounds to a smaller size, with the same limit of there not being other views.
+         *  To get this behavior, set release=false, and it will not release the allocated
+         *  memory when shrinking the size of the image.
          */
-        void resize(const Bounds<int>& new_bounds);
+        void resize(const Bounds<int>& new_bounds, bool release=true);
 
         //@{
         /**

@@ -286,7 +286,7 @@ ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds, const T init_value) :
 }
 
 template <typename T>
-void ImageAlloc<T>::resize(const Bounds<int>& new_bounds)
+void ImageAlloc<T>::resize(const Bounds<int>& new_bounds, bool release)
 {
     if (!new_bounds.isDefined()) {
         // Then this is really a deallocation.  Clear out the existing memory.
@@ -299,9 +299,9 @@ void ImageAlloc<T>::resize(const Bounds<int>& new_bounds)
         this->_stride = 0;
         this->_ncol = 0;
         this->_nrow = 0;
-    } else if (this->_bounds.isDefined() &&
-               new_bounds.area() <= this->_nElements &&
-               this->_owner.unique()) {
+    } else if (this->_bounds.isDefined() && this->_owner.unique() &&
+               (new_bounds.area() == this->_nElements ||
+                (new_bounds.area() < this->_nElements && !release))) {
         // Then safe to keep existing memory allocation.
         // Just redefine the bounds and stride.
         this->_bounds = new_bounds;

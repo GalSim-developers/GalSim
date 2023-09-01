@@ -125,6 +125,8 @@ namespace galsim {
 
         _horizontalDistortions.resize(horizontalRowStride(_nx) * (_ny + 1));
         _verticalDistortions.resize(verticalColumnStride(_ny) * (_nx + 1));
+        _horizontalDistortions.shrink_to_fit();
+        _verticalDistortions.shrink_to_fit();
 
         for (int index=0; index < nv1*_nx*_ny; index++) {
             int n1 = index % nv1;
@@ -1007,6 +1009,8 @@ namespace galsim {
     {
         _horizontalBoundaryPoints.resize(horizontalRowStride(nx) * (ny+1));
         _verticalBoundaryPoints.resize(verticalColumnStride(ny) * (nx+1));
+        _horizontalBoundaryPoints.shrink_to_fit();
+        _verticalBoundaryPoints.shrink_to_fit();
 
         // fill in horizontal boundary points from emptypoly
         int i = 0;
@@ -1037,6 +1041,8 @@ namespace galsim {
 
         _pixelInnerBounds.resize(nx * ny);
         _pixelOuterBounds.resize(nx * ny);
+        _pixelInnerBounds.shrink_to_fit();
+        _pixelOuterBounds.shrink_to_fit();
         for (int k = 0; k < (nx * ny); k++) {
             updatePixelBounds(nx, ny, k, _pixelInnerBounds.data(),
                               _pixelOuterBounds.data(),
