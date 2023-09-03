@@ -188,7 +188,7 @@ def test_logger():
     remove_handler()
     logger = galsim.main.make_logger(args)
     print('handlers = ',logger.handlers)
-    assert logger.getEffectiveLevel() == logging.CRITICAL
+    assert logger.getEffectiveLevel() == logging.ERROR
     logger.warning("Test warning")
     logger.info("Test info")
     logger.debug("Test debug")
@@ -214,7 +214,7 @@ def test_logger():
 @timer
 def test_parse_variables():
     logger = logging.getLogger('test_main')
-    logger.setLevel(logging.CRITICAL)
+    logger.setLevel(logging.ERROR)
 
     # Empty list -> empty dict
     new_params = galsim.main.parse_variables([], logger)

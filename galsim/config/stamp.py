@@ -85,7 +85,7 @@ def BuildStamps(nobjects, config, obj_num=0,
                  config.get('image_num',0),nobjects,obj_num)
 
     if nobjects == 0:
-        logger.error("No stamps were built, since nstamps == 0.")
+        logger.warning("No stamps were built, since nstamps == 0.")
         return (), ()
 
     # Figure out how many processes we will use for building the stamps:
@@ -141,7 +141,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     logger.debug('image %d: Done making stamps',config.get('image_num',0))
     if all(im is None for im in images):
-        logger.error('No stamps were built.  All objects were skipped.')
+        logger.warning('No stamps were built.  All objects were skipped.')
 
     return images, current_vars
 

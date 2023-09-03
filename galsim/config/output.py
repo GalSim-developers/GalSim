@@ -98,7 +98,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         timeout = 3600
 
     if nfiles == 0:
-        logger.error("No files were made, since nfiles == 0.")
+        logger.warning("No files were made, since nfiles == 0.")
         return orig_config
 
     for k in range(nfiles + first_file_num):
@@ -174,7 +174,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nfiles_written = sum([ t!=0 for t in times])
 
     if nfiles_written == 0:
-        logger.error('No files were written.  All were either skipped or had errors.')
+        logger.warning('No files were written.  All were either skipped or had errors.')
     else:
         if nfiles_written > 1 and nproc != 1:
             logger.warning('Total time for %d files with %d processes = %f sec',

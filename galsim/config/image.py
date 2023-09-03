@@ -67,7 +67,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
                  config.get('file_num',0),nimages,image_num,obj_num)
 
     if nimages == 0:
-        logger.error('No images were built, since nimages == 0.')
+        logger.warning('No images were built, since nimages == 0.')
         return []
 
     # Figure out how many processes we will use for building the images.
@@ -118,7 +118,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
 
     logger.debug('file %d: Done making images',config.get('file_num',0))
     if len(images) == 0:
-        logger.error('No images were built.  All were either skipped or had errors.')
+        logger.warning('No images were built.  All were either skipped or had errors.')
 
     return images
 
