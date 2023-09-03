@@ -25,6 +25,7 @@ Config Updates
 - Added skip_failures option in stamp fields.  (#1238)
 - Let input items depend on other input items, even if they appear later in the input field.
   (#1239)
+- Allow profiling output to reach the logger when running with -v0. (#1245)
 
 
 New Features

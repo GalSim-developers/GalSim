@@ -148,7 +148,7 @@ def make_logger(args):
     logger = logging.getLogger('galsim')
 
     # Parse the integer verbosity level from the command line args into a logging_level string
-    logging_levels = { 0: logging.CRITICAL,
+    logging_levels = { 0: logging.ERROR,
                        1: logging.WARNING,
                        2: logging.INFO,
                        3: logging.DEBUG }
