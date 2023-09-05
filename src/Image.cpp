@@ -759,34 +759,35 @@ void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
     double* xptr = reinterpret_cast<double*>(out.getData());
     const T* ptr = in.getData();
     const int skip = in.getNSkip();
+    const int step = in.getStep();
 
     // The FT image that FFTW will return will have FT(0,0) placed at the origin.  We
     // want it placed in the middle instead.  We can make that happen by inverting every other
     // row in the input image.
     if (shift_out) {
         double fac = (shift_in && Nyo2 % 2 == 1) ? -1 : 1.;
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
                 for (int i=Nx; i; --i)
                     *xptr++ = fac * REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=in.getStep())
+                for (int i=Nx; i; --i, ptr+=step)
                     *xptr++ = fac * REAL(*ptr);
         }
     } else {
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
                 for (int i=Nx; i; --i)
                     *xptr++ = REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
-                for (int i=Nx; i; --i, ptr+=in.getStep())
+                for (int i=Nx; i; --i, ptr+=step)
                     *xptr++ = REAL(*ptr);
         }
     }
     assert(out.ok_ptr((std::complex<double>*)(xptr-3)));
-    assert(in.ok_ptr(ptr-in.getStep()-skip));
+    assert(in.ok_ptr(ptr-step-skip));
 
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
     double* xdata = reinterpret_cast<double*>(out.getData());
@@ -857,9 +858,10 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
 
     const T* ptr = in.getData() + start_offset;
     const int skip = in.getNSkip();
+    const int step = in.getStep();
     if (shift_out) {
         const bool extra_flip = (Nxo2 % 2 == 1);
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
                 for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
@@ -869,15 +871,15 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=step, fac=-fac)
                     *kptr++ = fac * *ptr;
             ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else {
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
@@ -887,16 +889,16 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
+                for (int i=Nxo2+1; i; --i, ptr+=step)
                     *kptr++ = fac * *ptr;
             ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
+                for (int i=Nxo2+1; i; --i, ptr+=step)
                     *kptr++ = fac * *ptr;
         }
     }
     assert(out.ok_ptr((double*) (kptr-1)));
-    assert(in.ok_ptr(ptr-in.getStep()-skip));
+    assert(in.ok_ptr(ptr-step-skip));
 
     double* xdata = out.getData();
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(xdata);
@@ -935,44 +937,45 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
 
     const T* ptr = in.getData();
     const int skip = in.getNSkip();
+    const int step = in.getStep();
     std::complex<double>* kptr = out.getData();
 
     if (shift_out) {
         double fac = inverse ? 1./(Nx*Ny) : 1.;
         if (shift_in && (Nxo2 + Nyo2) % 2 == 1) fac = -fac;
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
                 for (int i=Nx; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=in.getStep(), fac=-fac)
+                for (int i=Nx; i; --i, ptr+=step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else if (inverse) {
         double fac = 1./(Nx*Ny);
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=in.getStep())
+                for (int i=Nx; i; --i, ptr+=step)
                     *kptr++ = fac * *ptr;
         }
     } else {
-        if (in.getStep() == 1) {
+        if (step == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=in.getStep())
+                for (int i=Nx; i; --i, ptr+=step)
                     *kptr++ = *ptr;
         }
     }
     assert(out.ok_ptr(kptr-1));
-    assert(in.ok_ptr(ptr-in.getStep()-skip));
+    assert(in.ok_ptr(ptr-step-skip));
 
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
 
