@@ -361,7 +361,7 @@ namespace galsim {
             _owner(owner), _data(data), _maxptr(maxptr), _nElements(nElements),
             _step(step), _stride(stride),
             _ncol(b.getXMax()-b.getXMin()+1), _nrow(b.getYMax()-b.getYMin()+1)
-        { if (_nElements == 0) _nElements = _ncol * _nrow; }
+        { if (_nElements == 0) _nElements = ptrdiff_t(_ncol) * _nrow; }
 
         /**
          *  @brief Copy constructor also protected
@@ -417,7 +417,7 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ConstImageView(T* data, const T* maxptr, int nElements, const shared_ptr<T>& owner,
+        ConstImageView(T* data, const T* maxptr, ptrdiff_t nElements, const shared_ptr<T>& owner,
                        int step, int stride, const Bounds<int>& b) :
             BaseImage<T>(data,maxptr,nElements,owner,step,stride,b) {}
 
@@ -474,7 +474,7 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const T* maxptr, int nElements, const shared_ptr<T>& owner,
+        ImageView(T* data, const T* maxptr, ptrdiff_t nElements, const shared_ptr<T>& owner,
                   int step, int stride, const Bounds<int>& b) :
             BaseImage<T>(data, maxptr, nElements, owner, step, stride, b) {}
 

@@ -148,7 +148,7 @@ void BaseImage<T>::allocateMem()
     _stride = _ncol = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
     _nrow = this->_bounds.getYMax() - this->_bounds.getYMin() + 1;
 
-    _nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
+    _nElements = _stride * ptrdiff_t(this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || _nElements <= 0) {
         FormatAndThrow<ImageError>() <<
             "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
@@ -157,6 +157,7 @@ void BaseImage<T>::allocateMem()
     _owner = allocateAlignedMemory<T>(_nElements);
     _data = _owner.get();
     _maxptr = _data + _nElements;
+    dbg<<"allocateMem: "<<_data<<"  "<<_nElements<<"  "<<_maxptr<<std::endl;
 }
 
 template <typename T>
