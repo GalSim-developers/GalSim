@@ -38,7 +38,6 @@ namespace galsim {
 
         // First figure out the maximum possible size of the return array.
         int max_ret_size = n0;
-        const double* a0_begin = static_cast<const double*>(a0.data());
         for(int k=1; k<n_arrays; ++k) {
             py::array_t<double> ak = arrays[k].cast<py::array_t<double> >();
             int nk = ak.size();
