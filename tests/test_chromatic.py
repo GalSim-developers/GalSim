@@ -2495,11 +2495,16 @@ def test_chromatic_invariant():
     # Test atomic and non-transformed objects first.
 
     # GSObject
-    gsobj = galsim.Kolmogorov(fwhm=0.6, flux=2.0)
+    flux = 2.0
+    gsobj = galsim.Kolmogorov(fwhm=0.6, flux=flux)
     check_chromatic_invariant(gsobj)
+    rng = galsim.BaseDeviate(1234)
+    waves = rng.np.uniform(500, 1000, 10)
+    np.testing.assert_allclose(gsobj.sed(waves), flux)
 
     # ChromaticObject
     check_chromatic_invariant(galsim.ChromaticObject(gsobj))
+    np.testing.assert_allclose(galsim.ChromaticObject(gsobj).sed(waves), flux)
     chrom1 = galsim.ChromaticObject(gsobj) * bulge_SED
     chrom2 = gsobj * bulge_SED
     chrom3 = galsim.ChromaticObject(gsobj * bulge_SED)
@@ -2518,6 +2523,9 @@ def test_chromatic_invariant():
     check_chromatic_invariant(chrom2)
     check_chromatic_invariant(chrom3)
     # also check that these end up with the same SED
+    np.testing.assert_allclose(chrom1.sed(waves), flux * bulge_SED(waves))
+    np.testing.assert_allclose(chrom2.sed(waves), flux * bulge_SED(waves))
+    np.testing.assert_allclose(chrom3.sed(waves), flux * bulge_SED(waves))
     assert chrom1.sed == chrom2.sed == chrom3.sed
 
     # And that they make the same image through a given bandpass
@@ -2544,6 +2552,7 @@ def test_chromatic_invariant():
     # SimpleChromaticTransformation
     chrom = gsobj * bulge_SED
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves))
     check_pickle(chrom)
 
     with assert_raises(galsim.GalSimError):
@@ -2553,11 +2562,13 @@ def test_chromatic_invariant():
     chrom = (gsobj * bulge_SED).shear(g1=0.2).shift((0.1,0.2))
     assert isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves))
     check_pickle(chrom)
 
     chrom = (gsobj * bulge_SED) * (lambda w: w**1.03)
     assert isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03)
     # Not picklable, but run str, repr
     str(chrom)
     repr(chrom)
@@ -2567,6 +2578,7 @@ def test_chromatic_invariant():
     assert isinstance(chrom, galsim.ChromaticTransformation)
     assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves))
     check_pickle(chrom)
 
     with assert_raises(galsim.GalSimError):
@@ -2576,6 +2588,7 @@ def test_chromatic_invariant():
     assert isinstance(chrom, galsim.ChromaticTransformation)
     assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves))
     check_pickle(chrom)
 
     scaling = galsim.SED(lambda w: w**1.03, 'nm', '1')
@@ -2583,6 +2596,7 @@ def test_chromatic_invariant():
     assert isinstance(chrom, galsim.ChromaticTransformation)
     assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03)
     # Not picklable, but run str, repr
     str(chrom)
     repr(chrom)
@@ -2591,17 +2605,20 @@ def test_chromatic_invariant():
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2,
                                            scale_unit='arcmin')
     check_chromatic_invariant(chrom_opt)
+    np.testing.assert_allclose(chrom_opt.sed(waves), 1.0)
     check_pickle(chrom_opt)
 
     # ChromaticAiry
     chrom_airy = galsim.ChromaticAiry(lam=500.0, diam=3.0, scale_unit=galsim.arcmin)
     check_chromatic_invariant(chrom_airy)
+    np.testing.assert_allclose(chrom_airy.sed(waves), 1.0)
     check_pickle(chrom_airy)
 
     # Now start testing compound objects...
     # ChromaticSum
     chrom_sum_noSED = chrom_airy + chrom_opt
     check_chromatic_invariant(chrom_sum_noSED)
+    np.testing.assert_allclose(chrom_sum_noSED.sed(waves), 2.0)
     # TODO: Seems like this should be picklable. Probably anything that doesn't include
     #       unpicklable user input should be picklable.
     #       e.g. autoconv2 has no hope.  But there are a few check_pickle calls that are commented
@@ -2615,6 +2632,7 @@ def test_chromatic_invariant():
     chrom = gsobj * bulge_SED
     chrom_sum_SED = chrom + chrom  # used to be considered separable, but not anymore.
     check_chromatic_invariant(chrom_sum_SED)
+    np.testing.assert_allclose(chrom_sum_SED.sed(waves), 2*flux*bulge_SED(waves))
     check_pickle(chrom_sum_SED)
     assert not chrom_sum_SED.separable
 
@@ -2622,6 +2640,7 @@ def test_chromatic_invariant():
     chrom2 = gsobj2 * disk_SED
     chrom_sum_SED2 = chrom + chrom2
     check_chromatic_invariant(chrom_sum_SED2)
+    np.testing.assert_allclose(chrom_sum_SED2.sed(waves), flux*bulge_SED(waves) + disk_SED(waves))
     check_pickle(chrom_sum_SED2)
     assert not chrom_sum_SED2.separable
     assert_raises(galsim.GalSimError, chrom_sum_SED.applyTo, p1)
@@ -2630,6 +2649,7 @@ def test_chromatic_invariant():
     # ChromaticConvolution
     conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
     check_chromatic_invariant(conv1)
+    np.testing.assert_allclose(conv1.sed(waves), flux*bulge_SED(waves))
     check_pickle(conv1)
 
     with assert_raises(galsim.GalSimError):
@@ -2637,6 +2657,7 @@ def test_chromatic_invariant():
 
     conv2 = galsim.Convolve(chrom_airy, chrom_opt)  # Non-SEDed
     check_chromatic_invariant(conv2)
+    np.testing.assert_allclose(conv2.sed(waves), 1.)
     check_pickle(conv2)
     assert_raises(galsim.GalSimError, conv1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, conv1.applyTo, p2)
@@ -2646,17 +2667,23 @@ def test_chromatic_invariant():
     # ChromaticDeconvolution
     deconv = galsim.Deconvolve(chrom_airy)
     check_chromatic_invariant(deconv)
+    np.testing.assert_allclose(deconv.sed(waves), 1.0)
     #check_pickle(deconv)
     repr(deconv) # gratuitous coverage of repr until check_pickle works.
     str(deconv)
     assert_raises(galsim.GalSimError, deconv.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, deconv.applyTo, p2)
+    # Repeat with non-unit SED; deconv SED should be inverse of base SED.
+    deconv2 = galsim.Deconvolve(chrom_airy * (lambda w:(w/500)**3))
+    np.testing.assert_allclose(deconv2.sed(waves), (waves/500)**-3)
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
     check_chromatic_invariant(autoconv1)
+    np.testing.assert_allclose(autoconv1.sed(waves), 1.0)
     autoconv2 = galsim.AutoConvolve(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autoconv2)
+    np.testing.assert_allclose(autoconv2.sed(waves), (waves/500)**0.2)
     check_pickle(autoconv1)
     assert_raises(galsim.GalSimError, autoconv1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, autoconv1.applyTo, p2)
@@ -2664,8 +2691,10 @@ def test_chromatic_invariant():
     # ChromaticAutoCorrelation
     autocorr1 = galsim.AutoCorrelate(chrom_airy)
     check_chromatic_invariant(autocorr1)
+    np.testing.assert_allclose(autocorr1.sed(waves), 1.0)
     autocorr2 = galsim.AutoCorrelate(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autocorr2)
+    np.testing.assert_allclose(autocorr2.sed(waves), (waves/500)**0.2)
     check_pickle(autocorr1)
     assert_raises(galsim.GalSimError, autocorr1.applyTo, p1)
     assert_raises(galsim.GalSimNotImplementedError, autocorr1.applyTo, p2)
@@ -2673,8 +2702,10 @@ def test_chromatic_invariant():
     # ChromaticFourierSqrt
     four1 = galsim.FourierSqrt(chrom_airy)
     check_chromatic_invariant(four1)
+    np.testing.assert_allclose(four1.sed(waves), 1.0)
     four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
+    np.testing.assert_allclose(four2.sed(waves), (waves/500)**0.05)
     #check_pickle(four1)
     repr(four1) # gratuitous coverage of repr until check_pickle works.
     str(four1)
@@ -2685,24 +2716,31 @@ def test_chromatic_invariant():
     # ChromaticTransformation
     sheared_chrom = chrom.shear(g1=0.1)
     check_chromatic_invariant(sheared_chrom)
+    np.testing.assert_allclose(sheared_chrom.sed(waves), chrom.sed(waves))
     check_pickle(sheared_chrom)
 
     scaled_chrom = 2 * chrom
     check_chromatic_invariant(scaled_chrom)
+    np.testing.assert_allclose(scaled_chrom.sed(waves), 2*chrom.sed(waves))
     check_pickle(scaled_chrom)
 
     complex_scaled_chrom = chrom * (lambda w: (w/500.0)**0.1)
+    np.testing.assert_allclose(complex_scaled_chrom.sed(waves), chrom.sed(waves) * (waves/500)**0.1)
     check_chromatic_invariant(complex_scaled_chrom)
 
     chrom_added_SED = chrom_airy * bulge_SED
     check_chromatic_invariant(chrom_added_SED)
+    np.testing.assert_allclose(chrom_added_SED.sed(waves), bulge_SED(waves))
     check_pickle(chrom_added_SED)
 
     complex_expanded_chrom = chrom.expand(lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_expanded_chrom)
+    np.testing.assert_allclose(complex_expanded_chrom.sed(waves),
+                               chrom.sed(waves) * (waves/500)**0.2)
 
     complex_dilated_chrom = chrom.dilate(lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_dilated_chrom)
+    np.testing.assert_allclose(complex_dilated_chrom.sed(waves), chrom.sed(waves))
 
     complex_transformed_chrom = chrom.transform(
             lambda w: 1. + 0.2*(w/500)**0.1,
@@ -2711,10 +2749,14 @@ def test_chromatic_invariant():
             lambda w: 1. + 0.1*(w/500)**0.2
     )
     check_chromatic_invariant(complex_transformed_chrom)
+    jac = ((1+0.2*(waves/500)**0.1) * (1+0.1*(waves/500)**0.2) -
+           (-0.2*(waves/500)**0.2) * (-0.3*(waves/500)**0.3))
+    np.testing.assert_allclose(complex_transformed_chrom.sed(waves), chrom.sed(waves) * jac)
 
     # ChromaticInterpolatedObject
     chrom_interp = chrom_airy.interpolate(waves=[400.0, 500.0, 600.0])
     check_chromatic_invariant(chrom_interp)
+    np.testing.assert_allclose(chrom_interp.sed(waves), 1.0)
     check_pickle(chrom_interp)
     assert_raises(galsim.GalSimError, chrom_interp.applyTo, p1)
 

@@ -2847,7 +2847,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
     @property
     def sed(self):
-        return self._obj.sed
+        return SED(lambda w: self._obj.sed(w)**-1, 'nm', '1')
 
     @property
     def gsparams(self):
@@ -3132,7 +3132,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
 
     @property
     def sed(self):
-        return self._obj.sed
+        return SED(lambda w: self._obj.sed(w)**0.5, 'nm', '1')
 
     @property
     def gsparams(self):
