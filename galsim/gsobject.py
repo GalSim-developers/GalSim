@@ -438,6 +438,11 @@ class GSObject:
     def sed(self):
         return sed.SED(self.flux, 'nm', '1')
     @property
+    def SED(self):
+        from .deprecated import depr
+        depr('obj.SED', 2.5, 'obj.sed')
+        return self.sed
+    @property
     def spectral(self): return False
     @property
     def dimensionless(self): return True
