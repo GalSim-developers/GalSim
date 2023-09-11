@@ -635,6 +635,8 @@ def test_chromatic_flux():
     assert sed == PSF.sed
     sed1 = check_dep(getattr, PSF1, 'SED')
     assert sed1 == PSF1.sed
+    sed2 = check_dep(getattr, mono_PSF, 'SED')
+    assert sed1 == mono_PSF.sed == galsim.SED(1, 'nm', '1')
 
 
 if __name__ == "__main__":
