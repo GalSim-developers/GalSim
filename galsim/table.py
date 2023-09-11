@@ -150,6 +150,10 @@ class LookupTable:
         if self.f_log and np.any(self.f <= 0.):
             raise GalSimValueError("Cannot interpolate in log(f) when table contains f<=0.", f)
 
+        # inf causes problems in some cases, so avoid it if used as the maximum x value.
+        if self._x_max == np.inf:
+            self.x[-1] = self._x_max = 1.e300
+
         # Check equal-spaced arrays
         if self._interp1d is not None:
             if self.x_log:
