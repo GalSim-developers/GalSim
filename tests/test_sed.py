@@ -1102,6 +1102,36 @@ def test_broadcast():
     assert np.array_equal(sed(waves), np.ones(3) * waves / (galsim.SED._h * galsim.SED._c))
 
 
+@timer
+def test_SED_calculateFlux_inf():
+    """ Check that calculateFlux works properly if the endpoint is inf.
+    """
+    # These two SEDs are functionally the same, but it didn't use to work with np.inf.
+    sed1 = galsim.SED(
+        galsim.LookupTable(
+            [0, 621, 622, 623, 10000],
+            [0, 0, 1, 0, 0],
+            interpolant='linear'
+        ),
+        wave_type='nm',
+        flux_type='fphotons'
+    )
+    sed2 = galsim.SED(
+        galsim.LookupTable(
+            [0, 621, 622, 623, np.inf],
+            [0, 0, 1, 0, 0],
+            interpolant='linear'
+        ),
+        wave_type='nm',
+        flux_type='fphotons'
+    )
+
+    bp = galsim.Bandpass("LSST_r.dat", 'nm')
+    flux1 = sed1.calculateFlux(bp)
+    flux2 = sed2.calculateFlux(bp)
+    print('flux = ', flux1, flux2)
+    assert flux1 == flux2
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
