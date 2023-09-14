@@ -46,15 +46,15 @@ PSF for Roman.
 # Define a default set of bandpasses for which this routine works.
 default_bandpass_list = ['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158']
 # Prefix for files containing information about Zernikes for each SCA for cycle 7.
-zemax_filepref = "Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727"
+zemax_filepref = "Roman_Cycle-9_WFI_zim_zernikes_082623"
 zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
 # These need 'SCA*' prepended to the start to get the file name, and they live in
 # the share/roman directory.
-pupil_plane_file_longwave = '_full_mask.fits.gz'
-pupil_plane_file_shortwave = '_rim_mask.fits.gz'
-
+pupil_plane_file_longwave = 'RST_WIM_Filter_F184_SCA_'
+pupil_plane_file_shortwave = 'RST_WIM_Filter_skinny_SCA_'
+pupil_plane_filesuff = '.fits.gz'
 def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, wcs=None,
            n_waves=None, extra_aberrations=None,
@@ -66,20 +66,14 @@ def getPSF(SCA, bandpass,
     plane configuration and when interpolating chromatic information, if requested.
 
     This routine carries out linear interpolation of the aberrations within a given SCA, based on
-    the Roman (then WFIRST) Cycle 7 specification of the aberrations as a function of focal plane
-    position, more specifically from ``Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm``
-    downloaded from https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.  Phase
-    B updates that became available in mid-2019 have not yet been incorporated into this module.
-    (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the
-    new name of the telescope, Roman, after downloading.)
+    the Roman Cycle 9 specification of the aberrations as a function of focal plane
+    position, more specifically from the WebbPSF data files from webbpsf-data-1.2.1.tar.gz
+    downloaded from https://webbpsf.readthedocs.io/en/latest/installation.html#data-install.
+    The abberation file is webbpsf-data/WFI/wim_zernikes_cycle9.csv.
 
-    The mask images for the Roman pupil plane are available at the Roman Reference Information
-    page: https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.
+    The mask images for the Roman pupil plane are available in the same WebbPSF data files.
     There are separate files for each SCA, since the view of the spider pattern varies somewhat
-    across the field of view of the wide field camera. Furthermore, the effect of the obscuration
-    is somewhat different at longer wavelengths, so F184 has a different set of files than the
-    other filters.  cf. the ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
-    attributes, which define which bands use which pupil plane images.  Users usually don't need
+    across the field of view of the wide field camera. Users usually don't need
     to worry about any of this, as GalSim will select the correct pupil image automatically based
     on the SCA and bandpass provided.
 
@@ -112,7 +106,7 @@ def getPSF(SCA, bandpass,
     the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
-    simple, understood wavelength-dependence.  (The Roman project webpage for Cycle 7 does in fact
+    simple, understood wavelength-dependence.  (The Roman abberation data for Cycle 9 does in fact
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
     dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the
     Zernikes given on the webpage and create the files in the GalSim repository can be found in
@@ -284,15 +278,15 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
     # Load the pupil plane image.
     if pupil_plane_type == 'long':
         pupil_plane_im = os.path.join(meta_data.share_dir, 'roman',
-            'SCA%d'%SCA + pupil_plane_file_longwave)
+            pupil_plane_file_longwave + '%d'%SCA + pupil_plane_filesuff)
     else:
         pupil_plane_im = os.path.join(meta_data.share_dir, 'roman',
-            'SCA%d'%SCA + pupil_plane_file_shortwave)
+            pupil_plane_file_shortwave + '%d'%SCA + pupil_plane_filesuff)
     pupil_plane_im = fits.read(pupil_plane_im, read_header=True)
     # Native pixel scale in the file is for the exit pupil.  We want the scale of the
-    # entrance pupil.  Fortunately, they provide the conversion as PUPILMAG in the header.
+    # entrance pupil.  Fortunately, they provide the conversion as 'HIERARCH PUPIL SCALE FACTOR' in the header.
     # They also use microns for units, and we want meters, hence the extra 1.e-6.
-    pupil_plane_im.scale *= pupil_plane_im.header['PUPILMAG'] * 1.e-6
+    pupil_plane_im.scale *= pupil_plane_im.header['HIERARCH PUPIL SCALE FACTOR'] * 1.e-6
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
 
@@ -380,7 +374,7 @@ def _read_aberrations(SCA):
     aberrations[:,1:] = dat[:,5:]
     # Also get the field position.  The file gives it in mm with respect to the center, but we
     # want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel
-    # The y-coordinates have the opposite signs to the corresponding WFI location, explained 
+    # The y-coordinates have the opposite signs to the corresponding WFI location, explained
     # in the Roman file.
 
     x_sca_pos = dat[:,1]/pixel_scale_mm + n_pix/2
@@ -397,10 +391,10 @@ def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
     # The data comprise 5 rows: center, lower-left, upper-left, upper-right, lower-right.
     # The x,y values at the corners aren't precisely identical, but despite that, just
     # take the outer one and do a simple bilinear interpolation as though it were a rectangle.
-    ll = 4
-    ul = 3
-    ur = 2
-    lr = 1
+    ll = 1
+    ul = 2
+    ur = 3
+    lr = 4
     # Sanity checks so we notice if an update breaks this ordering.
     # (E.g. Cycle 9 is different from Cycle 7.)
     assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]  # lower-left
