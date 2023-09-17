@@ -199,7 +199,7 @@ def check_basic_k(prof, name):
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawKImage(kimage.copy())
-    np.testing.assert_almost_equal(neg_image.array/prof.flux, -kimage.array/prof.flux, 7,
+    np.testing.assert_array_almost_equal(neg_image.array/prof.flux, -kimage.array/prof.flux, 7,
                                    '%s negative flux drawK is not negative of +flux image'%name)
 
     # If supposed to be axisymmetric, make sure it is in the kValues.
