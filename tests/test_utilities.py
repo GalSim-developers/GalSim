@@ -46,7 +46,10 @@ def test_pos():
     pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
     pi6 = galsim.PositionD(11.3,23.4).round()
     pi7 = pi2.round()
-    pi8 = galsim._PositionI(11,23)
+    if hasattr(galsim, '_galsim'):
+        pi8 = galsim._PositionI(11,23)
+    else:
+        pi8 = galsim.PositionI(11,23)
     assert pi2 == pi1
     assert pi3 == pi1
     assert pi4 == pi1
@@ -72,7 +75,10 @@ def test_pos():
     pd4 = galsim.PositionD(pd1)
     pd5 = galsim.PositionD(pi1)
     pd6 = galsim.PositionD(galsim.PositionD(11.3,23.4).round())
-    pd7 = galsim._PositionD(11.0,23.0)
+    if hasattr(galsim, '_galsim'):
+        pd7 = galsim._PositionD(11.0,23.0)
+    else:
+        pd7 = galsim.PositionD(11.0,23.0)
     assert pd2 == pd1
     assert pd3 == pd1
     assert pd4 == pd1
