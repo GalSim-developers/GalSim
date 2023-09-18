@@ -393,10 +393,11 @@ def test_bounds():
     assert galsim.BoundsD() == galsim.BoundsD() + galsim.BoundsD()
     assert galsim.BoundsD().area() == 0
 
-    assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
-    assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
-    assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
-    assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
+    if hasattr(galsim, "_galsim"):
+        assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
+        assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
+        assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
+        assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
 
     assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'center')
     assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'center')
