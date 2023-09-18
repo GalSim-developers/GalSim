@@ -150,8 +150,8 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     prof.drawImage(image, method='sb', scale=1., use_true_center=False)
     image2 = image.copy()
     prof.drawReal(image2)
-    np.testing.assert_equal(image2.array, image.array,
-                            err_msg="%s drawReal not equivalent to drawImage"%name)
+    np.testing.assert_array_equal(image2.array, image.array,
+                                  err_msg="%s drawReal not equivalent to drawImage"%name)
 
     # If supposed to be axisymmetric, make sure it is.
     if prof.is_axisymmetric:
