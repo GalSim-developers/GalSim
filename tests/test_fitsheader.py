@@ -191,7 +191,7 @@ def test_read():
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
     """
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     file_name = 'scamp.head'
 
     header = galsim.FitsHeader(file_name=file_name, dir=dir, text_file=True)
