@@ -260,7 +260,8 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
-    assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+    if hasattr(galsim, '_galsim'):
+        assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
         bi1 += (11,23)
