@@ -51,7 +51,7 @@ def test_read():
         assert 54384.18627436 in header.itervalues()
 
     file_name = 'tpv.fits'
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     # First option: give a file_name
     header = galsim.FitsHeader(file_name=os.path.join(dir,file_name))
     check_tpv(header)
