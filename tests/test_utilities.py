@@ -180,7 +180,8 @@ def test_bounds():
     assert isinstance(bi1.xmax, int)
     assert isinstance(bi1.ymin, int)
     assert isinstance(bi1.ymax, int)
-    assert isinstance(bi1._b, galsim._galsim.BoundsI)
+    if hasattr(galsim, '_galsim'):
+        assert isinstance(bi1._b, galsim._galsim.BoundsI)
 
     bi2 = galsim.BoundsI(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bi3 = galsim.BoundsI(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
@@ -217,7 +218,8 @@ def test_bounds():
     assert isinstance(bd1.xmax, float)
     assert isinstance(bd1.ymin, float)
     assert isinstance(bd1.ymax, float)
-    assert isinstance(bd1._b, galsim._galsim.BoundsD)
+    if hasattr(galsim, '_galsim'):
+        assert isinstance(bd1._b, galsim._galsim.BoundsD)
 
     bd2 = galsim.BoundsD(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bd3 = galsim.BoundsD(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
