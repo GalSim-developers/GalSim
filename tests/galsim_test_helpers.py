@@ -143,8 +143,8 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
-    np.testing.assert_almost_equal(neg_image.array/prof.flux, -image.array/prof.flux, 7,
-                                   '%s negative flux drawReal is not negative of +flux image'%name)
+    np.testing.assert_array_almost_equal(neg_image.array/prof.flux, -image.array/prof.flux, 7,
+                                         '%s negative flux drawReal is not negative of +flux image'%name)
 
     # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
     prof.drawImage(image, method='sb', scale=1., use_true_center=False)
