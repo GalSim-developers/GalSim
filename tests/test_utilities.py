@@ -96,7 +96,8 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionI, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionI, 11, 23, x=13, z=21)
-    assert_raises(TypeError, galsim.PositionI, 11, 23.5)
+    if hasattr(galsim, '_galsim'):
+        assert_raises(TypeError, galsim.PositionI, 11, 23.5)
 
     assert_raises(TypeError, galsim.PositionD, 11)
     assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
