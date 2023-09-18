@@ -204,10 +204,10 @@ def test_bounds():
     for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13, bi14]:
         assert b.isDefined()
         assert b == bi1
-        assert isinstance(b.xmin, int)
-        assert isinstance(b.xmax, int)
-        assert isinstance(b.ymin, int)
-        assert isinstance(b.ymax, int)
+        assert_intlike(b.xmin)
+        assert_intlike(b.xmax)
+        assert_intlike(b.ymin)
+        assert_intlike(b.ymax)
         assert b.origin == galsim.PositionI(11, 17)
         assert b.center == galsim.PositionI(17, 34)
         assert b.true_center == galsim.PositionD(17, 33.5)
@@ -217,10 +217,10 @@ def test_bounds():
     assert bd1.xmax == bd1.getXMax() == 23.
     assert bd1.ymin == bd1.getYMin() == 17.
     assert bd1.ymax == bd1.getYMax() == 50.
-    assert isinstance(bd1.xmin, float)
-    assert isinstance(bd1.xmax, float)
-    assert isinstance(bd1.ymin, float)
-    assert isinstance(bd1.ymax, float)
+    assert_floatlike(bd1.xmin)
+    assert_floatlike(bd1.xmax)
+    assert_floatlike(bd1.ymin)
+    assert_floatlike(bd1.ymax)
     if hasattr(galsim, '_galsim'):
         assert isinstance(bd1._b, galsim._galsim.BoundsD)
 
@@ -245,10 +245,10 @@ def test_bounds():
     for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13, bd14]:
         assert b.isDefined()
         assert b == bd1
-        assert isinstance(b.xmin, float)
-        assert isinstance(b.xmax, float)
-        assert isinstance(b.ymin, float)
-        assert isinstance(b.ymax, float)
+        assert_floatlike(b.xmin)
+        assert_floatlike(b.xmax)
+        assert_floatlike(b.ymin)
+        assert_floatlike(b.ymax)
         assert b.origin == galsim.PositionD(11, 17)
         assert b.center == galsim.PositionD(17, 33.5)
         assert b.true_center == galsim.PositionD(17, 33.5)

@@ -38,6 +38,7 @@ __all__ = [
     "check_basic_x",
     "check_basic_k",
     "assert_floatlike",
+    "assert_intlike",
     "check_basic",
     "do_shoot",
     "do_kvalue",
@@ -238,12 +239,25 @@ def assert_floatlike(val):
     assert (
         isinstance(val, float)
         or (
-            hasattr(val, "shape")
+            (not hasattr(galsim, "_galsim"))
+            and hasattr(val, "shape")
             and val.shape == ()
             and hasattr(val, "dtype")
             and val.dtype.name in ["float", "float32", "float64"]
         )
     ), "Value is not float-like: type(%r) = %r" % (val, type(val))
+
+def assert_intlike(val):
+    assert (
+        isinstance(val, int)
+        or (
+            (not hasattr(galsim, "_galsim"))
+            and hasattr(val, "shape")
+            and val.shape == ()
+            and hasattr(val, "dtype")
+            and val.dtype.name in ["int", "int32", "int64"]
+        )
+    ), "Value is not int-like: type(%r) = %r" % (val, type(val))
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
