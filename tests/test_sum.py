@@ -45,7 +45,7 @@ def test_add():
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    assert sum_gauss.centroid == cen, "Centers not equal: %r != %r" % (sum_gauss.centroid, cen)
+    np.testing.assert_equal(sum_gauss.centroid, cen)
     np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
     np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.max_sb)
 
