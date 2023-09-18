@@ -118,7 +118,7 @@ def test_shear_initialization():
     vec_ideal = np.zeros(len(vec))
     np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
                                          err_msg = "Incorrectly initialized empty shear")
-    np.testing.assert_equal(s.q, 1.)
+    np.testing.assert_array_equal(s.q, 1.)
     # now loop over shear values and ways of initializing
     for ind in range(n_shear):
         # initialize with reduced shear components
