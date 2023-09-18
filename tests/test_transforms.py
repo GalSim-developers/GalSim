@@ -23,8 +23,8 @@ import sys
 import galsim
 from galsim_test_helpers import *
 
-imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images.
+# Directory containing the reference images.
+imgdir = os.path.join(os.path.dirname(__file__), "SBProfile_comparison_images")
 
 # for flux normalization tests
 test_flux = 1.8
