@@ -211,6 +211,17 @@ def check_basic_k(prof, name):
             np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
                                        err_msg="%s profile not axisymmetric in kValues"%name)
 
+def assert_floatlike(val):
+    assert (
+        isinstance(val, float)
+        or (
+            hasattr(val, "shape")
+            and val.shape == ()
+            and hasattr(val, "dtype")
+            and val.dtype.name in ["float", "float32", "float64"]
+        )
+    ), "Value is not float-like: type(%r) = %r" % (val, type(val))
+
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
     """
@@ -225,12 +236,12 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
             prof.positive_flux - prof.negative_flux, prof.flux,
             err_msg="%s profile flux not equal to posflux + negflux"%name)
     assert isinstance(prof.centroid, galsim.PositionD)
-    assert isinstance(prof.flux, float)
-    assert isinstance(prof.positive_flux, float)
-    assert isinstance(prof.negative_flux, float)
-    assert isinstance(prof.max_sb, float)
-    assert isinstance(prof.stepk, float)
-    assert isinstance(prof.maxk, float)
+    assert_floatlike(prof.flux)
+    assert_floatlike(prof.positive_flux)
+    assert_floatlike(prof.negative_flux)
+    assert_floatlike(prof.max_sb)
+    assert_floatlike(prof.stepk)
+    assert_floatlike(prof.maxk)
     assert isinstance(prof.has_hard_edges, bool)
     assert isinstance(prof.is_axisymmetric, bool)
     assert isinstance(prof.is_analytic_x, bool)
