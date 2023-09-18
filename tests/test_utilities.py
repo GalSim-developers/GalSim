@@ -37,7 +37,8 @@ def test_pos():
     assert pi1.y == 23
     assert isinstance(pi1.x, int)
     assert isinstance(pi1.y, int)
-    assert isinstance(pi1._p, galsim._galsim.PositionI)
+    if hasattr(galsim, '_galsim'):
+        assert isinstance(pi1._p, galsim._galsim.PositionI)
 
     pi2 = galsim.PositionI((11,23))
     pi3 = galsim.PositionI(x=11.0, y=23.0)
@@ -63,7 +64,8 @@ def test_pos():
     assert pd1.y == 23.
     assert isinstance(pd1.x, float)
     assert isinstance(pd1.y, float)
-    assert isinstance(pd1._p, galsim._galsim.PositionD)
+    if hasattr(galsim, '_galsim'):
+        assert isinstance(pd1._p, galsim._galsim.PositionD)
 
     pd2 = galsim.PositionD((11,23))
     pd3 = galsim.PositionD(x=11.0, y=23.0)
