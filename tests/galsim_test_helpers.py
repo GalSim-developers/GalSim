@@ -30,6 +30,29 @@ from galsim.utilities import check_pickle, check_all_diff, timer, CaptureLog, Pr
 from numpy.testing import assert_raises
 from numpy.testing import assert_warns
 
+__all__ = [
+    "default_params",
+    "gsobject_compare",
+    "printval",
+    "convertToShear",
+    "check_basic_x",
+    "check_basic_k",
+    "assert_floatlike",
+    "check_basic",
+    "do_shoot",
+    "do_kvalue",
+    "radial_integrate",
+    "drawNoise",
+    "do_pickle",
+    "all_obj_diff",
+    "funcname",
+    "timer",
+    "CaptureLog",
+    "assert_raises",
+    "assert_warns",
+    "profile",
+]
+
 # This file has some helper functions that are used by tests from multiple files to help
 # avoid code duplication.
 
