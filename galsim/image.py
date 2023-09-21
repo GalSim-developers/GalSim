@@ -785,7 +785,7 @@ class Image:
     def _wrap(self, bounds, hermx, hermy):
         """A version of `wrap` without the sanity checks.
 
-        Equivalent to ``image.wrap(bounds, hermitian=='x', hermitian=='y')``.
+        Equivalent to ``image.wrap(bounds, hermitian='x' if hermx else 'y' if hermy else False)``
         """
         ret = self.subImage(bounds)
         _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
