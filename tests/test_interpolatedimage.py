@@ -453,8 +453,8 @@ def test_fluxnorm():
     # First, make some Image with some total flux value (sum of pixel values) and scale
     im = galsim.ImageF(im_lin_scale, im_lin_scale, scale=im_scale, init_value=im_fill_value)
     total_flux = im_fill_value*(im_lin_scale**2)
-    np.testing.assert_equal(total_flux, im.array.sum(),
-                            err_msg='Created array with wrong total flux')
+    np.testing.assert_array_equal(total_flux, im.array.sum(),
+                                  err_msg='Created array with wrong total flux')
 
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
