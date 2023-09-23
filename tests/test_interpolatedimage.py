@@ -744,8 +744,11 @@ def test_operations():
     test_decimal = 3
 
     # Make some nontrivial image
-    im = galsim.fits.read('./real_comparison_images/test_images.fits') # read in first real galaxy
-                                                                       # in test catalog
+    im_path = os.path.join(
+        os.path.dirname(__file__), "real_comparison_images/test_images.fits"
+    )
+    im = galsim.fits.read(im_path) # read in first real galaxy
+                                   # in test catalog
     int_im = galsim.InterpolatedImage(im)
     orig_mom = im.FindAdaptiveMom()
 
