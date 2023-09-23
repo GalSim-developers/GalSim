@@ -957,7 +957,7 @@ def test_corr_padding():
     # Set up some defaults for tests.
     decimal_precise=4
     decimal_coarse=2
-    imgfile = 'fits_files/blankimg.fits'
+    imgfile = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     orig_nx = 187
     orig_ny = 164
     big_nx = 319
