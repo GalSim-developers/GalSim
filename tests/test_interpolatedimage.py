@@ -1700,7 +1700,7 @@ def test_quintic_glagn():
     """This is code that was giving a seg fault.  cf. Issue 1079.
     """
 
-    fname = os.path.join('fits_files','GLAGN_host_427_0_disk.fits')
+    fname = os.path.join(os.path.dirname(__file__), 'fits_files','GLAGN_host_427_0_disk.fits')
     for interpolant in 'linear cubic quintic'.split():
         print(interpolant)
         fits_image = galsim.InterpolatedImage(fname, scale=0.04, x_interpolant=interpolant)
