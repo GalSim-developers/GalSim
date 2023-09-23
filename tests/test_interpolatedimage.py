@@ -1850,7 +1850,10 @@ def test_drawreal_seg_fault():
 
     import pickle
 
-    prof_file = 'input/test_interpolatedimage_seg_fault_prof.pkl'
+    prof_file = os.path.join(
+        os.path.dirname(__file__),
+        'input/test_interpolatedimage_seg_fault_prof.pkl'
+    )
     with open(prof_file, 'rb') as f:
         prof = pickle.load(f)
     print(repr(prof))
