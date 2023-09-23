@@ -1847,36 +1847,37 @@ def test_depixelize():
 def test_drawreal_seg_fault():
     """Test to reproduce bug report in Issue #1164 that was causing seg faults
     """
+    # this test only runs with real galsim
+    if hasattr(galsim, '_galsim'):
+        import pickle
 
-    import pickle
+        prof_file = os.path.join(
+            os.path.dirname(__file__),
+            'input/test_interpolatedimage_seg_fault_prof.pkl'
+        )
+        with open(prof_file, 'rb') as f:
+            prof = pickle.load(f)
+        print(repr(prof))
 
-    prof_file = os.path.join(
-        os.path.dirname(__file__),
-        'input/test_interpolatedimage_seg_fault_prof.pkl'
-    )
-    with open(prof_file, 'rb') as f:
-        prof = pickle.load(f)
-    print(repr(prof))
+        image = galsim.Image(
+            galsim.BoundsI(
+                xmin=-12,
+                xmax=12,
+                ymin=-12,
+                ymax=12
+            ),
+            dtype=float,
+            scale=1
+        )
 
-    image = galsim.Image(
-        galsim.BoundsI(
-            xmin=-12,
-            xmax=12,
-            ymin=-12,
-            ymax=12
-        ),
-        dtype=float,
-        scale=1
-    )
+        image.fill(3)
+        prof.drawReal(image)
 
-    image.fill(3)
-    prof.drawReal(image)
-
-    # The problem was that the object is shifted fully off the target image and that was leading
-    # to an attempt to create a stack of length -1, which caused the seg fault.
-    # So mostly this test just confirms that this runs without seg faulting.
-    # But we can check that the image is now correctly all zeros.
-    np.testing.assert_array_equal(image.array, 0)
+        # The problem was that the object is shifted fully off the target image and that was leading
+        # to an attempt to create a stack of length -1, which caused the seg fault.
+        # So mostly this test just confirms that this runs without seg faulting.
+        # But we can check that the image is now correctly all zeros.
+        np.testing.assert_array_equal(image.array, 0)
 
 
 
