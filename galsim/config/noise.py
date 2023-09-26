@@ -211,7 +211,7 @@ def GetSky(config, base, logger=None, full=False):
             return sky_level_pixel
         elif full:
             # This calculation is non-trivial, so store this in case we need it again.
-            tag = (id(base), base['file_num'], base['image_num'])
+            tag = (id(base), base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0))
             if config.get('_current_sky_tag',None) == tag:
                 logger.debug('image %d, obj %d: Using saved sky image',
                              base.get('image_num',0),base.get('obj_num',0))
