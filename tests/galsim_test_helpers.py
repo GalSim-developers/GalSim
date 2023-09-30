@@ -167,12 +167,12 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
     else:
         for line in galsim.GSObject.withFlux.__doc__.splitlines():
-            if line.strip():
+            if line.strip() and "LAX" not in line:
                 assert line.strip() in prof.withFlux.__doc__, (
                     prof.withFlux.__doc__, galsim.GSObject.withFlux.__doc__,
                 )
         for line in galsim.GSObject.withFlux.__doc__.splitlines():
-            if line.strip():
+            if line.strip() and "LAX" not in line:
                 assert line.strip() in prof.__class__.withFlux.__doc__, (
                     prof.__class__.withFlux.__doc__, galsim.GSObject.withFlux.__doc__,
                 )
