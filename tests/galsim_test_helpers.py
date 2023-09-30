@@ -162,8 +162,16 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
                 err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
-    assert prof.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
-    assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
+    if hasattr(galsim, "_galsim"):
+        assert prof.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
+        assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
+    else:
+        for line in galsim.GSObject.withFlux.__doc__.splitlines():
+            if line.strip():
+                assert line.strip() in prof.withFlux.__doc__
+        for line in galsim.GSObject.withFlux.__doc__.splitlines():
+            if line.strip():
+                assert line.strip() in prof.__class__.withFlux.__doc__
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
