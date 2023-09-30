@@ -168,10 +168,14 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     else:
         for line in galsim.GSObject.withFlux.__doc__.splitlines():
             if line.strip():
-                assert line.strip() in prof.withFlux.__doc__
+                assert line.strip() in prof.withFlux.__doc__, (
+                    prof.withFlux.__doc__, galsim.GSObject.withFlux.__doc__,
+                )
         for line in galsim.GSObject.withFlux.__doc__.splitlines():
             if line.strip():
-                assert line.strip() in prof.__class__.withFlux.__doc__
+                assert line.strip() in prof.__class__.withFlux.__doc__, (
+                    prof.__class__.withFlux.__doc__, galsim.GSObject.withFlux.__doc__,
+                )
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
