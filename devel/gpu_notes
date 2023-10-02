@@ -1,0 +1,15 @@
+Comments on Slack from James Perry about GPU testing work he did.
+https://lsstc.slack.com/archives/CHXKSF3HC/p1696253564727889
+
+Chris suggested that I make sure to pass on any documentation/tools I have developed and used
+during my GalSim work. Most of what I have done is documented in the normal places on GitHub,
+or discussed on this channel. But there are a couple of small things that may not be:
+
+https://github.com/jamesp-epcc/GalSimGPUTest
+- This is a test case and build scripts for running the GPU sensor model in pure C++,
+no Python layer.  I developed this so that I could get on with adding GPU acceleration to the
+code without having to worry about the complexities of setuptools etc. until later on.
+I'm not sure how much use it will be to anyone going forward, but just in case, here it is.
+
+https://jamesp-epcc.github.io/lsst/galsim-gpu.html
+- This is my notes on how to build and run GalSim on Perlmutter with GPU acceleration enabled.

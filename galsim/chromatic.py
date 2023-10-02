@@ -2065,7 +2065,7 @@ class SimpleChromaticTransformation(ChromaticTransformation):
             self._original = self._original.withGSParams(self._gsparams)
         self.deinterpolated = self
 
-    @property
+    @lazy_property
     def sed(self):
         return self._flux_ratio * self.original.flux
 
