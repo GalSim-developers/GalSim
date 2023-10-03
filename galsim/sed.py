@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-__all__ = [ 'SED' ]
+__all__ = [ 'SED', 'EmissionLine' ]
 
 import numpy as np
 from astropy import units
@@ -789,6 +789,8 @@ class SED:
         """
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless SED.", self)
+        if bandpass is None: # compute bolometric flux
+            bandpass = Bandpass(lambda w: 1., 'nm', blue_limit=0., red_limit=1e100)
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             slop = 1e-6 # nm
             if (self.blue_limit > bandpass.blue_limit + slop
@@ -1094,6 +1096,134 @@ class SED:
         if '_spec' not in d:
             self._initialize_spec()
         self._setup_funcs()
+
+
+class EmissionLine(SED):
+    """Emission line SED.
+
+    Creates a simple triangle-shaped emission line with a given wavelength and
+    FWHM.
+
+    Parameters:
+        wavelength:    The wavelength of the line.
+        fwhm:          The full-width-half-max of the line.  [default: 1.0]
+        flux:          The integrated flux of the line.  [default: 1.0]
+        wave_type:     The units of ``wavelength`` and ``fwhm`` above.  See SED
+                       constructor for options.  [default: 'nm']
+        flux_type:     The units of flux used for this SED.  See SED constructor
+                       for options.  [default: 'fphotons']
+        **kwargs:      Any additional keyword arguments to pass to the `SED`
+                       constructor.
+    """
+    def __init__(
+        self,
+        wavelength,
+        fwhm=1.0,
+        flux=1.0,
+        wave_type='nm',
+        flux_type='fphotons',
+        **kwargs
+    ):
+        self.wavelength = wavelength
+        self.fwhm = fwhm
+        self.flux = flux
+        spec = LookupTable(
+            [0.0, wavelength-fwhm, wavelength, wavelength+fwhm, np.inf],
+            [0, 0, flux/fwhm, 0, 0],
+            interpolant='linear'
+        )
+        super().__init__(
+            spec,
+            wave_type=wave_type,
+            flux_type=flux_type,
+            **kwargs
+        )
+
+    def atRedshift(self, redshift):
+        """Return a new `EmissionLine` with redshifted wavelengths.
+
+        Parameters:
+            redshift:   The redshift for the returned `EmissionLine`
+
+        Returns:
+            the redshifted `EmissionLine`.
+        """
+        if redshift == self.redshift:
+            return self
+        if redshift <= -1:
+            raise GalSimRangeError("Invalid redshift", redshift, -1.)
+        zfactor = (1.0 + redshift) / (1.0 + self.redshift)
+        return EmissionLine(
+            self.wavelength * zfactor,
+            self.fwhm * zfactor,
+            flux=self.flux,
+            wave_type=self.wave_type,
+            flux_type=self.flux_type,
+            redshift=redshift,
+            fast=self.fast
+        )
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            flux = self.flux * other
+            return EmissionLine(
+                self.wavelength,
+                self.fwhm,
+                flux=flux,
+                wave_type=self.wave_type,
+                flux_type=self.flux_type,
+                redshift=self.redshift,
+                fast=self.fast
+            )
+        else:
+            return super().__mul__(other)
+
+    def __div__(self, other):
+        if isinstance(other, (int, float)):
+            flux = self.flux / other
+            return EmissionLine(
+                self.wavelength,
+                self.fwhm,
+                flux=flux,
+                wave_type=self.wave_type,
+                flux_type=self.flux_type,
+                redshift=self.redshift,
+                fast=self.fast
+            )
+        else:
+            return super().__div__(other)
+
+    __truediv__ = __div__
+
+    def __eq__(self, other):
+        return (self is other or
+                (isinstance(other, EmissionLine) and
+                 self.wavelength == other.wavelength and
+                 self.fwhm == other.fwhm and
+                 self.flux == other.flux and
+                 self.wave_type == other.wave_type and
+                 self.flux_type == other.flux_type and
+                 self.redshift == other.redshift))
+
+    def __hash__(self):
+        return hash(("galsim.EmissionLine", self.wavelength, self.fwhm, self.flux))
+
+    def __repr__(self):
+        outstr = ('galsim.EmissionLine(%r, %r, flux=%r, wave_type=%r, flux_type=%r, redshift=%r,'
+                  ' fast=%r)')%(
+                      self.wavelength, self.fwhm, self.flux, self.wave_type, self._flux_type,
+                      self.redshift, self.fast)
+        return outstr
+
+    def __str__(self):
+        outstr = 'galsim.EmissionLine(wavelength=%s, fwhm=%s'%(self.wavelength, self.fwhm)
+        if self.flux != 1.0:
+            outstr += ', flux=%s'%self.flux
+        if self.redshift != 0.0:
+            outstr += ', redshift=%s'%self.redshift
+        outstr += ')'
+        return outstr
+
 
 # Put this at the bottom to avoid circular import errors.
 from .bandpass import Bandpass
