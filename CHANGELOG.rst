@@ -37,6 +37,7 @@ New Features
   people might want to use to the installed galsim.utilities. (#1240)
 - Added `galsim.utilities.merge_sorted` which merges two or more sorted numpy arrays faster than
   the available numpy options. (#1243)
+- Added `galsim.EmissionLine` class to represent emission line SEDs. (#1249)
 
 
 Performance Improvements

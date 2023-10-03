@@ -512,48 +512,53 @@ def test_SED_withFlux():
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
-            a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                           flux_type='flambda', fast=fast)
-            b = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
-            if z != 0:
-                a = a.atRedshift(z)
-                b = b.atRedshift(z)
-            a = a.withFlux(1.0, rband)
-            b = b.withFlux(1.0, rband)
-            np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
-                                                 "Setting SED flux failed.")
-            np.testing.assert_array_almost_equal(b.calculateFlux(rband), 1.0, 5,
-                                                 "Setting SED flux failed.")
+            for sed in [
+                galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                           flux_type='flambda', fast=fast),
+                galsim.SED('wave', wave_type='nm', flux_type='fphotons'),
+                galsim.EmissionLine(620.0, 1.0) + 2*galsim.EmissionLine(450.0, 0.5)
+            ]:
+                if z != 0:
+                    sed = sed.atRedshift(z)
+                sed = sed.withFlux(1.0, rband)
+                np.testing.assert_array_almost_equal(
+                    sed.calculateFlux(rband), 1.0, 5,
+                    "Setting SED flux failed."
+                )
 
-            # Should be almost equivalent to multiplying an SED * Bandpass and computing the
-            # "bolometric" flux.  The above is a bit more accurate, since it correctly does
-            # the integration of the product of two linear segments between each tabulated point.
-            ab = a * rband
-            bb = b * rband
-            bolo_bp = galsim.Bandpass('1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
-                                      wave_type='nm')
-            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 3,
-                                                 "Calculating SED flux from sed * bp failed.")
-            np.testing.assert_array_almost_equal(bb.calculateFlux(bolo_bp), 1.0, 3,
-                                                 "Calculating SED flux from sed * bp failed.")
+                # Should be almost equivalent to multiplying an SED * Bandpass and computing the
+                # "bolometric" flux.  The above is a bit more accurate, since it correctly does
+                # the integration of the product of two linear segments between each tabulated point.
+                ab = sed * rband
+                bolo_bp = galsim.Bandpass(
+                    '1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
+                    wave_type='nm'
+                )
+                np.testing.assert_array_almost_equal(
+                    ab.calculateFlux(bolo_bp), 1.0, 3,
+                    "Calculating SED flux from sed * bp failed."
+                )
 
-            # If one or the other table has finer wavelength gridding, then the agreement
-            # will be better.  Check with finer gridding for rband.
-            fine_wave = np.linspace(ab.blue_limit, ab.red_limit, 169101)
-            rband_fine = galsim.Bandpass(galsim.LookupTable(fine_wave, rband(fine_wave), 'linear'),
-                                         'nm')
-            ab = a * rband_fine
-            bb = b * rband_fine
+                # If one or the other table has finer wavelength gridding, then the agreement
+                # will be better.  Check with finer gridding for rband.
+                fine_wave = np.linspace(ab.blue_limit, ab.red_limit, 169101)
+                rband_fine = galsim.Bandpass(
+                    galsim.LookupTable(fine_wave, rband(fine_wave), 'linear'),
+                    'nm'
+                )
+                ab = sed * rband_fine
 
-            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
-                                                 "Calculating SED flux from sed * bp failed.")
-            np.testing.assert_array_almost_equal(bb.calculateFlux(bolo_bp), 1.0, 5,
-                                                 "Calculating SED flux from sed * bp failed.")
+                np.testing.assert_array_almost_equal(
+                    ab.calculateFlux(bolo_bp), 1.0, 5,
+                    "Calculating SED flux from sed * bp failed."
+                )
 
-            # Multiplying in the other order also works.
-            ba = rband_fine * a
-            np.testing.assert_array_almost_equal(ba.calculateFlux(bolo_bp), 1.0, 5,
-                                                 "Calculating SED flux from sed * bp failed.")
+                # Multiplying in the other order also works.
+                ba = rband_fine * sed
+                np.testing.assert_array_almost_equal(
+                    ba.calculateFlux(bolo_bp), 1.0, 5,
+                    "Calculating SED flux from sed * bp failed."
+                )
 
     # Invalid for dimensionless SED
     flat = galsim.SED(2.0, 'nm', '1')
@@ -1003,7 +1008,9 @@ def test_ne():
             galsim.SED(spec1, wave_type='nm', flux_type='fnu'),
             galsim.SED(spec1, 'nm', 'flambda', redshift=1.0),
             galsim.SED(spec2, 'nm', 'flambda'),
-            galsim.SED(spec3, 'nm', 'flambda')]
+            galsim.SED(spec3, 'nm', 'flambda'),
+            galsim.EmissionLine(500.0, 1.0),
+        ]
     check_all_diff(seds)
 
 
@@ -1131,6 +1138,50 @@ def test_SED_calculateFlux_inf():
     flux2 = sed2.calculateFlux(bp)
     print('flux = ', flux1, flux2)
     assert flux1 == flux2
+
+
+@timer
+def test_emission_line():
+    spectral = galsim.SED("vega.txt", wave_type='nm', flux_type='flambda')
+    dimensionless = galsim.SED("1", wave_type='nm', flux_type='1')
+
+    for wavelength, fwhm in [
+        (500.0, 1.0),
+        (650.0, 0.3),
+        (700.0, 4.3)
+    ]:
+        for sed in [
+            galsim.EmissionLine(wavelength, fwhm),
+            galsim.EmissionLine(wavelength*10, fwhm*10, wave_type='ang')
+        ]:
+            np.testing.assert_allclose(sed.calculateFlux(None), 1.0)
+            np.testing.assert_allclose((sed*2).calculateFlux(None), 2.0)
+            np.testing.assert_allclose((3*sed).calculateFlux(None), 3.0)
+            np.testing.assert_allclose((sed/2).calculateFlux(None), 0.5)
+            np.testing.assert_allclose(sed(wavelength), 1./fwhm)
+            np.testing.assert_allclose(sed(wavelength+fwhm), 0.0, rtol=0, atol=1e-11)
+            np.testing.assert_allclose(sed(wavelength-fwhm), 0.0, rtol=0, atol=1e-11)
+            np.testing.assert_allclose(sed(wavelength+fwhm/2), 0.5/fwhm, rtol=0, atol=1e-11)
+            np.testing.assert_allclose(sed(wavelength-fwhm/2), 0.5/fwhm, rtol=0, atol=1e-11)
+            np.testing.assert_allclose((sed*dimensionless).calculateFlux(None), 1.0)
+
+            check_pickle(sed)
+            check_pickle(sed*2)
+            check_pickle(sed/3)
+            check_pickle(sed.atRedshift(0.3))
+
+            with np.testing.assert_raises(galsim.GalSimIncompatibleValuesError):
+                sed * spectral
+            with np.testing.assert_raises(galsim.GalSimSEDError):
+                sed / spectral
+            with np.testing.assert_raises(galsim.GalSimSEDError):
+                spectral / sed
+
+            sed = sed.atRedshift(1.1)
+            assert sed is sed.atRedshift(1.1)
+            with np.testing.assert_raises(galsim.GalSimRangeError):
+                sed.atRedshift(-2.0)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
