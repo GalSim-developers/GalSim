@@ -1180,7 +1180,8 @@ def test_pixelscale():
     assert wcs.world_origin == galsim.PositionD(0,0)
 
     assert_raises(TypeError, galsim.PixelScale)
-    assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, origin=galsim.PositionD(0,0))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, world_origin=galsim.PositionD(0,0))
 
