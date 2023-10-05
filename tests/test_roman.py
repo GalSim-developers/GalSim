@@ -417,7 +417,7 @@ def test_roman_bandpass():
     reference['J129'] = 1.52e10
     reference['H158'] = 1.11e10
     reference['F184'] = 0.58e10
-    reference['W149'] = 4.34e10
+    reference['W146'] = 4.34e10
 
     # Only 15% accuracy required because did not use quite the same stellar template.  Fortunately,
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
@@ -440,7 +440,7 @@ def test_roman_bandpass():
     delta_zp = 2.5 * np.log10(area_eff)
     # Define the zeropoints that they calculated:
     ref_zp = {
-        'W149': 27.554,
+        'W146': 27.554,
         'Z087': 26.163
         }
     for key in ref_zp.keys():
@@ -771,7 +771,7 @@ def test_roman_basic_numbers():
                                'Y106': 0.023,
                                'Z087': 0.023,
                                'H158': 0.022,
-                               'W149': 0.023}
+                               'W146': 0.023}
     ref_pupil_plane_file = os.path.join(
             galsim.meta_data.share_dir, 'roman', 'SCA2_rim_mask.fits.gz')
     ref_stray_light_fraction = 0.1

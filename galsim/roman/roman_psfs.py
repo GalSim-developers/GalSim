@@ -201,6 +201,10 @@ def getPSF(SCA, bandpass,
     """
 
     # Deprecated options
+    if bandpass == 'W149':
+        from ..deprecated import depr
+        depr('W149', 2.5, 'W146', 'Note: this is to match current Roman filter naming schemes')
+        bandpass = 'W146'
     if high_accuracy:
         if approximate_struts:
             from ..deprecated import depr

@@ -638,6 +638,36 @@ def test_chromatic_flux():
     sed2 = check_dep(getattr, mono_PSF, 'SED')
     assert sed1 == mono_PSF.sed == galsim.SED(1, 'nm', '1')
 
+@timer
+def test_W149():
+    # Based on test_config_psf, using old W149 name.
+
+    config = {
+        'modules' : ['galsim.roman'],
+        'psf' : { 'type' : 'RomanPSF', 'SCA': 4, 'bandpass': 'W149' }
+    }
+
+    galsim.config.ImportModules(config)
+    psf1 = check_dep(galsim.config.BuildGSObject, config, 'psf')[0]
+    psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass='W149')
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
+
+    config = galsim.config.CleanConfig(config)
+    config['image'] = {
+        'bandpass' : { 'type' : 'RomanBandpass', 'name' : 'W149' }
+    }
+    config['psf']['wavelength'] = 985
+    config['psf']['pupil_bin'] = 8
+    bp = check_dep(galsim.config.BuildBandpass, config['image'], 'bandpass', config)[0]
+    config['bandpass'] = bp
+    psf1 = check_dep(galsim.config.BuildGSObject, config, 'psf')[0]
+    psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass='W149', pupil_bin=8, wavelength=985.)
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

@@ -39,7 +39,7 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
                        'Y106': 0.023,
                        'Z087': 0.023,
                        'H158': 0.022,
-                       'W149': 0.023}
+                       'W146': 0.023}
 
 # Physical pixel size
 pixel_scale_mm = 0.01 # mm
@@ -60,8 +60,8 @@ pupil_plane_scale = 0.00111175097
 # Which bands should use the long vs short pupil plane files for the PSF.
 # F184
 longwave_bands = ['F184']
-# Z087, Y106, J129, H158, W149
-shortwave_bands = ['Z087', 'Y106', 'J129', 'H158', 'W149']
+# Z087, Y106, J129, H158, W146
+shortwave_bands = ['Z087', 'Y106', 'J129', 'H158', 'W146']
 
 stray_light_fraction = 0.1
 

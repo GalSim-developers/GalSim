@@ -108,6 +108,10 @@ class RomanBandpassBuilder(BandpassBuilder):
         kwargs, safe = GetAllParams(config, base, req=req)
 
         name = kwargs['name']
+        if name == 'W149':
+            from ..deprecated import depr
+            depr('W149', 2.5, 'W146', 'Note: this is to match current Roman filter naming schemes')
+            name = 'W146'
         bandpass = getBandpasses()[name]
 
         return bandpass, safe
