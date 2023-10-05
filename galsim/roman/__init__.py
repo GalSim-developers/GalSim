@@ -25,7 +25,7 @@ from .. import meta_data, Image
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
-diameter = 2.37  # meters
+diameter = 2.36  # meters
 obscuration = 0.32
 collecting_area = 3.757e4 # cm^2, from Cycle 7
 exptime = 139.8  # s
