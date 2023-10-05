@@ -337,7 +337,9 @@ def test_roman_backgrounds():
     # No world_pos works.  Produces sky level for some plausible generic location.
     sky_level = galsim.roman.getSkyLevel(bp)
     print('sky_level = ',sky_level)
-    np.testing.assert_allclose(sky_level, 6233.47369567) # regression test relative to v1.6
+    exptime_ratio = galsim.roman.exptime / 140.25
+    # regression test relative to v1.6
+    np.testing.assert_allclose(sky_level, 6233.47369567 * exptime_ratio)
 
     # But not with a non-Roman bandpass
     with assert_raises(galsim.GalSimError):
@@ -758,7 +760,7 @@ def test_roman_basic_numbers():
     ref_pixel_scale = 0.11  # arcsec / pixel
     ref_diameter = 2.37  # meters
     ref_obscuration = 0.32
-    ref_exptime = 140.25  # s
+    ref_exptime = 139.8  # s
     ref_dark_current = 0.015 # e-/pix/s
     ref_nonlinearity_beta = -6.e-7
     ref_reciprocity_alpha = 0.0065
