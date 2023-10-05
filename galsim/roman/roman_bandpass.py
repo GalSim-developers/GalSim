@@ -33,7 +33,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all Roman
-    bandpasses, and uses the information in the file to create a dictionary.
+    bandpasses, and uses the information in the file to create a dictionary. This file is in units
+    of effective area (m^2), which includes the nominal mirror size and obscuration in each
+    bandpass.
 
     In principle it should be possible to replace the version of the file with another one, provided
     that the format obeys the following rules:
@@ -49,19 +51,8 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     if thinning is not desired, truncation is recommended.
 
     By default, the routine will set an AB zeropoint (unless ``AB_zeropoint=False``).  The
-    zeropoint in GalSim is defined such that the flux is 1 photon/cm^2/sec through the
-    bandpass. This differs from an instrumental bandpass, which is typically defined such that the
-    flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
-    follows:
-
-            # Shift zeropoint based on effective collecting area in cm^2.
-            area_eff = galsim.roman.collecting_area
-            delta_zp = 2.5 * np.log10(area_eff)
-
-    ``delta_zp`` will be a positive number that should be added to the GalSim zeropoints to compare
-    with externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
-    normalization of fluxes, the ``area`` kwarg to drawImage can be used to get the right
-    normalization (giving it the quantity ``area_eff`` calculated using the lines of code above).
+    zeropoint in this module is defined such that the flux is 1 photon/sec through the
+    bandpass.
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.roman.getSkyLevel() routine.  The sky background information is saved as an attribute in
@@ -70,6 +61,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     There are some subtle points related to the filter edges, which seem to depend on the field
     angle at some level.  This is more important for the grism than for the imaging, so currently
     this effect is not included in the Roman bandpasses in GalSim.
+
+    The bandpass throughput file is translated from a spreadsheet Roman_effarea_20201130.xlsx at
+    https://roman.gsfc.nasa.gov/science/WFI_technical.html.
 
     Example::
 
@@ -90,7 +84,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
     # Begin by reading in the file containing the info.
-    datafile = os.path.join(meta_data.share_dir, "roman", "afta_throughput.txt")
+    datafile = os.path.join(meta_data.share_dir, "roman", "Roman_effarea_20210614.txt")
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
@@ -126,11 +120,12 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     # Loop over the bands.
     for index, bp_name in enumerate(data.dtype.names[1:]):
         # Need to skip the prism and grism (not used for weak lensing imaging).
-        if bp_name=='SNPrism' or bp_name=='BAOGrism':
+        if bp_name=='SNPrism' or bp_name=='Grism_1stOrder' or bp_name=='Grism_0thOrder':
             continue
 
         # Initialize the bandpass object.
-        bp = Bandpass(LookupTable(wave, data[bp_name]), wave_type='nm')
+        # Convert effective area units from m^2 to cm^2
+        bp = Bandpass(LookupTable(wave, data[bp_name] * 100 * 100), wave_type='nm')
 
         # Use any arguments related to truncation, thinning, etc.
         if len(tmp_truncate_dict) > 0 or default_thin_trunc:
