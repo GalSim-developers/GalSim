@@ -374,12 +374,18 @@ def _read_aberrations(SCA):
     aberrations[:,1:] = dat[:,5:]
     # Also get the field position.  The file gives it in mm with respect to the center, but we
     # want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel
-    # The y-coordinates have the opposite signs to the corresponding WFI location, explained
-    # in the Roman file.
 
-    x_sca_pos = dat[:,1]/pixel_scale_mm + n_pix/2
-    y_sca_pos = n_pix/2 - dat[:,2]/pixel_scale_mm
-    return aberrations, x_sca_pos, y_sca_pos
+    x = dat[:,1]/pixel_scale_mm
+    y = dat[:,2]/pixel_scale_mm
+    if SCA % 3 != 0:
+        # For these, the SCA is rotated 180 degrees relative to the nominal X, Y coordinates.
+        x = -x
+        y = -y
+
+    x += n_pix/2
+    y += n_pix/2
+
+    return aberrations, x, y
 
 def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
     """
@@ -391,16 +397,21 @@ def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
     # The data comprise 5 rows: center, lower-left, upper-left, upper-right, lower-right.
     # The x,y values at the corners aren't precisely identical, but despite that, just
     # take the outer one and do a simple bilinear interpolation as though it were a rectangle.
-    ll = 1
-    ul = 2
-    ur = 3
-    lr = 4
-    # Sanity checks so we notice if an update breaks this ordering.
-    # (E.g. Cycle 9 is different from Cycle 7.)
-    assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]  # lower-left
-    assert x_pos[ul] < x_pos[0] and y_pos[ul] > y_pos[0]  # upper-left
-    assert x_pos[lr] > x_pos[0] and y_pos[lr] < y_pos[0]  # lower-right
-    assert x_pos[ur] > x_pos[0] and y_pos[ur] > y_pos[0]  # upper-right
+
+    # First, figure out which point is which corner. (0 is always the center.)
+    for i in range(1,5):
+        if x_pos[i] < x_pos[0] and y_pos[i] < y_pos[0]:
+            ll = i # lower-left
+        if x_pos[i] < x_pos[0] and y_pos[i] > y_pos[0]:
+            ul = i # upper-left
+        if x_pos[i] > x_pos[0] and y_pos[i] < y_pos[0]:
+            lr = i # lower-right
+        if x_pos[i] > x_pos[0] and y_pos[i] > y_pos[0]:
+            ur = i # upper-right
+    assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]
+    assert x_pos[ul] < x_pos[0] and y_pos[ul] > y_pos[0]
+    assert x_pos[lr] > x_pos[0] and y_pos[lr] < y_pos[0]
+    assert x_pos[ur] > x_pos[0] and y_pos[ur] > y_pos[0]
     min_x = np.min(x_pos)
     min_y = np.min(y_pos)
     max_x = np.max(x_pos)
