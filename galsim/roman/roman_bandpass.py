@@ -148,7 +148,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
         bp._sky_level = sky_data[2+index, :]
 
         # Add it to the dictionary.
-        bp.name = bp_name
-        bandpass_dict[bp_name] = bp
+        bp.name = bp_name if bp_name != 'W149' else 'W146'
+        bandpass_dict[bp.name] = bp
 
     return bandpass_dict
