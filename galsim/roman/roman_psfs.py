@@ -394,19 +394,30 @@ def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
     but these are generally quite close (within a few percent) of what would come from this bilinear
     interpolation.  So for simplicity, we just do the bilinear interpolation.
     """
+    # The data comprise 5 rows: center, lower-left, upper-left, upper-right, lower-right.
+    # The x,y values at the corners aren't precisely identical, but despite that, just
+    # take the outer one and do a simple bilinear interpolation as though it were a rectangle.
+    ll = 4
+    ul = 3
+    ur = 2
+    lr = 1
+    # Sanity checks so we notice if an update breaks this ordering.
+    # (E.g. Cycle 9 is different from Cycle 7.)
+    assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]  # lower-left
+    assert x_pos[ul] < x_pos[0] and y_pos[ul] > y_pos[0]  # upper-left
+    assert x_pos[lr] > x_pos[0] and y_pos[lr] < y_pos[0]  # lower-right
+    assert x_pos[ur] > x_pos[0] and y_pos[ur] > y_pos[0]  # upper-right
     min_x = np.min(x_pos)
     min_y = np.min(y_pos)
     max_x = np.max(x_pos)
     max_y = np.max(y_pos)
     x_frac = (SCA_pos.x - min_x) / (max_x - min_x)
     y_frac = (SCA_pos.y - min_y) / (max_y - min_y)
-    lower_x_lower_y_ab = aberrations[(x_pos==min_x) & (y_pos==min_y), :]
-    lower_x_upper_y_ab = aberrations[(x_pos==min_x) & (y_pos==max_y), :]
-    upper_x_lower_y_ab = aberrations[(x_pos==max_x) & (y_pos==min_y), :]
-    upper_x_upper_y_ab = aberrations[(x_pos==max_x) & (y_pos==max_y), :]
-    interp_ab = (1.0-x_frac)*(1.0-y_frac)*lower_x_lower_y_ab + \
-        (1.0-x_frac)*y_frac*lower_x_upper_y_ab + \
-        x_frac*(1.0-y_frac)*upper_x_lower_y_ab + \
-        x_frac*y_frac*upper_x_upper_y_ab
+    ll_ab = aberrations[ll, :]
+    ul_ab = aberrations[ul, :]
+    lr_ab = aberrations[lr, :]
+    ur_ab = aberrations[ur, :]
+    interp_ab = (1.0-x_frac)*(1.0-y_frac)*ll_ab + (1.0-x_frac)*y_frac*ul_ab + \
+        x_frac*(1.0-y_frac)*lr_ab + x_frac*y_frac*ur_ab
 
     return interp_ab.flatten()
