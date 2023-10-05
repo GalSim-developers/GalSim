@@ -25,6 +25,8 @@ from .. import meta_data, Image
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
+# Effective area now taken into account in the bandpass throughput (units of effective area, m^2) and sky background files.
+# To modify these assumptions, remove approximate factor of eff_area = 0.25 * np.pi * diameter**2 * (1. - obscuration**2) in meters^2 and rescale to new values of these parameters.
 diameter = 2.36  # meters
 obscuration = 0.32
 collecting_area = 3.757e4 # cm^2, from Cycle 7
@@ -58,10 +60,10 @@ pupil_plane_file = os.path.join(meta_data.share_dir, 'roman', 'SCA2_rim_mask.fit
 pupil_plane_scale = 0.00111175097
 
 # Which bands should use the long vs short pupil plane files for the PSF.
-# F184
-longwave_bands = ['F184']
-# Z087, Y106, J129, H158, W146
-shortwave_bands = ['Z087', 'Y106', 'J129', 'H158', 'W146']
+# F184, K213
+longwave_bands = ['F184', 'K213']
+# R062, Z087, Y106, J129, H158, W149
+shortwave_bands = ['R062', 'Z087', 'Y106', 'J129', 'H158', 'W146']
 
 stray_light_fraction = 0.1
 

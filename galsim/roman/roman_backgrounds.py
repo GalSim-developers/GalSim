@@ -40,8 +40,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     arbitrary positions on the sky.
 
     The numbers that are stored in the Bandpass object ``bandpass`` are background level in units of
-    e-/m^2/s/arcsec^2.  To get rid of the m^2, this routine multiplies by the total effective
-    collecting area in m^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The
+    e-/s/arcsec^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The
     result can either be multiplied by the approximate pixel area to get e-/pix, or the result can
     be used with wcs.makeSkyImage() to make an image of the sky that properly includes the actual
     pixel area as a function of position on the detector.
@@ -51,10 +50,12 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
 
         http://www.tapir.caltech.edu/~chirata/web/software/space-etc/
 
-    It nominally returns photons/m^2/s/arcsec^2, but the input bandpasses used internally by the ETC
-    code include the quantum efficiency, to effectively convert to e-/m^2/s/arcsec^2.  Note that in
+    Using the throughput files loaded into the ``bandpass`` object, the calculation nominally
+    returns photons/s/arcsec^2, but the input bandpasses used internally by the ETC
+    code include the quantum efficiency, to effectively convert to e-/s/arcsec^2.  Note that in
     general results will depend on the adopted model for zodiacal light, and these are uncertain at
-    the ~10% level.
+    the ~10% level. One must also better sample the integration in the zodiacal light calculation
+    to match the output tables used by GalSim here.
 
     Positions should be specified with the ``world_pos`` keyword, which must be a CelestialCoord
     object.  If no ``world_pos`` is supplied, then the routine will use a default position that
@@ -136,9 +137,6 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
         raise GalSimValueError("world_pos is too close to sun. Would not observe here.", world_pos)
 
     # Now, convert to the right units, and return.  (See docstring for explanation.)
-    # First, multiply by the effective collecting area in m^2.
-    eff_area = 0.25 * np.pi * diameter**2 * (1. - obscuration**2)
-    sky_val *= eff_area
     # Multiply by exposure time.
     sky_val *= exptime
 

@@ -337,10 +337,8 @@ def test_roman_backgrounds():
     # No world_pos works.  Produces sky level for some plausible generic location.
     sky_level = galsim.roman.getSkyLevel(bp)
     print('sky_level = ',sky_level)
-    # Account for change in exptime and diameter since the reference number.
-    flux_ratio = (galsim.roman.exptime / 140.25) * (galsim.roman.diameter / 2.37)**2
-    # regression test relative to v1.6
-    np.testing.assert_allclose(sky_level, 6233.47369567 * flux_ratio)
+    # regression test relative to v2.5
+    np.testing.assert_allclose(sky_level, 6928.267815, rtol=0.01)
 
     # But not with a non-Roman bandpass
     with assert_raises(galsim.GalSimError):
@@ -424,49 +422,48 @@ def test_roman_bandpass():
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
     # non-trivial.
     for filter_name, filter_ in bp.items():
+        if filter_name not in reference:
+            continue
         flux = sed.calculateFlux(filter_)  # photons / cm^2 / s
-        count_rate = flux * galsim.roman.collecting_area  # photons / s
-        print(count_rate, reference[filter_name])
+        print(flux, reference[filter_name])
         np.testing.assert_allclose(
-            count_rate, reference[filter_name], rtol=0.15,
+            flux, reference[filter_name], rtol=0.15,
             err_msg="Count rate for stellar model not as expected for bandpass "
             "{0}".format(filter_name))
 
     # Finally, compare against some external zeropoint calculations from the Roman microlensing
     # group: https://roman.ipac.caltech.edu/sims/MABuLS_sim.html
     # They calculated instrumental zero points, defined such that the flux is 1 photon/sec (taking
-    # into account the Roman collecting area).  We convert ours to their definition by adding
-    # `delta_zp` calculated below:
-    area_eff = galsim.roman.collecting_area
-    delta_zp = 2.5 * np.log10(area_eff)
-    # Define the zeropoints that they calculated:
+    # into account the Roman collecting area).  This is now (as of v2.5) consistent with our
+    # definition.  However, with the new bandpass changes since their calculation, the agreement
+    # is only about 0.3 magnitudes.
     ref_zp = {
         'W146': 27.554,
         'Z087': 26.163
         }
     for key in ref_zp.keys():
-        galsim_zp = bp[key].zeropoint + delta_zp
+        galsim_zp = bp[key].zeropoint
         # They use slightly different versions of the bandpasses, so we only require agreement to
         # 0.1 mag.
         print('zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.1,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.3,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
     # Note: the difference is not due to our default thinning.  This isn't any better.
     nothin_bp = galsim.roman.getBandpasses(AB_zeropoint=True, default_thin_trunc=False)
     for key in ref_zp.keys():
-        galsim_zp = nothin_bp[key].zeropoint + delta_zp
+        galsim_zp = nothin_bp[key].zeropoint
         print('nothin zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.1,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.3,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
-    # Even with fairly extreme thinning, the error is still only 0.15 mag.
+    # Even with fairly extreme thinning, the error is still 0.3 mag.
     verythin_bp = galsim.roman.getBandpasses(AB_zeropoint=True, default_thin_trunc=False,
                                              relative_throughput=0.05, rel_err=0.1)
     for key in ref_zp.keys():
-        galsim_zp = verythin_bp[key].zeropoint + delta_zp
+        galsim_zp = verythin_bp[key].zeropoint
         print('verythin zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.15,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.3,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
     with assert_raises(TypeError):
