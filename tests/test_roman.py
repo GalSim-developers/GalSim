@@ -764,12 +764,14 @@ def test_roman_basic_numbers():
     ref_reciprocity_alpha = 0.0065
     ref_read_noise = 8.5 # e-
     ref_n_dithers = 6
-    ref_thermal_backgrounds = {'J129': 0.023, # e-/pix/s
-                               'F184': 0.179,
-                               'Y106': 0.023,
-                               'Z087': 0.023,
-                               'H158': 0.022,
-                               'W146': 0.023}
+    ref_thermal_backgrounds = {'R062': 0.00, # e-/pix/s
+                               'Z087': 0.00,
+                               'Y106': 0.00,
+                               'J129': 0.00,
+                               'H158': 0.04,
+                               'F184': 0.17,
+                               'K213': 4.52,
+                               'W146': 0.98}
     ref_pupil_plane_file = os.path.join(
             galsim.meta_data.share_dir, 'roman', 'SCA2_rim_mask.fits.gz')
     ref_stray_light_fraction = 0.1

@@ -36,12 +36,16 @@ nonlinearity_beta = -6.e-7
 reciprocity_alpha = 0.0065
 read_noise = 8.5 # e-
 n_dithers = 6
-thermal_backgrounds = {'J129': 0.023, # e-/pix/s
-                       'F184': 0.179,
-                       'Y106': 0.023,
-                       'Z087': 0.023,
-                       'H158': 0.022,
-                       'W146': 0.023}
+
+# These are from https://roman.gsfc.nasa.gov/science/WFI_technical.html, as of October, 2023
+thermal_backgrounds = {'R062': 0.00, # e-/pix/s
+                       'Z087': 0.00,
+                       'Y106': 0.00,
+                       'J129': 0.00,
+                       'H158': 0.04,
+                       'F184': 0.17,
+                       'K213': 4.52,
+                       'W146': 0.98}
 
 # Physical pixel size
 pixel_scale_mm = 0.01 # mm
