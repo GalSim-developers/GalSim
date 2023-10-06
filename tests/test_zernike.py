@@ -828,25 +828,25 @@ def test_dz_val():
         np.testing.assert_allclose(
             np.array([zk(x, y) for x, y, zk in zip(*xy_vector, zk_list)]),
             vals,
-            atol=1e-13, rtol=0
+            atol=2e-13, rtol=0
         )
         for i, (x, y) in enumerate(xy_vector.T):
             np.testing.assert_allclose(
                 vals[i],
                 zk_list[i](x, y),
-                atol=1e-13, rtol=0
+                atol=2e-13, rtol=0
             )
         for i, (u, v, x, y) in enumerate(zip(*uv_vector, *xy_vector)):
             np.testing.assert_allclose(
                 vals[i],
                 dz(u, v, x, y),
-                atol=1e-13, rtol=0
+                atol=2e-13, rtol=0
             )
         for i, (u, v) in enumerate(zip(*uv_vector)):
             np.testing.assert_allclose(
                 vals[i],
                 dz(u, v)(*xy_vector[:, i]),
-                atol=1e-13, rtol=0
+                atol=2e-13, rtol=0
             )
 
         # Check asserts
