@@ -1132,12 +1132,15 @@ def test_SED_calculateFlux_inf():
         wave_type='nm',
         flux_type='fphotons'
     )
+    sed3 = galsim.EmissionLine(622)
 
     bp = galsim.Bandpass("LSST_r.dat", 'nm')
     flux1 = sed1.calculateFlux(bp)
     flux2 = sed2.calculateFlux(bp)
-    print('flux = ', flux1, flux2)
+    flux3 = sed3.calculateFlux(bp)
+    print('flux = ', flux1, flux2, flux3)
     assert flux1 == flux2
+    assert flux1 == flux3
 
 
 @timer

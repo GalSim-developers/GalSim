@@ -530,14 +530,11 @@ def test_monochromatic_sed():
         obj_achrom.drawImage(image=im1)
         print('im1.max,sum = ', im1.array.max(), im1.array.sum())
 
-        # Next do this chromatically using an SED that is basically a single emission line
-        # at the given wavelength.
+        # Next do this chromatically using an emission line SED.
         psf_chrom = galsim.ChromaticOpticalPSF(lam=wave, diam=diam,
                                                aberrations=aberrations, obscuration=obscuration,
                                                nstruts=nstruts)
-        sed = galsim.SED(galsim.LookupTable([500, wave-1, wave, wave+1, 1000],
-                                            [0, 0, 1, 0, 0], 'linear'),
-                         wave_type='nm', flux_type='fphotons')
+        sed = galsim.EmissionLine(wave)
         gal_chrom = (gal_achrom * sed).withFlux(flux, bandpass=bandpass)
         obj_chrom = galsim.Convolve(gal_chrom, psf_chrom)
         im2 = obj_chrom.drawImage(bandpass, image=im1.copy())
@@ -2148,12 +2145,10 @@ def test_phot():
     """
     import time
 
-    # Use a fairly extreme SED to exaggerate the effect of the wavelength dependence of the
+    # Use an emission line SED to exaggerate the effect of the wavelength dependence of the
     # Airy profile.  Otherwise we need a lot of photons to notice the effect.
     bandpass = galsim.Bandpass(galsim.LookupTable([500,1000], [1,1], 'linear'), wave_type='nm')
-    sed = galsim.SED(galsim.LookupTable([500, 510,515,520, 970,975,980, 1000],
-                                        [0, 0,1,0, 0,1,0, 0], 'linear'),
-                     wave_type='nm', flux_type='fphotons')
+    sed = galsim.EmissionLine(510, fwhm=5) + galsim.EmissionLine(975, fwhm=5)
     flux = 1.e6
     gal_achrom = galsim.Sersic(n=2.8, half_light_radius=0.03, flux=flux)
     gal = (gal_achrom * sed).withFlux(flux, bandpass=bandpass)
@@ -2307,9 +2302,7 @@ def test_phot():
     #       one in InterpolatedChromaticObject._shoot.
     rng = galsim.BaseDeviate(1234)
     bp2 = galsim.Bandpass(galsim.LookupTable([400,601], [1,1], 'linear'), wave_type='nm')
-    sed2 = galsim.SED(galsim.LookupTable([400, 410,415,420, 510, 515, 520, 1000],
-                                        [0, 0,1,0, 0,2,0, 0], 'linear'),
-                      wave_type='nm', flux_type='fphotons')
+    sed2 = galsim.EmissionLine(415, fwhm=5) + 2*galsim.EmissionLine(515, fwhm=5)
     gal2 = (gal_achrom * sed2).withFlux(flux, bandpass=bp2)
     obj2 = galsim.Convolve(gal2, psf7)
     with assert_raises(galsim.GalSimRangeError):
