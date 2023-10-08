@@ -2580,7 +2580,7 @@ def test_fitswcs():
         except:
             pass
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
@@ -2688,7 +2688,7 @@ def test_fittedsipwcs():
         'ZTF': (0.1, 0.1),
     }
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     if __name__ == "__main__":
         test_tags = all_tags
@@ -2917,7 +2917,7 @@ def test_fittedsipwcs():
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
     """
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     file_name = 'scamp.head'
 
     wcs = galsim.FitsWCS(file_name, dir=dir, text_file=True)
@@ -3138,7 +3138,7 @@ def test_int_args():
 
     test_tags = all_tags
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
@@ -3211,7 +3211,7 @@ def test_razero():
         import astropy.wcs
         import scipy  # AstropyWCS constructor will do this, so check now.
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     # This file is based in sipsample.fits, but with the CRVAL1 changed to 0.002322805429
     file_name = 'razero.fits'
     wcs = galsim.AstropyWCS(file_name, dir=dir)
