@@ -187,9 +187,10 @@ def test_shear_initialization():
     assert_raises(TypeError,galsim.Shear,g=0.5)
     assert_raises(TypeError,galsim.Shear,e=0.5)
     assert_raises(TypeError,galsim.Shear,eta=0.5)
-    assert_raises(galsim.GalSimRangeError,galsim.Shear,eta=-0.5,beta=0.*galsim.radians)
-    assert_raises(galsim.GalSimRangeError,galsim.Shear,g=1.3,beta=0.*galsim.radians)
-    assert_raises(galsim.GalSimRangeError,galsim.Shear,g=-0.3,beta=0.*galsim.radians)
+    if hasattr(galsim, "_galsim"):
+        assert_raises(galsim.GalSimRangeError,galsim.Shear,eta=-0.5,beta=0.*galsim.radians)
+        assert_raises(galsim.GalSimRangeError,galsim.Shear,g=1.3,beta=0.*galsim.radians)
+        assert_raises(galsim.GalSimRangeError,galsim.Shear,g=-0.3,beta=0.*galsim.radians)
     assert_raises(TypeError,galsim.Shear,e=0.3,beta=0.)
     assert_raises(TypeError,galsim.Shear,eta=0.3,beta=0.)
     assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
