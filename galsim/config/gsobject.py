@@ -32,7 +32,7 @@ from ..angle import Angle
 from ..gsobject import GSObject
 from ..chromatic import ChromaticObject, ChromaticOpticalPSF
 from ..gsparams import GSParams
-from ..utilities import basestring
+from ..utilities import basestring, math_eval
 from ..chromatic import ChromaticAtmosphere
 from ..celestial import CelestialCoord
 
@@ -403,6 +403,19 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
+def _BuildEval(config, base, ignore, gsparams, logger):
+    """Build a GSObject from an Eval string
+    """
+    req = { 'str': str }
+    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
+    gsobject = math_eval(params['str'])
+
+    if gsparams:
+        gsobject = gsobject.withGSParams(**gsparams)
+
+    return gsobject, safe
+
+
 def ParseAberrations(key, config, base, name):
     """Parse a possible aberrations list in config dict.
 
@@ -613,3 +626,4 @@ RegisterObjectType('List', _BuildList)
 RegisterObjectType('OpticalPSF', _BuildOpticalPSF)
 RegisterObjectType('ChromaticOpticalPSF', _BuildChromaticOpticalPSF)
 RegisterObjectType('ChromaticAtmosphere', _BuildChromaticAtmosphere)
+RegisterObjectType('Eval', _BuildEval)

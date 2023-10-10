@@ -32,6 +32,7 @@ def test_gaussian():
     config = {
         'gal1' : { 'type' : 'Gaussian' , 'sigma' : 2 },
         'gal2' : { 'type' : 'Gaussian' , 'fwhm' : 2, 'flux' : 100 },
+        'gal2c' : { 'type' : 'Eval', 'str': 'galsim.Gaussian(fwhm=2, flux=100)' },
         'gal3' : { 'type' : 'Gaussian' , 'half_light_radius' : 2, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
                  },
@@ -65,7 +66,9 @@ def test_gaussian():
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.Gaussian(fwhm = 2, flux = 100)
+    gal2c = galsim.config.BuildGSObject(config, 'gal2c')[0]
     gsobject_compare(gal2a, gal2b)
+    gsobject_compare(gal2a, gal2c)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
@@ -215,6 +218,9 @@ def test_airy():
         'gal5' : { 'type' : 'Airy' , 'lam_over_diam' : 45,
                    'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
                  },
+        'gal5c' : { 'type' : 'Eval', 'str': 'galsim.Airy(lam_over_diam=45)',
+                    'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
+                 },
         'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : 'arcmin' },
         'bad1' : { 'type' : 'Airy' , 'lam_over_diam' : 0.4, 'lam' : 400, 'diam' : 10 },
         'bad2' : { 'type' : 'Airy' , 'flux' : 1.3 },
@@ -246,7 +252,9 @@ def test_airy():
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gsparams = galsim.GSParams(xvalue_accuracy=1.e-2)
     gal5b = galsim.Airy(lam_over_diam=45, gsparams=gsparams)
+    gal5c = galsim.config.BuildGSObject(config, 'gal5c')[0]
     gsobject_compare(gal5a, gal5b)
+    gsobject_compare(gal5a, gal5c)
 
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.Airy(lam=400., diam=4., scale_unit=galsim.arcmin)
@@ -275,6 +283,9 @@ def test_kolmogorov():
         'gal3' : { 'type' : 'Kolmogorov' , 'half_light_radius' : 2, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
                  },
+        'gal3c' : { 'type': 'Eval',
+                    'str': "galsim.Kolmogorov(half_light_radius=2, flux=1.e6).shear(q=0.6, beta=0.39*galsim.radians)"
+                  },
         'gal4' : { 'type' : 'Kolmogorov' , 'lam' : 400, 'r0_500' : 0.15, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
@@ -303,7 +314,9 @@ def test_kolmogorov():
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Kolmogorov(half_light_radius = 2, flux = 1.e6)
     gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3c = galsim.config.BuildGSObject(config, 'gal3c')[0]
     gsobject_compare(gal3a, gal3b)
+    gsobject_compare(gal3a, gal3c)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Kolmogorov(lam=400, r0_500=0.15, flux = 50)
@@ -488,6 +501,10 @@ def test_sersic():
         'gal3' : { 'type' : 'Sersic' , 'n' : 2.2,  'half_light_radius' : 3.5, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
                  },
+        'gal3c' : { 'type': 'Eval',
+                    'str': "galsim.Sersic(n=2.2, half_light_radius=3.5, flux=1.e6)",
+                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
+                  },
         'gal4' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
@@ -524,7 +541,9 @@ def test_sersic():
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Sersic(n = 2.2, half_light_radius = 3.5, flux = 1.e6)
     gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3c = galsim.config.BuildGSObject(config, 'gal3c')[0]
     gsobject_compare(gal3a, gal3b)
+    gsobject_compare(gal3a, gal3c)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Sersic(n = 0.7, half_light_radius = 1, flux = 50)
@@ -1819,26 +1838,37 @@ def test_usertype():
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gsobject_compare(gal3a, gal3b, conv=psf)
 
-    # This one is potentially more useful.  Should add this to the GalSim registered types.
+    # This one is potentially more useful.
+    # This is now equivalent to the Eval type, but it started its life as a user type,
+    # so keep it here with a different name.
     def EvalGSObject(config, base, ignore, gsparams, logger):
         req = { 'str': str }
         params, safe = galsim.config.GetAllParams(config, base, req=req, ignore=ignore)
         return galsim.utilities.math_eval(params['str']).withGSParams(**gsparams), safe
 
-    galsim.config.RegisterObjectType('Eval', EvalGSObject)
+    galsim.config.RegisterObjectType('EvalX', EvalGSObject)
 
     config = {
-        'gal1' : { 'type': 'Eval', 'str': 'galsim.Gaussian(fwhm=0.3, flux=10)'  },
-        'gal2' : { 'type': 'Eval', 'str': 'galsim.DeltaFunction(432)' },
+        'gal1' : { 'type': 'EvalX', 'str': 'galsim.Gaussian(fwhm=0.3, flux=10)'  },
+        'gal2' : { 'type': 'EvalX', 'str': 'galsim.DeltaFunction(432)',
+                   'gsparams' : { 'folding_threshold' : 1.e-4 } },
+        # Also test the now-standard Eval type.
+        'gal1c' : { 'type': 'Eval', 'str': 'galsim.Gaussian(fwhm=0.3, flux=10)'  },
+        'gal2c' : { 'type': 'Eval', 'str': 'galsim.DeltaFunction(432)',
+                    'gsparams' : { 'folding_threshold' : 1.e-4 } },
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.Gaussian(fwhm=0.3, flux=10)
+    gal1c = galsim.config.BuildGSObject(config, 'gal1c')[0]
     gsobject_compare(gal1a, gal1b)
+    gsobject_compare(gal1a, gal1c)
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
-    gal2b = galsim.DeltaFunction(432)
+    gal2b = galsim.DeltaFunction(432, gsparams=galsim.GSParams(folding_threshold=1.e-4))
+    gal2c = galsim.config.BuildGSObject(config, 'gal2c')[0]
     gsobject_compare(gal2a, gal2b, conv=galsim.Gaussian(fwhm=0.3))
+    gsobject_compare(gal2a, gal2c, conv=galsim.Gaussian(fwhm=0.3))
 
 
 @timer
