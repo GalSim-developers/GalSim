@@ -604,6 +604,11 @@ def test_devaucouleurs():
         'gal3' : { 'type' : 'DeVaucouleurs' , 'half_light_radius' : 3.5, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
                  },
+        'gal3c': { 'type': 'Eval',
+                   'str': "galsim.DeVaucouleurs(half_light_radius=@gal3.half_light_radius,\
+                                                flux=@gal2.flux**3)",
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
+                 },
         'gal4' : { 'type' : 'DeVaucouleurs' , 'half_light_radius' : 1, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
@@ -626,7 +631,9 @@ def test_devaucouleurs():
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.DeVaucouleurs(half_light_radius = 3.5, flux = 1.e6)
     gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3c = galsim.config.BuildGSObject(config, 'gal3c')[0]
     gsobject_compare(gal3a, gal3b)
+    gsobject_compare(gal3a, gal3c)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.DeVaucouleurs(half_light_radius = 1, flux = 50)

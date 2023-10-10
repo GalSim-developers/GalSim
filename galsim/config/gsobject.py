@@ -406,10 +406,10 @@ def _BuildList(config, base, ignore, gsparams, logger):
 def _BuildEval(config, base, ignore, gsparams, logger):
     """Build a GSObject from an Eval string
     """
+    from .value_eval import _GenerateFromEval
     req = { 'str': str }
-    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
-    gsobject = math_eval(params['str'])
-
+    params, _ = GetAllParams(config, base, req=req, ignore=ignore)
+    gsobject, safe = _GenerateFromEval(params, base, None)
     if gsparams:
         gsobject = gsobject.withGSParams(**gsparams)
 
