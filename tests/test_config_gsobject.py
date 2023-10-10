@@ -1819,6 +1819,28 @@ def test_usertype():
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gsobject_compare(gal3a, gal3b, conv=psf)
 
+    # This one is potentially more useful.  Should add this to the GalSim registered types.
+    def EvalGSObject(config, base, ignore, gsparams, logger):
+        req = { 'str': str }
+        params, safe = galsim.config.GetAllParams(config, base, req=req, ignore=ignore)
+        return galsim.utilities.math_eval(params['str']).withGSParams(**gsparams), safe
+
+    galsim.config.RegisterObjectType('Eval', EvalGSObject)
+
+    config = {
+        'gal1' : { 'type': 'Eval', 'str': 'galsim.Gaussian(fwhm=0.3, flux=10)'  },
+        'gal2' : { 'type': 'Eval', 'str': 'galsim.DeltaFunction(432)' },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.Gaussian(fwhm=0.3, flux=10)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.DeltaFunction(432)
+    gsobject_compare(gal2a, gal2b, conv=galsim.Gaussian(fwhm=0.3))
+
+
 @timer
 def test_modules():
     """Test using modules in the config dict to get extra types
