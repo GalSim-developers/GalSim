@@ -32,7 +32,7 @@ from ..angle import Angle
 from ..gsobject import GSObject
 from ..chromatic import ChromaticObject, ChromaticOpticalPSF
 from ..gsparams import GSParams
-from ..utilities import basestring, math_eval
+from ..utilities import basestring
 from ..chromatic import ChromaticAtmosphere
 from ..celestial import CelestialCoord
 
