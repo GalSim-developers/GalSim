@@ -39,15 +39,15 @@ from .. import GalSimRangeError, GalSimError
 
 # Basic Roman reference info, with lengths in mm.
 pixel_size_mm = 0.01
-focal_length = 18727.2
+focal_length = 18714
 pix_scale = (pixel_size_mm/focal_length)*coord.radians
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
 tel_name = "Roman"
 instr_name = "WFC"
-optics_design_ver = "7.6.8"
-prog_version = "0.5"
+optics_design_ver = "20210204"
+prog_version = "d2"
 
 # Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)
 # coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as
@@ -55,15 +55,17 @@ prog_version = "0.5"
 # the center of the FPA by subtracting fpa_xc_mm and fpa_yc_mm.
 #
 # Since the SCAs are 1-indexed, these arrays have a non-used entry with index 0.  i.e., the maximum
-# SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
-# between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
-# were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
-infile = os.path.join(meta_data.share_dir, 'roman', 'sca_positions_7_6_8.txt')
+# SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.
+infile = os.path.join(meta_data.share_dir, 'roman', 'sca_positions_20210204.txt')
 sca_data = np.loadtxt(infile).transpose()
-sca_xc_mm = -sca_data[3,:]
+sca_xc_mm = sca_data[3,:]
 sca_yc_mm = sca_data[4,:]
 sca_xc_mm = np.insert(sca_xc_mm, 0, 0)
 sca_yc_mm = np.insert(sca_yc_mm, 0, 0)
+sca_crval_u_deg = sca_data[5,:]
+sca_crval_v_deg = sca_data[6,:]
+sca_crval_u_deg = np.insert(sca_crval_u_deg, 0, 0)
+sca_crval_v_deg = np.insert(sca_crval_v_deg, 0, 0)
 # Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle
 # (neglecting distortions - to be included later).
 fpa_xc_mm = 0.0
@@ -77,13 +79,12 @@ yc_fpa = np.arctan(fpa_yc_mm/focal_length)*coord.radians
 # testing.
 sca_rot = np.zeros_like(sca_xc_mm)
 
-# Rotation of focal plane axes relative to payload axes: this is expressed as a CCW rotation of the
-# f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In cycle 5, this was around +30 degrees,
-# but in cycle 6 there is a ~90 degree CCW rotation with respect to that.
-theta_fpa = -60.0*coord.degrees
+# Rotation of WFI local axes relative to payload axes: this is expressed as a CCW rotation
+# relative to observatory +Z direction.
+theta_fpa = 120.0*coord.degrees
 
 # File with SIP coefficients.
-sip_filename = os.path.join(meta_data.share_dir, 'roman', 'sip_7_6_8.txt')
+sip_filename = os.path.join(meta_data.share_dir, 'roman', 'sip_20210204.txt')
 
 def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
@@ -137,33 +138,13 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     # Sun in the absence of a roll offset (i.e., roll offset = 0 defines the optimal position angle
     # for the observatory), +Y_obs makes a right-handed system.
     #
-    # Payload coordinate system: +X_pl points along -Y_obs, +Y_pl points along +Z_obs, +Z_pl points
-    # along -X_obs (back towards observer).
+    # The x,y axes of each SCA are shown in the figure mapping_v210503.pdf in the devel/roman
+    # directory.  Some are 180 rotated with respect to others.
+    # The data in sip_filename give the coordinate transformation from each SCA's image x,y
+    # coordinates to the WFI Local coordinate system.  +Y in this system points away from the
+    # center of the observatory.  And +X is to the right if +Y is up.
     #
-    # Wide field imager (WFI) focal plane assembly (FPA) coordinate system: This is defined by a
-    # left-handed system f1, f2, that is rotated by an angle `theta_fpa` with respect to the payload
-    # axes.  +f1 points along the long axis of the focal plane, transverse to the radius from the
-    # telescope optic axis.  +f2 points radially out from the telescope optic axis, along the narrow
-    # dimension of the focal plane.  If +f2 points North, then +f1 points East.  `theta_fpa` is a
-    # positive CCW rotation of the f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In terms
-    # of focal plane geometry, if +Y_fp is pointing North, then SCAs 3 and 12 will be at highest
-    # declination, 8 and 17 at the lowest.  +Y_fp is aligned with the short axis of the focal plane
-    # array.
-    #
-    # There is also a detector coordinate system (P1, P2).  +P1 and +P2 point along the fast- and
-    # slow-scan directions of the pixel readout, respectively.
-    #
-    # So, for reference, if the boresight is pointed at RA=90, DEC=0 on March 21st (Sun at vernal
-    # equinox), then +X_obs points at (RA,DEC)=(90,0), +Y_obs points North, and +Z_obs points at the
-    # Sun.  The payload coordinates are +X_pl points South, -Y_pl points East.  Finally, the FPA
-    # coordinate system is defined by +f2 being at a position angle 90+theta_fpa east of North.  If
-    # the observatory +Y axis is at a position angle `pa_obsy` East of North, then the focal plane
-    # (+f2) is at a position angle pa_fpa = pa_obsy + 90 + theta_fpa.
-
-    # Figure out tangent-plane positions for FPA center:
-    # Distortion function is zero there (so we could've passed this through _det_to_tangplane
-    # routine, but we do not need to)
-    xc_fpa_tp, yc_fpa_tp = xc_fpa, yc_fpa
+    # These coordinates are rotated by an angle theta_fpa CCW from observatory +Z.
 
     # Note, this routine reads in the coeffs.  We don't use them until later, but read them in for
     # all SCAs at once.
@@ -217,15 +198,10 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         pa_sca = sca_tp_rot - crval.angleBetween(plus_y, north)
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
-        # linear terms are stored in the SIP arrays for convenience, but are defined differently.
-        # The other terms have been divided by the linear terms, so that these become pure
-        # multiplicative factors. There is no need to change signs of the SIP coefficents associated
-        # with odd powers of X! Change sign of a10, b10 because the tangent-plane X pixel coordinate
-        # has sign opposite to the detector pixel X coordinate, and this transformation maps pixels
-        # to tangent plane.
-        a10 = -a_sip[i_sca,1,0]
+        # linear terms are stored in the SIP arrays for convenience.
+        a10 = a_sip[i_sca,1,0]
         a11 = a_sip[i_sca,0,1]
-        b10 = -b_sip[i_sca,1,0]
+        b10 = b_sip[i_sca,1,0]
         b11 = b_sip[i_sca,0,1]
 
         # Rotate by pa_fpa.
@@ -410,28 +386,33 @@ def _calculate_minmax_pix(include_border=False):
         # are the same, but that won't always be the case, so for the sake of generality we only
         # group together those that are forced to be the same.
         #
+        # We figure out the borders based on the FPA coordinates, but when we apply the
+        # adjustments to min/max x/y, we take into account the orientations of the SCAs.
+        # cf. mapping_v210503.pdf in the devel/roman directory.
+        #
         # Positive side of 1/2/3, same as negative side of 10/11/12
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-n_pix*pixel_size_mm
+        border_mm = (sca_xc_mm[10]-sca_xc_mm[1])-n_pix*pixel_size_mm
+        # assert statement help ensure that these pairings continue to work if positions
+        # are updated in the future.
+        assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_x_pix[1:4] += half_border_pix
-        min_x_pix[10:13] -= half_border_pix
+        max_x_pix[ [3,10,11] ] += half_border_pix
+        min_x_pix[ [1,2,12] ] -= half_border_pix
 
-        # Negative side of 1/2/3 and 13/14/15, same as positive side of 10/11/12, 4/5/6
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-n_pix*pixel_size_mm
+        # Negative side of 1/2/3 and 13/14/15, same as positive side of 4/5/6 and 10/11/12
+        border_mm = (sca_xc_mm[1]-sca_xc_mm[4])-n_pix*pixel_size_mm
+        assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_x_pix[1:4] -= half_border_pix
-        min_x_pix[13:16] -= half_border_pix
-        max_x_pix[10:13] += half_border_pix
-        max_x_pix[4:7] += half_border_pix
+        min_x_pix[ [3,4,5,10,11,15] ] -= half_border_pix
+        max_x_pix[ [1,2,6,12,13,14] ] += half_border_pix
 
-        # Negative side of 4/5/6, 16/17/18, same as positive side of 13/14/15, 7/8/9
+        # Negative side of 4/5/6 and 16/17/18, same as positive side of 7/8/9 and 13/14/15
         # Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.
-        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-n_pix*pixel_size_mm
+        border_mm = (sca_xc_mm[4]-sca_xc_mm[7])-n_pix*pixel_size_mm
+        assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_x_pix[4:10] -= half_border_pix
-        min_x_pix[16:19] -= half_border_pix
-        max_x_pix[7:10] += half_border_pix
-        max_x_pix[13:19] += half_border_pix
+        min_x_pix[ [6,7,8,13,14,18] ] -= half_border_pix
+        max_x_pix[ [4,5,9,15,16,17] ] += half_border_pix
 
         # In the vertical direction, the gaps vary, with the gap between one pair of rows being
         # significantly larger than between the other pair of rows.  The reason for this has to do
@@ -441,22 +422,26 @@ def _calculate_minmax_pix(include_border=False):
 
         # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16.
         # Also use this for top of top row: 1/4/7/10/13/16.
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-n_pix*pixel_size_mm
+        border_mm = (sca_yc_mm[1]-sca_yc_mm[2])-n_pix*pixel_size_mm
+        # One of the two vertical borders is larger.  Just test them both at <10.
+        # (In the 20210204 setup, this one is the wider border.)
+        assert border_mm < 10
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         list_1 = np.arange(1,18,3)
         list_2 = list_1 + 1
         list_3 = list_1 + 2
-        max_y_pix[list_2] += half_border_pix
-        min_y_pix[list_1] -= half_border_pix
         max_y_pix[list_1] += half_border_pix
+        min_y_pix[list_2] -= half_border_pix
+        min_y_pix[list_1] -= half_border_pix
 
         # Top of 3/6/9/12/15/18, same as bottom of 2/5/8/11/14/17.
         # Also use this for bottom of bottom row: 3/6/9/12/15/18.
-        border_mm = abs(sca_yc_mm[2]-sca_yc_mm[3])-n_pix*pixel_size_mm
+        border_mm = (sca_yc_mm[2]-sca_yc_mm[3])-n_pix*pixel_size_mm
+        assert border_mm < 10
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_y_pix[list_3] += half_border_pix
-        min_y_pix[list_2] -= half_border_pix
+        max_y_pix[list_2] += half_border_pix
         min_y_pix[list_3] -= half_border_pix
+        max_y_pix[list_3] += half_border_pix
 
     return min_x_pix, max_x_pix, min_y_pix, max_y_pix
 
@@ -485,7 +470,7 @@ def _populate_required_fields(header):
         ('INSTRUME', instr_name, "identifier for instrument used to acquire data"),
     ])
 
-def _parse_sip_file(file):  # pragma: no cover
+def _parse_sip_file(file):
     """
     Utility routine to parse the file with the SIP coefficients and hand back some arrays to be used
     for later calculations.
@@ -493,7 +478,7 @@ def _parse_sip_file(file):  # pragma: no cover
     if not os.path.exists(file):
         raise OSError("Cannot find file that should have Roman SIP coefficients: %s"%file)
 
-    # Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.
+    # Parse the file, generated by make_sip_file.py in devel/roman directory.
     data = np.loadtxt(file, usecols=[0, 3, 4, 5, 6, 7]).transpose()
 
     a_sip = np.zeros((n_sca+1, n_sip, n_sip))
@@ -511,64 +496,21 @@ def _parse_sip_file(file):  # pragma: no cover
 
     return a_sip, b_sip
 
-def _det_to_tangplane_positions(x_in, y_in):
-    """
-    Helper routine to convert (x_in, y_in) focal plane coordinates to tangent plane coordinates
-    (x_out, y_out).  If (x_in, y_in) are measured focal plane positions of an object, with the
-    origin at the boresight, then we can define a radius as
-
-        r = sqrt(x_in^2 + y_in^2)
-
-    The optical distortion model relies on the following definitions:
-
-        dist = a3*r^3 + a2*r^2 + a1*r + a0
-
-    with true (tangent plane) coordinates given by
-
-        (x_out, y_out) = (x_in, y_in)/(1 + dist).
-
-    Note that the coefficients given in this routine go in the order {a0, a1, a2, a3}.
-
-    """
-    # These numbers come from the "Roman Wide-Field Instrument Reference Information" on
-    # https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html (cycle 7).
-    img_dist_coeff = np.array([-7.1229e-3, -1.6186e-2, 6.9169e-02, -1.4189e-02])
-    # The optical distortion model is defined in terms of separations in *degrees*.
-    r_sq = (x_in/coord.degrees)**2 + (y_in/coord.degrees)**2
-    r = np.sqrt(r_sq)
-    dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq \
-        + img_dist_coeff[3]*r*r_sq
-    return x_in/dist_fac, y_in/dist_fac
-
 def _get_sca_center_pos(i_sca, world_pos, pa_fpa):
     """
     This helper routine calculates the center position for a given SCA ``sca`` given the position of
     the center of the focal plane array ``world_pos`` and an orientation angle for the observation.
     It is used by getWCS() and other routines.
     """
-    # Set the position of center of this SCA in focal plane angular coordinates.
-    # In Jeff Kruk's code that is used for a comparison, these are also called sca_xc_parax and
-    # likewise for yc.
-    sca_xc_fpa = np.arctan(sca_xc_mm[i_sca]/focal_length)*coord.radians
-    sca_yc_fpa = np.arctan(sca_yc_mm[i_sca]/focal_length)*coord.radians
-
-    # Figure out tangent plane positions after distortion, and subtract off those for FPA center
-    # (calculated in header).
-    # These define the tangent plane (X, Y) distance of the center of this SCA from the
-    # boresight.
-    sca_xc_tp, sca_yc_tp = _det_to_tangplane_positions(sca_xc_fpa, sca_yc_fpa)
-    # And with respect to center of focal plane.  Note that (xc_fpa, yc_fpa) can be used directly
-    # (rather than in the tangent plane) because they are the same.
-    sca_xc_tp_f = sca_xc_tp - xc_fpa
-    sca_yc_tp_f = sca_yc_tp - yc_fpa
-
     # Go from the tangent plane position of the SCA center, to the actual celestial coordinate,
     # using `world_pos` as the center point of the tangent plane projection.  This celestial
     # coordinate for the SCA center is `crval`, which goes into the WCS as CRVAL1, CRVAL2.
     cos_pa = np.cos(pa_fpa)
     sin_pa = np.sin(pa_fpa)
-    u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
-    v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
+    u = sca_crval_u_deg[i_sca] * cos_pa - sca_crval_v_deg[i_sca] * sin_pa
+    v = sca_crval_u_deg[i_sca] * sin_pa + sca_crval_v_deg[i_sca] * cos_pa
+    u = u * coord.degrees
+    v = v * coord.degrees
     crval = world_pos.deproject(u, v, projection='gnomonic')
     return crval, u, v
 
@@ -627,10 +569,10 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
         pa_fpa = PA
-        pa_obsy = PA - 90.*coord.degrees - theta_fpa
+        pa_obsy = PA - theta_fpa
     else:
         pa_obsy = PA
-        pa_fpa = PA + 90.*coord.degrees + theta_fpa
+        pa_fpa = PA + theta_fpa
 
     return date, SCAs, pa_fpa, pa_obsy
 

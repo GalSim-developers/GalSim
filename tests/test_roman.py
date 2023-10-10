@@ -1219,8 +1219,207 @@ def test_aberration_interpolation():
     print("Continuity test passes.")
 
 
+@timer
+def test_roman_focal_plane():
+    """Test that a full focal plane has everything oriented as shown in mapping_v210503.pdf
+    """
+    # For this test, we mostly try to plot points on each SCA that visually reproduce
+    # the appearance of the red and blue arrows on Chris's plot of the focal plane.
+    # We'll put in some asserts, but the real test is to open the produced figure and
+    # compare the two diagrams visually.
 
+    # Boresight at 0,0, so RA, Dec are essentially observatory coordinates.
+    world_pos = galsim.CelestialCoord(0.*galsim.degrees, 0*galsim.degrees)
+    date = datetime.datetime(2025,5,20)
+    # Zero PA, so +Dec is up.  (Remember that +RA is left.)
+    wcs = galsim.roman.getWCS(PA=0*galsim.degrees, world_pos=world_pos, date=date)
 
+    red_arrows = {}
+    blue_arrows = {}
+    border = {}
+    numbers = {}
+    for sca in range(1,19):
+        # Make the red arrow for this SCA.
+        # x = 200, y = 200..3900, dotted.
+        red_arrows[sca] = []
+        x = 200
+        for y in range(200,3901,10):
+            if (y // 500) % 2 == 1: continue
+            coord = wcs[sca].toWorld(galsim.PositionD(x,y))
+            red_arrows[sca].append( (coord.ra.deg, coord.dec.deg) )
+
+        # Make the blue arrow
+        # y = 200, x = 200..3900, solid
+        blue_arrows[sca] = []
+        y = 200
+        for x in range(200,3901,10):
+            coord = wcs[sca].toWorld(galsim.PositionD(x,y))
+            blue_arrows[sca].append( (coord.ra.deg, coord.dec.deg) )
+
+        # Make a grey border around the edge
+        border[sca] = []
+        for xy in range(0,4096,10):
+            coord = wcs[sca].toWorld(galsim.PositionD(xy,0))
+            border[sca].append( (coord.ra.deg, coord.dec.deg) )
+            coord = wcs[sca].toWorld(galsim.PositionD(0,xy))
+            border[sca].append( (coord.ra.deg, coord.dec.deg) )
+            coord = wcs[sca].toWorld(galsim.PositionD(xy,4096))
+            border[sca].append( (coord.ra.deg, coord.dec.deg) )
+            coord = wcs[sca].toWorld(galsim.PositionD(4096,xy))
+            border[sca].append( (coord.ra.deg, coord.dec.deg) )
+
+    # Make crude numbers for each SCA
+    # Fit each number into rectangle from 1200<x<2800, 1000<y<3400
+    numbers[1] = []
+    x = 2000
+    for y in range(1000,3401,10):
+        numbers[1].append( (x,y) )
+    for d in range(10,401,10):
+        numbers[1].append( (2000-d, 3400-d) )
+
+    numbers[2] = []
+    for t in range(180,-91,-1):
+        theta = t * galsim.degrees
+        numbers[2].append( (2000+800*theta.cos(), 2600+800*theta.sin()) )
+    for d in range(10,801,10):
+        numbers[2].append( (2000-d, 1800-d) )
+    y = 1000
+    for x in range(1200,2801,10):
+        numbers[2].append( (x, y) )
+
+    numbers[3] = []
+    for t in range(180,-91,-1):
+        theta = t * galsim.degrees
+        numbers[3].append( (2000+600*theta.cos(), 2800+600*theta.sin()) )
+    for t in range(90,-181,-1):
+        theta = t * galsim.degrees
+        numbers[3].append( (2000+600*theta.cos(), 1600+600*theta.sin()) )
+
+    numbers[4] = []
+    x = 2400
+    for y in range(1000,3401,10):
+        numbers[4].append( (x,y) )
+    for d in range(10,1201,10):
+        numbers[4].append( (2400-d,3400-d) )
+    y = 2200
+    for x in range(1200,2801,10):
+        numbers[4].append( (x,y) )
+
+    numbers[5] = []
+    for t in range(-160,161):
+        theta = t * galsim.degrees
+        numbers[5].append( (2000+800*theta.cos(), 1800+800*theta.sin()) )
+    x = 1250
+    for y in range(2080,3401,10):
+        numbers[5].append( (x,y) )
+    y = 3400
+    for x in range(1250,2751,10):
+        numbers[5].append( (x,y) )
+
+    numbers[6] = []
+    for t in range(30,180):
+        theta = t * galsim.degrees
+        numbers[6].append( (2000+800*theta.cos(), 2600+800*theta.sin()) )
+    x = 1200
+    for y in range(1800,2600,10):
+        numbers[6].append( (x,y) )
+    for t in range(-180,180):
+        theta = t * galsim.degrees
+        numbers[6].append( (2000+800*theta.cos(), 1800+800*theta.sin()) )
+
+    numbers[7] = []
+    for x in range(1200,2801,10):
+        y = 1000 + 3*(x-1200)//2
+        numbers[7].append( (x,y) )
+    for x in range(1200,2801,10):
+        numbers[7].append( (x,3400) )
+
+    numbers[8] = []
+    for t in range(0,360):
+        theta = t * galsim.degrees
+        numbers[8].append( (2000+600*theta.cos(), 2800+600*theta.sin()) )
+    for t in range(0,360):
+        theta = t * galsim.degrees
+        numbers[8].append( (2000+600*theta.cos(), 1600+600*theta.sin()) )
+
+    numbers[9] = []
+    for t in range(-150,0):
+        theta = t * galsim.degrees
+        numbers[9].append( (2000+800*theta.cos(), 1800+800*theta.sin()) )
+    x = 2800
+    for y in range(1800,2600,10):
+        numbers[9].append( (x,y) )
+    for t in range(0,360):
+        theta = t * galsim.degrees
+        numbers[9].append( (2000+800*theta.cos(), 2600+800*theta.sin()) )
+
+    numbers[10] = []
+    for t in range(0,360):
+        theta = t * galsim.degrees
+        numbers[10].append( (2400+800*theta.cos(), 2200+1200*theta.sin()) )
+    x = 1200
+    for y in range(1000,3401,10):
+        numbers[10].append( (x,y) )
+    for d in range(10,401,10):
+        numbers[10].append( (1200-d, 3400-d) )
+
+    for sca in range(11,19):
+        numbers[sca] = [(x+400,y) for x,y in numbers[sca-10]]
+        x = 1200
+        for y in range(1000,3401,10):
+            numbers[sca].append( (x,y) )
+        for d in range(10,401,10):
+            numbers[sca].append( (1200-d, 3400-d) )
+
+    # OK, now convert all the x,y in numbers to ra, dec
+    for sca in range(1,19):
+        coords = [wcs[sca].toWorld(galsim.PositionD(x,y)) for x,y in numbers[sca]]
+        numbers[sca] = [(c.ra.deg, c.dec.deg) for c in coords]
+
+    if __name__ == '__main__':
+        from matplotlib.figure import Figure
+        from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+        # Make a plot of all these in the observatory coordinate system.
+        fig = Figure(figsize=(6,6))
+        ax = fig.subplots()
+        ax.set_xlim(0.6, -0.6)  # +RA is left
+        ax.set_ylim(-0.6, 0.6)
+        ax.set_xlabel('RA')
+        ax.set_ylabel('Dec')
+
+        for sca in range(1,19):
+            r,d = zip(*red_arrows[sca])
+            ax.scatter(r, d, color='red', marker='.', s=2)
+            r,d = zip(*blue_arrows[sca])
+            ax.scatter(r, d, color='blue', marker='.', s=2)
+            r,d = zip(*numbers[sca])
+            ax.scatter(r, d, color='black', marker='.', s=2)
+            r,d = zip(*border[sca])
+            ax.scatter(r, d, color='grey', marker='.', s=1)
+
+        canvas = FigureCanvasAgg(fig)
+        fig.set_layout_engine('tight')
+        file_name = os.path.join('output', 'test_roman_focal_plane.pdf')
+        canvas.print_figure(file_name, dpi=300)
+        print('Made ',file_name)
+        print('Compare this to ../devel/roman/mapping_v210503.pdf.')
+
+    # The real test is that the images look similar.  But turn this into some
+    # assert statements.
+    for sca in range(1,19):
+        if sca%3 == 0:
+            # 3,6,9,... have blue moving NE and red moving NW
+            assert blue_arrows[sca][-1][0] > blue_arrows[sca][0][0]  # RA increases
+            assert blue_arrows[sca][-1][1] > blue_arrows[sca][0][1]  # Dec increases
+            assert red_arrows[sca][-1][0] < red_arrows[sca][0][0]    # RA decreases
+            assert red_arrows[sca][-1][1] > red_arrows[sca][0][1]    # Dec increases
+        else:
+            # others have blue moving SW and red moving SE
+            assert blue_arrows[sca][-1][0] < blue_arrows[sca][0][0]  # RA decreases
+            assert blue_arrows[sca][-1][1] < blue_arrows[sca][0][1]  # Dec decreases
+            assert red_arrows[sca][-1][0] > red_arrows[sca][0][0]    # RA increases
+            assert red_arrows[sca][-1][1] < red_arrows[sca][0][1]    # Dec decreases
 
 
 if __name__ == "__main__":
