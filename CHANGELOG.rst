@@ -6,6 +6,7 @@ This version adds support for Pyton 3.11.  We currently support 3.7, 3.8, 3.9, 3
 API Changes
 -----------
 
+- Deprecated the use of filter W149 in roman module.  New name is W146. (#1017)
 - Deprecated automatic allocation of `PhotonArray` arrays via "get" access rather than
   "set" access for the arrays that are not initially allocated.  E.g. writing
   ``dxdz = photon_array.dxdz`` will emit a warning (and eventually this will be an error)
@@ -31,6 +32,7 @@ Config Updates
 New Features
 ------------
 
+- Updated Roman telescope data to Phase C (aka Cycle 9) specifications (#1017)
 - Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.  Also added
   the option ``use_sky_coords=True`` to `FindAdaptiveMom` to apply this automatically. (#1219)
 - Added some utility functions that we have found useful in our test suite, and which other
@@ -63,6 +65,7 @@ Performance Improvements
 Bug Fixes
 ---------
 
+- Fixed a bug that could lead to overflow in extremely large images. (#1017)
 - Fixed a slight error in the Moffat maxk calculation. (#1210)
 - Fixed a bug that prevented Eval types from generating lists in config files in some contexts.
   (#1220, #1223)

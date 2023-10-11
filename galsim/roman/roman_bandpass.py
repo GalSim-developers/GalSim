@@ -131,7 +131,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
         # Initialize the bandpass object.
         # Convert effective area units from m^2 to cm^2.
         # Also divide by the nominal Roman collecting area to get a dimensionless throughput.
-        bp = Bandpass(LookupTable(wave, data[bp_name]* 100**2/collecting_area), wave_type='nm')
+        bp = Bandpass(LookupTable(wave, data[bp_name] * 1.e4/collecting_area), wave_type='nm')
 
         # Use any arguments related to truncation, thinning, etc.
         if len(tmp_truncate_dict) > 0 or default_thin_trunc:
