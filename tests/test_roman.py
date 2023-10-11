@@ -309,6 +309,9 @@ def test_roman_wcs():
         galsim.roman.findSCA(wcs_dict=None, world_pos=pos)
     with assert_raises(TypeError):
         galsim.roman.findSCA(wcs_dict=wcs, world_pos=galsim.PositionD(300,400))
+    with mock.patch('galsim.roman.roman_wcs.sip_filename', 'sip_7_6_8.txt'):
+        with assert_raises(OSError):
+            galsim.roman.getWCS(world_pos=world_pos, date=date)
 
 @timer
 def test_roman_backgrounds():
