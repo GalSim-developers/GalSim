@@ -425,24 +425,30 @@ def test_roman_bandpass():
         if filter_name not in reference:
             continue
         flux = sed.calculateFlux(filter_)  # photons / cm^2 / s
-        print(flux, reference[filter_name])
+        count_rate = flux * galsim.roman.collecting_area  # photons / s
+        print(count_rate, reference[filter_name])
         np.testing.assert_allclose(
-            flux, reference[filter_name], rtol=0.15,
+            count_rate, reference[filter_name], rtol=0.15,
             err_msg="Count rate for stellar model not as expected for bandpass "
             "{0}".format(filter_name))
 
     # Finally, compare against some external zeropoint calculations from the Roman microlensing
     # group: https://roman.ipac.caltech.edu/sims/MABuLS_sim.html
     # They calculated instrumental zero points, defined such that the flux is 1 photon/sec (taking
-    # into account the Roman collecting area).  This is now (as of v2.5) consistent with our
-    # definition.  However, with the new bandpass changes since their calculation, the agreement
-    # is only about 0.3 magnitudes.
+    # into account the Roman collecting area).  We convert ours to their definition by adding
+    # `delta_zp` calculated below:
+    area_eff = galsim.roman.collecting_area
+    delta_zp = 2.5 * np.log10(area_eff)
+
+    # Define the zeropoints that they calculated:
+    # Note: with the new bandpass changes since their calculation, the agreement is only about
+    # 0.3 magnitudes.
     ref_zp = {
         'W146': 27.554,
         'Z087': 26.163
         }
     for key in ref_zp.keys():
-        galsim_zp = bp[key].zeropoint
+        galsim_zp = bp[key].zeropoint + delta_zp
         # They use slightly different versions of the bandpasses, so we only require agreement to
         # 0.1 mag.
         print('zp for %s: '%key, galsim_zp, ref_zp[key])
@@ -452,7 +458,7 @@ def test_roman_bandpass():
     # Note: the difference is not due to our default thinning.  This isn't any better.
     nothin_bp = galsim.roman.getBandpasses(AB_zeropoint=True, default_thin_trunc=False)
     for key in ref_zp.keys():
-        galsim_zp = nothin_bp[key].zeropoint
+        galsim_zp = nothin_bp[key].zeropoint + delta_zp
         print('nothin zp for %s: '%key, galsim_zp, ref_zp[key])
         np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.3,
                                    err_msg="Wrong zeropoint for bandpass "+key)
@@ -461,7 +467,7 @@ def test_roman_bandpass():
     verythin_bp = galsim.roman.getBandpasses(AB_zeropoint=True, default_thin_trunc=False,
                                              relative_throughput=0.05, rel_err=0.1)
     for key in ref_zp.keys():
-        galsim_zp = verythin_bp[key].zeropoint
+        galsim_zp = verythin_bp[key].zeropoint + delta_zp
         print('verythin zp for %s: '%key, galsim_zp, ref_zp[key])
         np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.3,
                                    err_msg="Wrong zeropoint for bandpass "+key)

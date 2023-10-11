@@ -35,7 +35,10 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     This routine reads in a file containing a list of wavelengths and throughput for all Roman
     bandpasses, and uses the information in the file to create a dictionary. This file is in units
     of effective area (m^2), which includes the nominal mirror size and obscuration in each
-    bandpass.
+    bandpass.  We divide these by the nominal roman.collecting_area, so the bandpass objects
+    include both filter transmission losses and the obscuration differences relevant for
+    each bandpass.  I.e. you should always use roman.collecting_area for the collecting area
+    in any flux calculation, and the bandpass will account for the differences from this.
 
     In principle it should be possible to replace the version of the file with another one, provided
     that the format obeys the following rules:
@@ -83,6 +86,8 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
 
     @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
+    from . import collecting_area
+
     # Begin by reading in the file containing the info.
     datafile = os.path.join(meta_data.share_dir, "roman", "Roman_effarea_20210614.txt")
     # One line with the column headings, and the rest as a NumPy array.
@@ -124,8 +129,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             continue
 
         # Initialize the bandpass object.
-        # Convert effective area units from m^2 to cm^2
-        bp = Bandpass(LookupTable(wave, data[bp_name] * 100 * 100), wave_type='nm')
+        # Convert effective area units from m^2 to cm^2.
+        # Also divide by the nominal Roman collecting area to get a dimensionless throughput.
+        bp = Bandpass(LookupTable(wave, data[bp_name]* 100**2/collecting_area), wave_type='nm')
 
         # Use any arguments related to truncation, thinning, etc.
         if len(tmp_truncate_dict) > 0 or default_thin_trunc:
