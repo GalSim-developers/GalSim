@@ -169,7 +169,7 @@ for isca in range(num_sca):
     # deg/pix = (1/FL) * (m/mm) * (mm/pix) * (deg/radian)
     deg_per_pix_u = 1./efl_u * (1/1000) * 0.01 * 180./np.pi
     deg_per_pix_v = 1./efl_v * (1/1000) * 0.01 * 180./np.pi
-    
+
     # The SIP A and B matrices define a transformation
     #
     # u =   A00     + A01 y     + A02 y^2     + A03 y^3   + A04 y^4

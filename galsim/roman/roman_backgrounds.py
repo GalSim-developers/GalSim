@@ -27,7 +27,6 @@ import os
 
 from .. import degrees, radians, CelestialCoord
 from .. import GalSimValueError
-from . import diameter, obscuration
 
 def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """

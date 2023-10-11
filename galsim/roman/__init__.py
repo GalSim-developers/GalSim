@@ -66,7 +66,7 @@ pupil_plane_scale = 0.00111175097
 # Which bands should use the long vs short pupil plane files for the PSF.
 # F184, K213
 longwave_bands = ['F184', 'K213']
-# R062, Z087, Y106, J129, H158, W149
+# R062, Z087, Y106, J129, H158, W146
 shortwave_bands = ['R062', 'Z087', 'Y106', 'J129', 'H158', 'W146']
 
 stray_light_fraction = 0.1
