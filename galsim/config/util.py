@@ -854,7 +854,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 logger.error("%s",traceback.format_exc())
                 # Clear any unclaimed jobs that are still in the queue
                 while not task_queue.empty():
-                    task_queue.get()
+                    task_queue.get(timeout=0.1)
                 # And terminate any jobs that might still be running.
                 for j in range(nproc):
                     p_list[j].terminate()

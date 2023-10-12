@@ -1664,7 +1664,7 @@ def test_timeout():
     # (PyPy doesn't seem to timeout, so skip this on PyPy.)
     if platform.python_implementation() != 'PyPy':
         config2 = galsim.config.CleanConfig(config2)
-        config2['output']['timeout'] = 0.001
+        config2['output']['timeout'] = 0.0001
         with CaptureLog() as cl:
             with assert_raises(galsim.GalSimError):
                 galsim.config.Process(config2, logger=cl.logger)
