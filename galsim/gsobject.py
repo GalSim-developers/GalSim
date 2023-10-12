@@ -1263,7 +1263,7 @@ class GSObject:
             wcs = image.wcs
 
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
-        if wcs is None or (wcs._isPixelScale and wcs.scale <= 0):
+        if wcs is None or (wcs._isPixelScale and not wcs.scale > 0):
             if default_wcs is None:
                 wcs = PixelScale(self.nyquist_scale)
             else:
@@ -1644,11 +1644,11 @@ class GSObject:
             raise TypeError("image is not an Image instance", image)
 
         # Make sure (gain, area, exptime) have valid values:
-        if gain <= 0.:
+        if not gain > 0.:
             raise GalSimRangeError("Invalid gain <= 0.", gain, 0., None)
-        if area <= 0.:
+        if not area > 0.:
             raise GalSimRangeError("Invalid area <= 0.", area, 0., None)
-        if exptime <= 0.:
+        if not exptime > 0.:
             raise GalSimRangeError("Invalid exptime <= 0.", exptime, 0., None)
 
         if method not in ('auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb'):
@@ -2521,13 +2521,13 @@ class GSObject:
 
         # The input scale (via scale or image.scale) is really a dk value, so call it that for
         # clarity here, since we also need the real-space pixel scale, which we will call dx.
-        if scale is None or scale <= 0:
+        if scale is None or not scale > 0:
             dk = self.stepk
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
             dx = np.pi/( max(image.array.shape) // 2 * dk )
-        elif scale is None or scale <= 0:
+        elif scale is None or not scale > 0:
             dx = self.nyquist_scale
         else:
             # Then dk = scale, which implies that we need to have dx smaller than nyquist_scale
