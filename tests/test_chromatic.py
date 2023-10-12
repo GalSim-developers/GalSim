@@ -902,6 +902,22 @@ def test_ChromaticSum_nphot():
     assert np.isclose(img.array.sum(), 1.0)
     assert np.isclose(img.added_flux, 1.0)
 
+    # Also check if the first two have zero flux.
+    obj = galsim.ChromaticSum([obj3, obj1, obj2 * 0])
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng,
+        photon_ops=[counter], n_photons=11, poisson_flux=False,
+    )
+    print("3 objects, last two with 0 flux, n_photons=11, poisson_flux=False:")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
+    assert np.sum(counter.nphot) == 11
+    assert np.isclose(img.array.sum(), 1.0)
+
+
 
 @timer
 def test_ChromaticConvolution_of_ChromaticConvolution():

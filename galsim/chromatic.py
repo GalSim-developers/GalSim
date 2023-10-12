@@ -2340,6 +2340,7 @@ class ChromaticSum(ChromaticObject):
             else:
                 flux_ratio = 1
             added_flux = 0
+            first = True
             for i, obj in enumerate(self.obj_list):
                 this_flux = obj.calculateFlux(bandpass)
                 if i == len(self.obj_list)-1:
@@ -2355,10 +2356,13 @@ class ChromaticSum(ChromaticObject):
                     image = obj.drawImage(bandpass, image=image, add_to_image=add_to_image,
                                           n_photons=this_nphot, poisson_flux=False, **kwargs)
                     added_flux += image.added_flux
-                if i==0:
-                    _remove_setup_kwargs(kwargs)
-                    add_to_image = True
-                if remaining_flux <= 0:
+                    if first:
+                        # Note: This might not be i==0.
+                        # Do this after the first call we make to drawImage.
+                        _remove_setup_kwargs(kwargs)
+                        add_to_image = True
+                        first = False
+                if not remaining_flux > 0:
                     break
             image.added_flux = added_flux
         self._last_wcs = image.wcs

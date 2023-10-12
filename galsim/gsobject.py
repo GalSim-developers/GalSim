@@ -2213,7 +2213,7 @@ class GSObject:
             photon_ops = surface_ops
 
         # Make sure the type of n_photons is correct and has a valid value:
-        if n_photons < 0.:
+        if not n_photons >= 0.:
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
 
         if poisson_flux is None:
@@ -2322,7 +2322,7 @@ class GSObject:
             photon_ops = surface_ops
 
         # Make sure the type of n_photons is correct and has a valid value:
-        if n_photons < 0.:
+        if not n_photons >= 0.:
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
 
         if poisson_flux is None:
