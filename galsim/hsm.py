@@ -233,9 +233,9 @@ class ShapeData:
 
         The values that are different from the original are:
 
-        moments_sigma is changed to be in units of arcsec.
-        observed_shape is changed to be in (u,v) coordinates.
-        moments_centroid is changed to be in (u,v) coordinates relative to image_pos.
+        * ``moments_sigma`` is changed to be in units of arcsec.
+        * ``observed_shape`` is changed to be in (u,v) coordinates.
+        * ``moments_centroid`` is changed to be in (u,v) coordinates relative to image_pos.
 
         .. note::
 
@@ -704,7 +704,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     for the coordinate variables. These coordinates are measured in arcsec and are oriented
     such that +v is towards North and +u is towards West. In this case, the returned values are
     all in arcsec, and are based instead on Iuu, Ivv, and Iuv.  To enable this feature, use
-    ``use_sky_coords=True`.  See also the method `ShapeData.applyWCS` for more details.
+    ``use_sky_coords=True``.  See also the method `ShapeData.applyWCS` for more details.
 
     .. note::
 

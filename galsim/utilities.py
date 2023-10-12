@@ -1702,7 +1702,7 @@ class CaptureLog:
     """A context manager that saves logging output into a string that is accessible for
     checking in unit tests.
 
-    After exiting the context, the attribute `output` will have the logging output.
+    After exiting the context, the attribute ``output`` will have the logging output.
 
     Sample usage:
 

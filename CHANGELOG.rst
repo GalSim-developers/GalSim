@@ -13,7 +13,7 @@ API Changes
   if the angle arrays have not been either set or explicitly allocated.  One should be sure
   to either set them (e.g. using ``photon_array.dxdz = [...]``) or explicitly allocate
   them (using ``photon_array.allocateAngles()``).  (#1191)
-- Changed the ``.SED`` attribute name of `ChromaticObject`s to lowercase ``.sed``. (#1245)
+- Changed the ``.SED`` attribute name of `ChromaticObject` to lowercase ``.sed``. (#1245)
 
 
 Config Updates
@@ -35,14 +35,14 @@ New Features
 
 - Updated Roman telescope data to Phase C (aka Cycle 9) specifications (#1017)
 - Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates.  Also added
-  the option ``use_sky_coords=True`` to `FindAdaptiveMom` to apply this automatically. (#1219)
+  the option ``use_sky_coords=True`` to `hsm.FindAdaptiveMom` to apply this automatically. (#1219)
 - Added `DoubleZernike` class and related functionality. (#1221)
 - Added some utility functions that we have found useful in our test suite, and which other
   people might want to use to the installed galsim.utilities. (#1240)
-- Added `galsim.utilities.merge_sorted` which merges two or more sorted numpy arrays faster than
+- Added `utilities.merge_sorted` which merges two or more sorted numpy arrays faster than
   the available numpy options. (#1243)
-- Added `galsim.EmissionLine` class to represent emission line SEDs. (#1247, #1249)
-- Updated data in galsim.roman module to Phase C (Cycle 9) information. (#1017, #1251)
+- Added `EmissionLine` class to represent emission line SEDs. (#1247, #1249)
+- Updated data in `roman` module to Phase C (Cycle 9) information. (#1017, #1251)
 
 
 Performance Improvements
@@ -55,12 +55,12 @@ Performance Improvements
   Now it only adds it if there is not already one given by the user. (#1229, #1236)
 - Work around an OMP bug that disables multiprocessing on some systems when omp_get_max_threads
   is called. (#1241)
-- Sped up the `combine_wave_lists` function, using the new `merge_sorted` function. (#1243)
-- No longer keep a separate ``wave_list`` array in `ChromaticObject`s.  These are always
+- Sped up the `combine_wave_list` function, using the new `merge_sorted` function.  (#1243)
+- No longer keep a separate ``wave_list`` array in `ChromaticObject`.  These are always
   equal to the ``wave_list`` in the ``sed`` attribute, so there is no need to duplicate the
   work of computing the ``wave_list``. (#1245)
-- Delayed the calculation of the `sed` attributes of `ChromaticObject`s until they are actually
-  needed.  Since sometimes they aren't needed, this is a performance improvement in those cases.
+- Delayed the calculation of the ``sed`` attributes of `ChromaticObject` until they are actually
+  needed.  Since sometimes they are not needed, this is a performance improvement in those cases.
   (#1245)
 - Reduce long-term memory usage of Silicon class after drawing onto a very large stamp and
   then moving on to smaller stamps. (#1246)

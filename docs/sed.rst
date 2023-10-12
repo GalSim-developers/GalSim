@@ -9,3 +9,6 @@ Spectral Energy Distributions
     .. automethod:: galsim.SED._mul_sed
     .. automethod:: galsim.SED._mul_bandpass
     .. automethod:: galsim.SED._mul_scalar
+
+.. autoclass:: galsim.EmissionLine
+    :members:

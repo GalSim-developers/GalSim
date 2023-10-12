@@ -237,6 +237,9 @@ Generic Types
     * ``items`` = *list* (required)  A list of profiles.
     * ``index`` = *int_value* (default = 'Sequence' from 0 to len(items)-1)  Which item in the list to select each time.
 
+* 'Eval'  Use Python's ``eval`` function to evaluate a given string as a GSObject.
+
+    * ``str`` = *str_value* (required)  The string to evaluate.
 
 Other Attributes
 ----------------

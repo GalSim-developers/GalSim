@@ -114,6 +114,12 @@ The ``input`` fields defined by GalSim are:
     * ``index`` = *str_value* (optional) If set, the power spectrum will only be computed when this index changed.  E.g. if ``index`` is 'file_num', then it will only update with each new file, not with each image.
     * ``variance`` = *float_value* (optional) If set, rescale the overall variance of the generated shears to this value.
 
+* ``initial_image`` specifies an initial image (read from an FITS file) to draw onto, rather than create a new blank image.
+
+    * ``file_name`` = *str_value* (required) The name fo the file with the desired initial image.
+    * ``dir`` = *str_value* (default = '.')  The directory the file is in.
+    * ``read_header`` = *bool_value* (default = False)  Whether to read the header as well.
+
 Another feature of the ``input`` field is that it may optionally be a list.  So you can have multiple input catalogs for instance; one for object parameters and one for overall image parameters perhaps.  When using values with the type 'InputCatalog', you would specify which catalog to use with ``num``.  If you only have a single item for one of the inputs, you can omit the ``num`` parameter when you are using it.
 
 Custom Input Types

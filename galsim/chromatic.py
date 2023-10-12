@@ -89,7 +89,7 @@ class ChromaticObject:
         >>> gal = bulge + disk
 
     The ``sed`` instances above describe the flux density in photons/nm/cm^2/s of an object, possibly
-    normalized with either the `sed.withFlux` or `sed.withMagnitude` methods (see their docstrings
+    normalized with either the `SED.withFlux` or `SED.withMagnitude` methods (see their docstrings
     for details about these and other normalization options).  Note that for dimensional
     consistency, in this case, the ``flux`` attribute of the multiplied `GSObject` is interpreted
     as being dimensionless instead of in its normal units of [photons/s/cm^2].  The photons/s/cm^2

@@ -961,19 +961,19 @@ class DoubleZernike:
     separate annuli:
 
     .. math::
-        DZ_{k, j}(u, v, x, y) = Z_k(u, v) Z_j(x, y)
+        DZ_{k,j}(u, v, x, y) = Z_k(u, v) Z_j(x, y)
 
     The double Zernike's therefore satisfy the orthonormality condition:
 
     .. math::
-        \int_{annuli} DZ_(k, j) DZ_(k', j') = A1 A2 \delta_{k, k'} \delta_{j, j'}
+        \int_{annuli} DZ_{k,j} DZ_{k',j'} = A_1 A_2 \delta_{k, k'} \delta_{j, j'}
 
-    where A1 and A2 are the areas of the two annuli.
+    where :math:`A_1` and :math:`A_2` are the areas of the two annuli.
 
     Double Zernikes series are useful for representing the field and pupil
     dependent wavefronts of a telescope.  We adopt the typical convention that
-    the first index (the `k` index) corresponds to the field-dependence, while
-    the second index (the `j` index) corresponds to the pupil-dependence.
+    the first index (the ``k`` index) corresponds to the field-dependence, while
+    the second index (the ``j`` index) corresponds to the pupil-dependence.
 
     Parameters:
         coef:       [kmax, jmax] array of double Zernike coefficients.  Like the
@@ -1131,8 +1131,8 @@ class DoubleZernike:
         """DoubleZernike coefficients.
 
         The coefficients are stored in a 2D array, where the first index
-        corresponds to the `uv` dependence and the second index corresponds to
-        the `xy` dependence.  The indices are Noll indices.  As an example, when
+        corresponds to the ``uv`` dependence and the second index corresponds to
+        the ``xy`` dependence.  The indices are Noll indices.  As an example, when
         describing a telescope wavefront the (1, 4) tuple corresponds to a
         constant (over the field) pupil defocus.  The (2, 5) term is a linear
         (over the field) astigmatism, etc.
