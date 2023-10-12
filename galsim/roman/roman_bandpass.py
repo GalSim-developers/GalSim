@@ -54,8 +54,18 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     if thinning is not desired, truncation is recommended.
 
     By default, the routine will set an AB zeropoint (unless ``AB_zeropoint=False``).  The
-    zeropoint in this module is defined such that the flux is 1 photon/sec through the
-    bandpass.
+    zeropoint in GalSim is defined such that the flux is 1 photon/cm^2/sec through the
+    bandpass. This differs from an instrumental bandpass, which is typically defined such that the
+    flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
+    follows::
+
+        # Shift zeropoint based on effective collecting area in cm^2.
+        delta_zp = 2.5 * np.log10(galsim.roman.collecting_area)
+
+    ``delta_zp`` will be a positive number that should be added to the GalSim zeropoints to compare
+    with externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
+    normalization of fluxes, the ``area`` kwarg to drawImage can be used to get the right
+    normalization (giving it the quantity ``galsim.roman.collecting_area``).
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.roman.getSkyLevel() routine.  The sky background information is saved as an attribute in
