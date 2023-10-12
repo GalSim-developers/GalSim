@@ -802,8 +802,10 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.isclose(np.sum(counter.nphot), flux)
     assert np.isclose(img.array.sum(), flux)
+    assert np.isclose(img.added_flux, flux)
     assert np.isclose(img.array.sum(), np.sum(counter.nphot))
     assert np.isclose(counter.nphot[0], flux1)
     assert np.isclose(counter.nphot[1], flux2)
@@ -818,8 +820,10 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.isclose(np.sum(counter.nphot), flux, rtol=0.1)
     assert np.isclose(img.array.sum(), flux, rtol=0.1)
+    assert np.isclose(img.added_flux, flux, rtol=0.1)
     assert np.isclose(img.array.sum(), np.sum(counter.nphot))
     assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=0.3)
     np.testing.assert_allclose(counter.meanflux, 1.0)
@@ -834,8 +838,10 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.sum(counter.nphot) == 101
     assert np.isclose(img.array.sum(), flux)
+    assert np.isclose(img.added_flux, flux)
     assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
     np.testing.assert_allclose(counter.meanflux, np.mean(counter.meanflux))
 
@@ -849,8 +855,10 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.sum(counter.nphot) == 101
     assert np.isclose(img.array.sum(), flux, rtol=0.1)
+    assert np.isclose(img.added_flux, flux, rtol=0.1)
     assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
     np.testing.assert_allclose(counter.meanflux, np.mean(counter.meanflux))
 
@@ -865,9 +873,11 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.sum(counter.nphot) == 11
     assert len(counter.nphot) == 1  # Not a priori required, but works for this rng.
     assert np.isclose(img.array.sum(), flux)
+    assert np.isclose(img.added_flux, flux)
 
     print('Start #1170 test')
     # If multiple objects at the end has zero flux, it used to cause a ZeroDivisionError.
@@ -887,8 +897,10 @@ def test_ChromaticSum_nphot():
     print("counter.nphot = ",counter.nphot)
     print("counter.meanflux = ",counter.meanflux)
     print("img.array.sum() = ",img.array.sum())
+    print("img.added_flux = ",img.added_flux)
     assert np.sum(counter.nphot) == 11
     assert np.isclose(img.array.sum(), 1.0)
+    assert np.isclose(img.added_flux, 1.0)
 
 
 @timer

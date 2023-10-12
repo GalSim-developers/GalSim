@@ -2323,8 +2323,11 @@ class ChromaticSum(ChromaticObject):
             image = self.obj_list[0].drawImage(
                     bandpass, image=image, add_to_image=add_to_image, **kwargs)
             _remove_setup_kwargs(kwargs)
+            added_flux = image.added_flux
             for obj in self.obj_list[1:]:
                 image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
+                added_flux += image.added_flux
+            image.added_flux = added_flux
         else:
             # If n_photons is specified, need some special handling here.
             rng = BaseDeviate(kwargs.get('rng', None))
@@ -2336,6 +2339,7 @@ class ChromaticSum(ChromaticObject):
                 flux_ratio = pd() / total_flux
             else:
                 flux_ratio = 1
+            added_flux = 0
             for i, obj in enumerate(self.obj_list):
                 this_flux = obj.calculateFlux(bandpass)
                 if i == len(self.obj_list)-1:
@@ -2350,11 +2354,13 @@ class ChromaticSum(ChromaticObject):
                     obj *= (this_nphot * total_flux) / (n_photons * this_flux) * flux_ratio
                     image = obj.drawImage(bandpass, image=image, add_to_image=add_to_image,
                                           n_photons=this_nphot, poisson_flux=False, **kwargs)
+                    added_flux += image.added_flux
                 if i==0:
                     _remove_setup_kwargs(kwargs)
                     add_to_image = True
                 if remaining_flux <= 0:
                     break
+            image.added_flux = added_flux
         self._last_wcs = image.wcs
         return image
 
