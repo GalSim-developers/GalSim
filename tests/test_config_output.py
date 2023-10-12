@@ -140,13 +140,13 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
     galsim.config.util.max_queue_size = 32767  # Set it back.
 
-    # Check that profile outputs something appropriate for multithreading.
+    # Check that profile outputs something appropriate for multiprocessing.
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
     config = galsim.config.CopyConfig(config1)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger,
-                              new_params={'profile':True, 'output.nproc': -1})
+                              new_params={'profile':True, 'output.nproc': 4})
     #print(cl.output)
     # Unfortunately, the LoggerProxy doesn't really work right with the string logger used
     # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
@@ -154,6 +154,10 @@ def test_fits():
     # multithreading starts.  But with a regular logger, there really is profiling output.
     if galsim.config.UpdateNProc(10, 6, config) > 1:
         assert "Starting separate profiling for each of the" in cl.output
+    for p in range(4):
+        pstats_file = f'galsim-Process-{p+1}.pstats'
+        assert os.path.exists(pstats_file)
+        os.remove(pstats_file)
 
     # Check some public API utility functions
     assert galsim.config.GetNFiles(config) == 6
