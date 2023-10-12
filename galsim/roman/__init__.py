@@ -25,8 +25,6 @@ from .. import meta_data, Image
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
-# Effective area now taken into account in the bandpass throughput (units of effective area, m^2) and sky background files.
-# To modify these assumptions, remove approximate factor of eff_area = 0.25 * np.pi * diameter**2 * (1. - obscuration**2) in meters^2 and rescale to new values of these parameters.
 diameter = 2.36  # meters
 obscuration = 0.32
 collecting_area = 3.757e4 # cm^2, from Cycle 7
