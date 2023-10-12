@@ -740,6 +740,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
         logger.debug('%s: Received STOP', proc)
         if pr is not None:
             pr.disable()
+            pr.dump_stats(config.get('root', 'galsim') + '_' + str(proc) + '.pstats')
             s = StringIO()
             sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
                              # alias for this that is backwards compatible to older versions
