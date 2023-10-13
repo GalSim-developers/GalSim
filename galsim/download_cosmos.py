@@ -195,15 +195,17 @@ def check_existing(target, unpack_dir, meta, args, logger):
                 saved_meta_dict = json.load(fp)
                 # Get rid of the unicode
                 saved_meta_dict = dict([ (str(k),str(v)) for k,v in saved_meta_dict.items()])
+            saved_meta_dict = {k.lower():v for k,v in saved_meta_dict.items()}
             logger.debug("current meta information is %s",saved_meta_dict)
             meta_dict = dict(meta)
+            meta_dict = {k.lower():v for k,v in meta_dict.items()}
             logger.debug("url's meta information is %s",meta_dict)
 
             # There are several checksum tags.  If any of them are present and match,
             # then file is current.  If they don't match, file is obsolete.
             # If none are present, then they changed something, so do a longer check.
             # (And try to get around to updating this list of checksum keys.)
-            checksum_keys = ['OC-Checksum', 'Content-MD5', 'ETag']
+            checksum_keys = ['oc-checksum', 'content-md5', 'etag']
             obsolete = None
             for k in checksum_keys:
                 if k in saved_meta_dict and k in meta_dict:
@@ -221,9 +223,9 @@ def check_existing(target, unpack_dir, meta, args, logger):
                 obsolete = False
                 for k in meta_dict:
                     # Skip some keys that don't imply obselescence.
-                    if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
+                    if k.startswith('x-') or k.startswith('retry') or k.startswith('set-cookie'):
                         continue
-                    if k == 'Date' or k == 'Last-Modified' or k == 'Server':
+                    if k == 'date' or k == 'last-modified' or k == 'server':
                         continue
                     # Others that are missing or different imply obsolete
                     if k not in saved_meta_dict:
