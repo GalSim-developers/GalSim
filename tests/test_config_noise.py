@@ -697,8 +697,9 @@ def test_whiten():
     config['image']['noise'] =  { 'whiten' : True, }
     im1c, cv1c = galsim.config.BuildStamp(config, do_noise=False)
     print('From BuildStamp, current_var = ',cv1c)
-    np.testing.assert_equal(cv1c, cv1a)
-    np.testing.assert_equal(im1c.array, im1a.array)
+    # Occasionally these aren't precisely equal due to slight numerical rounding differences.
+    np.testing.assert_allclose(cv1c, cv1a, rtol=1.e-15)
+    np.testing.assert_allclose(im1c.array, im1a.array, rtol=1.e-15)
     rng1 = rng.duplicate()  # Save current state of rng
 
     # 1. Gaussian noise

@@ -1170,10 +1170,10 @@ def test_retry_io():
     for k in range(nfiles):
         im1 = galsim.fits.read('output/test_flaky_fits_%d.fits'%k)
         im2 = galsim.fits.read('output/test_nonflaky_fits_%d.fits'%k)
-        np.testing.assert_array_equal(im1.array, im2.array)
+        np.testing.assert_allclose(im1.array, im2.array, atol=1.e-15)
         wt1 = galsim.fits.read('output/test_flaky_wt_%d.fits'%k)
         wt2 = galsim.fits.read('output/test_nonflaky_wt_%d.fits'%k)
-        np.testing.assert_array_equal(wt1.array, wt2.array)
+        np.testing.assert_allclose(wt1.array, wt2.array, atol=1.e-15)
 
     # Without retry_io, it will fail, but keep going
     del config['output']['retry_io']
@@ -1701,8 +1701,10 @@ def test_timeout():
         with CaptureLog() as cl:
             galsim.config.Process(config2, logger=cl.logger)
         assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
-        assert 'File output/test_timeout_nproc2_1.fits not written! Continuing on...' in cl.output
-        assert 'No files were written.  All were either skipped or had errors.' in cl.output
+        # Note: Usually they all fail, and the two lines below are in the logging output, but
+        #       it's possible for one of them to finish, so these asserts occasionally fail.
+        #assert 'File output/test_timeout_nproc2_1.fits not written! Continuing on...' in cl.output
+        #assert 'No files were written.  All were either skipped or had errors.' in cl.output
 
         # If you want this to abort, use except_abort=True
         config2 = galsim.config.CleanConfig(config2)
