@@ -21,6 +21,7 @@ __all__ = [ 'AtmosphericScreen', 'Atmosphere', 'OpticalScreen', 'UserScreen', ]
 import sys
 import numpy as np
 import multiprocessing
+from contextlib import contextmanager
 from numbers import Real
 
 from .random import BaseDeviate, GaussianDeviate
@@ -90,6 +91,17 @@ def reset_shared_screens():
     """
     global _GSScreenShare
     _GSScreenShare = {}
+
+# Helper to let the with Lock() context in the __del__ below timeout if things get borked.
+# From https://stackoverflow.com/questions/71282555/acquire-a-multiprocessing-lock-in-a-with-statement-if-non-blocking-or-with-timeo
+@contextmanager
+def acquire_lock(lock, block=True, timeout=None):
+    held = lock.acquire(block=block, timeout=timeout)
+    try:
+        yield held
+    finally:
+        if held:
+            lock.release()
 
 
 class AtmosphericScreen:
@@ -372,9 +384,12 @@ class AtmosphericScreen:
     def __del__(self):
         if not hasattr(self, '_objDict'):  # for if __init__ raised exception
             return
-        with self._objDict['lock']:
+        with acquire_lock(self._objDict['lock'], timeout=3) as acquired:
+            # If this can't acquire the lock, just timeout and return -- don't hang.
+            # (This seems to happen occasionally, but apparently only here in __del__.)
+            if not acquired: return
+
             self._objDict['refcount'].value -= 1
-        with self._objDict['lock']:
             # Normally, shareKey is present, but on final cleanup, we have no control over
             # the order than things are deleted, so it might already be gone, in which
             # case there can be a KeyError here.
