@@ -74,6 +74,23 @@ def initWorker(share):
     """
     _GSScreenShare.update(share)  # pragma: no cover  (covered, but in a fork)
 
+def reset_shared_screens():
+    """Reset the global dict that contains screens being shared across multiprocessing processes.
+
+    This is almost never necessary.  However, if you first use one multiprocessing context with
+    `initWorker` and `initWorkerArgs`, and then switch to a different context for another
+    multiprocessing action, the dict we use for storing the shared memory will not be usable
+    in the new context.  In this case, you should reset the global dict before starting
+    the second multiprocessing action by running::
+
+        galsim.phase_screens.reset_shared_screens()
+
+    If you only ever use one multiprocessing context in your program, you should never need
+    to call this.
+    """
+    global _GSScreenShare
+    _GSScreenShare = {}
+
 
 class AtmosphericScreen:
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The

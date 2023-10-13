@@ -1229,6 +1229,9 @@ def test_shared_memory():
         ctxs = [None, mp.get_context("fork")]
 
     for ctx in ctxs:
+        print('ctx = ',ctx)
+        galsim.phase_screens.reset_shared_screens()
+
         atmPar = galsim.Atmosphere(
             r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
             rng=rng.duplicate(),

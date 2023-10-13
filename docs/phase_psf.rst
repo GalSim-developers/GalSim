@@ -104,3 +104,5 @@ The main classes of note are:
 .. autofunction:: galsim.phase_screens.initWorkerArgs
 
 .. autofunction:: galsim.phase_screens.initWorker
+
+.. autofunction:: galsim.phase_screens.reset_shared_screens
