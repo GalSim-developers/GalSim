@@ -854,7 +854,12 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 logger.error("%s",traceback.format_exc())
                 # Clear any unclaimed jobs that are still in the queue
                 while not task_queue.empty():
-                    task_queue.get(timeout=0.1)
+                    try:
+                        # If something else gets between the empty() check and this get,
+                        # it will raise an Empty exception.  Ignore it.
+                        task_queue.get_nowait()
+                    except Exception:  # pragma: no cover
+                        pass
                 # And terminate any jobs that might still be running.
                 for j in range(nproc):
                     p_list[j].terminate()
@@ -867,7 +872,13 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 # running processes, even if the main process gets to the end.  So you do want to
                 # make sure to add those 'STOP's at some point!
                 for j in range(nproc):
-                    task_queue.put('STOP')
+                    try:
+                        # Sometimes this one will hang if we timed out above.  Not sure why, but
+                        # the nowait seems to fix it.  And if there was a reason for put() to
+                        # hang, then put_nowait might raise an exception.  Ignore it.
+                        task_queue.put_nowait('STOP')
+                    except Exception:  # pragma: no cover
+                        pass
                 for j in range(nproc):
                     p_list[j].join()
                 task_queue.close()
