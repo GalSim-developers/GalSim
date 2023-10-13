@@ -626,6 +626,11 @@ def test_Image_FITS_IO():
         assert_raises(OSError, galsim.fits.read, test_file0, compression='bzip2')
 
         # Test rice
+        # Avoid astropy 5.3 issue reading rice-compressed file.
+        # cf. https://github.com/astropy/astropy/issues/15477
+        # Hopefull they will fix it before 5.4 comes out...
+        import astropy
+        if astropy.__version__ >= "5.3" and astropy.__version__ < "5.4": continue
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
@@ -938,6 +943,11 @@ def test_Image_MultiFITS_IO():
         assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='bzip2')
 
         # Test rice
+        # Avoid astropy 5.3 issue reading rice-compressed file.
+        # cf. https://github.com/astropy/astropy/issues/15477
+        # Hopefull they will fix it before 5.4 comes out...
+        import astropy
+        if astropy.__version__ >= "5.3" and astropy.__version__ < "5.4": continue
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.fz")
         test_image_list = galsim.fits.readMulti(test_multi_file, compression='rice')
         for k in range(nimages):
@@ -1263,6 +1273,11 @@ def test_Image_CubeFITS_IO():
         assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='bzip2')
 
         # Test rice
+        # Avoid astropy 5.3 issue reading rice-compressed file.
+        # cf. https://github.com/astropy/astropy/issues/15477
+        # Hopefull they will fix it before 5.4 comes out...
+        import astropy
+        if astropy.__version__ >= "5.3" and astropy.__version__ < "5.4": continue
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.fz")
         test_image_list = galsim.fits.readCube(test_cube_file, compression='rice')
         for k in range(nimages):
