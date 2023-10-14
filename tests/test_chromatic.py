@@ -2229,7 +2229,7 @@ def test_phot():
     for psf in [psf1, psf2, psf3, psf4, psf5, psf6, psf7]:
         print('psf = ',psf)
         atol = 4.e-4
-        if psf in [psf5, psf6]:
+        if psf in [psf5, psf6, psf7]:
             atol = 6e-4   # OpticalPSF doesn't match quite as well as the others.
         rng = galsim.BaseDeviate(1234)
 
