@@ -301,7 +301,7 @@ namespace galsim {
 #endif
     }
 
-    class CubicIntegrand : public std::unary_function<double,double>
+    class CubicIntegrand
     {
     public:
         CubicIntegrand(double u, const Cubic& c): _u(u), _c(c) {}
@@ -451,7 +451,7 @@ namespace galsim {
 #endif
     }
 
-    class QuinticIntegrand : public std::unary_function<double,double>
+    class QuinticIntegrand
     {
     public:
         QuinticIntegrand(double u, const Quintic& q): _u(u), _q(q) {}

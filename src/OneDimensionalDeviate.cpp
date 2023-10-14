@@ -38,7 +38,7 @@ namespace galsim {
 
     // Wrapper class for doing integrals over annuli
     template <class F>
-    class RTimesF: public std::unary_function<double,double> {
+    class RTimesF {
     public:
         RTimesF(const F& function): _function(function) {}
         double operator()(double r) const { return r*_function(r); }

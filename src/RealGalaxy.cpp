@@ -19,6 +19,7 @@
 
 #if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 // Clang incorrectly defines __CUDA_ARCH__ in host code when building for

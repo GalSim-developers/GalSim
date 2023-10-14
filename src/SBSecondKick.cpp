@@ -136,7 +136,7 @@ namespace galsim {
 
     inline double pow4(double x) { double x2 = x*x; return x2*x2; }
 
-    class SKISFIntegrand : public std::unary_function<double,double>
+    class SKISFIntegrand
     {
     public:
         SKISFIntegrand(double rho, double kcrit) :

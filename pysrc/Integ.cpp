@@ -31,8 +31,7 @@ namespace integ {
 #pragma GCC visibility push(hidden)
 #endif
     // A C++ function object that just calls a python function.
-    class PyFunc :
-        public std::unary_function<double, double>
+    class PyFunc
     {
     public:
         PyFunc(const py::function& func) : _func(func) {}

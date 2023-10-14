@@ -723,7 +723,7 @@ namespace galsim {
             // having a temporary polygon per thread is not practical
 
             // compute first point of polygon (index 0)
-            double x1, y1, xfirst, yfirst, xinters = 0.0;
+            double x1=0, y1=0, xfirst, yfirst, xinters = 0.0;
             inside = false;
             for (int n = 0; n <= _nv; n++) {
                 double xp = 0.0, yp = 0.0;

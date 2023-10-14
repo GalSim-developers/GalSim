@@ -33,8 +33,7 @@
 
 namespace galsim {
 
-    class ConvolveFunc :
-        public std::binary_function<double,double,double>
+    class ConvolveFunc
     {
     public:
         ConvolveFunc(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos) :
@@ -54,8 +53,7 @@ namespace galsim {
         const Position<double>& _pos;
     };
 
-    class YRegion :
-        public std::unary_function<double, integ::IntRegion<double> >
+    class YRegion
     {
     public:
         YRegion(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos) :
