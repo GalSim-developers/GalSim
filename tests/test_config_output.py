@@ -1630,7 +1630,7 @@ def test_timeout():
             # Note: Making n random means the image creation is moderately slow
             # (since a new Hankel transform is done for each one in SersicInfo)
             # But don't let max be too large so it's not very slow!
-            'n' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'n' : { 'type': 'Random', 'min': 3, 'max': 4 },
             'half_light_radius' : { 'type': 'Random', 'min': 1, 'max': 2 },
         },
         'psf' : {
