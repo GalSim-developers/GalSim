@@ -54,7 +54,7 @@ to customize any aspect of the stamp-building process.
     * ``min_snr`` = *float_value* (optional) If the measured signal-to-noise ratio (using the optimal matched filter definition of S/N, measured using the signal on the stamp before noise is applied) is less than this, then reject it and start over.  This counts as a "failure" for the purpose of the ``retry_failures`` count.
     * ``max_snr`` = *float_value* (optional) If the measured signal-to-noise ratio is higher than this, then reject it and start over.  This counts as a "failure" for the purpose of the ``retry_failures`` count.
     * ``reject`` = *bool_value* (optional) If this evaluates to true, then reject the current stamp and start over.  Typically, this would be a custom function that would perform some measurement on the pre-noise image.
-      See :download:`cgc.yaml <../examples/great3/cgc.yaml>` for an examples of such a custom function.  This counts as a "failure" for the purpose of the ``retry_failures`` count.
+      See :gh-link:`cgc.yaml <examples/great3/cgc.yaml>` for an examples of such a custom function.  This counts as a "failure" for the purpose of the ``retry_failures`` count.
 
 * 'Ring' Generate galaxies in a ring for a ring test. (Use num=2 to get pairs of 90 degree rotated galaxies.)
 
@@ -125,10 +125,10 @@ Then you can use this as a valid stamp type:
 
 For examples of custom stamps, see
 
-* :download:`blend.yaml <../examples/des/blend.yaml>`
-* :download:`blendset.yaml <../examples/des/blendset.yaml>`
+* :gh-link:`blend.yaml <examples/des/blend.yaml>`
+* :gh-link:`blendset.yaml <examples/des/blendset.yaml>`
 
-which use custom stamp types ``Blend`` and ``BlendSet`` defined in :download:`blend.py <../examples/des/blend.py>`.
+which use custom stamp types ``Blend`` and ``BlendSet`` defined in :gh-link:`blend.py <examples/des/blend.py>`.
 
 It may also be helpful to look at the GalSim implementation of the include ``Ring`` type:
 (click on the ``[source]`` link):

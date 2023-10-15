@@ -52,21 +52,21 @@ C++ Integration Functions
 
 .. doxygenstruct:: galsim::integ::IntRegion
 
-.. doxygenfunction:: galsim::integ::int1d(const UF&, typename UF::result_type, typename UF::result_type, const typename UF::result_type&, const typename UF::result_type&)
+.. doxygenfunction:: galsim::integ::int1d(const UF&, double, double, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int1d(const UF&, IntRegion<typename UF::result_type>&, const typename UF::result_type&, const typename UF::result_type&)
+.. doxygenfunction:: galsim::integ::int1d(const UF&, IntRegion<double>&, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int2d(const BF&, typename BF::result_type, typename BF::result_type, typename BF::result_type, typename BF::result_type, const typename BF::result_type&, const typename BF::result_type&)
+.. doxygenfunction:: galsim::integ::int2d(const BF&, double, double, double, double, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int2d(const BF&, IntRegion<typename BF::result_type>&, const YREG&, const typename BF::result_type&, const typename BF::result_type&)
+.. doxygenfunction:: galsim::integ::int2d(const BF&, IntRegion<double>&, const YREG&, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int2d(const BF&, IntRegion<typename BF::result_type>&, IntRegion<typename BF::result_type>&, const typename BF::result_type&, const typename BF::result_type&)
+.. doxygenfunction:: galsim::integ::int2d(const BF&, IntRegion<double>&, IntRegion<double>&, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int3d(const TF&, typename TF::result_type, typename TF::result_type, typename TF::result_type, typename TF::result_type, typename TF::result_type, typename TF::result_type, const typename TF::result_type&, const typename TF::result_type&)
+.. doxygenfunction:: galsim::integ::int3d(const TF&, double, double, double, double, double, double, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int3d(const TF&, IntRegion<typename TF::result_type>&, const YREG&, const ZREG&, const typename TF::result_type&, const typename TF::result_type&)
+.. doxygenfunction:: galsim::integ::int3d(const TF&, IntRegion<double>&, const YREG&, const ZREG&, const double, const double)
 
-.. doxygenfunction:: galsim::integ::int3d(const TF&, IntRegion<typename TF::result_type>&, IntRegion<typename TF::result_type>&, IntRegion<typename TF::result_type>&, const typename TF::result_type&, const typename TF::result_type&)
+.. doxygenfunction:: galsim::integ::int3d(const TF&, IntRegion<double>&, IntRegion<double>&, IntRegion<double>&, const double, const double)
 
 .. doxygenfunction:: galsim::math::hankel_trunc
 

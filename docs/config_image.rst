@@ -320,8 +320,8 @@ Then you can use this as a valid wcs type:
             type: CustomWCS
             ...
 
-For examples of custom wcs types, see :download:`des_wcs.py <../examples/des/des_wcs.py>`, which implements ``DES_SlowLocal`` and ``DES_Local``.
-The latter is faster because it uses in input field, 'des_wcs', which saves on I/O time by only loading the files once.  DES_Local is used by :download:`meds.yaml <../examples/des/meds.yaml>`.
+For examples of custom wcs types, see :gh-link:`des_wcs.py <examples/des/des_wcs.py>`, which implements ``DES_SlowLocal`` and ``DES_Local``.
+The latter is faster because it uses in input field, 'des_wcs', which saves on I/O time by only loading the files once.  DES_Local is used by :gh-link:`meds.yaml <examples/des/meds.yaml>`.
 
 It may also be helpful to look at the GalSim implementation of the various included wcs types (click on
 the ``[source]`` links):

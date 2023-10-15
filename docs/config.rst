@@ -17,7 +17,7 @@ are a series of demo config files in the ``GalSim/examples`` directory.
 See `Tutorials` for more information.
 
 For a concrete example of what a config file looks like, here is
-:download:`demo1.yaml <../examples/demo1.yaml>`
+:gh-link:`demo1.yaml <examples/demo1.yaml>`
 (the first file in the aforementioned tutorial) stripped of most of the comments to make it easier
 to see the essence of the structure:
 

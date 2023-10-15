@@ -3,7 +3,7 @@ Config Processing From Python
 
 It is also possible to run the config processing from a Python script, rather than using
 `the galsim executable`.  An example of this can be found in
-:download:`demo8 <../examples/demo8.py>`.
+:gh-link:`demo8 <examples/demo8.py>`.
 
 Running the Whole Script
 ------------------------

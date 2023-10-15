@@ -51,6 +51,7 @@ version = '.'.join(map(str,galsim.__version_info__[:2]))
 # The full version, including alpha/beta/rc tags
 release = galsim.__version__
 
+sys.path.insert(0,os.path.abspath('.'))
 
 # -- General configuration ---------------------------------------------------
 
@@ -69,6 +70,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
     'breathe',
+    'gh-link',
 ]
 
 # Stuff for breathe

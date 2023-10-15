@@ -383,9 +383,9 @@ Then you can use this as a valid object type:
         type: CustomObject
         ...
 
-For examples of custom objects, see :download:`des_psfex.py <../galsim/des/des_psfex.py>`
-and :download:`des_shapelet.py <../galsim/des/des_shapelet.py>`
-in the galsim.des module, which define custom object types DES_PSFEx and DES_Shapelet.  These objects are used by :download:`draw_psf.yaml <../examples/des/draw_psf.yaml>`
+For examples of custom objects, see :gh-link:`des_psfex.py <galsim/des/des_psfex.py>`
+and :gh-link:`des_shapelet.py <galsim/des/des_shapelet.py>`
+in the galsim.des module, which define custom object types DES_PSFEx and DES_Shapelet.  These objects are used by :gh-link:`draw_psf.yaml <examples/des/draw_psf.yaml>`
 in the ``GalSim/examples/des`` directory.
 It may also be helpful to look at the GalSim implementation of some of the included object builders (click on the ``[source]`` links):
 

@@ -124,7 +124,7 @@ Then you can use this as a valid output type:
         ...
 
 For an example of a custom output type, see `MEDSBuilder` in `The DES Module`,
-which is used by :download:`meds.yaml <../examples/des/meds.yaml>`.
+which is used by :gh-link:`meds.yaml <examples/des/meds.yaml>`.
 
 It may also be helpful to look at the GalSim implementation of the included output types
 (click on the ``[source]`` links):
@@ -229,16 +229,16 @@ Then you can use this as a valid extra output directive:
 
 For examples of custom extra outputs, see
 
-* :download:`blend.yaml <../examples/des/blend.yaml>`
-* :download:`blendset.yaml <../examples/des/blendset.yaml>`
+* :gh-link:`blend.yaml <examples/des/blend.yaml>`
+* :gh-link:`blendset.yaml <examples/des/blendset.yaml>`
 
-which use custom extra outputs ``deblend`` and ``deblend_meds`` defined in :download:`blend.py <../examples/des/blend.py>`.
+which use custom extra outputs ``deblend`` and ``deblend_meds`` defined in :gh-link:`blend.py <examples/des/blend.py>`.
 
 Also,
 
-* :download:`cgc.yaml <../examples/great3/cgc.yaml>`
+* :gh-link:`cgc.yaml <examples/great3/cgc.yaml>`
 
-which uses custom extra output ``noise_free`` defined in :download:`noise_free.py <../examples/great3/noise_free.py>`.
+which uses custom extra output ``noise_free`` defined in :gh-link:`noise_free.py <examples/great3/noise_free.py>`.
 
 It may also be helpful to look at the GalSim implementation of the included extra output types
 (click on the ``[source]`` links):

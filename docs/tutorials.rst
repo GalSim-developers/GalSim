@@ -23,8 +23,8 @@ about how some of the config features are handled by GalSim.
 Demo 1
 ------
 
-:download:`demo1.py <../examples/demo1.py>`
-:download:`demo1.yaml <../examples/demo1.yaml>`
+:gh-link:`demo1.py <examples/demo1.py>`
+:gh-link:`demo1.yaml <examples/demo1.yaml>`
 
 This first demo is about as simple as it gets.  We draw an image of a single galaxy
 convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the
@@ -53,8 +53,8 @@ PSF and the galaxy, and add a constant level of Gaussian noise to the image.
 Demo 2
 ------
 
-:download:`demo2.py <../examples/demo2.py>`
-:download:`demo2.yaml <../examples/demo2.yaml>`
+:gh-link:`demo2.py <examples/demo2.py>`
+:gh-link:`demo2.yaml <examples/demo2.yaml>`
 
 This demo is a bit more sophisticated, but still pretty basic.  We still only make
 a single image, but now the galaxy has an exponential radial profile and is sheared.
@@ -84,8 +84,8 @@ variance in each pixel.
 Demo 3
 ------
 
-:download:`demo3.py <../examples/demo3.py>`
-:download:`demo3.yaml <../examples/demo3.yaml>`
+:gh-link:`demo3.py <examples/demo3.py>`
+:gh-link:`demo3.yaml <examples/demo3.yaml>`
 
 This demo gets reasonably close to including all the principal features of an image
 from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
@@ -134,8 +134,8 @@ telescope distortion.
 Demo 4
 ------
 
-:download:`demo4.py <../examples/demo4.py>`
-:download:`demo4.yaml <../examples/demo4.yaml>`
+:gh-link:`demo4.py <examples/demo4.py>`
+:gh-link:`demo4.yaml <examples/demo4.yaml>`
 
 This demo is our first one to create multiple images.  Typically, you would want each object
 to have at least some of its attributes vary when you are drawing multiple images (although
@@ -176,8 +176,8 @@ We write the images out into a multi-extension fits file.
 Demo 5
 ------
 
-:download:`demo5.py <../examples/demo5.py>`
-:download:`demo5.yaml <../examples/demo5.yaml>`
+:gh-link:`demo5.py <examples/demo5.py>`
+:gh-link:`demo5.yaml <examples/demo5.yaml>`
 
 This demo is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
 We produce a single image made up of tiles of postage stamps for each individual object.
@@ -220,8 +220,8 @@ shape noise.  The applied shear is the same for each galaxy.
 Demo 6
 ------
 
-:download:`demo6.py <../examples/demo6.py>`
-:download:`demo6.yaml <../examples/demo6.yaml>`
+:gh-link:`demo6.py <examples/demo6.py>`
+:gh-link:`demo6.yaml <examples/demo6.yaml>`
 
 This demo uses real galaxy images from COSMOS observations.  The catalog of real galaxy
 images distributed with GalSim only includes 100 galaxies, but you can download a much
@@ -264,8 +264,8 @@ slider to quickly move through the different images.
 Demo 7
 ------
 
-:download:`demo7.py <../examples/demo7.py>`
-:download:`demo7.yaml <../examples/demo7.yaml>`
+:gh-link:`demo7.py <examples/demo7.py>`
+:gh-link:`demo7.yaml <examples/demo7.yaml>`
 
 This demo introduces drawing profiles with photon shooting rather than doing the
 convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
@@ -307,8 +307,8 @@ which makes it easy to scroll through the images comparing the two drawing metho
 Demo 8
 ------
 
-:download:`demo8.py <../examples/demo8.py>`
-:download:`demo8.yaml <../examples/demo8.yaml>`
+:gh-link:`demo8.py <examples/demo8.py>`
+:gh-link:`demo8.yaml <examples/demo8.yaml>`
 
 In this demo, we show how to run the GalSim config processing using a python dict rather
 than using a config file.  The previous demos have shown what Python code corresponds to
@@ -337,8 +337,8 @@ processing with them.  (e.g. Run your shape measurement code on the images from 
 Demo 9
 ------
 
-:download:`demo9.py <../examples/demo9.py>`
-:download:`demo9.yaml <../examples/demo9.yaml>`
+:gh-link:`demo9.py <examples/demo9.py>`
+:gh-link:`demo9.yaml <examples/demo9.yaml>`
 
 This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations
@@ -397,8 +397,8 @@ output image that could be used for testing the accuracy of shape or flux measur
 Demo 10
 -------
 
-:download:`demo10.py <../examples/demo10.py>`
-:download:`demo10.yaml <../examples/demo10.yaml>`
+:gh-link:`demo10.py <examples/demo10.py>`
+:gh-link:`demo10.yaml <examples/demo10.yaml>`
 
 This script uses both a variable PSF and variable shear, taken from a power spectrum, along
 the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid
@@ -443,8 +443,8 @@ correct applied shear for each object (among other information).
 Demo 11
 -------
 
-:download:`demo11.py <../examples/demo11.py>`
-:download:`demo11.yaml <../examples/demo11.yaml>`
+:gh-link:`demo11.py <examples/demo11.py>`
+:gh-link:`demo11.yaml <examples/demo11.yaml>`
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
@@ -498,8 +498,8 @@ The flux and size distribution are thus realistic for an I < 23.5 magnitude limi
 Demo 12
 -------
 
-:download:`demo12.py <../examples/demo12.py>`
-:download:`demo12.yaml <../examples/demo12.yaml>`
+:gh-link:`demo12.py <examples/demo12.py>`
+:gh-link:`demo12.yaml <examples/demo12.yaml>`
 
 This demo introduces wavelength-dependent profiles.  Three kinds of chromatic profiles are
 demonstrated:
@@ -536,8 +536,8 @@ demonstrated:
 Demo 13
 -------
 
-:download:`demo13.py <../examples/demo13.py>`
-:download:`demo13.yaml <../examples/demo13.yaml>`
+:gh-link:`demo13.py <examples/demo13.py>`
+:gh-link:`demo13.yaml <examples/demo13.yaml>`
 
 This script is intended to produce a relatively realistic scene of galaxies and stars as will
 be observed by the Roman Space Telescope, including the Roman PSF, WCS, and various NIR detector
@@ -601,12 +601,12 @@ the files for the other branches (Issue #699).
 **Significant features in these files**:
 
 - template option to load another config file and then modify a few aspects of it. (e.g.
-  :download:`rgc.yaml <../examples/great3/rgc.yaml>`)
+  :gh-link:`rgc.yaml <examples/great3/rgc.yaml>`)
 - template option to load only a particular field from another config file. (e.g.
-  :download:`cgc_psf.yaml <../examples/great3/cgc_psf.yaml>`)
+  :gh-link:`cgc_psf.yaml <examples/great3/cgc_psf.yaml>`)
 - stamp.reject
-- custom value type (e.g. Great3Reject in :download:`cgc.yaml <../examples/great3/cgc.yaml>`)
-- custom extra output type (e.g. noise_free in :download:`cgc.yaml <../examples/great3/cgc.yaml>`)
+- custom value type (e.g. Great3Reject in :gh-link:`cgc.yaml <examples/great3/cgc.yaml>`)
+- custom extra output type (e.g. noise_free in :gh-link:`cgc.yaml <examples/great3/cgc.yaml>`)
 - top-level module field
 - use of '$' and '@' shorthand in Eval items.
 
@@ -616,17 +616,17 @@ DES Simulations
 In the directory ``examples/des``,
 there are YAML config files that showcase some of the classes
 defined in the ``galsim.des`` module.  These are mostly gratuitous demos designed to showcase
-various features, although :download:`meds.yaml <../examples/des/meds.yaml>`
+various features, although :gh-link:`meds.yaml <examples/des/meds.yaml>`
 is very close to a real simulation we actually used in DES for testing shear measurements.
 
 **Significant features in these files**:
 
 - top-level module field
 - special object types from galsim.des module (e.g. DES_Shapelet and DES_PSFEx in
-  :download:`draw_psf.yaml <../examples/des/draw_psf.yaml>`)
-- special output type from galsim.des module (e.g. MEDS in :download:`meds.yaml <../examples/des/meds.yaml>`)
-- custom value type (e.g. HSM_Shape_Measure in meds.yaml, LogNormal in :download:`blend.yaml <../examples/des/blend.yaml>`)
-- custom WCS type (e.g. DES_Local in :download:`meds.yaml <../examples/des/meds.yaml>`)
-- custom input type (e.g. des_wcs in :download:`meds.yaml <../examples/des/meds.yaml>`)
-- custom stamp types (e.g. Blend in blend.yaml and BlendSet in :download:`blendset.yaml <../examples/des/blendset.yaml>`)
-- custom extra output type (e.g. deblend in :download:`blend.yaml <../examples/des/blend.yaml>`)
+  :gh-link:`draw_psf.yaml <examples/des/draw_psf.yaml>`)
+- special output type from galsim.des module (e.g. MEDS in :gh-link:`meds.yaml <examples/des/meds.yaml>`)
+- custom value type (e.g. HSM_Shape_Measure in meds.yaml, LogNormal in :gh-link:`blend.yaml <examples/des/blend.yaml>`)
+- custom WCS type (e.g. DES_Local in :gh-link:`meds.yaml <examples/des/meds.yaml>`)
+- custom input type (e.g. des_wcs in :gh-link:`meds.yaml <examples/des/meds.yaml>`)
+- custom stamp types (e.g. Blend in blend.yaml and BlendSet in :gh-link:`blendset.yaml <examples/des/blendset.yaml>`)
+- custom extra output type (e.g. deblend in :gh-link:`blend.yaml <examples/des/blend.yaml>`)

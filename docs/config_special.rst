@@ -20,9 +20,9 @@ need to be located in a directory in ``sys.path``.)
 
 See:
 
-* :download:`meds.yaml <../examples/des/meds.yaml>`
-* :download:`blendset.yaml <../examples/des/blendset.yaml>`
-* :download:`cgc.yaml <../examples/great3/cgc.yaml>`
+* :gh-link:`meds.yaml <examples/des/meds.yaml>`
+* :gh-link:`blendset.yaml <examples/des/blendset.yaml>`
+* :gh-link:`cgc.yaml <examples/great3/cgc.yaml>`
 
 for some examples of this field.
 
@@ -40,9 +40,9 @@ items, but they can be placed separately from those evaluations.
 
 For examples of this field, see:
 
-* :download:`demo11.yaml <../examples/demo11.yaml>`
-* :download:`draw_psf.yaml <../examples/des/draw_psf.yaml>`
-* :download:`cgc.yaml <../examples/great3/cgc.yaml>`
+* :gh-link:`demo11.yaml <examples/demo11.yaml>`
+* :gh-link:`draw_psf.yaml <examples/des/draw_psf.yaml>`
+* :gh-link:`cgc.yaml <examples/great3/cgc.yaml>`
 
 template
 --------
@@ -153,8 +153,8 @@ To use this feature, the module (i.e. my_module in the example here) should regi
 
 See:
 
-* :download:`rgc.yaml <../examples/great3/rgc.yaml>`
-* :download:`cgc_psf.yaml <../examples/great3/cgc_psf.yaml>`
+* :gh-link:`rgc.yaml <examples/great3/rgc.yaml>`
+* :gh-link:`cgc_psf.yaml <examples/great3/cgc_psf.yaml>`
 
 for more examples of this feature.
 

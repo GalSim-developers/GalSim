@@ -191,10 +191,10 @@ Then you can use this as a valid value type:
         CustomInput:
             ...
 
-For examples of custom inputs, see :download:`des_wcs.py <../examples/des/des_wcs.py>`,
-which is used by :download:`meds.yaml <../examples/des/meds.yaml>`.
+For examples of custom inputs, see :gh-link:`des_wcs.py <examples/des/des_wcs.py>`,
+which is used by :gh-link:`meds.yaml <examples/des/meds.yaml>`.
 
-Also `The DES Module` uses custom inputs for the `DES_PSFEx` and `DES_Shapelet` object types, which are used by :download:`draw_psf.yaml <../examples/des/draw_psf.yaml>`.
+Also `The DES Module` uses custom inputs for the `DES_PSFEx` and `DES_Shapelet` object types, which are used by :gh-link:`draw_psf.yaml <examples/des/draw_psf.yaml>`.
 
 It may also be helpful to look at the GalSim implementation of our various included input types
 (click on the ``[source]`` links):
