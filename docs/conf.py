@@ -31,8 +31,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # MJ: I find things work better if it's installed properly and you don't do this.
 #
-#import os
-#import sys
+import os
+import sys
+sys.path.insert(0,os.path.abspath('.'))
 #sys.path.insert(0, os.path.abspath('../galsim'))
 
 
@@ -50,8 +51,6 @@ author = 'GalSim-developers'
 version = '.'.join(map(str,galsim.__version_info__[:2]))
 # The full version, including alpha/beta/rc tags
 release = galsim.__version__
-
-sys.path.insert(0,os.path.abspath('.'))
 
 # -- General configuration ---------------------------------------------------
 
