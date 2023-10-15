@@ -5,12 +5,15 @@ For new major or minor releases:
 
 - Run test suite on as many machines as possible.
 - On each machine, run:
-  - python setup.py test
+  - pytest
+  - python setup.py test  (for c++ tests mostly)
   - run_all_tests (in tests directory. go get some coffee...)
   - check_yaml (in examples directory)
   - check_json (in examples directory)
   - check_des (in examples directory)
 - Update any docs that might need updating.
+- Update copyright year in code files (using devel/updatecr)
+- Update copyright year in docs/conf.py
 - Make the release branch for the new minor version.
     git checkout -b releases/M.m
     git push -u origin releases/M.m
@@ -20,7 +23,7 @@ For all releases:
 - Update the version number to the new M.m.r value in galsim/_version.py
 - Read over the CHANGELOG.rst file and edit as needed.
 - Make sure the current code is installed:
-    python setup.py install
+    pip install .
 - Generate current docs
     ./update_docs
 - Commit and push new docs.
