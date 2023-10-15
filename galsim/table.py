@@ -20,6 +20,7 @@ __all__ = [ 'LookupTable', 'LookupTable2D', '_LookupTable', '_LookupTable2D', 't
 
 import numpy as np
 import numbers
+import warnings
 
 from . import _galsim
 from ._utilities import lazy_property, basestring
@@ -464,8 +465,10 @@ class LookupTable:
         ParserError = AttributeError # In case we don't get to the line below where we import
                                      # it from pandas.
         try:
-            import pandas
-            from pandas.errors import ParserError
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                import pandas
+                from pandas.errors import ParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
         except (ImportError, AttributeError, ParserError):
