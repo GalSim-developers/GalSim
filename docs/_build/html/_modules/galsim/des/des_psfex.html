@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.des.des_psfex &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.des.des_psfex</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.des.des_psfex</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="kn">import</span> <span class="n">FitsHeader</span>
+<span class="kn">from</span> <span class="nn">..wcs</span> <span class="kn">import</span> <span class="n">readFromFitsHeader</span><span class="p">,</span> <span class="n">PixelScale</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">..interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
+<span class="kn">from</span> <span class="nn">..interpolant</span> <span class="kn">import</span> <span class="n">Lanczos</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span>
+<span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+
+<div class="viewcode-block" id="DES_PSFEx"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx">[docs]</a><span class="k">class</span> <span class="nc">DES_PSFEx</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated principal component images</span>
+<span class="sd">    of the PSF.  These are usually stored as \*_psfcat.psf files.</span>
+
+<span class="sd">    PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please</span>
+<span class="sd">    check out the web site:</span>
+
+<span class="sd">    http://www.astromatic.net/software/psfex</span>
+
+<span class="sd">    It builds PSF objects from images of stars in a given exposure, finds a reasonable basis</span>
+<span class="sd">    set to describe those images, and then fits the coefficient of these bases as a function</span>
+<span class="sd">    of the ``(x,y)`` position on the image.</span>
+
+<span class="sd">    Note that while the interpolation is done in image coordinates, GalSim usually deals with</span>
+<span class="sd">    object profiles in world coordinates.  However, PSFEx does not consider the WCS of the</span>
+<span class="sd">    image when building its bases.  The bases are built in image coordinates.  So there are</span>
+<span class="sd">    two options to get GalSim to handle this difference.</span>
+
+<span class="sd">    1. Ignore the WCS of the original image.  In this case, the \*.psf files have all the</span>
+<span class="sd">       information you need:</span>
+
+<span class="sd">           &gt;&gt;&gt; des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)</span>
+<span class="sd">           &gt;&gt;&gt; image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image</span>
+<span class="sd">           &gt;&gt;&gt;                                                   # NOT in arcsec on the sky!</span>
+<span class="sd">           &gt;&gt;&gt; psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates</span>
+
+<span class="sd">       The psf profile that is returned will be in image coordinates.  Therefore, it should be</span>
+<span class="sd">       drawn onto an image with no wcs.  (Or equivalently, one with ``scale = 1``.)  If you want</span>
+<span class="sd">       to use this to convolve a galaxy profile, you would want to either project the galaxy</span>
+<span class="sd">       (typically constructed in world coordinates) to the correct image coordinates or project</span>
+<span class="sd">       the PSF up into world coordinates.</span>
+
+<span class="sd">    2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an</span>
+<span class="sd">       extra argument, either ``image_file_name`` or ``wcs``, to tell GalSim what WCS to use for</span>
+<span class="sd">       the coversion between image and world coordinates.  The former option is the name of</span>
+<span class="sd">       the file from which to read the WCS, which will often be more convenient, but you can</span>
+<span class="sd">       also just pass in a WCS object directly.</span>
+
+<span class="sd">           &gt;&gt;&gt; des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)</span>
+<span class="sd">           &gt;&gt;&gt; image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image</span>
+<span class="sd">           &gt;&gt;&gt;                                                   # NOT in arcsec on the sky!</span>
+<span class="sd">           &gt;&gt;&gt; psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates</span>
+
+<span class="sd">       This time the psf profile that is returned will already be in world coordinates as</span>
+<span class="sd">       GalSim normally expects, so you can use it in the normal ways.  If you want to draw it</span>
+<span class="sd">       (or a convolved object) onto an image with the original WCS at that location, you can use</span>
+<span class="sd">       ``des_psfex.getLocalWCS(image_pos)`` for the local wcs at the location of the PSF.</span>
+
+<span class="sd">    Note that the returned psf here already includes the pixel.  This is what is sometimes</span>
+<span class="sd">    called an &quot;effective PSF&quot;.  Thus, you should not convolve by the pixel profile again</span>
+<span class="sd">    (nor integrate over the pixel).  This would effectively include the pixel twice!</span>
+
+<span class="sd">    In GalSim, you should always pass ``method=&#39;no_pixel&#39;`` when drawing images of objects</span>
+<span class="sd">    convolved with PSFs produced with this class.  Other drawing methods, such as photon shooting</span>
+<span class="sd">    (``method=&#39;phot&#39;``) or an FFT (``method=&#39;fft&#39;``), will result in convolving the pixel twice.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">       file_name:       The file name to be read in, or a pyfits HDU in which case it is</span>
+<span class="sd">                        used directly instead of being opened.</span>
+<span class="sd">       image_file_name: The name of the fits file of the original image (needed for the</span>
+<span class="sd">                        WCS information in the header).  If unavailable, you may omit this</span>
+<span class="sd">                        (or use None), but then the returned profiles will be in image</span>
+<span class="sd">                        coordinates, not world coordinates. [default: None]</span>
+<span class="sd">       wcs:             Optional way to provide the WCS if you already have it loaded from</span>
+<span class="sd">                        the image file. [default: None]</span>
+<span class="sd">       dir:              Optionally a directory name can be provided if the ``file_name``</span>
+<span class="sd">                        does not already include it.  (The image file is assumed to be in</span>
+<span class="sd">                        the same directory.) [default: None].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># For config, image_file_name is required, since that always works in world coordinates.</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;image_file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">image_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;file_name must be a string&quot;</span><span class="p">)</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">image_file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">image_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">image_file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span>
+        <span class="k">if</span> <span class="n">image_file_name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot provide both image_file_name and wcs&quot;</span><span class="p">,</span>
+                    <span class="n">image_file_name</span><span class="o">=</span><span class="n">image_file_name</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">)</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">image_file_name</span><span class="p">)</span>
+            <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
+        <span class="k">elif</span> <span class="n">wcs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">hdu_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
+            <span class="n">hdu_list</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Number of parameters used for the interpolation.  We require this to be 2.</span>
+        <span class="n">pol_naxis</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLNAXIS&#39;</span><span class="p">]</span>
+
+        <span class="c1"># These are the names of the two axes.  Should be X_IMAGE, Y_IMAGE.</span>
+        <span class="c1"># If they aren&#39;t, then the way we use the interpolation will be wrong.</span>
+        <span class="c1"># Well, really they can also be XWIN_IMAGE, etc.  So just check that it</span>
+        <span class="c1"># starts with X and ends with IMAGE.</span>
+        <span class="n">pol_name1</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLNAME1&#39;</span><span class="p">]</span>
+        <span class="n">pol_name2</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLNAME2&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Zero points and scale.  Interpolation is in terms of (x-x0)/xscale, (y-y0)/yscale</span>
+        <span class="n">pol_zero1</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLZERO1&#39;</span><span class="p">]</span>
+        <span class="n">pol_zero2</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLZERO2&#39;</span><span class="p">]</span>
+        <span class="n">pol_scal1</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLSCAL1&#39;</span><span class="p">]</span>
+        <span class="n">pol_scal2</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLSCAL2&#39;</span><span class="p">]</span>
+
+        <span class="c1"># This defines the number of &quot;context groups&quot;.</span>
+        <span class="c1"># Here is Emmanuel&#39;s explanation:</span>
+        <span class="c1">#</span>
+        <span class="c1">#     POLNGRP is the number of &quot;context groups&quot;. A group represents a set of variables</span>
+        <span class="c1">#     (SExtractor measurements or FITS header parameters if preceded with &quot;:&quot;) which share</span>
+        <span class="c1">#     the same maximum polynomial degree. For instance if x and y are in group 1, and the</span>
+        <span class="c1">#     degree of that group is 2, and z is in group 2 with degree 1, the polynomial will</span>
+        <span class="c1">#     consist of:</span>
+        <span class="c1">#         1, x, x^2, y, y.x, y^2, z, z.x^2, z.y, z.y.x, z.y^2</span>
+        <span class="c1">#     (see eq 14 in https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf )</span>
+        <span class="c1">#     By default, POLNGRP is 1 and the group contains X_IMAGE and Y_IMAGE measurements</span>
+        <span class="c1">#     from SExtractor.</span>
+        <span class="c1">#</span>
+        <span class="c1"># For now, we require this to be 1, since I didn&#39;t have any files with POLNGRP != 1 to</span>
+        <span class="c1"># test on.</span>
+        <span class="n">pol_ngrp</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLNGRP&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Which group each item is in.  We require group 1.</span>
+        <span class="n">pol_group1</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLGRP1&#39;</span><span class="p">]</span>
+        <span class="n">pol_group2</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLGRP2&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The degree of the polynomial.  E.g. POLDEG1 = 2 means the values will be:</span>
+        <span class="c1">#     1, x, x^2, y, xy, y^2</span>
+        <span class="c1"># If we start allowing POLNGRP &gt; 1, there is a separate degree for each group.</span>
+        <span class="n">pol_deg</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;POLDEG1&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The number of axes in the basis object.  We require this to be 3.</span>
+        <span class="n">psf_naxis</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PSFNAXIS&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The first two axes are the image size of the PSF postage stamp.</span>
+        <span class="n">psf_axis1</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PSFAXIS1&#39;</span><span class="p">]</span>
+        <span class="n">psf_axis2</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PSFAXIS2&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The third axis is the direction of the polynomial interpolation.  So it should</span>
+        <span class="c1"># be equal to (d+1)(d+2)/2.</span>
+        <span class="n">psf_axis3</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PSFAXIS3&#39;</span><span class="p">]</span>
+
+        <span class="c1"># This is the PSF &quot;sample size&quot;.  Again, from Emmanuel:</span>
+        <span class="c1">#</span>
+        <span class="c1">#     PSF_SAMP is the sampling step of the PSF. PSF_SAMP=0.5 means that the PSF model has</span>
+        <span class="c1">#     two samples per original image pixel (superresolution, so in automatic mode it is a</span>
+        <span class="c1">#     sign that the original images were undersampled)</span>
+        <span class="c1">#</span>
+        <span class="c1"># In other words, it can be thought of as a unit conversion:</span>
+        <span class="c1">#     &quot;image pixels&quot; / &quot;psfex pixels&quot;</span>
+        <span class="c1"># So 1 image pixel = (1/psf_samp) psfex pixels.</span>
+        <span class="n">psf_samp</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PSF_SAMP&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The basis object is a data cube (assuming PSFNAXIS==3)</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;PSF_MASK&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Make sure to close the hdu before we might raise exceptions.</span>
+        <span class="k">if</span> <span class="n">hdu_list</span><span class="p">:</span>
+            <span class="n">hdu_list</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Check for valid values of all these things.</span>
+        <span class="c1"># Not sure which of these are actually required in PSFEx files, but this implementation</span>
+        <span class="c1"># assumes these things are true, so if this fails, we probably need to rework some aspect</span>
+        <span class="c1"># of this code.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">pol_naxis</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="k">assert</span> <span class="n">pol_name1</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pol_name1</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;IMAGE&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">pol_name2</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pol_name2</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;IMAGE&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">pol_ngrp</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">assert</span> <span class="n">pol_group1</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">assert</span> <span class="n">pol_group2</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">assert</span> <span class="n">psf_naxis</span> <span class="o">==</span> <span class="mi">3</span>
+            <span class="k">assert</span> <span class="n">psf_axis3</span> <span class="o">==</span> <span class="p">((</span><span class="n">pol_deg</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">pol_deg</span><span class="o">+</span><span class="mi">2</span><span class="p">))</span><span class="o">//</span><span class="mi">2</span>
+            <span class="k">assert</span> <span class="n">basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">psf_axis3</span>
+            <span class="k">assert</span> <span class="n">basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">psf_axis2</span>
+            <span class="k">assert</span> <span class="n">basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">psf_axis1</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;PSFEx file </span><span class="si">%s</span><span class="s2"> is not as expected.</span><span class="se">\n</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+
+        <span class="c1"># Save some of these values for use in building the interpolated images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span> <span class="o">=</span> <span class="n">pol_deg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span> <span class="o">=</span> <span class="n">psf_axis3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_zero</span> <span class="o">=</span> <span class="n">pol_zero1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_zero</span> <span class="o">=</span> <span class="n">pol_zero2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_scale</span> <span class="o">=</span> <span class="n">pol_scal1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_scale</span> <span class="o">=</span> <span class="n">pol_scal2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span> <span class="o">=</span> <span class="n">psf_samp</span>
+
+    <span class="k">def</span> <span class="nf">getSampleScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span>
+
+<div class="viewcode-block" id="DES_PSFEx.getLocalWCS"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getLocalWCS">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the original image was provided to the constructor, this will return the local</span>
+<span class="sd">        WCS at a given location in that original image.  If not, this will return None.</span>
+
+<span class="sd">        Parameter:</span>
+<span class="sd">           image_pos (Position):    The position in pixels in the image.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           A LocalWCS or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="DES_PSFEx.getPSF"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at position ``image_pos``.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">           image_pos:   The position in image coordinates at which to build the PSF.</span>
+<span class="sd">           gsparams:    A `GSParams` instance to pass to the constructed `GSObject`.</span>
+<span class="sd">                        [defualt: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           the PSF as a `GSObject`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Build an image version of the numpy array</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
+
+        <span class="c1"># Build the PSF profile in the image coordinate system.</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+
+        <span class="c1"># This brings if from image coordinates to world coordinates.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">:</span>
+            <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="n">image_pos</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">psf</span></div>
+
+<div class="viewcode-block" id="DES_PSFEx.getPSFArray"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx.getPSFArray">[docs]</a>    <span class="k">def</span> <span class="nf">getPSFArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF image as a numpy array at position image_pos in image coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_xto</span><span class="p">(</span> <span class="p">(</span><span class="n">image_pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_zero</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_scale</span> <span class="p">)</span>
+        <span class="n">yto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_xto</span><span class="p">(</span> <span class="p">(</span><span class="n">image_pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_zero</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_scale</span> <span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">xto</span><span class="p">[</span><span class="n">nx</span><span class="p">]</span> <span class="o">*</span> <span class="n">yto</span><span class="p">[</span><span class="n">ny</span><span class="p">]</span> <span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">nx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="n">ny</span><span class="p">)</span> <span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="c1"># Note: This is equivalent to:</span>
+        <span class="c1">#   ar = self.basis[0].astype(numpy.float32)</span>
+        <span class="c1">#   for n in range(1,self.fit_order+1):</span>
+        <span class="c1">#       for ny in range(n+1):</span>
+        <span class="c1">#           nx = n-ny</span>
+        <span class="c1">#           k = nx+ny*(self.fit_order+1)-ny*(ny-1)/2</span>
+        <span class="c1">#           ar += xto[nx] * yto[ny] * self.basis[k]</span>
+        <span class="c1"># which is pretty much Peter&#39;s version of this code.</span>
+        <span class="k">return</span> <span class="n">ar</span></div>
+
+    <span class="k">def</span> <span class="nf">_define_xto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">xto</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xto</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">xto</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">xto</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">xto</span></div>
+
+
+<span class="k">class</span> <span class="nc">PSFExLoader</span><span class="p">(</span><span class="n">InputLoader</span><span class="p">):</span>
+    <span class="c1"># Allow the user to not provide the image file.  In this case, we&#39;ll grab the wcs from the</span>
+    <span class="c1"># config dict.</span>
+    <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;image_file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;image_file_name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Then we aren&#39;t doing normal config processing, so just use pixel scale = 1.</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="c1"># First we need to add the class itself as a valid input_type.</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">PSFExLoader</span><span class="p">(</span><span class="n">DES_PSFEx</span><span class="p">))</span>
+
+<span class="c1"># Also make a builder to create the PSF object for a given position.</span>
+<span class="c1"># The builders require 4 args.</span>
+<span class="c1"># config is a dictionary that includes &#39;type&#39; plus other items you might want to allow or require.</span>
+<span class="c1"># base is the top level config dictionary where some global variables are stored.</span>
+<span class="c1"># ignore is a list of key words that might be in the config dictionary that you should ignore.</span>
+<span class="k">def</span> <span class="nf">BuildDES_PSFEx</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a GSObject representing the PSFex model at the correct location in the image in a</span>
+<span class="sd">    config-processing context.</span>
+
+<span class="sd">    This is used as object type ``DES_PSFEx`` in a config file.</span>
+
+<span class="sd">    It requires the use of the ``des_psfex`` input field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">des_psfex</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">)</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
+    <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;DES_PSFEx requested, but no image_pos defined in base.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Convert gsparams from a dict to an actual GSParams object</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#psf = des_psfex.getPSF(image_pos, gsparams=gsparams)</span>
+    <span class="c1"># Because of serialization issues, the above call doesn&#39;t work.  So we need to</span>
+    <span class="c1"># repeat the internals of getPSF here.</span>
+    <span class="c1"># Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers</span>
+    <span class="c1"># stuff only makes available methods of classes that are proxied, not all the attributes.</span>
+    <span class="c1"># So this is the only way to access these attributes.</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
+    <span class="n">psf</span> <span class="o">=</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getSampleScale</span><span class="p">(),</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                           <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">des_psfex</span><span class="o">.</span><span class="n">getLocalWCS</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;flux&#39;</span><span class="p">])</span>
+
+    <span class="c1"># The second item here is &quot;safe&quot;, a boolean that declares whether the returned value is</span>
+    <span class="c1"># safe to save and use again for later objects.  In this case, we wouldn&#39;t want to do</span>
+    <span class="c1"># that, since they will be at different positions, so the interpolated PSF will be different.</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="kc">False</span>
+
+<span class="c1"># Register this builder with the config framework:</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">,</span> <span class="n">BuildDES_PSFEx</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

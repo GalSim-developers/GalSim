@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photon Shooting &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Photon Arrays" href="photon_array.html" />
+    <link rel="prev" title="Power Spectrum Estimation" href="pse.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Photon Shooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="photon_array.html">Photon Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sensor.html">Sensor Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html">Photon Operators</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Photon Shooting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/photon.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="photon-shooting">
+<h1>Photon Shooting<a class="headerlink" href="#photon-shooting" title="Permalink to this heading"></a></h1>
+<p>Photon shooting was used successfully to generate the simulated images for the GREAT08 and GREAT10
+weak lensing challenges. The objects were convolutions of elliptical Sersic-profile galaxies with
+Moffat-profile PSFs. GalSim extends this technique to enable photon shooting for nearly all of its
+possible objects, except for deconvolutions.</p>
+<p>When we “shoot” a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>,
+<span class="math notranslate nohighlight">\(N_\gamma\)</span> photons are created with fluxes <span class="math notranslate nohighlight">\(f_i\)</span> and
+positions <span class="math notranslate nohighlight">\(x_i\)</span>.  The total photon flux within any region has an expectation value of the
+integrated surface brightness of the object in that region, and the total photon flux in any
+two regions are uncorrelated.  The actual realized flux in each region is distributed according
+to Poisson statistics of the number of photons that actually fall in the region.</p>
+<p>We allow for non-uniform <span class="math notranslate nohighlight">\(f_i\)</span> values primarily so that we can represent negative values of
+surface brightness. This is necessary to realize interpolation with kernels that have negative
+regions (as will any interpolant that approximates band-limited behavior), and to correctly render
+interpolated images that have negative pixel values, such as might arise from using empirical,
+noisy galaxy images.</p>
+<p>The basic way to activate photon shooting is to use <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code> when calling the
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a> method.
+This will switch over to photon shooting, and the resulting
+image will have photon shot noise included from the finite number of photons being shot.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method necessarily accounts for integration over the pixel by summing the photons that
+are incident in each.  This means that if your surface brightness profile already
+includes the pixel convolution, then you will get the wrong answer.  Such profiles should
+normally use <code class="docutils literal notranslate"><span class="pre">method='no_pixel'</span></code>.  This kind of profile is often the result of PSF estimation
+codes, so some care is required if you intend to use photon shooting with PSFs that come from
+measurements of real data.</p>
+</div>
+<p>There are a number of other parameters that are relevant only when photon shooting that let you
+customize the behavior to some extent:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>n_photons</dt><dd><p>The total number of photons to shoot is normally calculated from the object’s
+flux.  This flux is taken to be given in photons/cm^2/s, so for most simple
+profiles, this times <code class="docutils literal notranslate"><span class="pre">area</span> <span class="pre">*</span> <span class="pre">exptime</span></code> (both of which default to 1) will equal
+the number of photons shot.  (See the discussion in Rowe et al, 2015, for why
+this might be modified for <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> and related profiles.)  However,
+you can manually set a different number of photons with <code class="docutils literal notranslate"><span class="pre">n_photons</span></code>.</p>
+</dd>
+<dt>rng</dt><dd><p>Since photon shooting is a stochastic process, it needs a random number generator.
+This should be a <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> instance.  If none is provided, one will be
+created automatically.</p>
+</dd>
+<dt>max_extra_noise</dt><dd><p>This allows you to gain some speed by shooting fewer photons with <span class="math notranslate nohighlight">\(f_i &gt; 1\)</span>
+at the expense of increasing the noise in each pixel above the natural Poisson
+value.  This parameter specifies how much extra noise you are willing to tolerate.
+It is only relevant if you are not setting <code class="docutils literal notranslate"><span class="pre">n_photons</span></code>, so the number of photons
+is being automatically calculated. The <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> parameter specifies
+how much extra noise per pixel is allowed because of this approximation.  A
+typical value might be <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span> <span class="pre">=</span> <span class="pre">sky_level</span> <span class="pre">/</span> <span class="pre">100</span></code> where <code class="docutils literal notranslate"><span class="pre">sky_level</span></code>
+is the flux per pixel due to the sky.</p>
+</dd>
+<dt>poisson_flux</dt><dd><p>Normally the total flux of the shot photons will itself be a Poisson random
+value with <a class="reference internal" href="gsobject.html#galsim.GSObject.flux" title="galsim.GSObject.flux"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">GSObject.flux</span></code></a> as the expectation value.  However, you can disable
+this effect by setting <code class="docutils literal notranslate"><span class="pre">poisson_flux=False</span></code> to have it shoot exactly the
+flux of the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+</dd>
+<dt>sensor</dt><dd><p>The default behavior is for the photons to simply accumulate in the pixel where
+they land.  However, more sophisticated behavior is possible by providing a
+<a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> object, which can implement e.g. the brighter-fatter effect, charge
+diffusion, and other effects present in real sensors.  See <a class="reference internal" href="sensor.html#sensor-models"><span class="std std-ref">Sensor Models</span></a>
+for more information about the current options.</p>
+</dd>
+<dt>photon_ops</dt><dd><p>Prior to accumulating on the sensor, one might want to apply one or more
+<a class="reference internal" href="photon_ops.html#photon-operators"><span class="std std-ref">Photon Operators</span></a> to the photons.  These operators can be used to apply
+a variety of effects to the photons: changing their fluxes or positions,
+assigning wavelengths or incidence angles, etc.  The <code class="docutils literal notranslate"><span class="pre">photon_ops</span></code> argument
+should be a list of any such operators you want to apply.</p>
+</dd>
+<dt>maxN</dt><dd><p>For very bright objects, one might want to limit the number of photons that are
+shot before being accumulated.  Normally all the photons are generated first
+and stored in a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.  Then the <a class="reference internal" href="photon_ops.html#photon-operators"><span class="std std-ref">Photon Operators</span></a> (if any) are
+applied.  And finally the photons are accumulated onto the image pixels.
+If you set <code class="docutils literal notranslate"><span class="pre">maxN</span></code>, then this process will be done in batches of at most this
+many photons at a time.</p>
+</dd>
+<dt>save_photons</dt><dd><p>This provides the ability to return the <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> that was accumulated
+in case you want to do anything else with it.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>If you prefer even more fine-grained control over photon shooting, you can use the following
+methods:</p>
+<blockquote>
+<div><dl class="simple">
+<dt><a class="reference internal" href="gsobject.html#galsim.GSObject.drawPhot" title="galsim.GSObject.drawPhot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawPhot</span></code></a></dt><dd><p>This is the actual driver function that <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> calls after
+performing some basic sanity checks and image setup.  If you are trying to
+optimize your code for low flux objects, you might find it useful to do the
+image setup yourself and then call this directly.</p>
+</dd>
+<dt><a class="reference internal" href="gsobject.html#galsim.GSObject.shoot" title="galsim.GSObject.shoot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shoot</span></code></a></dt><dd><p>This is the method that actually shoots the photons for a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  It
+does not apply any photon operators or accumulate onto the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="photon_array.html">Photon Arrays</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="photon_array.html#galsim.PhotonArray"><code class="docutils literal notranslate"><span class="pre">PhotonArray</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sensor.html">Sensor Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sensor.html#galsim.Sensor"><code class="docutils literal notranslate"><span class="pre">Sensor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sensor.html#galsim.SiliconSensor"><code class="docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="photon_ops.html">Photon Operators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.PhotonOp"><code class="docutils literal notranslate"><span class="pre">PhotonOp</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler"><code class="docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.FRatioAngles"><code class="docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.PhotonDCR"><code class="docutils literal notranslate"><span class="pre">PhotonDCR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.FocusDepth"><code class="docutils literal notranslate"><span class="pre">FocusDepth</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.Refraction"><code class="docutils literal notranslate"><span class="pre">Refraction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.PupilImageSampler"><code class="docutils literal notranslate"><span class="pre">PupilImageSampler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.PupilAnnulusSampler"><code class="docutils literal notranslate"><span class="pre">PupilAnnulusSampler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html#galsim.TimeSampler"><code class="docutils literal notranslate"><span class="pre">TimeSampler</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pse.html" class="btn btn-neutral float-left" title="Power Spectrum Estimation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="photon_array.html" class="btn btn-neutral float-right" title="Photon Arrays" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

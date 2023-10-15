@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power Spectrum Estimation &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Photon Shooting" href="photon.html" />
+    <link rel="prev" title="NFW Halo Shears" href="nfwhalo.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="wl.html">Weak Lensing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shear.html">The Shear class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="powerspectrum.html">Power Spectrum Shears</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nfwhalo.html">NFW Halo Shears</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Power Spectrum Estimation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator"><code class="docutils literal notranslate"><span class="pre">PowerSpectrumEstimator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator.estimate"><code class="docutils literal notranslate"><span class="pre">PowerSpectrumEstimator.estimate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="wl.html">Weak Lensing</a></li>
+      <li class="breadcrumb-item active">Power Spectrum Estimation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pse.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="power-spectrum-estimation">
+<h1>Power Spectrum Estimation<a class="headerlink" href="#power-spectrum-estimation" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">galsim.pse</span></code> module was developed largely by Joe Zuntz and tweaked by assorted GalSim
+developers.  This development and testing of this module took place in a separate (private)
+repository before the code was moved into the GalSim repository, but there are some demonstrations
+of the performance of this code in devel/modules/lensing_engine.pdf.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.pse.PowerSpectrumEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.pse.</span></span><span class="sig-name descname"><span class="pre">PowerSpectrumEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sky_size_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Class for estimating the shear power spectrum from gridded shears.</p>
+<p>This class stores all the data used in power spectrum estimation that is fixed with the geometry
+of the problem - the binning and spin weighting factors.</p>
+<p>The only public method is estimate(), which is called with 2D <code class="docutils literal notranslate"><span class="pre">g1</span></code> and <code class="docutils literal notranslate"><span class="pre">g2</span></code> arrays on a
+square grid.  It assumes the flat sky approximation (where <code class="docutils literal notranslate"><span class="pre">ell</span></code> and <code class="docutils literal notranslate"><span class="pre">k</span></code> are
+interchangeable), and rebins the observed ell modes into a user-defined number of logarithimic
+bins in ell.  Given that the grid parameters are precomputed and stored when the
+<a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator" title="galsim.pse.PowerSpectrumEstimator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrumEstimator</span></code></a> is initialized, computation of the PS for multiple sets of shears
+corresponding to the same grid setup can proceed more rapidly than if everything had to be
+recomputed each time.</p>
+<p>Below is an example of how to use this code (relying on GalSim to provide the arrays of g1 and
+g2, though that is by no means required, and assuming that the user is sitting in the examples/
+directory):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grid_size</span> <span class="o">=</span> <span class="mf">10.</span>  <span class="c1"># Define the total grid extent, in degrees</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ngrid</span> <span class="o">=</span> <span class="mi">100</span>      <span class="c1"># Define the number of grid points in each dimension: (ngrid x ngrid)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_ell</span> <span class="o">=</span> <span class="mi">15</span>       <span class="c1"># Choose the number of logarithmic bins in ell or k for outputs</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define a lookup-table for the power spectrum as a function of k based on the outputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># of iCosmo (see demo11.py for more description of how this was generated).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_tab</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">LookupTable</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;data/cosmo-fid.zmed1.00.out&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generate a galsim.PowerSpectrum with this P(k), noting the units.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_ps</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">my_tab</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Build a grid of shear values with the desired parameters.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span><span class="n">grid_spacing</span><span class="o">=</span><span class="n">grid_size</span><span class="o">/</span><span class="n">ngrid</span><span class="p">,</span> <span class="n">ngrid</span><span class="o">=</span><span class="n">ngrid</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">units</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># bins. Note that these values are actually the default, so we didn&#39;t technically have</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># to specifythem.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_pse</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">pse</span><span class="o">.</span><span class="n">PowerSpectrumEstimator</span><span class="p">(</span><span class="n">ngrid</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">,</span> <span class="n">n_ell</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Estimate the power based on this set of g1, g2.  If we get another set of shears for</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># the same grid geometry, we can reuse the same PowerSpectrumEstimator object.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ell</span><span class="p">,</span> <span class="n">P_e</span><span class="p">,</span> <span class="n">P_b</span><span class="p">,</span> <span class="n">P_eb</span> <span class="o">=</span> <span class="n">my_pse</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output NumPy arrays <code class="docutils literal notranslate"><span class="pre">ell</span></code>, <code class="docutils literal notranslate"><span class="pre">P_e</span></code>, <code class="docutils literal notranslate"><span class="pre">P_b</span></code>, and <code class="docutils literal notranslate"><span class="pre">P_eb</span></code> contain the effective ell
+value, the E-mode auto-power spectrum, the B-mode auto-power spectrum, and the EB cross-power
+spectrum.  The units are inverse radians for ell, and radians^2 for the output power spectra.</p>
+<p>Some important notes:</p>
+<ol class="arabic simple">
+<li><p>Power spectrum estimation requires a weight function which decides how the averaging is done
+across ell within each bin.  By default that weighting is flat in ell using an analytic
+calculation of the area in ell space, but this is easy to change with the <code class="docutils literal notranslate"><span class="pre">_bin_power</span></code>
+function.  (Note this area averaged bin weighting is only approximate for the higher
+frequency bins in which the lower <code class="docutils literal notranslate"><span class="pre">ell</span></code> edge is greater than <code class="docutils literal notranslate"><span class="pre">pi</span> <span class="pre">*</span> <span class="pre">ngrid</span> <span class="pre">/</span> <span class="pre">grid_size</span></code>,
+due to the annular <code class="docutils literal notranslate"><span class="pre">ell</span></code> region being cut off by the square grid edges beyond this value.)
+A keyword allows for weighting by the power itself.</p></li>
+<li><p>This is the power spectrum of the gridded <em>data</em>, not the underlying field - we do not
+account for the effects of the finite grid (basically, ignoring all the reasons why power
+spectrum estimation is hard - see devel/modules/lensing_engine.pdf in the GalSim repository).
+Users must account for the contribution of noise in <code class="docutils literal notranslate"><span class="pre">g1</span></code>, <code class="docutils literal notranslate"><span class="pre">g2</span></code> and any masking.</p></li>
+<li><p>The binning is currently fixed as uniform in log(ell).</p></li>
+<li><p>The code for this class uses the notation of the GREAT10 handbook (Kitching et al. 2011,
+<a class="reference external" href="http://dx.doi.org/10.1214/11-AOAS484">http://dx.doi.org/10.1214/11-AOAS484</a>), equations 17-21.</p></li>
+</ol>
+<p>galsim.pse.PowerSpectrumEstimator.__init__</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.pse.PowerSpectrumEstimator.estimate">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_EE</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_BB</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theory_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator.estimate" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the EE, BB, and EB power spectra of two 2D arrays <code class="docutils literal notranslate"><span class="pre">g1</span></code> and <code class="docutils literal notranslate"><span class="pre">g2</span></code>.</p>
+<p>For example usage, see the docstring for the <a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator" title="galsim.pse.PowerSpectrumEstimator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrumEstimator</span></code></a> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>g1</strong> – The shear component g1 as a square 2D NumPy array.</p></li>
+<li><p><strong>g2</strong> – The shear component g2 as a square 2D NumPy array.</p></li>
+<li><p><strong>weight_EE</strong> – If True, then the E auto-power spectrum is re-computed weighting by
+the power within each logarithmically-spaced ell bin. [default: False]</p></li>
+<li><p><strong>weight_BB</strong> – If True, then the B auto-power spectrum is re-computed weighting by
+the power within each logarithmically-spaced ell bin. [default: False]</p></li>
+<li><p><strong>theory_func</strong> – An optional callable function that can be used to get an idealized
+value of power at each point on the grid, and then see what results
+it gives for our chosen ell binning. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nfwhalo.html" class="btn btn-neutral float-left" title="NFW Halo Shears" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="photon.html" class="btn btn-neutral float-right" title="Photon Shooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

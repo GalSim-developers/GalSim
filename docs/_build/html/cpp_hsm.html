@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSM Implementation &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Math" href="cpp_math.html" />
+    <link rel="prev" title="Interpolation Tools" href="cpp_interp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">HSM Implementation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#primary-interface">Primary Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper-functions">Helper Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cpp.html">C++ Layer</a></li>
+      <li class="breadcrumb-item active">HSM Implementation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_hsm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hsm-implementation">
+<h1>HSM Implementation<a class="headerlink" href="#hsm-implementation" title="Permalink to this heading"></a></h1>
+<section id="primary-interface">
+<h2>Primary Interface<a class="headerlink" href="#primary-interface" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN6galsim3hsm17EstimateShearViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams">
+<span id="_CPPv3I00EN6galsim3hsm17EstimateShearViewER9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams"></span><span id="_CPPv2I00EN6galsim3hsm17EstimateShearViewER9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1hsm_1a589505d4173366d5ad73474ffb12bdca"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hsm</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">EstimateShearView</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6galsim3hsm9ShapeDataE" title="galsim::hsm::ShapeData"><span class="n"><span class="pre">ShapeData</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">results</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN6galsim3hsm17EstimateShearViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams" title="galsim::hsm::EstimateShearView::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gal_image</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN6galsim3hsm17EstimateShearViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams" title="galsim::hsm::EstimateShearView::U"><span class="n"><span class="pre">U</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">PSF_image</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gal_mask_image</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sky_var</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.0</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">shear_est</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;REGAUSS&quot;</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recompute_flux</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;FIT&quot;</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">guess_sig_gal</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">5.0</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">guess_sig_PSF</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3.0</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">precision</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.0e-6</span></span>, <span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">guess_centroid</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">(</span></span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1000.</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1000.</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">hsmparams</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00EN6galsim3hsm17EstimateShearViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageI1UERK9BaseImageIiEfPKcPKcdddN6galsim8PositionIdEERK9HSMParams" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Carry out PSF correction directly using Images. </p>
+<p>A template function to carry out one of the multiple possible methods of PSF correction using the HSM package, directly accessing the input Images. The input arguments get repackaged before calling general_shear_estimator, and results for the shape measurement are returned as <a class="reference internal" href="#structgalsim_1_1hsm_1_1_shape_data"><span class="std std-ref">ShapeData</span></a>. There are two arguments that have default values, namely shear_est (the type of shear estimator) and recompute_flux (for the REGAUSS method only).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[in/out]</strong> – results A <a class="reference internal" href="#structgalsim_1_1hsm_1_1_shape_data"><span class="std std-ref">ShapeData</span></a> object to hold the results </p></li>
+<li><p><strong>gal_image</strong> – <strong>[in]</strong> The <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> for the galaxy being measured </p></li>
+<li><p><strong>PSF_image</strong> – <strong>[in]</strong> The <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> for the PSF </p></li>
+<li><p><strong>gal_mask_image</strong> – <strong>[in]</strong> The <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> for the mask image to be applied to the galaxy being measured (integer array, 1=use pixel and 0=do not use pixel). </p></li>
+<li><p><strong>sky_var</strong> – <strong>[in]</strong> The variance of the sky level, used for estimating uncertainty on the measured shape; default 0. </p></li>
+<li><p><strong>*shear_est</strong> – <strong>[in]</strong> A string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB; default REGAUSS. </p></li>
+<li><p><strong>*recompute_flux</strong> – <strong>[in]</strong> A string indicating whether to recompute the object flux, which should be NONE (for no recomputation), SUM (for recomputation via an unweighted sum over unmasked pixels), or FIT (for recomputation using the Gaussian + quartic fit). </p></li>
+<li><p><strong>guess_sig_gal</strong> – <strong>[in]</strong> Optional argument with an initial guess for the Gaussian sigma of the galaxy, default 5.0 (pixels). </p></li>
+<li><p><strong>guess_sig_PSF</strong> – <strong>[in]</strong> Optional argument with an initial guess for the Gaussian sigma of the PSF, default 3.0 (pixels). </p></li>
+<li><p><strong>precision</strong> – <strong>[in]</strong> The convergence criterion for the moments; default 1e-6. </p></li>
+<li><p><strong>guess_centroid</strong> – <strong>[in]</strong> Optional argument with an initial guess for the centroid of the galaxy; if not set, then the code will try the center of the image. </p></li>
+<li><p><strong>hsmparams</strong> – <strong>[in]</strong> Optional argument to specify parameters to be used for shape measurement routines, as an <a class="reference internal" href="#structgalsim_1_1hsm_1_1_h_s_m_params"><span class="std std-ref">HSMParams</span></a> object. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim3hsm19FindAdaptiveMomViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageIiEddN6galsim8PositionIdEEbRK9HSMParams">
+<span id="_CPPv3I0EN6galsim3hsm19FindAdaptiveMomViewER9ShapeDataRK9BaseImageI1TERK9BaseImageIiEddN6galsim8PositionIdEEbRK9HSMParams"></span><span id="_CPPv2I0EN6galsim3hsm19FindAdaptiveMomViewER9ShapeDataRK9BaseImageI1TERK9BaseImageIiEddN6galsim8PositionIdEEbRK9HSMParams"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1hsm_1a35e6a72f7df8b48ea7a33ad8af2d393a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hsm</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">FindAdaptiveMomView</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6galsim3hsm9ShapeDataE" title="galsim::hsm::ShapeData"><span class="n"><span class="pre">ShapeData</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">results</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim3hsm19FindAdaptiveMomViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageIiEddN6galsim8PositionIdEEbRK9HSMParams" title="galsim::hsm::FindAdaptiveMomView::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">object_image</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">object_mask_image</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">guess_sig</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">5.0</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">precision</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.0e-6</span></span>, <span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">guess_centroid</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">(</span></span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1000.</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1000.</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">round_moments</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">hsmparams</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim3hsm19FindAdaptiveMomViewEvR9ShapeDataRK9BaseImageI1TERK9BaseImageIiEddN6galsim8PositionIdEEbRK9HSMParams" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Measure the adaptive moments of an object directly using Images. </p>
+<p>This function repackages the input <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> in a format that find_ellipmom_2 accepts, in order to iteratively compute the adaptive moments of an object. The key result is the best-fit elliptical Gaussian to the object, which is computed by initially guessing a circular Gaussian that is used as a weight function, computing the weighted moments, recomputing the moments using the result of the previous step as the weight function, and so on until the moments that are measured are the same as those used for the weight function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[in/out]</strong> – A <a class="reference internal" href="#structgalsim_1_1hsm_1_1_shape_data"><span class="std std-ref">ShapeData</span></a> object to hold the results </p></li>
+<li><p><strong>object_image</strong> – <strong>[in]</strong> The <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> for the object being measured. </p></li>
+<li><p><strong>object_mask_image</strong> – <strong>[in]</strong> The <a class="reference internal" href="cpp_image.html#classgalsim_1_1_base_image"><span class="std std-ref">BaseImage</span></a> for the mask image to be applied to the object being measured (integer array, 1=use pixel and 0=do not use pixel). </p></li>
+<li><p><strong>guess_sig</strong> – <strong>[in]</strong> Optional argument with an initial guess for the Gaussian sigma of the object, default 5.0 (pixels). </p></li>
+<li><p><strong>precision</strong> – <strong>[in]</strong> The convergence criterion for the moments; default 1e-6. </p></li>
+<li><p><strong>guess_centroid</strong> – <strong>[in]</strong> Optional argument with an initial guess for the centroid of the galaxy; if not set, then the code will try the center of the image. </p></li>
+<li><p><strong>hsmparams</strong> – <strong>[in]</strong> Optional argument to specify parameters to be used for shape measurement routines, as an <a class="reference internal" href="#structgalsim_1_1hsm_1_1_h_s_m_params"><span class="std std-ref">HSMParams</span></a> object. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParamsE">
+<span id="_CPPv3N6galsim3hsm9HSMParamsE"></span><span id="_CPPv2N6galsim3hsm9HSMParamsE"></span><span id="galsim::hsm::HSMParams"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HSMParams</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams9HSMParamsEdddiidlldddiddd">
+<span id="_CPPv3N6galsim3hsm9HSMParams9HSMParamsEdddiidlldddiddd"></span><span id="_CPPv2N6galsim3hsm9HSMParams9HSMParamsEdddiidlldddiddd"></span><span id="galsim::hsm::HSMParams::HSMParams__double.double.double.i.i.double.l.l.double.double.double.i.double.double.double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1ad150062771f30108da7630243a4c7394"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HSMParams</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_nsig_rg</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_nsig_rg2</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_max_moment_nsig2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_regauss_too_small</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_adapt_order</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_convergence_threshold</span></span>, <span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_max_mom2_iter</span></span>, <span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_num_iter_default</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_bound_correct_wt</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_max_amoment</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_max_ashift</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_ksb_moments_max</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_ksb_sig_weight</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_ksb_sig_factor</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">_failed_moments</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams9HSMParamsEdddiidlldddiddd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams9HSMParamsEv">
+<span id="_CPPv3N6galsim3hsm9HSMParams9HSMParamsEv"></span><span id="_CPPv2N6galsim3hsm9HSMParams9HSMParamsEv"></span><span id="galsim::hsm::HSMParams::HSMParams"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a8cbd75bead8c899ca490f9fa20d7b4ea"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HSMParams</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams9HSMParamsEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A reasonable set of default values </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams7nsig_rgE">
+<span id="_CPPv3N6galsim3hsm9HSMParams7nsig_rgE"></span><span id="_CPPv2N6galsim3hsm9HSMParams7nsig_rgE"></span><span id="galsim::hsm::HSMParams::nsig_rg__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1afa53e9052c23b0ad142eb7bbec78af03"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nsig_rg</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams7nsig_rgE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams8nsig_rg2E">
+<span id="_CPPv3N6galsim3hsm9HSMParams8nsig_rg2E"></span><span id="_CPPv2N6galsim3hsm9HSMParams8nsig_rg2E"></span><span id="galsim::hsm::HSMParams::nsig_rg2__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a9947c8eb851d3911d3551eaf3f6b4df2"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nsig_rg2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams8nsig_rg2E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams16max_moment_nsig2E">
+<span id="_CPPv3N6galsim3hsm9HSMParams16max_moment_nsig2E"></span><span id="_CPPv2N6galsim3hsm9HSMParams16max_moment_nsig2E"></span><span id="galsim::hsm::HSMParams::max_moment_nsig2__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a4cf63eba2651c4abf780ac9f69f4b2c8"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_moment_nsig2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams16max_moment_nsig2E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams17regauss_too_smallE">
+<span id="_CPPv3N6galsim3hsm9HSMParams17regauss_too_smallE"></span><span id="_CPPv2N6galsim3hsm9HSMParams17regauss_too_smallE"></span><span id="galsim::hsm::HSMParams::regauss_too_small__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1afae32d9064fda38289c23a6a24915599"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">regauss_too_small</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams17regauss_too_smallE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams11adapt_orderE">
+<span id="_CPPv3N6galsim3hsm9HSMParams11adapt_orderE"></span><span id="_CPPv2N6galsim3hsm9HSMParams11adapt_orderE"></span><span id="galsim::hsm::HSMParams::adapt_order__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a4e60d118ed60bda1ee907d076fabfe8f"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adapt_order</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams11adapt_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams21convergence_thresholdE">
+<span id="_CPPv3N6galsim3hsm9HSMParams21convergence_thresholdE"></span><span id="_CPPv2N6galsim3hsm9HSMParams21convergence_thresholdE"></span><span id="galsim::hsm::HSMParams::convergence_threshold__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1aa90bdd93c10cc111b7245bb7a258efde"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">convergence_threshold</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams21convergence_thresholdE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams13max_mom2_iterE">
+<span id="_CPPv3N6galsim3hsm9HSMParams13max_mom2_iterE"></span><span id="_CPPv2N6galsim3hsm9HSMParams13max_mom2_iterE"></span><span id="galsim::hsm::HSMParams::max_mom2_iter__l"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a925d5952c776175ff39e35d84e6ee6f4"></span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_mom2_iter</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams13max_mom2_iterE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams16num_iter_defaultE">
+<span id="_CPPv3N6galsim3hsm9HSMParams16num_iter_defaultE"></span><span id="_CPPv2N6galsim3hsm9HSMParams16num_iter_defaultE"></span><span id="galsim::hsm::HSMParams::num_iter_default__l"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a8ebb94fefb4162846f58dde7bb56dbd8"></span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_iter_default</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams16num_iter_defaultE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams16bound_correct_wtE">
+<span id="_CPPv3N6galsim3hsm9HSMParams16bound_correct_wtE"></span><span id="_CPPv2N6galsim3hsm9HSMParams16bound_correct_wtE"></span><span id="galsim::hsm::HSMParams::bound_correct_wt__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a283bb08ff7430134c7da8d4e26d096ba"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bound_correct_wt</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams16bound_correct_wtE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams11max_amomentE">
+<span id="_CPPv3N6galsim3hsm9HSMParams11max_amomentE"></span><span id="_CPPv2N6galsim3hsm9HSMParams11max_amomentE"></span><span id="galsim::hsm::HSMParams::max_amoment__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1aebed48c41cfc2f90bbcfa74e22c4ee5c"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_amoment</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams11max_amomentE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams10max_ashiftE">
+<span id="_CPPv3N6galsim3hsm9HSMParams10max_ashiftE"></span><span id="_CPPv2N6galsim3hsm9HSMParams10max_ashiftE"></span><span id="galsim::hsm::HSMParams::max_ashift__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a64e185290d3140c81b1bac422b19c127"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_ashift</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams10max_ashiftE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams15ksb_moments_maxE">
+<span id="_CPPv3N6galsim3hsm9HSMParams15ksb_moments_maxE"></span><span id="_CPPv2N6galsim3hsm9HSMParams15ksb_moments_maxE"></span><span id="galsim::hsm::HSMParams::ksb_moments_max__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1af90c2c5eb1147b91ae1aa08be672b358"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ksb_moments_max</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams15ksb_moments_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams14ksb_sig_weightE">
+<span id="_CPPv3N6galsim3hsm9HSMParams14ksb_sig_weightE"></span><span id="_CPPv2N6galsim3hsm9HSMParams14ksb_sig_weightE"></span><span id="galsim::hsm::HSMParams::ksb_sig_weight__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a11ad7f20a9a387bcb028783f1618c759"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ksb_sig_weight</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams14ksb_sig_weightE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams14ksb_sig_factorE">
+<span id="_CPPv3N6galsim3hsm9HSMParams14ksb_sig_factorE"></span><span id="_CPPv2N6galsim3hsm9HSMParams14ksb_sig_factorE"></span><span id="galsim::hsm::HSMParams::ksb_sig_factor__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1a3ec767e65e32e929509f1f7806d2a641"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ksb_sig_factor</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams14ksb_sig_factorE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9HSMParams14failed_momentsE">
+<span id="_CPPv3N6galsim3hsm9HSMParams14failed_momentsE"></span><span id="_CPPv2N6galsim3hsm9HSMParams14failed_momentsE"></span><span id="galsim::hsm::HSMParams::failed_moments__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_h_s_m_params_1ac38c3e48b9fcf5d270b93d906ecf1df2"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">failed_moments</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9HSMParams14failed_momentsE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm8HSMErrorE">
+<span id="_CPPv3N6galsim3hsm8HSMErrorE"></span><span id="_CPPv2N6galsim3hsm8HSMErrorE"></span><span id="galsim::hsm::HSMError"></span><span class="target" id="classgalsim_1_1hsm_1_1_h_s_m_error"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HSMError</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">runtime_error</span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm8HSMErrorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Exception class thrown by the adaptive moment and shape measurement routines in the hsm namespace. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm8HSMError8HSMErrorERKNSt6stringE">
+<span id="_CPPv3N6galsim3hsm8HSMError8HSMErrorERKNSt6stringE"></span><span id="_CPPv2N6galsim3hsm8HSMError8HSMErrorERKNSt6stringE"></span><span id="galsim::hsm::HSMError::HSMError__ssCR"></span><span class="target" id="classgalsim_1_1hsm_1_1_h_s_m_error_1a1d1b2538a5132b37161bf823ad580b99"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HSMError</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm8HSMError8HSMErrorERKNSt6stringE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm23general_shear_estimatorE14ConstImageViewIdE14ConstImageViewIdER10ObjectDataR10ObjectDataPKcmRK9HSMParams">
+<span id="_CPPv3N6galsim3hsm23general_shear_estimatorE14ConstImageViewIdE14ConstImageViewIdER10ObjectDataR10ObjectDataPKcmRK9HSMParams"></span><span id="_CPPv2N6galsim3hsm23general_shear_estimatorE14ConstImageViewIdE14ConstImageViewIdER10ObjectDataR10ObjectDataPKcmRK9HSMParams"></span><span id="galsim::hsm::general_shear_estimator__ConstImageView:double:.ConstImageView:double:.ObjectDataR.ObjectDataR.cCP.unsigned-l.HSMParamsCR"></span><span class="target" id="namespacegalsim_1_1hsm_1aa6b2bdc39aa9b8ad247c0b1301e259e0"></span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hsm</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">general_shear_estimator</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim14ConstImageViewE" title="galsim::ConstImageView"><span class="n"><span class="pre">ConstImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">gal_image</span></span>, <a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim14ConstImageViewE" title="galsim::ConstImageView"><span class="n"><span class="pre">ConstImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">PSF_image</span></span>, <a class="reference internal" href="#_CPPv4N6galsim3hsm10ObjectDataE" title="galsim::hsm::ObjectData"><span class="n"><span class="pre">ObjectData</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gal_data</span></span>, <a class="reference internal" href="#_CPPv4N6galsim3hsm10ObjectDataE" title="galsim::hsm::ObjectData"><span class="n"><span class="pre">ObjectData</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">PSF_data</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">shear_est</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">flags</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">hsmparams</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm23general_shear_estimatorE14ConstImageViewIdE14ConstImageViewIdER10ObjectDataR10ObjectDataPKcmRK9HSMParams" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Carry out PSF correction. </p>
+<p>Carry out one of the multiple possible methods of PSF correction using the HSM package. Results for the shape measurement are returned by modifying the galaxy data directly. The flags parameter is only used for the REGAUSS shape measurement method, and is defined as follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time, 0x8=cut off PSF residual at NSIG_RG2 to save time. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gal_image</strong> – <strong>[in]</strong> The galaxy Image. </p></li>
+<li><p><strong>PSF_image</strong> – <strong>[in]</strong> The PSF Image. </p></li>
+<li><p><strong>gal_data</strong> – <strong>[in]</strong> The <a class="reference internal" href="#structgalsim_1_1hsm_1_1_object_data"><span class="std std-ref">ObjectData</span></a> object for the galaxy </p></li>
+<li><p><strong>PSF_data</strong> – <strong>[in]</strong> The <a class="reference internal" href="#structgalsim_1_1hsm_1_1_object_data"><span class="std std-ref">ObjectData</span></a> object for the PSF </p></li>
+<li><p><strong>shear_est</strong> – <strong>[in]</strong> A string indicating the desired method of PSF correction: REGAUSS, LINEAR, BJ, or KSB. </p></li>
+<li><p><strong>flags</strong> – <strong>[in]</strong> A parameter for REGAUSS (typical usage is 0xe). </p></li>
+<li><p><strong>hsmparams</strong> – <strong>[in]</strong> Optional argument to specify parameters to be used for shape measurement routines, as an <a class="reference internal" href="#structgalsim_1_1hsm_1_1_h_s_m_params"><span class="std std-ref">HSMParams</span></a> object. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A status flag that should be zero if the measurement was successful. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm15find_ellipmom_2E14ConstImageViewIdERdRdRdRdRdRdRddRiRK9HSMParams">
+<span id="_CPPv3N6galsim3hsm15find_ellipmom_2E14ConstImageViewIdERdRdRdRdRdRdRddRiRK9HSMParams"></span><span id="_CPPv2N6galsim3hsm15find_ellipmom_2E14ConstImageViewIdERdRdRdRdRdRdRddRiRK9HSMParams"></span><span id="galsim::hsm::find_ellipmom_2__ConstImageView:double:.doubleR.doubleR.doubleR.doubleR.doubleR.doubleR.doubleR.double.iR.HSMParamsCR"></span><span class="target" id="namespacegalsim_1_1hsm_1aed98dfc4c59f5fac83ba2f097753a8f6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hsm</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">find_ellipmom_2</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim14ConstImageViewE" title="galsim::ConstImageView"><span class="n"><span class="pre">ConstImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">data</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">x0</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">y0</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">Mxx</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">Mxy</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">Myy</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rho4</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">convergence_threshold</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">num_iter</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim3hsm9HSMParamsE" title="galsim::hsm::HSMParams"><span class="n"><span class="pre">HSMParams</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">hsmparams</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm15find_ellipmom_2E14ConstImageViewIdERdRdRdRdRdRdRddRiRK9HSMParams" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Measure the adaptive moments of an object. </p>
+<p>This function iteratively computes the adaptive moments of an image, and tells the user the results plus other diagnostic information. The key result is the best-fit elliptical Gaussian to the object, which is computed by initially guessing a circular Gaussian that is used as a weight function, computing the weighted moments, recomputing the moments using the result of the previous step as the weight function, and so on until the moments that are measured are the same as those used for the weight function. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – <strong>[in]</strong> The Image for the object being measured. </p></li>
+<li><p><strong>A</strong> – <strong>[out]</strong> The amplitude of the best-fit elliptical Gaussian (total image intensity for the Gaussian is 2A). </p></li>
+<li><p><strong>x0</strong> – <strong>[out]</strong> The x centroid of the best-fit elliptical Gaussian. </p></li>
+<li><p><strong>y0</strong> – <strong>[out]</strong> The y centroid of the best-fit elliptical Gaussian. </p></li>
+<li><p><strong>Mxx</strong> – <strong>[out]</strong> The xx component of the moment matrix. </p></li>
+<li><p><strong>Mxy</strong> – <strong>[out]</strong> The xy component of the moment matrix. </p></li>
+<li><p><strong>Myy</strong> – <strong>[out]</strong> The yy component of the moment matrix. </p></li>
+<li><p><strong>rho4</strong> – <strong>[out]</strong> The weighted radial fourth moment. </p></li>
+<li><p><strong>convergence_threshold</strong> – <strong>[in]</strong> The required level of accuracy. </p></li>
+<li><p><strong>num_iter</strong> – <strong>[out]</strong> The number of iterations needed to converge. </p></li>
+<li><p><strong>hsmparams</strong> – <strong>[in]</strong> Optional argument to specify parameters to be used for shape measurement routines, as an <a class="reference internal" href="#structgalsim_1_1hsm_1_1_h_s_m_params"><span class="std std-ref">HSMParams</span></a> object. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeDataE">
+<span id="_CPPv3N6galsim3hsm9ShapeDataE"></span><span id="_CPPv2N6galsim3hsm9ShapeDataE"></span><span id="galsim::hsm::ShapeData"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ShapeData</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeDataE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Struct containing information about the shape of an object. </p>
+<p>This representation of an object shape contains information about observed shapes and shape estimators after PSF correction. It also contains information about what PSF correction was used; if no PSF correction was carried out and only the observed moments were measured, the PSF correction method will be ‘None’. Note that observed shapes are bounded to lie in the range |e| &lt; 1 or |g| &lt; 1, so they can be represented using a Shear object. In contrast, the PSF-corrected distortions and shears are not bounded at a maximum of 1 since they are shear estimators, and placing such a bound would bias the mean. Thus, the corrected results are not represented using Shear objects, since it may not be possible to make a meaningful per-object conversion from distortion to shear (e.g., if |e|&gt;1). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData9ShapeDataEv">
+<span id="_CPPv3N6galsim3hsm9ShapeData9ShapeDataEv"></span><span id="_CPPv2N6galsim3hsm9ShapeData9ShapeDataEv"></span><span id="galsim::hsm::ShapeData::ShapeData"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a4d403298de989a1d147f93a58ddaf868"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ShapeData</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData9ShapeDataEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructor, setting defaults. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12image_boundsE">
+<span id="_CPPv3N6galsim3hsm9ShapeData12image_boundsE"></span><span id="_CPPv2N6galsim3hsm9ShapeData12image_boundsE"></span><span id="galsim::hsm::ShapeData::image_bounds__Bounds:i:"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a4748b416c63e97fa7eb39dcccf9d1fb3"></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="n"><span class="pre">Bounds</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">image_bounds</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12image_boundsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="cpp_bounds.html#classgalsim_1_1_bounds"><span class="std std-ref">galsim::Bounds</span></a> object describing the image of the object </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData14moments_statusE">
+<span id="_CPPv3N6galsim3hsm9ShapeData14moments_statusE"></span><span id="_CPPv2N6galsim3hsm9ShapeData14moments_statusE"></span><span id="galsim::hsm::ShapeData::moments_status__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a7f138f8579917173f9dd700576210070"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_status</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData14moments_statusE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Status after measuring adaptive moments; -1 indicates no attempt to measure them. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData11observed_e1E">
+<span id="_CPPv3N6galsim3hsm9ShapeData11observed_e1E"></span><span id="_CPPv2N6galsim3hsm9ShapeData11observed_e1E"></span><span id="galsim::hsm::ShapeData::observed_e1__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a9b0ae1ff28bf657fc2f847553d2bddd9"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">observed_e1</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData11observed_e1E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The observed shape e1,e2. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData11observed_e2E">
+<span id="_CPPv3N6galsim3hsm9ShapeData11observed_e2E"></span><span id="_CPPv2N6galsim3hsm9ShapeData11observed_e2E"></span><span id="galsim::hsm::ShapeData::observed_e2__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a836d968319dcc46f911150e272b44774"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">observed_e2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData11observed_e2E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData13moments_sigmaE">
+<span id="_CPPv3N6galsim3hsm9ShapeData13moments_sigmaE"></span><span id="_CPPv2N6galsim3hsm9ShapeData13moments_sigmaE"></span><span id="galsim::hsm::ShapeData::moments_sigma__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1ade1a2b62aa9f7e666816b64c4af6c179"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_sigma</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData13moments_sigmaE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if not measured. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData11moments_ampE">
+<span id="_CPPv3N6galsim3hsm9ShapeData11moments_ampE"></span><span id="_CPPv2N6galsim3hsm9ShapeData11moments_ampE"></span><span id="galsim::hsm::ShapeData::moments_amp__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1aec5f932fa4c88567b709c06d1bb2ebc5"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_amp</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData11moments_ampE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Total image intensity for best-fit elliptical Gaussian from adaptive moments; note that this is not flux, since flux = (total image intensity)*(pixel scale)^2. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData16moments_centroidE">
+<span id="_CPPv3N6galsim3hsm9ShapeData16moments_centroidE"></span><span id="_CPPv2N6galsim3hsm9ShapeData16moments_centroidE"></span><span id="galsim::hsm::ShapeData::moments_centroid__Position:double:"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a9f76958d8cf29e39d30ae6ad470dd186"></span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_centroid</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData16moments_centroidE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Centroid of best-fit elliptical Gaussian. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12moments_rho4E">
+<span id="_CPPv3N6galsim3hsm9ShapeData12moments_rho4E"></span><span id="_CPPv2N6galsim3hsm9ShapeData12moments_rho4E"></span><span id="galsim::hsm::ShapeData::moments_rho4__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a0f1b146c2373932cdb9dba38640455d6"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_rho4</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12moments_rho4E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The weighted radial fourth moment of the image. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData14moments_n_iterE">
+<span id="_CPPv3N6galsim3hsm9ShapeData14moments_n_iterE"></span><span id="_CPPv2N6galsim3hsm9ShapeData14moments_n_iterE"></span><span id="galsim::hsm::ShapeData::moments_n_iter__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1acd50ea1ec38f43b1163d408af6bded8d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">moments_n_iter</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData14moments_n_iterE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Number of iterations needed to get adaptive moments; 0 if not measured. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData17correction_statusE">
+<span id="_CPPv3N6galsim3hsm9ShapeData17correction_statusE"></span><span id="_CPPv2N6galsim3hsm9ShapeData17correction_statusE"></span><span id="galsim::hsm::ShapeData::correction_status__i"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a6ef5e0efbbac1eed88f144c585420d31"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">correction_status</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData17correction_statusE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Status after carrying out PSF correction; -1 indicates no attempt to do so. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12corrected_e1E">
+<span id="_CPPv3N6galsim3hsm9ShapeData12corrected_e1E"></span><span id="_CPPv2N6galsim3hsm9ShapeData12corrected_e1E"></span><span id="galsim::hsm::ShapeData::corrected_e1__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a025c82949253ed70a70605fe52ed3e20"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">corrected_e1</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12corrected_e1E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Estimated e1 after correcting for effects of the PSF, for methods that return a distortion. Default value -10 if no correction carried out. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12corrected_e2E">
+<span id="_CPPv3N6galsim3hsm9ShapeData12corrected_e2E"></span><span id="_CPPv2N6galsim3hsm9ShapeData12corrected_e2E"></span><span id="galsim::hsm::ShapeData::corrected_e2__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a9b497bbe07de03f03abe4a724dfb0878"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">corrected_e2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12corrected_e2E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Estimated e2 after correcting for effects of the PSF, for methods that return a distortion. Default value -10 if no correction carried out. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12corrected_g1E">
+<span id="_CPPv3N6galsim3hsm9ShapeData12corrected_g1E"></span><span id="_CPPv2N6galsim3hsm9ShapeData12corrected_g1E"></span><span id="galsim::hsm::ShapeData::corrected_g1__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1aee886f66e2eb5043abe3839ef5b1816a"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">corrected_g1</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12corrected_g1E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Estimated g1 after correcting for effects of the PSF, for methods that return a shear. Default value -10 if no correction carried out. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData12corrected_g2E">
+<span id="_CPPv3N6galsim3hsm9ShapeData12corrected_g2E"></span><span id="_CPPv2N6galsim3hsm9ShapeData12corrected_g2E"></span><span id="galsim::hsm::ShapeData::corrected_g2__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1acfe4b4d8dbfccd5e28a77a31fe75c22d"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">corrected_g2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData12corrected_g2E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Estimated g2 after correcting for effects of the PSF, for methods that return a shear. Default value -10 if no correction carried out. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData9meas_typeE">
+<span id="_CPPv3N6galsim3hsm9ShapeData9meas_typeE"></span><span id="_CPPv2N6galsim3hsm9ShapeData9meas_typeE"></span><span id="galsim::hsm::ShapeData::meas_type__ss"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1af34449b7e818b4004bdb3f3d3f6d5b91"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">meas_type</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData9meas_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>‘e’ for PSF correction methods that return a distortion, ‘g’ for methods that return a shear. “None” if PSF correction was not done. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData19corrected_shape_errE">
+<span id="_CPPv3N6galsim3hsm9ShapeData19corrected_shape_errE"></span><span id="_CPPv2N6galsim3hsm9ShapeData19corrected_shape_errE"></span><span id="galsim::hsm::ShapeData::corrected_shape_err__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a7fb0d77593f52cc270657a2e09be68b6"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">corrected_shape_err</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData19corrected_shape_errE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Shape measurement uncertainty sigma_gamma (not sigma_e) per component. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData17correction_methodE">
+<span id="_CPPv3N6galsim3hsm9ShapeData17correction_methodE"></span><span id="_CPPv2N6galsim3hsm9ShapeData17correction_methodE"></span><span id="galsim::hsm::ShapeData::correction_method__ss"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1ae4f4f114619a7e98dafcb28f647002bf"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">correction_method</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData17correction_methodE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>String indicating PSF-correction method; “None” if PSF correction was not done. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData17resolution_factorE">
+<span id="_CPPv3N6galsim3hsm9ShapeData17resolution_factorE"></span><span id="_CPPv2N6galsim3hsm9ShapeData17resolution_factorE"></span><span id="galsim::hsm::ShapeData::resolution_factor__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a50b19f46e3860f7baa4ecd7877475e0e"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">resolution_factor</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData17resolution_factorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Resolution factor R_2; 0 indicates object is consistent with a PSF, 1 indicates perfect resolution; default -1. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData9psf_sigmaE">
+<span id="_CPPv3N6galsim3hsm9ShapeData9psf_sigmaE"></span><span id="_CPPv2N6galsim3hsm9ShapeData9psf_sigmaE"></span><span id="galsim::hsm::ShapeData::psf_sigma__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1ae2e9ba2da7f20484b3076f6f2fe84f9d"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">psf_sigma</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData9psf_sigmaE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>PSF size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; default -1. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData6psf_e1E">
+<span id="_CPPv3N6galsim3hsm9ShapeData6psf_e1E"></span><span id="_CPPv2N6galsim3hsm9ShapeData6psf_e1E"></span><span id="galsim::hsm::ShapeData::psf_e1__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a4ee196a0f499e097834bdb9ed340e4b1"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">psf_e1</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData6psf_e1E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>PSF shape from the adaptive moments. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData6psf_e2E">
+<span id="_CPPv3N6galsim3hsm9ShapeData6psf_e2E"></span><span id="_CPPv2N6galsim3hsm9ShapeData6psf_e2E"></span><span id="galsim::hsm::ShapeData::psf_e2__float"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1aedabfe52ada475fecae7f61b9722b3f6"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">psf_e2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData6psf_e2E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm9ShapeData13error_messageE">
+<span id="_CPPv3N6galsim3hsm9ShapeData13error_messageE"></span><span id="_CPPv2N6galsim3hsm9ShapeData13error_messageE"></span><span id="galsim::hsm::ShapeData::error_message__ss"></span><span class="target" id="structgalsim_1_1hsm_1_1_shape_data_1a430ae8fc16da271c17ae06b0dd1d5740"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error_message</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm9ShapeData13error_messageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A string containing any error messages from the attempted measurements, to facilitate proper error handling in both C++ and python. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectDataE">
+<span id="_CPPv3N6galsim3hsm10ObjectDataE"></span><span id="_CPPv2N6galsim3hsm10ObjectDataE"></span><span id="galsim::hsm::ObjectData"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ObjectData</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectDataE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Characterizes the shape and other parameters of objects. </p>
+<p>Describe the hsm shape-related parameters of some object (usually galaxy) before and after PSF correction. All ellipticities are defined as (1-q^2)/(1+q^2), with the 1st component aligned with the pixel grid and the 2nd aligned at 45 degrees with respect to it. There are two choices for measurement type: ‘e’ = Bernstein &amp; Jarvis (2002) ellipticity (or distortion), ‘g’ = shear estimator = shear*responsivity. The sigma is defined based on the observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = [ det(M) ]^(1/4). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData10ObjectDataEv">
+<span id="_CPPv3N6galsim3hsm10ObjectData10ObjectDataEv"></span><span id="_CPPv2N6galsim3hsm10ObjectData10ObjectDataEv"></span><span id="galsim::hsm::ObjectData::ObjectData"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a7c1031b23f2e04f208d041d43123f04d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ObjectData</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData10ObjectDataEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData2x0E">
+<span id="_CPPv3N6galsim3hsm10ObjectData2x0E"></span><span id="_CPPv2N6galsim3hsm10ObjectData2x0E"></span><span id="galsim::hsm::ObjectData::x0__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1acb59cce570c60d3a66f38765f85d869b"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">x0</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData2x0E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>x centroid position within the postage stamp, in units of pixels </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData2y0E">
+<span id="_CPPv3N6galsim3hsm10ObjectData2y0E"></span><span id="_CPPv2N6galsim3hsm10ObjectData2y0E"></span><span id="galsim::hsm::ObjectData::y0__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1aca967ef9ed1a5c3aff52b0993b63f90a"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">y0</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData2y0E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>y centroid position within the postage stamp, in units of pixels </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData5sigmaE">
+<span id="_CPPv3N6galsim3hsm10ObjectData5sigmaE"></span><span id="_CPPv2N6galsim3hsm10ObjectData5sigmaE"></span><span id="galsim::hsm::ObjectData::sigma__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a9609fdee193b52a5cd0ed28f87fba0f6"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sigma</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData5sigmaE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>size parameter </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData4fluxE">
+<span id="_CPPv3N6galsim3hsm10ObjectData4fluxE"></span><span id="_CPPv2N6galsim3hsm10ObjectData4fluxE"></span><span id="galsim::hsm::ObjectData::flux__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a8281fdfda007e87bb3167980f74fe526"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flux</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData4fluxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>total flux </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData2e1E">
+<span id="_CPPv3N6galsim3hsm10ObjectData2e1E"></span><span id="_CPPv2N6galsim3hsm10ObjectData2e1E"></span><span id="galsim::hsm::ObjectData::e1__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a85d9bc4f3908f93171d98e4e7388c1f7"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">e1</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData2e1E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>first ellipticity component </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData2e2E">
+<span id="_CPPv3N6galsim3hsm10ObjectData2e2E"></span><span id="_CPPv2N6galsim3hsm10ObjectData2e2E"></span><span id="galsim::hsm::ObjectData::e2__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a56dec6d715aff0345b5f9a69a1d1091c"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">e2</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData2e2E" title="Permalink to this definition"></a><br /></dt>
+<dd><p>second ellipticity component </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData12responsivityE">
+<span id="_CPPv3N6galsim3hsm10ObjectData12responsivityE"></span><span id="_CPPv2N6galsim3hsm10ObjectData12responsivityE"></span><span id="galsim::hsm::ObjectData::responsivity__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a79773ab653f07a9a3510f7d19b9531fd"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">responsivity</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData12responsivityE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>responsivity of ellipticity estimator </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData9meas_typeE">
+<span id="_CPPv3N6galsim3hsm10ObjectData9meas_typeE"></span><span id="_CPPv2N6galsim3hsm10ObjectData9meas_typeE"></span><span id="galsim::hsm::ObjectData::meas_type__c"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a9914f47c6c8a9aea60780fc63e2df2cb"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">meas_type</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData9meas_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>type of measurement (see function description) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim3hsm10ObjectData10resolutionE">
+<span id="_CPPv3N6galsim3hsm10ObjectData10resolutionE"></span><span id="_CPPv2N6galsim3hsm10ObjectData10resolutionE"></span><span id="galsim::hsm::ObjectData::resolution__double"></span><span class="target" id="structgalsim_1_1hsm_1_1_object_data_1a6fc3211235f35e56e1be397a7ec5b52b"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">resolution</span></span></span><a class="headerlink" href="#_CPPv4N6galsim3hsm10ObjectData10resolutionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>resolution factor (0=unresolved, 1=resolved) </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_interp.html" class="btn btn-neutral float-left" title="Interpolation Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_math.html" class="btn btn-neutral float-right" title="Math" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

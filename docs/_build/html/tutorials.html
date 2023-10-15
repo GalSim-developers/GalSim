@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorials &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Images and Related Concepts" href="image.html" />
+    <link rel="prev" title="Installing With Conda" href="install_conda.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#demo-1">Demo 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-2">Demo 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-3">Demo 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-4">Demo 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-5">Demo 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-6">Demo 6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-7">Demo 7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-8">Demo 8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-9">Demo 9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-10">Demo 10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-11">Demo 11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-12">Demo 12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-13">Demo 13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-simulations">Advanced Simulations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#great3-simulations">Great3 Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#des-simulations">DES Simulations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tutorials</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tutorials.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">GalSim/examples</span></code> directory contains demo files serve as tutorials on how to use the
+GalSim code.</p>
+<p>There are versions of each demo in both Python (<code class="docutils literal notranslate"><span class="pre">demo*.py</span></code>) and YAML (<code class="docutils literal notranslate"><span class="pre">demo*.yaml</span></code>).
+The demos start fairly simple and progress to more sophisticated simulations, adding
+a modest number of new features each time with copious documentation about the new features
+being introduced.</p>
+<p>The YAML files are run using the <code class="docutils literal notranslate"><span class="pre">galsim</span></code> executable, which parses the YAML file into a Python
+dict and runs this through <a class="reference internal" href="config.html#the-config-module"><span class="std std-ref">The Config Module</span></a> in GalSim.  For complicated simulations,
+we generally recommend using config files such as these, since they tend to be more quickly
+readable than the Python scripts, which makes it easy to see how to modify them to effect
+some desired change in the simulation.  For more information about running the <code class="docutils literal notranslate"><span class="pre">galsim</span></code>
+executable, see <a class="reference internal" href="config_galsim.html#the-galsim-executable"><span class="std std-ref">The galsim Executable</span></a>.</p>
+<p>Both versions of each demo produce identical output files.  Internally, this serves as a useful
+test of the config parsing code.  But it also serves as a kind of implicit documentation
+about how some of the config features are handled by GalSim.</p>
+<section id="demo-1">
+<h2>Demo 1<a class="headerlink" href="#demo-1" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo1.py"><code class="file docutils literal notranslate"><span class="pre">demo1.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo1.yaml"><code class="file docutils literal notranslate"><span class="pre">demo1.yaml</span> </code></a></p>
+<p>This first demo is about as simple as it gets.  We draw an image of a single galaxy
+convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the
+PSF and the galaxy, and add a constant level of Gaussian noise to the image.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>obj = galsim.Gaussian(flux, sigma)</p></li>
+<li><p>obj = galsim.Convolve([list of objects])</p></li>
+<li><p>image = obj.drawImage(scale)</p></li>
+<li><p>image.added_flux  (Only present after a drawImage command.)</p></li>
+<li><p>noise = galsim.GaussianNoise(sigma)</p></li>
+<li><p>image.addNoise(noise)</p></li>
+<li><p>image.write(file_name)</p></li>
+<li><p>image.FindAdaptiveMom()</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>top level fields gal, psf, image, output</p></li>
+<li><p>obj type : Gaussian (flux, sigma)</p></li>
+<li><p>image : pixel_scale</p></li>
+<li><p>image : noise</p></li>
+<li><p>noise type : Gaussian (sigma)</p></li>
+<li><p>output : dir, file_name</p></li>
+</ul>
+</section>
+<section id="demo-2">
+<h2>Demo 2<a class="headerlink" href="#demo-2" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo2.py"><code class="file docutils literal notranslate"><span class="pre">demo2.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo2.yaml"><code class="file docutils literal notranslate"><span class="pre">demo2.yaml</span> </code></a></p>
+<p>This demo is a bit more sophisticated, but still pretty basic.  We still only make
+a single image, but now the galaxy has an exponential radial profile and is sheared.
+The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
+using the flux from both the object and a background sky level to determine the
+variance in each pixel.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>obj = galsim.Exponential(flux, scale_radius)</p></li>
+<li><p>obj = galsim.Moffat(beta, flux, half_light_radius)</p></li>
+<li><p>obj = obj.shear(g1, g2)  – with explanation of other ways to specify shear</p></li>
+<li><p>rng = galsim.BaseDeviate(seed)</p></li>
+<li><p>noise = galsim.PoissonNoise(rng, sky_level)</p></li>
+<li><p>galsim.hsm.EstimateShear(image, image_epsf)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : Exponential (flux, scale_radius)</p></li>
+<li><p>obj type : Moffat (flux, beta, half_light_radius)</p></li>
+<li><p>obj : shear</p></li>
+<li><p>shear type : G1G2 (g1, g2)</p></li>
+<li><p>noise type : Poisson (sky_level)</p></li>
+<li><p>image : random_seed</p></li>
+</ul>
+</section>
+<section id="demo-3">
+<h2>Demo 3<a class="headerlink" href="#demo-3" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo3.py"><code class="file docutils literal notranslate"><span class="pre">demo3.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo3.yaml"><code class="file docutils literal notranslate"><span class="pre">demo3.yaml</span> </code></a></p>
+<p>This demo gets reasonably close to including all the principal features of an image
+from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
+where each component is represented by a sheared Sersic profile (with different Sersic
+indices).  The PSF has both atmospheric and optical components.  The atmospheric
+component is a Kolmogorov turbulent spectrum.  The optical component includes defocus,
+coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model
+includes both a gain and read noise.  And finally, we include the effect of a slight
+telescope distortion.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>obj = galsim.Sersic(n, flux, half_light_radius)</p></li>
+<li><p>obj = galsim.Sersic(n, flux, scale_radius)</p></li>
+<li><p>obj = galsim.Kolmogorov(fwhm)</p></li>
+<li><p>obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)</p></li>
+<li><p>obj = obj.shear(e, beta)  – including how to specify an angle in GalSim</p></li>
+<li><p>shear = galsim.Shear(q, beta)</p></li>
+<li><p>obj = obj.shear(shear)</p></li>
+<li><p>obj3 = x1 * obj1 + x2 * obj2</p></li>
+<li><p>obj = obj.withFlux(flux)</p></li>
+<li><p>image = galsim.ImageF(image_size, image_size)</p></li>
+<li><p>image = obj.drawImage(image, wcs)</p></li>
+<li><p>image = obj.drawImage(method=’sb’)</p></li>
+<li><p>world_profile = wcs.toWorld(profile)</p></li>
+<li><p>shear3 = shear1 + shear2</p></li>
+<li><p>noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : Sum (items)</p></li>
+<li><p>obj type : Convolve (items)</p></li>
+<li><p>obj type : Sersic (flux, n, half_light_radius)</p></li>
+<li><p>obj type : Sersic (flux, n, scale_radius)</p></li>
+<li><p>obj type : Kolmogorov (fwhm)</p></li>
+<li><p>obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)</p></li>
+<li><p>obj : ellip</p></li>
+<li><p>shear type : QBeta (q, beta) – including how to specify an angle</p></li>
+<li><p>shear type : EBeta (e, beta)</p></li>
+<li><p>noise type : CCD (sky_level, gain, read_noise)</p></li>
+<li><p>image : size</p></li>
+<li><p>image : wcs</p></li>
+<li><p>wcs type : Shear</p></li>
+<li><p>output : psf</p></li>
+</ul>
+</section>
+<section id="demo-4">
+<h2>Demo 4<a class="headerlink" href="#demo-4" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo4.py"><code class="file docutils literal notranslate"><span class="pre">demo4.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo4.yaml"><code class="file docutils literal notranslate"><span class="pre">demo4.yaml</span> </code></a></p>
+<p>This demo is our first one to create multiple images.  Typically, you would want each object
+to have at least some of its attributes vary when you are drawing multiple images (although
+not necessarily – you might just want different noise realization of the same profile).
+The easiest way to do this is to read in the properties from a catalog, which is what we
+do in this case.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
+Both components get many of their parameters from an input catalog.  We also shift the
+profile by a fraction of a pixel in each direction so the effect of pixelization varies
+among the images.  Each galaxy has the same applied shear.  The noise is simple Poisson noise.
+We write the images out into a multi-extension fits file.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>cat = galsim.Catalog(file_name, dir)</p></li>
+<li><p>obj = galsim.Moffat(beta, fwhm, trunc)</p></li>
+<li><p>obj = galsim.DeVaucouleurs(flux, half_light_radius)</p></li>
+<li><p>obj = galsim.RandomKnots(npoints, half_light_radius, flux)</p></li>
+<li><p>obj = galsim.Add([list of objects])</p></li>
+<li><p>obj = obj.shift(dx,dy)</p></li>
+<li><p>galsim.fits.writeMulti([list of images], file_name)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : Moffat (…, trunc)</p></li>
+<li><p>obj type : DeVaucouleurs (flux, half_light_radius)</p></li>
+<li><p>obj type : RandomKnots (npoints, half_light_radius, flux)</p></li>
+<li><p>value type : Catalog (col)</p></li>
+<li><p>obj : shift</p></li>
+<li><p>shift type : XY (x, y)</p></li>
+<li><p>shear type : E1E2 (e1, e2)</p></li>
+<li><p>image : xsize, ysize</p></li>
+<li><p>top level field input</p></li>
+<li><p>input : catalog (file_name, dir)</p></li>
+<li><p>output type : MultiFits (file_name, dir)</p></li>
+<li><p>Using both ellip and shear for the same object</p></li>
+<li><p>Using variables in a YAML file</p></li>
+</ul>
+</section>
+<section id="demo-5">
+<h2>Demo 5<a class="headerlink" href="#demo-5" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo5.py"><code class="file docutils literal notranslate"><span class="pre">demo5.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo5.yaml"><code class="file docutils literal notranslate"><span class="pre">demo5.yaml</span> </code></a></p>
+<p>This demo is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
+We produce a single image made up of tiles of postage stamps for each individual object.
+(We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)
+Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
+The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
+(Great08 mixed pure bulge and pure disk for its LowNoise run.  We just use disks to
+make things simpler. However see demo3 for an example of using bulge+disk galaxies.)
+The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of
+shape noise.  The applied shear is the same for each galaxy.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>ud = galsim.UniformDeviate(seed)</p></li>
+<li><p>gd = galsim.GaussianDeviate(ud, sigma)</p></li>
+<li><p>ccdnoise = galsim.CCDNoise(ud)</p></li>
+<li><p>image *= scalar</p></li>
+<li><p>bounds = galsim.BoundsI(xmin, xmax, ymin, ymax)</p></li>
+<li><p>pos = bounds.center</p></li>
+<li><p>pos.x, pos.y</p></li>
+<li><p>sub_image = image[bounds]</p></li>
+<li><p>Build a single large image, and access sub-images within it.</p></li>
+<li><p>Set the galaxy size based on the PSF size and a resolution factor.</p></li>
+<li><p>Set the object flux according to a target S/N value.</p></li>
+<li><p>Use 90 degree-rotated pairs for the intrinsic galaxy shapes.</p></li>
+<li><p>Shift by a random (dx, dy) drawn from a unit circle top hat.</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>gal : resolution</p></li>
+<li><p>gal : signal_to_noise</p></li>
+<li><p>stamp type : Ring (first, num)</p></li>
+<li><p>value type : RandomGaussian (sigma, min, max)</p></li>
+<li><p>angle type : Random</p></li>
+<li><p>shift type : RandomCircle (radius)</p></li>
+<li><p>image type : Tiled (nx_tiles, ny_tiles, stamp_xsize, stamp_ysize, border)</p></li>
+<li><p>output type : Fits (file_name, dir)</p></li>
+<li><p>output.psf : shift</p></li>
+</ul>
+</section>
+<section id="demo-6">
+<h2>Demo 6<a class="headerlink" href="#demo-6" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo6.py"><code class="file docutils literal notranslate"><span class="pre">demo6.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo6.yaml"><code class="file docutils literal notranslate"><span class="pre">demo6.yaml</span> </code></a></p>
+<p>This demo uses real galaxy images from COSMOS observations.  The catalog of real galaxy
+images distributed with GalSim only includes 100 galaxies, but you can download a much
+larger set of images as described in <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a>.</p>
+<p>The galaxy images are already convolved with the effective PSF for the original
+observations, so GalSim considers the galaxy profile to be the observed image deconvolved
+by that PSF (also distributed with the galaxy data).
+In this case, we then randomly rotate the galaxies, apply a given gravitational shear as
+well as gravitational magnification, and then finally convolve by a double Gaussian PSF.
+The final image can of course have any pixel scale, not just that of the original images.
+The output for this demo is to a FITS “data cube”.  With DS9, this can be viewed with a
+slider to quickly move through the different images.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>real_cat = galsim.RealGalaxyCatalog(file_name, dir)</p></li>
+<li><p>obj = galsim.Gaussian(fwhm, flux)</p></li>
+<li><p>obj = galsim.RealGalaxy(real_cat, index, flux)</p></li>
+<li><p>obj = obj.rotate(theta)</p></li>
+<li><p>obj = obj.magnify(mu)</p></li>
+<li><p>image += background</p></li>
+<li><p>noise = galsim.PoissonNoise()  # with no sky_level given</p></li>
+<li><p>obj.drawImage(…, offset)</p></li>
+<li><p>galsim.fits.writeCube([list of images], file_name)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>input : real_catalog (file_name, dir, image_dir)</p></li>
+<li><p>obj type : RealGalaxy (index)</p></li>
+<li><p>obj : rotate</p></li>
+<li><p>obj : magnify</p></li>
+<li><p>image : sky_level</p></li>
+<li><p>image : offset</p></li>
+<li><p>value type : Sequence (first, last, step)</p></li>
+<li><p>output type : DataCube (file_name, dir, nimages)</p></li>
+<li><p>Using YAML multiple document feature to do more than one thing</p></li>
+</ul>
+</section>
+<section id="demo-7">
+<h2>Demo 7<a class="headerlink" href="#demo-7" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo7.py"><code class="file docutils literal notranslate"><span class="pre">demo7.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo7.yaml"><code class="file docutils literal notranslate"><span class="pre">demo7.yaml</span> </code></a></p>
+<p>This demo introduces drawing profiles with photon shooting rather than doing the
+convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
+kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so
+each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
+The profiles are drawn twice: once with the FFT method, and once with photon shooting.
+The two images are drawn side by side into the same larger image so it is easy to
+visually compare the results. The 100 total profiles are written to a FITS data cube,
+which makes it easy to scroll through the images comparing the two drawing methods.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>obj = galsim.Airy(lam_over_diam)</p></li>
+<li><p>obj = galsim.Sersic(n, half_light_radius, trunc)</p></li>
+<li><p>psf = galsim.OpticalPSF(…, aberrations=aberrations, …)</p></li>
+<li><p>obj = obj.dilate(scale)</p></li>
+<li><p>str(obj)</p></li>
+<li><p>image.scale = pixel_scale</p></li>
+<li><p>obj.drawImage(image, method=’fft’)</p></li>
+<li><p>obj.drawImage(image, method=’phot’, max_extra_noise, rng)</p></li>
+<li><p>dev = galsim.PoissonDeviate(rng, mean)</p></li>
+<li><p>noise = galsim.DeviateNoise(dev)</p></li>
+<li><p>writeCube(…, compress=’gzip’)</p></li>
+<li><p>gsparams = galsim.GSParams(…)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : List (items)</p></li>
+<li><p>obj type : Airy (lam_over_diam)</p></li>
+<li><p>obj type : Sersic (…, trunc)</p></li>
+<li><p>obj : dilate</p></li>
+<li><p>value type : Sequence (…, repeat, index_key)</p></li>
+<li><p>value type : Random (min, max)</p></li>
+<li><p>image type : Tiled (…, stamp_size, xborder, yborder)</p></li>
+<li><p>stamp : draw_method (fft or phot)</p></li>
+<li><p>stamp : gsparams</p></li>
+<li><p>output : file_name with .gz, .bz2 or .fz extension automatically uses compression.</p></li>
+</ul>
+</section>
+<section id="demo-8">
+<h2>Demo 8<a class="headerlink" href="#demo-8" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo8.py"><code class="file docutils literal notranslate"><span class="pre">demo8.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo8.yaml"><code class="file docutils literal notranslate"><span class="pre">demo8.yaml</span> </code></a></p>
+<p>In this demo, we show how to run the GalSim config processing using a python dict rather
+than using a config file.  The previous demos have shown what Python code corresponds to
+the given YAML files.  Now we turn the tables
+and show how to use some of the machinery in the GalSim configuration processing
+from within Python itself.</p>
+<p>This could be useful if you want to use the config machinery to build the images, but then
+rather than write the images to disk, you want to keep them in memory and do further
+processing with them.  (e.g. Run your shape measurement code on the images from within python.)</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>galsim.config.Process(config, logger)</p></li>
+<li><p>galsim.config.ProcessInput(config, logger)</p></li>
+<li><p>galsim.config.BuildFile(config, file_num, logger)</p></li>
+<li><p>image = galsim.config.BuildImage(config, image_num, logger)</p></li>
+<li><p>galsim.fits.read(file_name)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>stamp : retry_failures</p></li>
+<li><p>shear type : Eta1Eta2 (eta1, eta2)</p></li>
+<li><p>image : nproc</p></li>
+</ul>
+</section>
+<section id="demo-9">
+<h2>Demo 9<a class="headerlink" href="#demo-9" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo9.py"><code class="file docutils literal notranslate"><span class="pre">demo9.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo9.yaml"><code class="file docutils literal notranslate"><span class="pre">demo9.yaml</span> </code></a></p>
+<p>This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
+applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations
+of galaxies around 20 different clusters – 5 each of 4 different masses.  Each cluster
+has its own file, organized into 4 directories (one for each mass).  For each cluster, we
+draw 20 lensed galaxies located at random positions in the image.  The PSF is appropriate for a
+space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
+a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
+output image that could be used for testing the accuracy of shape or flux measurements.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>psf = OpticalPSF(lam, diam, …, trefoil1, trefoil2, nstruts, strut_thick, strut_angle)</p></li>
+<li><p>im = galsim.ImageS(xsize, ysize, wcs)</p></li>
+<li><p>pos = galsim.PositionD(x, y)</p></li>
+<li><p>nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)</p></li>
+<li><p>g1,g2 = nfw.getShear(pos, z)</p></li>
+<li><p>mag = nfw.getMagnification(pos, z)</p></li>
+<li><p>distdev = galsim.DistDeviate(rng, function, x_min, x_max)</p></li>
+<li><p>pos = bounds.true_center</p></li>
+<li><p>wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)</p></li>
+<li><p>wcs.toWorld(profile, image_pos)</p></li>
+<li><p>wcs.makeSkyImage(image, sky_level)</p></li>
+<li><p>image_pos = wcs.toImage(pos)</p></li>
+<li><p>image.invertSelf()</p></li>
+<li><p>truth_cat = galsim.OutputCatalog(names, types)</p></li>
+<li><p>bounds.isDefined()</p></li>
+<li><p>Make multiple output files.</p></li>
+<li><p>Place galaxies at random positions on a larger image.</p></li>
+<li><p>Write a bad pixel mask and a weight image as the second and third HDUs in each file.</p></li>
+<li><p>Use multiple processes to construct each file in parallel.</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : OpticalPSF (lam, diam, …, trefoil1, trefoil2, nstruts, strut_thick, strut_angle)</p></li>
+<li><p>obj type : InclinedExponential (scale_radius, scale_h_over_r, inclination)</p></li>
+<li><p>angle type : Radians</p></li>
+<li><p>shear type : NFWHaloShear (redshift)</p></li>
+<li><p>float type : NFWHaloMagnification (redshift)</p></li>
+<li><p>float type : RandomDistribution(function, x_min, x_max)</p></li>
+<li><p>input : nfw_halo (mass, conc, redshift)</p></li>
+<li><p>shear type : Sum (items)</p></li>
+<li><p>image type : Scattered (size, nobjects)</p></li>
+<li><p>wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)</p></li>
+<li><p>str type : NumberedFile (root, num, ext, digits)</p></li>
+<li><p>str type : FormattedStr (format, items)</p></li>
+<li><p>pos type : RandomCircle (…, inner_radius)</p></li>
+<li><p>value type : Sequence (…, nitems)</p></li>
+<li><p>output : nproc</p></li>
+<li><p>output : weight</p></li>
+<li><p>output : badpix</p></li>
+<li><p>output : truth</p></li>
+<li><p>output : skip</p></li>
+<li><p>output : noclobber</p></li>
+</ul>
+</section>
+<section id="demo-10">
+<h2>Demo 10<a class="headerlink" href="#demo-10" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo10.py"><code class="file docutils literal notranslate"><span class="pre">demo10.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo10.yaml"><code class="file docutils literal notranslate"><span class="pre">demo10.yaml</span> </code></a></p>
+<p>This script uses both a variable PSF and variable shear, taken from a power spectrum, along
+the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid
+(10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
+is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
+as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
+RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from
+the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring
+test (Nakajima &amp; Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+correct applied shear for each object (among other information).</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>im.wcs = galsim.OffsetWCS(scale, origin)</p></li>
+<li><p>rng = galsim.BaseDeviate(seed)</p></li>
+<li><p>obj = galsim.RealGalaxy(real_galaxy_catalog, id)</p></li>
+<li><p>obj = galsim.Convolve([list], real_space)</p></li>
+<li><p>ps = galsim.PowerSpectrum(e_power_function, b_power_function)</p></li>
+<li><p>g1,g2 = ps.buildGrid(grid_spacing, ngrid, rng)</p></li>
+<li><p>g1,g2 = ps.getShear(pos)</p></li>
+<li><p>galsim.random.permute(rng, list1, list2, …)</p></li>
+<li><p>Choosing PSF parameters as a function of (x,y)</p></li>
+<li><p>Selecting RealGalaxy by ID rather than index.</p></li>
+<li><p>Putting the PSF image in a second HDU in the same file as the main image.</p></li>
+<li><p>Using PowerSpectrum for the applied shear.</p></li>
+<li><p>Doing a full ring test (i.e. not just 90 degree rotated pairs)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : Ring (…, full_rotation)</p></li>
+<li><p>obj type : RealGalaxy (…, id)</p></li>
+<li><p>type : Eval using world_pos variable, user-defined variables and math functions</p></li>
+<li><p>type : Current</p></li>
+<li><p>shear_value : PowerSpectrumShear</p></li>
+<li><p>pos_value : RTheta (r, theta)</p></li>
+<li><p>image type : Tiled (…, order)</p></li>
+<li><p>input : power_spectrum (e_power_function, b_power_function)</p></li>
+<li><p>output.psf : hdu, signal_to_noise, draw_method, offset</p></li>
+<li><p>output.truth : hdu</p></li>
+<li><p>Evaluated values in output.truth.columns</p></li>
+</ul>
+</section>
+<section id="demo-11">
+<h2>Demo 11<a class="headerlink" href="#demo-11" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo11.py"><code class="file docutils literal notranslate"><span class="pre">demo11.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo11.yaml"><code class="file docutils literal notranslate"><span class="pre">demo11.yaml</span> </code></a></p>
+<p>This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
+parametric model) and variable shear and magnification according to some cosmological model for
+which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
+0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
+permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
+the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
+used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
+The flux and size distribution are thus realistic for an I &lt; 23.5 magnitude limited sample.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>coord = galsim.CelestialCoord(ra, dec)</p></li>
+<li><p>wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)</p></li>
+<li><p>wcs = galsim.TanWCS(affine, world_origin, units)</p></li>
+<li><p>psf = galsim.InterpolatedImage(psf_filename, scale, flux)</p></li>
+<li><p>tab = galsim.LookupTable(file)</p></li>
+<li><p>cosmos_cat = galsim.COSMOSCatalog(file_name, dir)</p></li>
+<li><p>gal = cosmos_cat.makeGalaxy(gal_type, rng, noise_pad_size)</p></li>
+<li><p>ps = galsim.PowerSpectrum(…, units)</p></li>
+<li><p>gal = gal.lens(g1, g2, mu)</p></li>
+<li><p>image.whitenNoise(correlated_noise)</p></li>
+<li><p>image.symmetrizeNoise(correlated_noise)</p></li>
+<li><p>vn = galsim.VariableGaussianNoise(rng, var_image)</p></li>
+<li><p>image.addNoise(cn)</p></li>
+<li><p>image.setOrigin(x,y)</p></li>
+<li><p>angle.dms(), angle.hms()</p></li>
+<li><p>Power spectrum shears and magnifications for non-gridded positions.</p></li>
+<li><p>Reading a compressed FITS image (using BZip2 compression).</p></li>
+<li><p>Writing a compressed FITS image (using Rice compression).</p></li>
+<li><p>Writing WCS information to a FITS header that ds9 reads as RA, Dec</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>obj type : InterpolatedImage(image, scale)</p></li>
+<li><p>obj type : COSMOSGalaxy</p></li>
+<li><p>obj : scale_flus</p></li>
+<li><p>image : draw_method (no_pixel)</p></li>
+<li><p>input : power_spectrum (e_power_file, delta2, units)</p></li>
+<li><p>input : cosmos_catalog (file_name, dir, use_real)</p></li>
+<li><p>image : index_convention</p></li>
+<li><p>image.noise : whiten</p></li>
+<li><p>image.noise : symmetrize</p></li>
+<li><p>wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)</p></li>
+<li><p>top level field eval_variables</p></li>
+<li><p>Power spectrum shears and magnifications for non-gridded positions.</p></li>
+<li><p>Reading a compressed FITS image (using BZip2 compression).</p></li>
+<li><p>Writing a compressed FITS image (using Rice compression).</p></li>
+<li><p>Using $ as a shorthand for Eval type.</p></li>
+</ul>
+</section>
+<section id="demo-12">
+<h2>Demo 12<a class="headerlink" href="#demo-12" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo12.py"><code class="file docutils literal notranslate"><span class="pre">demo12.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo12.yaml"><code class="file docutils literal notranslate"><span class="pre">demo12.yaml</span> </code></a></p>
+<p>This demo introduces wavelength-dependent profiles.  Three kinds of chromatic profiles are
+demonstrated:</p>
+<ol class="arabic simple">
+<li><p>A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
+g-band dropout.</p></li>
+<li><p>A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs.</p></li>
+<li><p>A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+is convolved with a simple Exponential galaxy.</p></li>
+</ol>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>SED = galsim.SED(wave, flambda, wave_type, flux_type)</p></li>
+<li><p>SED2 = SED.atRedshift(redshift)</p></li>
+<li><p>bandpass = galsim.Bandpass(filename, wave_type)</p></li>
+<li><p>bandpass2 = bandpass.truncate(relative_throughput)</p></li>
+<li><p>bandpass3 = bandpass2.thin(rel_err)</p></li>
+<li><p>gal = GSObject * SED</p></li>
+<li><p>obj = galsim.Add([list of ChromaticObjects])</p></li>
+<li><p>ChromaticObject.drawImage(bandpass)</p></li>
+<li><p>PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>sed<span class="classifier">file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,</span></dt><dd><p>norm_flux, norm_bandpass</p>
+</dd>
+</dl>
+</li>
+<li><p>bandpass : filename, wave_type, thin</p></li>
+<li><p>gal : redshift</p></li>
+<li><p>psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)</p></li>
+</ul>
+</section>
+<section id="demo-13">
+<h2>Demo 13<a class="headerlink" href="#demo-13" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo13.py"><code class="file docutils literal notranslate"><span class="pre">demo13.py</span> </code></a>
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/demo13.yaml"><code class="file docutils literal notranslate"><span class="pre">demo13.yaml</span> </code></a></p>
+<p>This script is intended to produce a relatively realistic scene of galaxies and stars as will
+be observed by the Roman Space Telescope, including the Roman PSF, WCS, and various NIR detector
+effects.</p>
+<p>It introduces several non-idealities arising from NIR detectors, in particular those that will
+be observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
+demonstrated, in the order in which they are introduced in the detectors:</p>
+<ol class="arabic simple">
+<li><p>Reciprocity failure: Flux-dependent sensitivity of the detector.</p></li>
+<li><p>Non-linearity: Charge-dependent gain in converting from units of electrons to ADU.  Non-linearity
+in some form is also relevant for CCDs in addition to NIR detectors.</p></li>
+<li><p>Interpixel capacitance: Influence of charge in a pixel on the voltage reading of neighboring
+ones.</p></li>
+</ol>
+<p>It also uses chromatic photon shooting, which is generally a more efficient way to simulate
+scenes with many faint galaxies.  The default FFT method for drawing chromatically is fairly
+slow, since it needs to integrate the image over the bandpass.  With photon shooting, the
+photons are assigned wavelengths according to the SED of the galaxy, and then each photon has
+the appropriate application of the chromatic PSF according to the wavelength.</p>
+<p><strong>New features in the Python file</strong>:</p>
+<ul class="simple">
+<li><p>image.quantize()</p></li>
+<li><p>obj = galsim.DeltaFunction(flux)</p></li>
+<li><p>galsim.roman.addReciprocityFailure(image)</p></li>
+<li><p>galsim.roman.applyNonlinearity(image)</p></li>
+<li><p>galsim.roman.applyIPC(image)</p></li>
+<li><p>galsim.roman.getBandpasses()</p></li>
+<li><p>galsim.roman.getPSF()</p></li>
+<li><p>galsim.roman.getWCS()</p></li>
+<li><p>galsim.roman.allowedPos()</p></li>
+<li><p>galsim.roman.getSkyLevel()</p></li>
+</ul>
+<p><strong>New features in the YAML file</strong>:</p>
+<ul class="simple">
+<li><p>Top-level field modules</p></li>
+<li><p>obj type: RomanPSF</p></li>
+<li><p>image type: RomanSCA</p></li>
+<li><p>draw_method=phot in conjunction with chromatic objects</p></li>
+<li><p>Multiple random seeds (particular so one can repeat the same values for multiple images)</p></li>
+<li><p>rng_num specification in various fields</p></li>
+<li><p>Multiple inputs of the same type.  Use num to specify which item in the list to use each time.</p></li>
+</ul>
+</section>
+<section id="advanced-simulations">
+<h2>Advanced Simulations<a class="headerlink" href="#advanced-simulations" title="Permalink to this heading"></a></h2>
+<section id="great3-simulations">
+<h3>Great3 Simulations<a class="headerlink" href="#great3-simulations" title="Permalink to this heading"></a></h3>
+<p>In the directory <code class="docutils literal notranslate"><span class="pre">GalSim/examples/great3</span></code>,
+there are YAML config files that perform essentially the same
+simulations that were done for Great3.  The config apparatus had not matured sufficiently by the
+time the Great3 sims were run, so these are not what the Great3 team used.  However, the files
+in this directory produce essentially equivalent simulations as those used in Great3.</p>
+<p>So far there are only config files for the cgc and rgc branches of Great3, but we plan to add
+the files for the other branches (Issue #699).</p>
+<p><strong>Significant features in these files</strong>:</p>
+<ul class="simple">
+<li><p>template option to load another config file and then modify a few aspects of it. (e.g.
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/rgc.yaml"><code class="file docutils literal notranslate"><span class="pre">rgc.yaml</span> </code></a>)</p></li>
+<li><p>template option to load only a particular field from another config file. (e.g.
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/cgc_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc_psf.yaml</span> </code></a>)</p></li>
+<li><p>stamp.reject</p></li>
+<li><p>custom value type (e.g. Great3Reject in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a>)</p></li>
+<li><p>custom extra output type (e.g. noise_free in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a>)</p></li>
+<li><p>top-level module field</p></li>
+<li><p>use of ‘$’ and ‘&#64;’ shorthand in Eval items.</p></li>
+</ul>
+</section>
+<section id="des-simulations">
+<h3>DES Simulations<a class="headerlink" href="#des-simulations" title="Permalink to this heading"></a></h3>
+<p>In the directory <code class="docutils literal notranslate"><span class="pre">examples/des</span></code>,
+there are YAML config files that showcase some of the classes
+defined in the <code class="docutils literal notranslate"><span class="pre">galsim.des</span></code> module.  These are mostly gratuitous demos designed to showcase
+various features, although <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>
+is very close to a real simulation we actually used in DES for testing shear measurements.</p>
+<p><strong>Significant features in these files</strong>:</p>
+<ul class="simple">
+<li><p>top-level module field</p></li>
+<li><p>special object types from galsim.des module (e.g. DES_Shapelet and DES_PSFEx in
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/draw_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">draw_psf.yaml</span> </code></a>)</p></li>
+<li><p>special output type from galsim.des module (e.g. MEDS in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>)</p></li>
+<li><p>custom value type (e.g. HSM_Shape_Measure in meds.yaml, LogNormal in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a>)</p></li>
+<li><p>custom WCS type (e.g. DES_Local in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>)</p></li>
+<li><p>custom input type (e.g. des_wcs in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>)</p></li>
+<li><p>custom stamp types (e.g. Blend in blend.yaml and BlendSet in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a>)</p></li>
+<li><p>custom extra output type (e.g. deblend in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a>)</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install_conda.html" class="btn btn-neutral float-left" title="Installing With Conda" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="image.html" class="btn btn-neutral float-right" title="Images and Related Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

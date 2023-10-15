@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.roman.roman_wcs &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.roman.roman_wcs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.roman.roman_wcs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@file roman_wcs.py</span>
+
+<span class="sd">Part of the Roman Space Telescope module.  This file includes any routines needed to define and use</span>
+<span class="sd">the Roman WCS.  Current version is consistent with Roman wide-field channel optical design version</span>
+<span class="sd">7.6.8, generated during Phase A and presented at the Roman System Requirements Review and Mission</span>
+<span class="sd">Definition Review.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">coord</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_sca</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GSFitsWCS</span><span class="p">,</span> <span class="n">FitsHeader</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimError</span>
+
+
+<span class="c1"># Basic Roman reference info, with lengths in mm.</span>
+<span class="n">pixel_size_mm</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">focal_length</span> <span class="o">=</span> <span class="mi">18714</span>
+<span class="n">pix_scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">pixel_size_mm</span><span class="o">/</span><span class="n">focal_length</span><span class="p">)</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
+<span class="n">n_sip</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension</span>
+
+<span class="c1"># Version-related information, for reference back to material provided by Jeff Kruk.</span>
+<span class="n">tel_name</span> <span class="o">=</span> <span class="s2">&quot;Roman&quot;</span>
+<span class="n">instr_name</span> <span class="o">=</span> <span class="s2">&quot;WFC&quot;</span>
+<span class="n">optics_design_ver</span> <span class="o">=</span> <span class="s2">&quot;20210204&quot;</span>
+<span class="n">prog_version</span> <span class="o">=</span> <span class="s2">&quot;d2&quot;</span>
+
+<span class="c1"># Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)</span>
+<span class="c1"># coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as</span>
+<span class="c1"># projected onto the sky.  The origin is centered on the telescope boresight, but can be related to</span>
+<span class="c1"># the center of the FPA by subtracting fpa_xc_mm and fpa_yc_mm.</span>
+<span class="c1">#</span>
+<span class="c1"># Since the SCAs are 1-indexed, these arrays have a non-used entry with index 0.  i.e., the maximum</span>
+<span class="c1"># SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.</span>
+<span class="n">infile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span> <span class="s1">&#39;sca_positions_20210204.txt&#39;</span><span class="p">)</span>
+<span class="n">sca_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+<span class="n">sca_xc_mm</span> <span class="o">=</span> <span class="n">sca_data</span><span class="p">[</span><span class="mi">3</span><span class="p">,:]</span>
+<span class="n">sca_yc_mm</span> <span class="o">=</span> <span class="n">sca_data</span><span class="p">[</span><span class="mi">4</span><span class="p">,:]</span>
+<span class="n">sca_xc_mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sca_xc_mm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">sca_yc_mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sca_yc_mm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">sca_crval_u_deg</span> <span class="o">=</span> <span class="n">sca_data</span><span class="p">[</span><span class="mi">5</span><span class="p">,:]</span>
+<span class="n">sca_crval_v_deg</span> <span class="o">=</span> <span class="n">sca_data</span><span class="p">[</span><span class="mi">6</span><span class="p">,:]</span>
+<span class="n">sca_crval_u_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sca_crval_u_deg</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">sca_crval_v_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sca_crval_v_deg</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1"># Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle</span>
+<span class="c1"># (neglecting distortions - to be included later).</span>
+<span class="n">fpa_xc_mm</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">fpa_yc_mm</span> <span class="o">=</span> <span class="mf">160.484</span>
+<span class="n">xc_fpa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">fpa_xc_mm</span><span class="o">/</span><span class="n">focal_length</span><span class="p">)</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
+<span class="n">yc_fpa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">fpa_yc_mm</span><span class="o">/</span><span class="n">focal_length</span><span class="p">)</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
+
+<span class="c1"># The next array contains rotation offsets of individual SCA Y axis relative to FPA f2 axis. Same</span>
+<span class="c1"># sign convention as theta_fpa. These represent mechanical installation deviations from perfect</span>
+<span class="c1"># alignment and are ideally zero. These will be measured during focal plane integration and</span>
+<span class="c1"># testing.</span>
+<span class="n">sca_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">sca_xc_mm</span><span class="p">)</span>
+
+<span class="c1"># Rotation of WFI local axes relative to payload axes: this is expressed as a CCW rotation</span>
+<span class="c1"># relative to observatory +Z direction.</span>
+<span class="n">theta_fpa</span> <span class="o">=</span> <span class="mf">120.0</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span>
+
+<span class="c1"># File with SIP coefficients.</span>
+<span class="n">sip_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span> <span class="s1">&#39;sip_20210204.txt&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="getWCS"><a class="viewcode-back" href="../../../roman.html#galsim.roman.getWCS">[docs]</a><span class="k">def</span> <span class="nf">getWCS</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">SCAs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This routine returns a dict containing a WCS for each of the Roman SCAs (Sensor Chip Array, the</span>
+<span class="sd">    equivalent of a chip in an optical CCD).  The Roman SCAs are labeled 1-18, so these numbers are</span>
+<span class="sd">    used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the</span>
+<span class="sd">    ``SCAs`` option.  The basic instrument parameters used to create the WCS correspond to those in</span>
+<span class="sd">    Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of</span>
+<span class="sd">    the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.</span>
+
+<span class="sd">    The user must specify a position for observation, at which the center of the focal plane array</span>
+<span class="sd">    will point.  This must be supplied as a CelestialCoord ``world_pos``.  In general, only certain</span>
+<span class="sd">    positions are observable on certain dates, and for a given position there is an optimal position</span>
+<span class="sd">    angle for the observatory (with the solar panels pointed as directly towards the sun as</span>
+<span class="sd">    possible).  Users who are knowledgable about these details may choose to supply a position angle</span>
+<span class="sd">    as ``PA``, either for the observatory or for the focal plane (using ``PA_is_FPA`` to indicate</span>
+<span class="sd">    this).  But otherwise, the routine will simply choose the optimal position angle for a given</span>
+<span class="sd">    date.</span>
+
+<span class="sd">    To fully understand all possible inputs and outputs to this routine, users may wish to consult</span>
+<span class="sd">    the diagram on the GalSim wiki,</span>
+<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        world_pos:      A `galsim.CelestialCoord` indicating the position to observe at the center</span>
+<span class="sd">                        of the focal plane array (FPA).  Note that if the given position is not</span>
+<span class="sd">                        observable on the given date, then the routine will raise an exception.</span>
+<span class="sd">        PA:             A `galsim.Angle` representing the position angle of the observatory +Y</span>
+<span class="sd">                        axis, unless ``PA_is_FPA=True``, in which case it&#39;s the position angle of</span>
+<span class="sd">                        the FPA.  For users to do not care about this, then leaving this as None</span>
+<span class="sd">                        will result in the routine using the supplied ``date`` and ``world_pos`` to</span>
+<span class="sd">                        select the optimal orientation for the observatory.  Note that if a user</span>
+<span class="sd">                        supplies a ``PA`` value, the routine does not check whether this orientation</span>
+<span class="sd">                        is actually allowed.  [default: None]</span>
+<span class="sd">        date:           The date of the observation, as a python datetime object.  If None, then the</span>
+<span class="sd">                        vernal equinox in 2025 will be used.  [default: None]</span>
+<span class="sd">        PA_is_FPA:      If True, then the position angle that was provided was the PA of the focal</span>
+<span class="sd">                        plane array, not the observatory. [default: False]</span>
+<span class="sd">        SCAs:           A single number or iterable giving the SCAs for which the WCS should be</span>
+<span class="sd">                        obtained.  If None, then the WCS is calculated for all SCAs.</span>
+<span class="sd">                        [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict of WCS objects for each SCA.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First just parse the input quantities.</span>
+    <span class="n">date</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">pa_obsy</span> <span class="o">=</span> <span class="n">_parse_WCS_inputs</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">)</span>
+
+    <span class="c1"># Further gory details on coordinate systems, for developers: Observatory coordinate system is</span>
+    <span class="c1"># defined such that +X_obs points along the boresight into the sky, +Z_obs points towards the</span>
+    <span class="c1"># Sun in the absence of a roll offset (i.e., roll offset = 0 defines the optimal position angle</span>
+    <span class="c1"># for the observatory), +Y_obs makes a right-handed system.</span>
+    <span class="c1">#</span>
+    <span class="c1"># The x,y axes of each SCA are shown in the figure mapping_v210503.pdf in the devel/roman</span>
+    <span class="c1"># directory.  Some are 180 rotated with respect to others.</span>
+    <span class="c1"># The data in sip_filename give the coordinate transformation from each SCA&#39;s image x,y</span>
+    <span class="c1"># coordinates to the WFI Local coordinate system.  +Y in this system points away from the</span>
+    <span class="c1"># center of the observatory.  And +X is to the right if +Y is up.</span>
+    <span class="c1">#</span>
+    <span class="c1"># These coordinates are rotated by an angle theta_fpa CCW from observatory +Z.</span>
+
+    <span class="c1"># Note, this routine reads in the coeffs.  We don&#39;t use them until later, but read them in for</span>
+    <span class="c1"># all SCAs at once.</span>
+    <span class="n">a_sip</span><span class="p">,</span> <span class="n">b_sip</span> <span class="o">=</span> <span class="n">_parse_sip_file</span><span class="p">(</span><span class="n">sip_filename</span><span class="p">)</span>
+
+    <span class="c1"># Loop over SCAs:</span>
+    <span class="n">wcs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i_sca</span> <span class="ow">in</span> <span class="n">SCAs</span><span class="p">:</span>
+        <span class="c1"># Set up the header.</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Populate some necessary variables in the FITS header that are always the same, regardless of</span>
+        <span class="c1"># input and SCA number.</span>
+        <span class="n">_populate_required_fields</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+        <span class="c1"># And populate some things that just depend on the overall locations or other input, not on</span>
+        <span class="c1"># the SCA.</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="p">(</span><span class="s1">&#39;RA_TARG&#39;</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">ra</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span>
+                        <span class="s2">&quot;right ascension of the target (deg) (J2000)&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;DEC_TARG&#39;</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">dec</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span>
+                         <span class="s2">&quot;declination of the target (deg) (J2000)&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;PA_OBSY&#39;</span><span class="p">,</span> <span class="n">pa_obsy</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;position angle of observatory Y axis (deg)&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;PA_FPA&#39;</span><span class="p">,</span> <span class="n">pa_fpa</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;position angle of FPA Y axis (deg)&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;SCA_NUM&#39;</span><span class="p">,</span> <span class="n">i_sca</span><span class="p">,</span> <span class="s2">&quot;SCA number (1 - 18)&quot;</span><span class="p">),</span>
+        <span class="p">])</span>
+
+        <span class="c1"># Leave phi_p at 180 (0 if dec_targ==-90), so that tangent plane axes remain oriented along</span>
+        <span class="c1"># celestial coordinates. In other words, phi_p is the angle of the +Y axis in the tangent</span>
+        <span class="c1"># plane, which is of course pi if we&#39;re measuring these phi angles clockwise from the -Y</span>
+        <span class="c1"># axis.  Note that this quantity is not used in any calculations at all, but for consistency</span>
+        <span class="c1"># with the WCS code that comes from the Roman project office, we calculate this quantity</span>
+        <span class="c1"># and put it in the FITS header.</span>
+        <span class="k">if</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">dec</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">90.</span><span class="p">:</span>
+            <span class="n">phi_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi_p</span> <span class="o">=</span> <span class="mf">0.</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
+
+        <span class="c1"># Get position of SCA center given the center of the FPA and the orientation angle of the</span>
+        <span class="c1"># focal plane.</span>
+        <span class="n">crval</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">_get_sca_center_pos</span><span class="p">(</span><span class="n">i_sca</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">)</span>
+
+        <span class="c1"># Compute the position angle of the local pixel Y axis.</span>
+        <span class="c1"># This requires projecting local North onto the detector axes.</span>
+        <span class="c1"># Start by adding any SCA-unique rotation relative to FPA axes:</span>
+        <span class="n">sca_tp_rot</span> <span class="o">=</span> <span class="n">pa_fpa</span> <span class="o">+</span> <span class="n">sca_rot</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span>
+
+        <span class="c1"># Go some reasonable distance from crval in the +y direction.  Say, 1 degree.</span>
+        <span class="n">plus_y</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">deproject</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">1</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+        <span class="c1"># Find the angle between this point, crval and due north.</span>
+        <span class="n">north</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">(</span><span class="mf">0.</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="mf">90.</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+        <span class="n">pa_sca</span> <span class="o">=</span> <span class="n">sca_tp_rot</span> <span class="o">-</span> <span class="n">crval</span><span class="o">.</span><span class="n">angleBetween</span><span class="p">(</span><span class="n">plus_y</span><span class="p">,</span> <span class="n">north</span><span class="p">)</span>
+
+        <span class="c1"># Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These</span>
+        <span class="c1"># linear terms are stored in the SIP arrays for convenience.</span>
+        <span class="n">a10</span> <span class="o">=</span> <span class="n">a_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a11</span> <span class="o">=</span> <span class="n">a_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">b10</span> <span class="o">=</span> <span class="n">b_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b11</span> <span class="o">=</span> <span class="n">b_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Rotate by pa_fpa.</span>
+        <span class="n">cos_pa_sca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pa_sca</span><span class="p">)</span>
+        <span class="n">sin_pa_sca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pa_sca</span><span class="p">)</span>
+
+        <span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="p">(</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">,</span> <span class="n">crval</span><span class="o">.</span><span class="n">ra</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;first axis value at reference pixel&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CRVAL2&#39;</span><span class="p">,</span> <span class="n">crval</span><span class="o">.</span><span class="n">dec</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;second axis value at reference pixel&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CD1_1&#39;</span><span class="p">,</span> <span class="n">cos_pa_sca</span> <span class="o">*</span> <span class="n">a10</span> <span class="o">+</span> <span class="n">sin_pa_sca</span> <span class="o">*</span> <span class="n">b10</span><span class="p">,</span>
+                      <span class="s2">&quot;partial of first axis coordinate w.r.t. x&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CD1_2&#39;</span><span class="p">,</span> <span class="n">cos_pa_sca</span> <span class="o">*</span> <span class="n">a11</span> <span class="o">+</span> <span class="n">sin_pa_sca</span> <span class="o">*</span> <span class="n">b11</span><span class="p">,</span>
+                      <span class="s2">&quot;partial of first axis coordinate w.r.t. y&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CD2_1&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">sin_pa_sca</span> <span class="o">*</span> <span class="n">a10</span> <span class="o">+</span> <span class="n">cos_pa_sca</span> <span class="o">*</span> <span class="n">b10</span><span class="p">,</span>
+                      <span class="s2">&quot;partial of second axis coordinate w.r.t. x&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CD2_2&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">sin_pa_sca</span> <span class="o">*</span> <span class="n">a11</span> <span class="o">+</span> <span class="n">cos_pa_sca</span> <span class="o">*</span> <span class="n">b11</span><span class="p">,</span>
+                      <span class="s2">&quot;partial of second axis coordinate w.r.t. y&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;ORIENTAT&#39;</span><span class="p">,</span> <span class="n">pa_sca</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;position angle of image y axis (deg. e of n)&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;LONPOLE&#39;</span><span class="p">,</span> <span class="n">phi_p</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="s2">&quot;Native longitude of celestial pole&quot;</span><span class="p">),</span>
+        <span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sip</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sip</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&lt;</span> <span class="n">n_sip</span><span class="p">:</span>
+                    <span class="n">sipstr</span> <span class="o">=</span> <span class="s2">&quot;A_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                    <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">sipstr</span><span class="p">,</span> <span class="n">a_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">])</span> <span class="p">)</span>
+                    <span class="n">sipstr</span> <span class="o">=</span> <span class="s2">&quot;B_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                    <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">sipstr</span><span class="p">,</span>  <span class="n">b_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">])</span> <span class="p">)</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">GSFitsWCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
+        <span class="c1"># Store the original header as an attribute of the WCS.  This ensures that we have all the</span>
+        <span class="c1"># extra keywords for whenever an image with this WCS is written to file.</span>
+        <span class="n">wcs</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="n">wcs_dict</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span><span class="o">=</span><span class="n">wcs</span>
+
+    <span class="k">return</span> <span class="n">wcs_dict</span></div>
+
+<div class="viewcode-block" id="convertCenter"><a class="viewcode-back" href="../../../roman.html#galsim.roman.convertCenter">[docs]</a><span class="k">def</span> <span class="nf">convertCenter</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a simple helper routine that takes an input position ``world_pos`` that is meant to</span>
+<span class="sd">    correspond to the position of the center of an SCA, and tells where the center of the focal</span>
+<span class="sd">    plane array should be.  The goal is to provide a position that can be used as an input to</span>
+<span class="sd">    getWCS(), which wants the center of the focal plane array.</span>
+
+<span class="sd">    The results of the calculation are deterministic if given a fixed position angle (PA).  If it&#39;s</span>
+<span class="sd">    not given one, it will try to determine the best one for this location and date, like getWCS()</span>
+<span class="sd">    does.</span>
+
+<span class="sd">    Because of distortions varying across the focal plane, this routine has to iteratively correct</span>
+<span class="sd">    its initial result based on empirical tests.  The ``tol`` kwarg can be used to adjust how</span>
+<span class="sd">    careful it will be, but it always does at least one iteration.</span>
+
+<span class="sd">    To fully understand all possible inputs and outputs to this routine, users may wish to consult</span>
+<span class="sd">    the diagram on the GalSim wiki,</span>
+<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        world_pos:  A galsim.CelestialCoord indicating the position to observe at the center of the</span>
+<span class="sd">                    given SCA.  Note that if the given position is not observable on</span>
+<span class="sd">                    the given date, then the routine will raise an exception.</span>
+<span class="sd">        SCA:        A single number giving the SCA for which the center should be located at</span>
+<span class="sd">                    ``world_pos``.</span>
+<span class="sd">        PA:         galsim.Angle representing the position angle of the observatory +Y axis, unless</span>
+<span class="sd">                    ``PA_is_FPA=True``, in which case it&#39;s the position angle of the FPA.  For</span>
+<span class="sd">                    users to do not care about this, then leaving this as None will result in the</span>
+<span class="sd">                    routine using the supplied ``date`` and ``world_pos`` to select the optimal</span>
+<span class="sd">                    orientation for the observatory.  Note that if a user supplies a ``PA`` value,</span>
+<span class="sd">                    the routine does not check whether this orientation is actually allowed.</span>
+<span class="sd">                    [default: None]</span>
+<span class="sd">        date:       The date of the observation, as a python datetime object.  If None, then the</span>
+<span class="sd">                    vernal equinox in 2025 will be used.  [default: None]</span>
+<span class="sd">        PA_is_FPA:  If True, then the position angle that was provided was the PA of the focal</span>
+<span class="sd">                    plane array, not the observatory. [default: False]</span>
+<span class="sd">        tol:        Tolerance for errors due to distortions, as a galsim.Angle.</span>
+<span class="sd">                    [default: 0.5*galsim.arcsec]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A CelestialCoord object indicating the center of the focal plane array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must pass in an int corresponding to the SCA&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tol</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">Angle</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tol must be a galsim.Angle&quot;</span><span class="p">)</span>
+    <span class="n">use_SCA</span> <span class="o">=</span> <span class="n">SCA</span>
+    <span class="c1"># Parse inputs appropriately.</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse_WCS_inputs</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="p">,</span> <span class="p">[</span><span class="n">SCA</span><span class="p">])</span>
+
+    <span class="c1"># Now pretend world_pos was the FPA center and we want to find the location of this SCA:</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">_get_sca_center_pos</span><span class="p">(</span><span class="n">use_SCA</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">)</span>
+    <span class="c1"># The (u, v) values give an offset, and we can invert this.</span>
+    <span class="n">fpa_cent</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">deproject</span><span class="p">(</span><span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+    <span class="c1"># This is only approximately correct, especially for detectors that are far from the center of</span>
+    <span class="c1"># the FPA, because of distortions etc.  We can do an iterative correction.</span>
+    <span class="c1"># For the default value of &#39;tol&#39;, typically just 1-2 iterations are needed.</span>
+    <span class="n">shift_val</span> <span class="o">=</span> <span class="mf">1000.0</span> <span class="c1"># arcsec</span>
+    <span class="k">while</span> <span class="n">shift_val</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">:</span>
+        <span class="n">test_wcs</span> <span class="o">=</span> <span class="n">getWCS</span><span class="p">(</span><span class="n">fpa_cent</span><span class="p">,</span> <span class="n">PA</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">use_SCA</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="p">)[</span><span class="n">use_SCA</span><span class="p">]</span>
+        <span class="n">im_cent_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">test_sca_pos</span> <span class="o">=</span> <span class="n">test_wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">im_cent_pos</span><span class="p">)</span>
+        <span class="n">delta_ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">world_pos</span><span class="o">.</span><span class="n">dec</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">world_pos</span><span class="o">.</span><span class="n">ra</span><span class="o">-</span><span class="n">test_sca_pos</span><span class="o">.</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">delta_dec</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">dec</span><span class="o">-</span><span class="n">test_sca_pos</span><span class="o">.</span><span class="n">dec</span>
+        <span class="n">shift_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">world_pos</span><span class="o">.</span><span class="n">distanceTo</span><span class="p">(</span><span class="n">test_sca_pos</span><span class="p">)</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">)</span>
+        <span class="n">fpa_cent</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">(</span><span class="n">fpa_cent</span><span class="o">.</span><span class="n">ra</span> <span class="o">+</span> <span class="n">delta_ra</span><span class="p">,</span> <span class="n">fpa_cent</span><span class="o">.</span><span class="n">dec</span> <span class="o">+</span> <span class="n">delta_dec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fpa_cent</span></div>
+
+<div class="viewcode-block" id="findSCA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.findSCA">[docs]</a><span class="k">def</span> <span class="nf">findSCA</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a subroutine to take a dict of WCS (one per SCA) from galsim.roman.getWCS() and query</span>
+<span class="sd">    which SCA a particular real-world coordinate would be located on.  The position (``world_pos``)</span>
+<span class="sd">    should be specified as a galsim.CelestialCoord.  If the position is not located on any of the</span>
+<span class="sd">    SCAs, the result will be None.  Note that if ``wcs_dict`` does not include all SCAs in it, then</span>
+<span class="sd">    it&#39;s possible the position might lie on one of the SCAs that was not included.</span>
+
+<span class="sd">    Depending on what the user wants to do with the results, they may wish to use the</span>
+<span class="sd">    ``include_border`` keyword.  This keyword determines whether or not to include an additional</span>
+<span class="sd">    border corresponding to half of the gaps between SCAs.  For example, if a user is drawing a</span>
+<span class="sd">    single image they may wish to only know whether a given position falls onto an SCA, and if so,</span>
+<span class="sd">    which one (ignoring everything in the gaps).  In contrast, a user who plans to make a sequence</span>
+<span class="sd">    of dithered images might find it most useful to know whether the position is either on an SCA or</span>
+<span class="sd">    close enough that in a small dither sequence it might appear on the SCA at some point.  Use of</span>
+<span class="sd">    ``include_border`` switches between these scenarios.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        wcs_dict:        The dict of WCS&#39;s output from galsim.roman.getWCS().</span>
+<span class="sd">        world_pos:       A galsim.CelestialCoord indicating the sky position of interest.</span>
+<span class="sd">        include_border:  If True, then include the half-border around SCA to cover the gap</span>
+<span class="sd">                         between each sensor. [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        an integer value of the SCA on which the position falls, or None if the position is not</span>
+<span class="sd">        on any SCA.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Sanity check args.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;wcs_dict should be a dict containing WCS output by galsim.roman.getWCS.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Position on the sky must be given as a galsim.CelestialCoord.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Set up the minimum and maximum pixel values, depending on whether or not to include the</span>
+    <span class="c1"># border.  We put it immediately into a galsim.BoundsI(), since the routine returns xmin, xmax,</span>
+    <span class="c1"># ymin, ymax:</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">_calculate_minmax_pix</span><span class="p">(</span><span class="n">include_border</span><span class="p">)</span>
+    <span class="n">bounds_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">BoundsI</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">ymin</span><span class="p">,</span><span class="n">ymax</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="n">sca</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">i_sca</span> <span class="ow">in</span> <span class="n">wcs_dict</span><span class="p">:</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs_dict</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span>
+        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bounds_list</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span><span class="o">.</span><span class="n">includes</span><span class="p">(</span><span class="n">image_pos</span><span class="p">):</span>
+            <span class="n">sca</span> <span class="o">=</span> <span class="n">i_sca</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">sca</span></div>
+
+<span class="k">def</span> <span class="nf">_calculate_minmax_pix</span><span class="p">(</span><span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a helper routine to calculate the minimum and maximum pixel values that should be</span>
+<span class="sd">    considered within an SCA, possibly including the complexities of including 1/2 of the gap</span>
+<span class="sd">    between SCAs.  In that case it depends on the detailed geometry of the Roman focal plane.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        include_border:     A boolean value that determines whether to include 1/2 of the gap</span>
+<span class="sd">                            between SCAs as part of the SCA itself.  [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y</span>
+<span class="sd">        pixel value, and maximum y pixel value for each SCA.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First, set up the default (no border).</span>
+    <span class="c1"># The minimum and maximum pixel values are (1, n_pix).</span>
+    <span class="n">min_x_pix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_sca</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">max_x_pix</span> <span class="o">=</span> <span class="n">min_x_pix</span> <span class="o">+</span> <span class="n">n_pix</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">min_y_pix</span> <span class="o">=</span> <span class="n">min_x_pix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">max_y_pix</span> <span class="o">=</span> <span class="n">max_x_pix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Then, calculate the half-gaps, grouping together SCAs whenever possible.</span>
+    <span class="k">if</span> <span class="n">include_border</span><span class="p">:</span>
+        <span class="c1"># Currently, the configuration in the focal plane is such that all the horizontal chip gaps</span>
+        <span class="c1"># are the same, but that won&#39;t always be the case, so for the sake of generality we only</span>
+        <span class="c1"># group together those that are forced to be the same.</span>
+        <span class="c1">#</span>
+        <span class="c1"># We figure out the borders based on the FPA coordinates, but when we apply the</span>
+        <span class="c1"># adjustments to min/max x/y, we take into account the orientations of the SCAs.</span>
+        <span class="c1"># cf. mapping_v210503.pdf in the devel/roman directory.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Positive side of 1/2/3, same as negative side of 10/11/12</span>
+        <span class="n">border_mm</span> <span class="o">=</span> <span class="p">(</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">-</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="n">n_pix</span><span class="o">*</span><span class="n">pixel_size_mm</span>
+        <span class="c1"># assert statement help ensure that these pairings continue to work if positions</span>
+        <span class="c1"># are updated in the future.</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">border_mm</span> <span class="o">&lt;</span> <span class="mi">5</span>
+        <span class="n">half_border_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">border_mm</span> <span class="o">/</span> <span class="n">pixel_size_mm</span><span class="p">)</span>
+        <span class="n">max_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">]</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+        <span class="n">min_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">12</span><span class="p">]</span> <span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+
+        <span class="c1"># Negative side of 1/2/3 and 13/14/15, same as positive side of 4/5/6 and 10/11/12</span>
+        <span class="n">border_mm</span> <span class="o">=</span> <span class="p">(</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">-</span><span class="n">n_pix</span><span class="o">*</span><span class="n">pixel_size_mm</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">border_mm</span> <span class="o">&lt;</span> <span class="mi">5</span>
+        <span class="n">half_border_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">border_mm</span> <span class="o">/</span> <span class="n">pixel_size_mm</span><span class="p">)</span>
+        <span class="n">min_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">15</span><span class="p">]</span> <span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+        <span class="n">max_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">]</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+
+        <span class="c1"># Negative side of 4/5/6 and 16/17/18, same as positive side of 7/8/9 and 13/14/15</span>
+        <span class="c1"># Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.</span>
+        <span class="n">border_mm</span> <span class="o">=</span> <span class="p">(</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">-</span><span class="n">sca_xc_mm</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span><span class="o">-</span><span class="n">n_pix</span><span class="o">*</span><span class="n">pixel_size_mm</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">border_mm</span> <span class="o">&lt;</span> <span class="mi">5</span>
+        <span class="n">half_border_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">border_mm</span> <span class="o">/</span> <span class="n">pixel_size_mm</span><span class="p">)</span>
+        <span class="n">min_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">18</span><span class="p">]</span> <span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+        <span class="n">max_x_pix</span><span class="p">[</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">]</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+
+        <span class="c1"># In the vertical direction, the gaps vary, with the gap between one pair of rows being</span>
+        <span class="c1"># significantly larger than between the other pair of rows.  The reason for this has to do</span>
+        <span class="c1"># with asymmetries in the electronics that stick out from the top and bottom of the SCAs,</span>
+        <span class="c1"># and choices in which way to arrange each SCA to maximize the usable space in the focal</span>
+        <span class="c1"># plane.</span>
+
+        <span class="c1"># Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16.</span>
+        <span class="c1"># Also use this for top of top row: 1/4/7/10/13/16.</span>
+        <span class="n">border_mm</span> <span class="o">=</span> <span class="p">(</span><span class="n">sca_yc_mm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">sca_yc_mm</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">-</span><span class="n">n_pix</span><span class="o">*</span><span class="n">pixel_size_mm</span>
+        <span class="c1"># One of the two vertical borders is larger.  Just test them both at &lt;10.</span>
+        <span class="c1"># (In the 20210204 setup, this one is the wider border.)</span>
+        <span class="k">assert</span> <span class="n">border_mm</span> <span class="o">&lt;</span> <span class="mi">10</span>
+        <span class="n">half_border_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">border_mm</span> <span class="o">/</span> <span class="n">pixel_size_mm</span><span class="p">)</span>
+        <span class="n">list_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">list_2</span> <span class="o">=</span> <span class="n">list_1</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">list_3</span> <span class="o">=</span> <span class="n">list_1</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="n">max_y_pix</span><span class="p">[</span><span class="n">list_1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+        <span class="n">min_y_pix</span><span class="p">[</span><span class="n">list_2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+        <span class="n">min_y_pix</span><span class="p">[</span><span class="n">list_1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+
+        <span class="c1"># Top of 3/6/9/12/15/18, same as bottom of 2/5/8/11/14/17.</span>
+        <span class="c1"># Also use this for bottom of bottom row: 3/6/9/12/15/18.</span>
+        <span class="n">border_mm</span> <span class="o">=</span> <span class="p">(</span><span class="n">sca_yc_mm</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">sca_yc_mm</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">-</span><span class="n">n_pix</span><span class="o">*</span><span class="n">pixel_size_mm</span>
+        <span class="k">assert</span> <span class="n">border_mm</span> <span class="o">&lt;</span> <span class="mi">10</span>
+        <span class="n">half_border_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">border_mm</span> <span class="o">/</span> <span class="n">pixel_size_mm</span><span class="p">)</span>
+        <span class="n">max_y_pix</span><span class="p">[</span><span class="n">list_2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+        <span class="n">min_y_pix</span><span class="p">[</span><span class="n">list_3</span><span class="p">]</span> <span class="o">-=</span> <span class="n">half_border_pix</span>
+        <span class="n">max_y_pix</span><span class="p">[</span><span class="n">list_3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">half_border_pix</span>
+
+    <span class="k">return</span> <span class="n">min_x_pix</span><span class="p">,</span> <span class="n">max_x_pix</span><span class="p">,</span> <span class="n">min_y_pix</span><span class="p">,</span> <span class="n">max_y_pix</span>
+
+<span class="k">def</span> <span class="nf">_populate_required_fields</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility routine to do populate some of the basic fields for the WCS headers for Roman that</span>
+<span class="sd">    don&#39;t require any interesting calculation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="p">(</span><span class="s1">&#39;EQUINOX&#39;</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">,</span> <span class="s2">&quot;equinox of celestial coordinate system&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;WCSAXES&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;number of World Coordinate System axes&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;A_ORDER&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;B_ORDER&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;WCSNAME&#39;</span><span class="p">,</span> <span class="s1">&#39;wfiwcs_&#39;</span><span class="o">+</span><span class="n">optics_design_ver</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">prog_version</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;CRPIX1&#39;</span><span class="p">,</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;x-coordinate of reference pixel&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;CRPIX2&#39;</span><span class="p">,</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;y-coordinate of reference pixel&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">,</span> <span class="s2">&quot;RA---TAN-SIP&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate type for the first axis&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">,</span> <span class="s2">&quot;DEC--TAN-SIP&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate type for the second axis&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;SIMPLE&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;BITPIX&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;NAXIS&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;EXTEND&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;BZERO&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;BSCALE&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;TELESCOP&#39;</span><span class="p">,</span> <span class="n">tel_name</span><span class="p">,</span> <span class="s2">&quot;telescope used to acquire data&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;INSTRUME&#39;</span><span class="p">,</span> <span class="n">instr_name</span><span class="p">,</span> <span class="s2">&quot;identifier for instrument used to acquire data&quot;</span><span class="p">),</span>
+    <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">_parse_sip_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility routine to parse the file with the SIP coefficients and hand back some arrays to be used</span>
+<span class="sd">    for later calculations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find file that should have Roman SIP coefficients: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="c1"># Parse the file, generated by make_sip_file.py in devel/roman directory.</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+    <span class="n">a_sip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_sca</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_sip</span><span class="p">,</span> <span class="n">n_sip</span><span class="p">))</span>
+    <span class="n">b_sip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_sca</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_sip</span><span class="p">,</span> <span class="n">n_sip</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i_sca</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_sca</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">i_sca_m1</span> <span class="o">=</span> <span class="n">i_sca</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c1"># Take the data for this SCA</span>
+        <span class="n">use_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span><span class="o">==</span><span class="n">i_sca_m1</span><span class="p">]</span>
+        <span class="c1"># Split it into a and b-type coefficients</span>
+        <span class="n">a_data</span> <span class="o">=</span> <span class="n">use_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_sip</span><span class="p">]</span>
+        <span class="n">b_data</span> <span class="o">=</span> <span class="n">use_data</span><span class="p">[:,</span> <span class="n">n_sip</span><span class="p">:]</span>
+        <span class="c1"># Assign the data to our master array of coefficients</span>
+        <span class="n">a_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">a_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:,:]</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="n">b_sip</span><span class="p">[</span><span class="n">i_sca</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">b_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:,:]</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">a_sip</span><span class="p">,</span> <span class="n">b_sip</span>
+
+<span class="k">def</span> <span class="nf">_get_sca_center_pos</span><span class="p">(</span><span class="n">i_sca</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This helper routine calculates the center position for a given SCA ``sca`` given the position of</span>
+<span class="sd">    the center of the focal plane array ``world_pos`` and an orientation angle for the observation.</span>
+<span class="sd">    It is used by getWCS() and other routines.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Go from the tangent plane position of the SCA center, to the actual celestial coordinate,</span>
+    <span class="c1"># using `world_pos` as the center point of the tangent plane projection.  This celestial</span>
+    <span class="c1"># coordinate for the SCA center is `crval`, which goes into the WCS as CRVAL1, CRVAL2.</span>
+    <span class="n">cos_pa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pa_fpa</span><span class="p">)</span>
+    <span class="n">sin_pa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pa_fpa</span><span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">sca_crval_u_deg</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span> <span class="o">*</span> <span class="n">cos_pa</span> <span class="o">-</span> <span class="n">sca_crval_v_deg</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span> <span class="o">*</span> <span class="n">sin_pa</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">sca_crval_u_deg</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span> <span class="o">*</span> <span class="n">sin_pa</span> <span class="o">+</span> <span class="n">sca_crval_v_deg</span><span class="p">[</span><span class="n">i_sca</span><span class="p">]</span> <span class="o">*</span> <span class="n">cos_pa</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">*</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span>
+    <span class="n">crval</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">deproject</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">crval</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+
+<span class="k">def</span> <span class="nf">_parse_SCAs</span><span class="p">(</span><span class="n">SCAs</span><span class="p">):</span>
+    <span class="c1"># This is a helper routine to parse the input SCAs (single number or iterable) and put it into a</span>
+    <span class="c1"># convenient format.  It is used in roman_wcs.py.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Check which SCAs are to be done.  Default is all (and they are 1-indexed).</span>
+    <span class="n">all_SCAs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_sca</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Later we will use the list of selected SCAs to decide which ones we&#39;re actually going to do</span>
+    <span class="c1"># the calculations for.  For now, just check for invalid numbers.</span>
+    <span class="k">if</span> <span class="n">SCAs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Make sure SCAs is iterable.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">SCAs</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">SCAs</span> <span class="o">=</span> <span class="p">[</span><span class="n">SCAs</span><span class="p">]</span>
+        <span class="c1"># Then check for reasonable values.</span>
+        <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">SCAs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">max</span><span class="p">(</span><span class="n">SCAs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">n_sca</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid SCA.&quot;</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_sca</span><span class="p">)</span>
+        <span class="c1"># Check for uniqueness.  If not unique, make it unique.</span>
+        <span class="n">SCAs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">SCAs</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">SCAs</span> <span class="o">=</span> <span class="n">all_SCAs</span>
+    <span class="k">return</span> <span class="n">SCAs</span>
+
+<span class="k">def</span> <span class="nf">_parse_WCS_inputs</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This routine parses the various input options to getWCS() and returns what the routine needs to</span>
+<span class="sd">    do its job.  The reason to pull this out is so other helper routines can use it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Parse input position</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Position on the sky must be given as a galsim.CelestialCoord!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get the date. (Vernal equinox in 2025, taken from</span>
+    <span class="c1"># http://www.astropixels.com/ephemeris/soleq2001.html, if none was supplied.)</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2025</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Are we allowed to look here?</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Error, Roman cannot look at this position on this date!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If position angle was not given, then get the optimal one:</span>
+    <span class="k">if</span> <span class="n">PA</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">PA_is_FPA</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">PA</span> <span class="o">=</span> <span class="n">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Just enforce type</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PA</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">Angle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Position angle must be a galsim.Angle!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check which SCAs are to be done using a helper routine in the galsim.roman module.</span>
+    <span class="n">SCAs</span> <span class="o">=</span> <span class="n">_parse_SCAs</span><span class="p">(</span><span class="n">SCAs</span><span class="p">)</span>
+
+    <span class="c1"># Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.</span>
+    <span class="k">if</span> <span class="n">PA_is_FPA</span><span class="p">:</span>
+        <span class="n">pa_fpa</span> <span class="o">=</span> <span class="n">PA</span>
+        <span class="n">pa_obsy</span> <span class="o">=</span> <span class="n">PA</span> <span class="o">-</span> <span class="n">theta_fpa</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pa_obsy</span> <span class="o">=</span> <span class="n">PA</span>
+        <span class="n">pa_fpa</span> <span class="o">=</span> <span class="n">PA</span> <span class="o">+</span> <span class="n">theta_fpa</span>
+
+    <span class="k">return</span> <span class="n">date</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">pa_obsy</span>
+
+<div class="viewcode-block" id="allowedPos"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allowedPos">[docs]</a><span class="k">def</span> <span class="nf">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This routine can be used to check whether Roman would be allowed to look at a particular</span>
+<span class="sd">    position (``world_pos``) on a given ``date``.   This is determined by the angle of this position</span>
+<span class="sd">    relative to the Sun.</span>
+
+<span class="sd">    In general, Roman can point at angles relative to the Sun in the range 90+/-36 degrees.</span>
+<span class="sd">    Obviously, pointing too close to the Sun would result in overly high sky backgrounds.  It is</span>
+<span class="sd">    less obvious why Roman cannot look at a spot directly opposite from the Sun (180 degrees on the</span>
+<span class="sd">    sky).  The reason is that the observatory is aligned such that if the observer is looking at</span>
+<span class="sd">    some sky position, the solar panels are oriented at 90 degrees from that position.  So it&#39;s</span>
+<span class="sd">    always optimal for the observatory to be pointing at an angle of 90 degrees relative to the</span>
+<span class="sd">    Sun.  It is also permitted to look within 36 degrees of that optimal position.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        world_pos:      A galsim.CelestialCoord indicating the position at which the observer</span>
+<span class="sd">                        wishes to look.</span>
+<span class="sd">        date:           A python datetime object indicating the desired date of observation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True or False, indicating whether it is permitted to look at this position on this date.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find the Sun&#39;s location on the sky on this date.</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">sun_position_ecliptic</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_ecliptic</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+
+    <span class="c1"># Find the angle between that and the supplied position</span>
+    <span class="n">angle_deg</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">world_pos</span><span class="o">.</span><span class="n">distanceTo</span><span class="p">(</span><span class="n">sun</span><span class="p">)</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+
+    <span class="c1"># Check if it&#39;s within tolerance.</span>
+    <span class="n">min_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">-</span> <span class="mf">36.</span>
+    <span class="n">max_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">+</span> <span class="mf">36.</span>
+    <span class="k">return</span> <span class="n">angle_deg</span> <span class="o">&gt;=</span> <span class="n">min_ang</span> <span class="ow">and</span> <span class="n">angle_deg</span> <span class="o">&lt;=</span> <span class="n">max_ang</span></div>
+
+<div class="viewcode-block" id="bestPA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.bestPA">[docs]</a><span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This routine determines the best position angle for the observatory for a given observation date</span>
+<span class="sd">    and position on the sky.</span>
+
+<span class="sd">    The best/optimal position angle is determined by the fact that the solar panels are at 90</span>
+<span class="sd">    degrees to the position being observed, and it is best to have those facing the Sun as directly</span>
+<span class="sd">    as possible.  Note that if a given ``world_pos`` is not actually observable on the given</span>
+<span class="sd">    ``date``, then this routine will return None.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        world_pos:      A galsim.CelestialCoord indicating the position at which the observer</span>
+<span class="sd">                        wishes to look.</span>
+<span class="sd">        date:           A python datetime object indicating the desired date of observation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the best position angle for the observatory, as a galsim.Angle, or None if the position</span>
+<span class="sd">        is not observable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First check for observability.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Find the location of the sun on this date.  +X_observatory points out into the sky, towards</span>
+    <span class="c1"># world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">sun_position_ecliptic</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_ecliptic</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+    <span class="c1"># Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.</span>
+    <span class="n">sun_tp_x</span><span class="p">,</span> <span class="n">sun_tp_y</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">sun</span><span class="p">,</span> <span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+
+    <span class="c1"># We want to rotate around by 90 degrees to find the +Y obs direction.  Specifically, we want</span>
+    <span class="c1"># (+X, +Y, +Z)_obs to form a right-handed coordinate system.</span>
+    <span class="n">y_obs_tp_x</span><span class="p">,</span> <span class="n">y_obs_tp_y</span> <span class="o">=</span> <span class="o">-</span><span class="n">sun_tp_y</span><span class="p">,</span> <span class="n">sun_tp_x</span>
+    <span class="n">y_obs</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">deproject</span><span class="p">(</span><span class="n">y_obs_tp_x</span><span class="p">,</span> <span class="n">y_obs_tp_y</span><span class="p">,</span> <span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Finally the observatory position angle is defined by the angle between +Y_observatory and the</span>
+    <span class="c1"># celestial north pole.  It is defined as position angle east of north.</span>
+    <span class="n">north</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">(</span><span class="n">y_obs</span><span class="o">.</span><span class="n">ra</span><span class="p">,</span> <span class="mf">90.</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+    <span class="n">obs_pa</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">angleBetween</span><span class="p">(</span><span class="n">y_obs</span><span class="p">,</span> <span class="n">north</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">obs_pa</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

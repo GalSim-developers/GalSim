@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.process &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.process</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.process</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="c1"># Lots of function that used to be here are now in util, so import them back here in case users</span>
+<span class="c1"># were using them as galsim.config.process.*.  But having them in util means that we can safely</span>
+<span class="c1"># import from .util in other files without triggering a circular import cycle.</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span>
+<span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">GetNFiles</span><span class="p">,</span> <span class="n">BuildFiles</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">SimpleGenerator</span>
+<span class="kn">from</span> <span class="nn">..random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
+
+<span class="n">top_level_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp&#39;</span><span class="p">,</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;eval_variables&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span> <span class="s1">&#39;modules&#39;</span><span class="p">,</span> <span class="s1">&#39;profile&#39;</span><span class="p">]</span>
+
+<span class="n">rng_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_num_rng&#39;</span><span class="p">,</span> <span class="s1">&#39;image_num_rng&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num_rng&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;obj_num_rngs&#39;</span><span class="p">,</span> <span class="s1">&#39;image_num_rngs&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num_rngs&#39;</span><span class="p">]</span>
+
+<span class="n">valid_index_keys</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;obj_num_in_file&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_num&#39;</span><span class="p">,</span> <span class="s1">&#39;image_num&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num&#39;</span> <span class="p">]</span>
+
+<span class="c1"># This module-level dict will store all the registered template names.</span>
+<span class="c1"># See the RegisterTemplate function at the end of this file.</span>
+<span class="c1"># The keys are the (string) names of the templates, and the values are the corresponding</span>
+<span class="c1"># real file location on disk.</span>
+<span class="n">valid_templates</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="ReadConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ReadConfig">[docs]</a><span class="k">def</span> <span class="nf">ReadConfig</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read in a configuration file and return the corresponding dicts.</span>
+
+<span class="sd">    A YAML file is allowed to define several dicts using multiple documents. The GalSim parser</span>
+<span class="sd">    treats this as a set of multiple jobs to be done.  The first document is taken to be a &quot;base&quot;</span>
+<span class="sd">    dict that has common definitions for all the jobs.  Then each subsequent document has the</span>
+<span class="sd">    (usually small) modifications to the base dict for each job.  See demo6.yaml, demo8.yaml and</span>
+<span class="sd">    demo9.yaml in the GalSim/examples directory for example usage.</span>
+
+<span class="sd">    On output, the returned list will have an entry for each job to be done.  If there are</span>
+<span class="sd">    multiple documents, then the first dict is a merge of the first two documents, the</span>
+<span class="sd">    second a merge of the first and third, and so on.  Each job includes the first document</span>
+<span class="sd">    merged with each subseqent document in turn.  If there is only one document defined,</span>
+<span class="sd">    the returned list will have one element, which is this dict.</span>
+
+<span class="sd">    A JSON file does not have this feature, but to be consistent, we always return a list,</span>
+<span class="sd">    which would only have one element in this case.</span>
+
+<span class="sd">    Also, we actually read in the config file into an OrderedDict.  The main advantage of</span>
+<span class="sd">    this is for the truth catalog.  This lets the columns be in the same order as the entries</span>
+<span class="sd">    in the config file.  With a normal dict, they get scrambled.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config_file:    The name of the configuration file to read.</span>
+<span class="sd">        file_type:      If given, the type of file to read.  [default: None, which mean</span>
+<span class="sd">                        infer the file type from the extension.]</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of config dicts</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Reading config file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
+    <span class="c1"># Determine the file type from the extension if necessary:</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.j&#39;</span><span class="p">):</span>
+            <span class="n">file_type</span> <span class="o">=</span> <span class="s1">&#39;json&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Let YAML be the default if the extension is not .y* or .j*.</span>
+            <span class="n">file_type</span> <span class="o">=</span> <span class="s1">&#39;yaml&#39;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;File type determined to be </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file_type</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;File type specified to be </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file_type</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;yaml&#39;</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reading YAML config file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">ReadYaml</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reading JSON config file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">ReadJson</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
+    <span class="n">ConvertNones</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Successfully read in config file.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="ImportModules"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ImportModules">[docs]</a><span class="k">def</span> <span class="nf">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">gdict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Import any modules listed in config[&#39;modules&#39;].</span>
+
+<span class="sd">    These won&#39;t be brought into the running scope of the config processing, but any side</span>
+<span class="sd">    effects of the import statements will persist.  In particular, these are allowed to</span>
+<span class="sd">    register additional custom types that can then be used in the current config dict.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">gdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;modules&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;modules&#39;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">module</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="c1"># Try adding &#39;.&#39; to path, in case loading a local module and &#39;.&#39; not present.</span>
+                <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">module</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ProcessTemplate"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessTemplate">[docs]</a><span class="k">def</span> <span class="nf">ProcessTemplate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;If the config dict has a &#39;template&#39; item, read in the appropriate file and</span>
+<span class="sd">    make any requested updates.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        base:           The base configuration dict.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.value_eval</span> <span class="kn">import</span> <span class="n">_GenerateFromEval</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;template&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">template_string</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;template&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Processing template specified as </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">template_string</span><span class="p">)</span>
+
+        <span class="c1"># Allow it to be an Eval.  We don&#39;t have much set up yet in the config dict,</span>
+        <span class="c1"># but really simple Eval strings should still be workable.</span>
+        <span class="k">if</span> <span class="n">template_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span><span class="p">:</span>
+            <span class="n">temp_config</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Eval&#39;</span><span class="p">,</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="n">template_string</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="p">}</span>
+            <span class="n">template_string</span> <span class="o">=</span> <span class="n">_GenerateFromEval</span><span class="p">(</span><span class="n">temp_config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Parse the template string</span>
+        <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">template_string</span><span class="p">:</span>
+            <span class="n">config_file</span><span class="p">,</span> <span class="n">field</span> <span class="o">=</span> <span class="n">template_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config_file</span><span class="p">,</span> <span class="n">field</span> <span class="o">=</span> <span class="n">template_string</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1"># If it is a registered name, get the real file name</span>
+        <span class="k">if</span> <span class="n">config_file</span> <span class="ow">in</span> <span class="n">valid_templates</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Template </span><span class="si">%s</span><span class="s2"> is registered as </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">config_file</span><span class="p">,</span> <span class="n">valid_templates</span><span class="p">[</span><span class="n">config_file</span><span class="p">])</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">valid_templates</span><span class="p">[</span><span class="n">config_file</span><span class="p">]</span>
+
+        <span class="c1"># Read the config file if appropriate</span>
+        <span class="k">if</span> <span class="n">config_file</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">ReadConfig</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ImportModules</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">base</span>
+
+        <span class="c1"># Pull out the specified field, if any</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">GetFromConfig</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+        <span class="c1"># In case template has further templates to process, do that now.</span>
+        <span class="n">ProcessTemplate</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Copy over the template config into this one.</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># N.B. Already popped config[&#39;template&#39;].</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;modules&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="c1"># We want to keep all the modules from either place in the config dict</span>
+            <span class="c1"># so things like Eval can import everything that might be needed.</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;modules&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;modules&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+
+        <span class="c1"># Update the config with the requested changes</span>
+        <span class="n">UpdateConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ProcessAllTemplates"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessAllTemplates">[docs]</a><span class="k">def</span> <span class="nf">ProcessAllTemplates</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check through the full config dict and process any fields that have a &#39;template&#39; item.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        base:           The base configuration dict. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">base</span> <span class="o">=</span> <span class="n">config</span>
+    <span class="n">ProcessTemplate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">ProcessAllTemplates</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">ProcessAllTemplates</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
+
+<span class="c1"># This is the main script to process everything in the configuration dict.</span>
+<div class="viewcode-block" id="Process"><a class="viewcode-back" href="../../../config_process.html#galsim.config.Process">[docs]</a><span class="k">def</span> <span class="nf">Process</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">njobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">job</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_abort</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Do all processing of the provided configuration dict.  In particular, this</span>
+<span class="sd">    function handles processing the output field, calling other functions to</span>
+<span class="sd">    build and write the specified files.  The input field is processed before</span>
+<span class="sd">    building each file.</span>
+
+<span class="sd">    Sometimes, it can be helpful to split up a processing jobs over multiple machines</span>
+<span class="sd">    (i.e. not just multiple processes, which can be handled natively with the output.nproc</span>
+<span class="sd">    or image.nproc options).  In this case, you can ask the Process command to split up</span>
+<span class="sd">    the total amount of work into njobs and only do one of those jobs here.  To do this,</span>
+<span class="sd">    set njobs to be the number of jobs total and job to be which job should be done here.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        njobs:          The total number of jobs to split the work into. [default: 1]</span>
+<span class="sd">        job:            Which job should be worked on here (1..njobs). [default: 1]</span>
+<span class="sd">        new_params:     A dict of new parameter values that should be used to update the config</span>
+<span class="sd">                        dict after any template loading (if any). [default: None]</span>
+<span class="sd">        except_abort:   Whether to abort processing when a file raises an exception (True)</span>
+<span class="sd">                        or just report errors and continue on (False). [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the final config dict that was used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">njobs</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid number of jobs&quot;</span><span class="p">,</span><span class="n">njobs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">job</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid job number.  Must be &gt;= 1.&quot;</span><span class="p">,</span><span class="n">job</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">job</span> <span class="o">&gt;</span> <span class="n">njobs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid job number.  Must be &lt;= njobs (</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">njobs</span><span class="p">),</span><span class="n">job</span><span class="p">)</span>
+
+    <span class="c1"># First thing to do is deep copy the input config to make sure we don&#39;t modify the original.</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CopyConfig</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="c1"># Import any modules if requested</span>
+    <span class="n">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="c1"># Process any template specifications in the dict.</span>
+    <span class="n">ProcessAllTemplates</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Update using any new_params that are given:</span>
+    <span class="k">if</span> <span class="n">new_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">UpdateConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Do this again in case any new modules were added by the templates or command line params.</span>
+    <span class="n">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final config dict to be processed: </span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                 <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="c1"># Warn about any unexpected fields.</span>
+    <span class="n">unexpected</span> <span class="o">=</span> <span class="p">[</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">top_level_fields</span> <span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unexpected</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: config dict contains the following unexpected fields: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+                       <span class="n">unexpected</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;These fields are not (directly) processed by the config processing.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Determine how many files we will be processing in total.</span>
+    <span class="c1"># Usually, this is just output.nfiles, but different output types may define this differently.</span>
+    <span class="n">nfiles</span> <span class="o">=</span> <span class="n">GetNFiles</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;nfiles = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">nfiles</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">njobs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Start each job at file_num = nfiles * job / njobs</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">nfiles</span> <span class="o">*</span> <span class="p">(</span><span class="n">job</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">njobs</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">nfiles</span> <span class="o">*</span> <span class="n">job</span> <span class="o">//</span> <span class="n">njobs</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Splitting work into </span><span class="si">%d</span><span class="s1"> jobs.  Doing job </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">njobs</span><span class="p">,</span><span class="n">job</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Building </span><span class="si">%d</span><span class="s1"> out of </span><span class="si">%d</span><span class="s1"> total files: file_num = </span><span class="si">%d</span><span class="s1"> .. </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
+                       <span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">,</span><span class="n">nfiles</span><span class="p">,</span><span class="n">start</span><span class="p">,</span><span class="n">end</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">nfiles</span> <span class="o">=</span> <span class="n">end</span><span class="o">-</span><span class="n">start</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">nfiles</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">except_abort</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Mostly just so the message reads better.</span>
+
+    <span class="c1">#BuildFiles returns the config dictionary, which can includes stuff added</span>
+    <span class="c1">#by custom output types during the run.</span>
+    <span class="n">config_out</span> <span class="o">=</span> <span class="n">BuildFiles</span><span class="p">(</span><span class="n">nfiles</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">file_num</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                            <span class="n">except_abort</span><span class="o">=</span><span class="n">except_abort</span><span class="p">)</span>
+    <span class="c1">#Return config_out in case useful</span>
+    <span class="k">return</span> <span class="n">config_out</span></div>
+
+<div class="viewcode-block" id="RegisterTemplate"><a class="viewcode-back" href="../../../config_special.html#galsim.config.RegisterTemplate">[docs]</a><span class="k">def</span> <span class="nf">RegisterTemplate</span><span class="p">(</span><span class="n">template_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a template config file with the given named alias.</span>
+
+<span class="sd">    There are currently no named templates shipped with GalSim, but this function</span>
+<span class="sd">    provides a mechanism for modules to register a config file with a more user-friendly</span>
+<span class="sd">    name for a module-provided configuration that may be stored in an awkward location</span>
+<span class="sd">    on disk.</span>
+
+<span class="sd">    E.g. LSSTDESC.imSim has a few configurations that include most of the default recommended</span>
+<span class="sd">    modules for producing various simulations of LSST images.  They are stored in the imSim</span>
+<span class="sd">    data directory, but users can just use the named value as a more convenient alias.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        template_name:  The name to allow in a &#39;template&#39; field in lieu of the file name.</span>
+<span class="sd">        file_name:      The actual file name on disk with the configuration file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_templates</span><span class="p">[</span><span class="n">template_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

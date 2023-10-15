@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C++ Layer &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="C++ Images" href="cpp_image.html" />
+    <link rel="prev" title="The Roman Space Telescope Module" href="roman.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">C++ Layer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">C++ Layer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="c-layer">
+<h1>C++ Layer<a class="headerlink" href="#c-layer" title="Permalink to this heading"></a></h1>
+<p>While GalSim is primarily a Python package, much of the implementation is done in C++
+for improved speed for the hard-core numerical calculations.</p>
+<p>If you would like to use the C++-layer functions in your own C++ project, you can do
+so with the caveat that these are officially implementation details, so we don’t
+strictly enforce semantic versioning for the C++-layer API.  That is, function signatures
+may change on minor version updates (e.g. 2.3.x to 2.4.0).  We don’t often make huge
+changes to the C++ API, so most of the time you will be fine upgrading, but you should
+be prepared that you may need to update your code when upgrading GalSim.  (We do
+guarantee that we won’t change the C++ API for bugfix updates, e.g. 2.4.1 to 2.4.2.)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While we don’t intend to break ABI compatibility on bugfix releases, we don’t
+currently have any mechanisms in place to ensure ABI compatibility.  So it is
+possible that you will need to recompile your code when updating to a new
+GalSim version.</p>
+</div>
+<p>The other caveat is that we haven’t put much energy into documenting the C++ layer
+functions.  The following comes from a combination of Doxygen and Breathe to shoehorn
+it into the Sphinx structure.  But the docs are pretty bare bones in places.  Sorry
+about that.  If you use these and want to pretty up these docs, a PR doing so would be
+much appreciated.  :)</p>
+<p>When compiling your code, all of the public functionality should be included simply
+by using <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;GalSim.h&quot;</span></code> with the appropriate <code class="docutils literal notranslate"><span class="pre">-I</span></code> directive when compiling
+to find the GalSim include directory.  The appropriate directory name is accessible
+from python by running the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;import galsim; print(galsim.include_dir)&quot;</span>
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_math.html">Math</a></li>
+</ul>
+</div>
+<section id="linking-your-code">
+<h2>Linking Your Code<a class="headerlink" href="#linking-your-code" title="Permalink to this heading"></a></h2>
+<p>If you install GalSim using conda (see <a class="reference internal" href="install_conda.html#installing-with-conda"><span class="std std-ref">Installing With Conda</span></a>), then the appropriate
+C++ library file is included in the conda packaging.  It should be installed into either
+the main conda lib directory (e.g. <code class="docutils literal notranslate"><span class="pre">/anaconda/lib</span></code>) or the one for your conda environment
+(e.g. <code class="docutils literal notranslate"><span class="pre">/anaconda/envs/myenv/lib</span></code>).</p>
+<p>If you don’t use conda, then you will need to build the lib file yourself, since we don’t
+include it in the pip package.
+See <a class="reference internal" href="install_pip.html#installing-the-c-shared-library"><span class="std std-ref">Installing the C++ Shared Library</span></a> for instructions on installing it.</p>
+<p>There are both versioned and unversioned copies of the library.  On OSX, these are
+<code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.dylib</span></code> and <code class="docutils literal notranslate"><span class="pre">libgalsim.dylib</span></code>.  On Linux, they are
+<code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.so</span></code> and <code class="docutils literal notranslate"><span class="pre">libgalsim.so</span></code>.</p>
+<p>You should link by specifying the appropriate directory with <code class="docutils literal notranslate"><span class="pre">-L</span></code> and link with <code class="docutils literal notranslate"><span class="pre">-lgalsim</span></code>.</p>
+</section>
+<section id="version-control">
+<h2>Version control<a class="headerlink" href="#version-control" title="Permalink to this heading"></a></h2>
+<p>We provide a number of functions to help you ensure that your code remains compatible with
+updates to GalSim.</p>
+<p>First, there are 3 MACROS that you can use to make a compile-time assert that you are
+coding to the right version:</p>
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.GALSIM_MAJOR">
+<span class="target" id="_version_8h_1aba8bfb69e08b2f32809497fc291083cc"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MAJOR</span></span></span><a class="headerlink" href="#c.GALSIM_MAJOR" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.GALSIM_MINOR">
+<span class="target" id="_version_8h_1a8a57b4a36cbbdd6bc38505eff9f08065"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MINOR</span></span></span><a class="headerlink" href="#c.GALSIM_MINOR" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.GALSIM_REVISION">
+<span class="target" id="_version_8h_1adf74f7b6c355f60cfdb9059520b74212"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_REVISION</span></span></span><a class="headerlink" href="#c.GALSIM_REVISION" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Then there are three functions that return the compiled versions of those same numbers:</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim13major_versionEv">
+<span id="_CPPv3N6galsim13major_versionEv"></span><span id="_CPPv2N6galsim13major_versionEv"></span><span id="galsim::major_version"></span><span class="target" id="namespacegalsim_1a0415def675b95d81f0580b39eda266a8"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">major_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13major_versionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim13minor_versionEv">
+<span id="_CPPv3N6galsim13minor_versionEv"></span><span id="_CPPv2N6galsim13minor_versionEv"></span><span id="galsim::minor_version"></span><span class="target" id="namespacegalsim_1a8e916041a86750d878b3bd1c26d423e3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">minor_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13minor_versionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim8revisionEv">
+<span id="_CPPv3N6galsim8revisionEv"></span><span id="_CPPv2N6galsim8revisionEv"></span><span id="galsim::revision"></span><span class="target" id="namespacegalsim_1a69c8ce7a57f713c3e671eaa09ec9fc2d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">revision</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8revisionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>One can also get the full three-number version as a string (e.g. “1.4.2”)</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7versionEv">
+<span id="_CPPv3N6galsim7versionEv"></span><span id="_CPPv2N6galsim7versionEv"></span><span id="galsim::version"></span><span class="target" id="namespacegalsim_1a5571dbaed126caa1a6d33878c718e97f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7versionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>And finally, we provide a fucntion that checks that the header file being included matches
+the compiled values in the library being linked to:</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim13check_versionEv">
+<span id="_CPPv3N6galsim13check_versionEv"></span><span id="_CPPv2N6galsim13check_versionEv"></span><span id="galsim::check_version"></span><span class="target" id="namespacegalsim_1a8088371cd33f94e7f5a3fa110802d041"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">check_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13check_versionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="roman.html" class="btn btn-neutral float-left" title="The Roman Space Telescope Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_image.html" class="btn btn-neutral float-right" title="C++ Images" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

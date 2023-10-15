@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.extra &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.extra</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.extra</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">ListProxy</span><span class="p">,</span> <span class="n">DictProxy</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">SetDefaultExt</span><span class="p">,</span> <span class="n">RetryIO</span><span class="p">,</span> <span class="n">SafeManager</span><span class="p">,</span> <span class="n">single_threaded</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">GetNObjForImage</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">ensure_dir</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="kn">import</span> <span class="n">writeMulti</span>
+
+<span class="c1"># This file handles the processing of extra output items in addition to the primary output file</span>
+<span class="c1"># in config[&#39;output&#39;]. The ones that are defined natively in GalSim are psf, weight, badpix,</span>
+<span class="c1"># and truth.  See extra_*.py for the specific functions for each of these.</span>
+
+<span class="c1"># This module-level dict will store all the registered &quot;extra&quot; output types.</span>
+<span class="c1"># See the RegisterExtraOutput function at the end of this file.</span>
+<span class="c1"># The keys will be the (string) names of the extra output types, and the values will be</span>
+<span class="c1"># builder classes that will perform the different processing functions.</span>
+<span class="n">valid_extra_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="SetupExtraOutput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupExtraOutput">[docs]</a><span class="k">def</span> <span class="nf">SetupExtraOutput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set up the extra output items as necessary, including building Managers for the work</span>
+<span class="sd">    space so they can work safely in multi-processing mode.  Each builder will be placed in</span>
+<span class="sd">    config[&#39;extra_builder&#39;][key] where key is the key in galsim.config.valid_extra_outputs.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+    <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># We&#39;ll iterate through this list of keys a few times</span>
+    <span class="n">all_keys</span> <span class="o">=</span> <span class="p">[</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span> <span class="p">]</span>
+
+    <span class="c1"># We don&#39;t need the manager stuff if we (a) are already in a multiprocessing Process, or</span>
+    <span class="c1"># (b) config.image.nproc == 1.</span>
+    <span class="n">use_manager</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
+            <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="ow">and</span>
+            <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">use_manager</span> <span class="ow">and</span> <span class="s1">&#39;output_manager&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">class</span> <span class="nc">OutputManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
+
+        <span class="c1"># We&#39;ll use a list and a dict as work space to do the extra output processing.</span>
+        <span class="n">OutputManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;dict&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">DictProxy</span><span class="p">)</span>
+        <span class="n">OutputManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">ListProxy</span><span class="p">)</span>
+        <span class="c1"># Start up the output_manager</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_manager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OutputManager</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s1">&#39;extra_builder&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Keep track of any skipped obj_nums, since usually need to treat them differently.</span>
+    <span class="c1"># Note: it would be slightly nicer to use a set here, but there isn&#39;t a pre-defined</span>
+    <span class="c1"># multiprocessing.managers.SetProxy type, so we just use a dict like a set by giving</span>
+    <span class="c1"># each item the value None.</span>
+    <span class="k">if</span> <span class="s1">&#39;_skipped_obj_nums&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">use_manager</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Setup output item </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="c1"># Make the work space structures</span>
+        <span class="k">if</span> <span class="n">use_manager</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+            <span class="n">scratch</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">scratch</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># Make the data list the right length now to avoid issues with multiple</span>
+        <span class="c1"># processes trying to append at the same time.</span>
+        <span class="n">nimages</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nimages&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nimages</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Create the builder, giving it the data and scratch objects as work space.</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_extra_outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">scratch</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="c1"># And store it in the config dict</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Setup output </span><span class="si">%s</span><span class="s1"> object&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SetupExtraOutputsForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupExtraOutputsForImage">[docs]</a><span class="k">def</span> <span class="nf">SetupExtraOutputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform any necessary setup for the extra output items at the start of a new image.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;extra_builder&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">SetupExtraOutput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">setupImage</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProcessExtraOutputsForStamp"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessExtraOutputsForStamp">[docs]</a><span class="k">def</span> <span class="nf">ProcessExtraOutputsForStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">skip</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the appropriate processing code for any extra output items that need to do something</span>
+<span class="sd">    at the end of building each object.</span>
+
+<span class="sd">    This gets called after all the object flux is added to the stamp, but before the sky level</span>
+<span class="sd">    and noise are added.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        skip:       Was the drawing of this object skipped?</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">obj_num</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">][</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">processSkippedStamp</span><span class="p">(</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">processStamp</span><span class="p">(</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ProcessExtraOutputsForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessExtraOutputsForImage">[docs]</a><span class="k">def</span> <span class="nf">ProcessExtraOutputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the appropriate processing code for any extra output items that need to do something</span>
+<span class="sd">    at the end of building each image</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">obj_nums</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">image_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">start_image_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">obj_nums</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Figure out which obj_nums were used for this image.</span>
+                <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">start_obj_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">nobj</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nobj&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">image_num</span><span class="p">)])</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">image_num</span> <span class="o">-</span> <span class="n">start_image_num</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+                    <span class="n">start_obj_num</span> <span class="o">+=</span> <span class="n">nobj</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">obj_nums</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_obj_num</span><span class="p">,</span> <span class="n">start_obj_num</span><span class="o">+</span><span class="n">nobj</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="c1"># Omit skipped obj_nums</span>
+                <span class="n">skipped</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">]</span>
+                <span class="n">obj_nums</span> <span class="o">=</span> <span class="p">[</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">obj_nums</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span> <span class="p">]</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">image_num</span> <span class="o">-</span> <span class="n">start_image_num</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">processImage</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WriteExtraOutputs"><a class="viewcode-back" href="../../../config_process.html#galsim.config.WriteExtraOutputs">[docs]</a><span class="k">def</span> <span class="nf">WriteExtraOutputs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write the extra output objects to files.</span>
+
+<span class="sd">    This gets run at the end of the functions for building the regular output files.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        main_data:  The main file data in case it is needed.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;retry_io&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+        <span class="n">ntries</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span><span class="s1">&#39;retry_io&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># This is how many retries.  Do at least 1, so ntries is 1 more than this.</span>
+        <span class="n">ntries</span> <span class="o">=</span> <span class="n">ntries</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ntries</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="s1">&#39;dir&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+        <span class="n">default_dir</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">default_dir</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s1">&#39;noclobber&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+        <span class="n">noclobber</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;noclobber&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">noclobber</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="s1">&#39;extra_last_file&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_last_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;file_name&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+            <span class="n">SetDefaultExt</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;file_name&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  This is covered, but codecov thinks it isn&#39;t.</span>
+            <span class="c1"># If no file_name, then probably writing to hdu</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="s1">&#39;dir&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">default_dir</span>
+
+        <span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+        <span class="n">ensure_dir</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">noclobber</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not writing </span><span class="si">%s</span><span class="s1"> file </span><span class="si">%d</span><span class="s1"> = </span><span class="si">%s</span><span class="s1"> because output.noclobber = True &#39;</span>
+                           <span class="s1">&#39;and file exists&#39;</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_last_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="c1"># If we already wrote this file, skip it this time around.</span>
+            <span class="c1"># (Typically this is applicable for psf, where we may only want 1 psf file.)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Not writing </span><span class="si">%s</span><span class="s1"> file </span><span class="si">%d</span><span class="s1"> = </span><span class="si">%s</span><span class="s1"> because already written&#39;</span><span class="p">,</span>
+                        <span class="n">key</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Do any final processing that needs to happen.</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">ensureFinalized</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Call the write function, possibly multiple times to account for IO failures.</span>
+        <span class="n">write_func</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">writeFile</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">field</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">RetryIO</span><span class="p">(</span><span class="n">write_func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">ntries</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_last_file&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Wrote </span><span class="si">%s</span><span class="s1"> to </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span><span class="n">key</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AddExtraOutputHDUs"><a class="viewcode-back" href="../../../config_process.html#galsim.config.AddExtraOutputHDUs">[docs]</a><span class="k">def</span> <span class="nf">AddExtraOutputHDUs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write the extra output objects to either HDUS or images as appropriate and add them</span>
+<span class="sd">    to the existing data.</span>
+
+<span class="sd">    This gets run at the end of the functions for building the regular output files.</span>
+
+<span class="sd">    Note: the extra items must have hdu numbers ranging continuously (in any order) starting</span>
+<span class="sd">    at len(data).  Typically first = 1, since the main image is the primary HDU, numbered 0.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        main_data:  The main file data as a list of images.  Usually just [image] where</span>
+<span class="sd">                    image is the primary image to be written to the output file.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        data with additional hdus added</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+    <span class="n">hdus</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;hdu&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  This is covered, but codecov thinks it isn&#39;t.</span>
+            <span class="c1"># If no hdu, then probably writing to file</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">hdu</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">hdus</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;hdu is invalid or a duplicate.&quot;</span><span class="p">,</span><span class="n">hdu</span><span class="p">)</span>
+
+        <span class="c1"># Do any final processing that needs to happen.</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">ensureFinalized</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Build the HDU for this output object.</span>
+        <span class="n">hdus</span><span class="p">[</span><span class="n">hdu</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">writeHdu</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">main_data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdus</span><span class="p">)</span><span class="o">+</span><span class="n">first</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">h</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdus</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Cannot skip hdus.  No output found for hdu </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">h</span><span class="p">)</span>
+    <span class="c1"># Turn hdus into a list (in order)</span>
+    <span class="n">hdulist</span> <span class="o">=</span> <span class="p">[</span> <span class="n">hdus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdus</span><span class="p">)</span><span class="o">+</span><span class="n">first</span><span class="p">)</span> <span class="p">]</span>
+    <span class="k">return</span> <span class="n">main_data</span> <span class="o">+</span> <span class="n">hdulist</span></div>
+
+<div class="viewcode-block" id="CheckNoExtraOutputHDUs"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CheckNoExtraOutputHDUs">[docs]</a><span class="k">def</span> <span class="nf">CheckNoExtraOutputHDUs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that none of the extra output objects want to add to the HDU list.</span>
+
+<span class="sd">    Raises an exception if one of them has an hdu field.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        output_type:    A string to use in the error message to indicate which output type</span>
+<span class="sd">                        had a problem.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;hdu&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Extra output </span><span class="si">%s</span><span class="s2"> requesting to write to hdu </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">hdu</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Output type </span><span class="si">%s</span><span class="s2"> cannot add extra images as HDUs&quot;</span><span class="o">%</span><span class="n">output_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GetFinalExtraOutput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetFinalExtraOutput">[docs]</a><span class="k">def</span> <span class="nf">GetFinalExtraOutput</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="o">=</span><span class="p">[],</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the finalized output object for the given extra output key</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        key:        The name of the output field in config[&#39;output&#39;]</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        main_data:  The main file data in case it is needed.  [default: []]</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the final data to be output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">ensureFinalized</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder">[docs]</a><span class="k">class</span> <span class="nc">ExtraOutputBuilder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building some kind of extra output object along with the main output.</span>
+
+<span class="sd">    The base class doesn&#39;t do anything, but it defines the function signatures that a derived</span>
+<span class="sd">    class can override to perform specific processing at any of several steps in the processing.</span>
+
+<span class="sd">    The builder gets initialized with a list and and dict to use as work space.</span>
+<span class="sd">    The typical work flow is to save something in scratch[obj_num] for each object built, and then</span>
+<span class="sd">    process them all at the end of each image into data[k].  Then finalize may do something</span>
+<span class="sd">    additional at the end of the processing to prepare the data to be written.</span>
+
+<span class="sd">    It&#39;s worth remembering that the objects could potentially be processed in a random order if</span>
+<span class="sd">    multiprocessing is being used.  The above work flow will thus work regardless of the order</span>
+<span class="sd">    that the stamps and/or images are processed.</span>
+
+<span class="sd">    Also, because of how objects are duplicated across processes during multiprocessing, you</span>
+<span class="sd">    should not count on attributes you set in the builder object during the stamp or image</span>
+<span class="sd">    processing stages to be present in the later finalize or write stages.  You should write</span>
+<span class="sd">    any information you want to persist into the scratch or data objects, which are set up</span>
+<span class="sd">    to handle the multiprocessing communication properly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ExtraOutputBuilder.initialize"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">scratch</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do any initial setup for this builder at the start of a new output file.</span>
+
+<span class="sd">        The base class implementation saves two work space items into self.data and self.scratch</span>
+<span class="sd">        that can be used to safely communicate across multiple processes.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            data:       An empty list of length nimages to use as work space.</span>
+<span class="sd">            scratch:    An empty dict that can be used as work space.</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span> <span class="o">=</span> <span class="n">scratch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.setupImage"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.setupImage">[docs]</a>    <span class="k">def</span> <span class="nf">setupImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform any necessary setup at the start of an image.</span>
+
+<span class="sd">        This function will be called at the start of each image to allow for any setup that</span>
+<span class="sd">        needs to happen at this point in the processing.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.processStamp"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.processStamp">[docs]</a>    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform any necessary processing at the end of each stamp construction.</span>
+
+<span class="sd">        This function will be called after each stamp is built, but before the noise is added,</span>
+<span class="sd">        so the existing stamp image has the true surface brightness profile (unless photon shooting</span>
+<span class="sd">        was used, in which case there will necessarily be noise from that process).</span>
+
+<span class="sd">        Remember, these stamps may be processed out of order.  Saving data to the scratch dict</span>
+<span class="sd">        is safe, even if multiprocessing is being used.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">           obj_num:    The object number</span>
+<span class="sd">           config:     The configuration field for this output object.</span>
+<span class="sd">           base:       The base configuration dict.</span>
+<span class="sd">           logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>  <span class="c1"># pragma: no cover  (all our ExtraBuilders override this function.)</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.processSkippedStamp"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.processSkippedStamp">[docs]</a>    <span class="k">def</span> <span class="nf">processSkippedStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform any necessary processing for stamps that were skipped in the normal processing.</span>
+
+<span class="sd">        This function will be called for stamps that are not built because they were skipped</span>
+<span class="sd">        for some reason.  Normally, you would not want to do anything for the extra outputs in</span>
+<span class="sd">        these cases, but in case some module needs to do something in these cases as well, this</span>
+<span class="sd">        method can be overridden.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            obj_num:    The object number</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.processImage"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.processImage">[docs]</a>    <span class="k">def</span> <span class="nf">processImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform any necessary processing at the end of each image construction.</span>
+
+<span class="sd">        This function will be called after each full image is built.</span>
+
+<span class="sd">        Remember, these images may be processed out of order.  But if using the default</span>
+<span class="sd">        constructor, the data list is already set to be the correct size, so it is safe to</span>
+<span class="sd">        access self.data[k], where k = base[&#39;image_num&#39;] - base[&#39;start_image_num&#39;] is the</span>
+<span class="sd">        appropriate index to use for this image.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            index:      The index in self.data to use for this image.  This isn&#39;t the image_num</span>
+<span class="sd">                        (which can be accessed at base[&#39;image_num&#39;] if needed), but rather</span>
+<span class="sd">                        an index that starts at 0 for the first image being worked on and</span>
+<span class="sd">                        goes up to nimages-1.</span>
+<span class="sd">            obj_nums:   The object numbers that were used for this image.</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.ensureFinalized"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.ensureFinalized">[docs]</a>    <span class="k">def</span> <span class="nf">ensureFinalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A helper function in the base class to make sure finalize only gets called once by the</span>
+<span class="sd">        different possible locations that might need it to have been called.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            main_data:  The main file data in case it is needed.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the final version of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.finalize"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform any final processing at the end of all the image processing.</span>
+
+<span class="sd">        This function will be called after all images have been built.</span>
+
+<span class="sd">        It returns some sort of final version of the object.  In the base class, it just returns</span>
+<span class="sd">        self.data, but depending on the meaning of the output object, something else might be</span>
+<span class="sd">        more appropriate.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">           config:     The configuration field for this output object.</span>
+<span class="sd">           base:       The base configuration dict.</span>
+<span class="sd">           main_data:  The main file data in case it is needed.</span>
+<span class="sd">           logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           The final version of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.writeFile"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.writeFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write this output object to a file.</span>
+
+<span class="sd">        The base class implementation is appropriate for the cas that the result of finalize</span>
+<span class="sd">        is a list of images to be written to a FITS file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            file_name:  The file to write to.</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">writeMulti</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExtraOutputBuilder.writeHdu"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.writeHdu">[docs]</a>    <span class="k">def</span> <span class="nf">writeHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a FITS HDU with the data for this output object.</span>
+
+<span class="sd">        The base class implementation is appropriate for the cas that the result of finalize</span>
+<span class="sd">        is a list of images of length 1 to be written to a FITS file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration field for this output object.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            an HDU with the output data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (Not sure if this is possible.)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> images were created. Expecting 1.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_output_key</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="RegisterExtraOutput"><a class="viewcode-back" href="../../../config_output.html#galsim.config.RegisterExtraOutput">[docs]</a><span class="k">def</span> <span class="nf">RegisterExtraOutput</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an extra output field for use by the config apparatus.</span>
+
+<span class="sd">    The builder parameter should be a subclass of galsim.config.ExtraOutputBuilder.</span>
+<span class="sd">    See that class for the functions that should be defined and their signatures.</span>
+<span class="sd">    Not all functions need to be overridden.  If nothing needs to be done at a particular place</span>
+<span class="sd">    in the processing, you can leave the base class function, which doesn&#39;t do anything.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        key:        The name of the output field in config[&#39;output&#39;]</span>
+<span class="sd">        builder:    A builder object to use for building the extra output object.</span>
+<span class="sd">                    It should be an instance of a subclass of ExtraOutputBuilder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">_extra_output_key</span> <span class="o">=</span> <span class="n">key</span>
+    <span class="n">valid_extra_outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span></div>
+
+<span class="c1"># Nothing is registered here.  The appropriate items are registered in extra_*.py.</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

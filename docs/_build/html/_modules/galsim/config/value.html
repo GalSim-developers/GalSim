@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.value &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.value</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.value</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">PropagateIndexKeyRNGNum</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">ParseExtendedKey</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">hours</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">..table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">basestring</span>
+
+<span class="c1"># This file handles the parsing of values given in the config dict.  It includes the basic</span>
+<span class="c1"># parsing functionality along with generators for most of the simple value types.</span>
+<span class="c1"># Additional value types are defined in value_random.py, value_eval.py, input.py,</span>
+<span class="c1"># input_powerspectrum.py, input_nfw.py, and input_fitsheader.</span>
+
+<span class="c1"># This module-level dict will store all the registered value types.</span>
+<span class="c1"># See the RegisterValueType function at the end of this file.</span>
+<span class="c1"># The keys are the (string) names of the value types, and the values are a tuple of the</span>
+<span class="c1"># function to call to generate the value and a list of the types (float, int, str, etc.)</span>
+<span class="c1"># that the value type is able to generate.</span>
+<span class="n">valid_value_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="c1"># Standard keys to ignore while parsing values:</span>
+<span class="n">standard_ignore</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_num&#39;</span><span class="p">,</span> <span class="s1">&#39;_gen_fn&#39;</span><span class="p">,</span> <span class="s1">&#39;_get&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_index_key&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;#&#39;</span> <span class="c1"># When we read in json files, there represent comments</span>
+<span class="p">]</span>
+
+<div class="viewcode-block" id="ParseValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseValue">[docs]</a><span class="k">def</span> <span class="nf">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read or generate a parameter value from config.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The config dict from which to parse the value.</span>
+<span class="sd">        key:        The key value in the dict to parse.</span>
+<span class="sd">        base:       The base config dict.  [default: None, which means use base=config]</span>
+<span class="sd">        value_type: The value_type expected.  [default: None, which means it won&#39;t check</span>
+<span class="sd">                    that the value is the right type.]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the tuple (value, safe).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">BuildGSObject</span>
+
+    <span class="c1"># Special: if the &quot;value_type&quot; is GSObject, then switch over to that builder instead.</span>
+    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">GSObject</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+    <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="c1">#print(&#39;ParseValue for key = &#39;,key,&#39;, value_type = &#39;,str(value_type))</span>
+    <span class="c1">#print(&#39;param = &#39;,param)</span>
+    <span class="c1">#print(&#39;nums = &#39;,base.get(&#39;file_num&#39;,0), base.get(&#39;image_num&#39;,0), base.get(&#39;obj_num&#39;,0))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+
+        <span class="n">type_name</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1">#print(&#39;type = &#39;,type_name, value_type)</span>
+
+        <span class="c1"># Check what index key we want to use for this value.</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="p">(</span><span class="n">type_name</span><span class="o">==</span><span class="s1">&#39;Sequence&#39;</span><span class="p">))</span>
+        <span class="c1">#print(&#39;index, index_key = &#39;,index,index_key)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;_gen_fn&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+            <span class="n">generate_func</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;_gen_fn&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                <span class="n">cval</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">cindex_key</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">&#39;repeat&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                    <span class="n">repeat</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">use_current</span> <span class="o">=</span> <span class="p">(</span><span class="n">cindex</span><span class="o">//</span><span class="n">repeat</span> <span class="o">==</span> <span class="n">index</span><span class="o">//</span><span class="n">repeat</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">use_current</span> <span class="o">=</span> <span class="p">(</span><span class="n">cindex</span> <span class="o">==</span> <span class="n">index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">use_current</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cvalue_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+                            <span class="n">cvalue_type</span> <span class="o">!=</span> <span class="n">value_type</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                            <span class="s2">&quot;Attempt to parse </span><span class="si">%s</span><span class="s2"> multiple times with different value types: &quot;</span>
+                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">))</span>
+                    <span class="c1">#print(index,&#39;Using current value of &#39;,key,&#39; = &#39;,param[&#39;current&#39;][0])</span>
+                    <span class="k">return</span> <span class="n">cval</span><span class="p">,</span> <span class="n">csafe</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">dict</span> <span class="ow">and</span> <span class="n">type_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">param</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Only need to check this the first time.</span>
+            <span class="k">if</span> <span class="n">type_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.type attribute required when providing a dict.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+            <span class="c1"># Check if the value_type is valid.</span>
+            <span class="c1"># (See valid_value_types defined at the top of the file.)</span>
+            <span class="k">if</span> <span class="n">type_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_value_types</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized </span><span class="si">%s</span><span class="s2">.type&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">type_name</span><span class="p">,</span>
+                                             <span class="n">valid_value_types</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+            <span class="c1"># Get the generating function and the list of valid types for it.</span>
+            <span class="n">generate_func</span><span class="p">,</span> <span class="n">valid_types</span> <span class="o">=</span> <span class="n">valid_value_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">value_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_types</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">value_type</span> <span class="o">=</span> <span class="n">valid_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">err_str</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s2">&quot;Could not determine the appropriate value_type to use for &quot;</span> <span class="o">+</span>
+                            <span class="s2">&quot;parameter </span><span class="si">%s</span><span class="s2"> with type=</span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span> <span class="o">+</span>
+                            <span class="s2">&quot;Probably it&#39;s being used in a Current context before being &quot;</span> <span class="o">+</span>
+                            <span class="s2">&quot;evaluated.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                            <span class="s2">&quot;Consider using an explicit value-typed type name like </span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2"> &quot;</span><span class="o">%</span><span class="p">(</span>
+                                <span class="n">type_name</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="o">+</span>
+                            <span class="s2">&quot;to help GalSim know which value_type to expect.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">err_str</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s2">&quot;Invalid value_type specified for parameter </span><span class="si">%s</span><span class="s2"> with type=</span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                                <span class="n">key</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span> <span class="o">+</span>
+                            <span class="s2">&quot;In this context, GalSim was expecting something that can be &quot;</span><span class="o">+</span>
+                            <span class="s2">&quot;evaluated as a </span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">value_type</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="n">err_str</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">)</span>
+            <span class="n">param</span><span class="p">[</span><span class="s1">&#39;_gen_fn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">generate_func</span>
+
+        <span class="c1">#print(&#39;generate_func = &#39;,generate_func)</span>
+        <span class="n">val_safe</span> <span class="o">=</span> <span class="n">generate_func</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+        <span class="c1">#print(&#39;returned val, safe = &#39;,val_safe)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val_safe</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">val</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">val_safe</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If a user-defined type forgot to return safe, just assume safe = False</span>
+            <span class="c1"># It&#39;s an easy mistake to make and the TypeError that gets emitted isn&#39;t</span>
+            <span class="c1"># terribly informative about what the error is.</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">val_safe</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1">#print(&#39;generate_func = &#39;,generate_func)</span>
+            <span class="c1">#print(&#39;param = &#39;,param)</span>
+            <span class="c1">#print(&#39;val_safe = &#39;,val_safe)</span>
+
+        <span class="c1"># Make sure we really got the right type back.  (Just in case...)</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="n">value_type</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">value_type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># Save the current value for possible use by the Current type</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="p">(</span><span class="n">type_name</span><span class="o">==</span><span class="s1">&#39;Sequence&#39;</span><span class="p">))</span>
+        <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">safe</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span><span class="p">)</span>
+        <span class="c1">#print(key,&#39; = &#39;,val)</span>
+
+        <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">safe</span>
+
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># Not a dict</span>
+
+        <span class="c1"># Check for some special markup on string items and convert them to normal dicts.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Eval&#39;</span><span class="p">,</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="p">}</span>
+                <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="p">}</span>
+                <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+
+        <span class="c1"># See if it&#39;s already the right kind of object, in which case we can just return it.</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+            <span class="c1">#print(key,&#39; = &#39;,param)</span>
+            <span class="k">return</span> <span class="n">param</span><span class="p">,</span> <span class="kc">True</span>
+
+        <span class="c1"># Convert lists to dicts with type=List</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="s1">&#39;items&#39;</span><span class="p">:</span> <span class="n">param</span> <span class="p">}</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+
+        <span class="c1"># The rest of these are special processing options for specific value_types:</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="c1"># Just don&#39;t turn a string into a list of characters.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Could not parse </span><span class="si">%s</span><span class="s2"> as a list.&quot;</span><span class="o">%</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">Angle</span><span class="p">:</span>
+            <span class="c1"># Angle is a special case.  Angles are specified with a final string to</span>
+            <span class="c1"># declare what unit to use.</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_GetAngleValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="c1"># For bool, we allow a few special string conversions</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_GetBoolValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">PositionD</span><span class="p">:</span>
+            <span class="c1"># For PositionD, we allow a string of x,y</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_GetPositionValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If none of the above worked, just try a normal value_type initialization.</span>
+            <span class="c1"># This makes sure strings are converted to float (or other type) if necessary.</span>
+            <span class="c1"># In particular things like 1.e6 aren&#39;t converted to float automatically</span>
+            <span class="c1"># by the yaml reader. (Although I think this is a bug.)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">value_type</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Could not parse </span><span class="si">%s</span><span class="s2"> as a </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value_type</span><span class="p">))</span>
+        <span class="c1">#print(key,&#39; = &#39;,val)</span>
+
+        <span class="c1"># Save the converted type for next time so it will hit the first if statement here</span>
+        <span class="c1"># instead of recalculating the value.</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="GetCurrentValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetCurrentValue">[docs]</a><span class="k">def</span> <span class="nf">GetCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current value of another config item given the key name.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        key:        The (extended) key value in the dict to get the current value of.</span>
+<span class="sd">        config:     The config dict from which to get the key.</span>
+<span class="sd">        value_type: The value_type expected.  [default: None, which means it won&#39;t check</span>
+<span class="sd">                    that the value is the right type.]</span>
+<span class="sd">        base:       The base config dict.  [default: None, which means use base=config]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the current value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#print(&#39;GetCurrent %s.  value_type = %s&#39;%(key,value_type))</span>
+    <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="n">val</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">EvaluateCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="EvaluateCurrentValue"><a class="viewcode-back" href="../../../config_process.html#galsim.config.EvaluateCurrentValue">[docs]</a><span class="k">def</span> <span class="nf">EvaluateCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to evaluate the current value at config[key] where key is no longer</span>
+<span class="sd">    an extended key, and config is the local dict where it is relevant.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        key:        The key value in the dict to get the current value of.</span>
+<span class="sd">        config:     The config dict from which to get the key.</span>
+<span class="sd">        base:       The base config dict.</span>
+<span class="sd">        value_type: The value_type expected.  [default: None, which means it won&#39;t check</span>
+<span class="sd">                    that the value is the right type.]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">GetInputObj</span>
+
+    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If we are trying to access a current input, then use GetInputObj instead.</span>
+            <span class="k">return</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Current&#39;</span><span class="p">),</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="n">GalSimConfigError</span><span class="p">:</span>
+            <span class="c1"># If ProcessInput hasn&#39;t been called, then the above won&#39;t work.</span>
+            <span class="c1"># Try the normal Current processing in that case.</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span><span class="s1">&#39;$&#39;</span><span class="p">)):</span>
+            <span class="c1"># This will work fine to evaluate the current value, but will also</span>
+            <span class="c1"># compute it if necessary</span>
+            <span class="c1">#print(&#39;Not dict. Parse value normally&#39;)</span>
+            <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If we are not given the value_type, and it&#39;s not a dict, then the</span>
+            <span class="c1"># item is probably just some value already.</span>
+            <span class="c1"># (Unless it is a base item, in which case, it is not safe.)</span>
+            <span class="c1">#print(&#39;Not dict, no value_type.  Assume %s is ok.&#39;%d[k])</span>
+            <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">(</span><span class="n">config</span> <span class="o">!=</span> <span class="n">base</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+            <span class="c1"># If there is already a current val, use it.</span>
+            <span class="c1">#print(&#39;Dict with current.  Use it: &#39;,d[k][&#39;current&#39;][0])</span>
+            <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;current&#39;</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, parse the value for this key</span>
+            <span class="c1">#print(&#39;Parse value normally&#39;)</span>
+            <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SetDefaultIndex"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetDefaultIndex">[docs]</a><span class="k">def</span> <span class="nf">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    When the number of items in a list is known, we allow the user to omit some of</span>
+<span class="sd">    the parameters of a Sequence or Random and set them automatically based on the</span>
+<span class="sd">    size of the list, catalog, etc.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The config dict with the field to be updated.</span>
+<span class="sd">        num:        The number to use for the length of the index Sequence if appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We use a default item (set to True) to indicate that the value of nitems, last, or max</span>
+    <span class="c1"># has been set here, rather than by the user.  This way if the number of items in the</span>
+    <span class="c1"># catalog changes from one file to the next, it will be update correctly to the new</span>
+    <span class="c1"># number of catalog entries.</span>
+
+    <span class="k">if</span> <span class="s1">&#39;index&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Sequence&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;nitems&#39;</span> <span class="p">:</span> <span class="n">num</span><span class="p">,</span>
+            <span class="s1">&#39;default&#39;</span> <span class="p">:</span> <span class="n">num</span>
+        <span class="p">}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">],</span><span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">num</span><span class="p">:</span> <span class="k">return</span>
+        <span class="k">if</span> <span class="s1">&#39;_get&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span> <span class="k">del</span> <span class="n">index</span><span class="p">[</span><span class="s1">&#39;_get&#39;</span><span class="p">]</span>
+
+        <span class="n">type_name</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s1">&#39;Sequence&#39;</span> <span class="ow">and</span> <span class="s1">&#39;nitems&#39;</span> <span class="ow">in</span> <span class="n">index</span> <span class="ow">and</span> <span class="s1">&#39;default&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;nitems&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">type_name</span> <span class="o">==</span> <span class="s1">&#39;Sequence&#39;</span>
+              <span class="ow">and</span> <span class="s1">&#39;nitems&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span>
+              <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+              <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;last&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span> <span class="ow">or</span> <span class="s1">&#39;default&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+        <span class="k">elif</span> <span class="p">(</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s1">&#39;Sequence&#39;</span>
+               <span class="ow">and</span> <span class="s1">&#39;nitems&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span>
+               <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
+               <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;last&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span> <span class="ow">or</span> <span class="s1">&#39;default&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+        <span class="k">elif</span> <span class="p">(</span> <span class="n">type_name</span> <span class="o">==</span> <span class="s1">&#39;Random&#39;</span>
+               <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;min&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span> <span class="ow">or</span> <span class="s1">&#39;default&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span>
+               <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;max&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span> <span class="ow">or</span> <span class="s1">&#39;default&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">index</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+    <span class="k">if</span> <span class="s1">&#39;index_key&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">][</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CheckAllParams"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CheckAllParams">[docs]</a><span class="k">def</span> <span class="nf">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="p">{},</span> <span class="n">opt</span><span class="o">=</span><span class="p">{},</span> <span class="n">single</span><span class="o">=</span><span class="p">[],</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that the parameters for a particular item are all valid</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The config dict to check</span>
+<span class="sd">        req:        The required items [default: {}]</span>
+<span class="sd">        opt:        The optional items [default: {}]</span>
+<span class="sd">        single:     List of items where exactly one is required [default: []]</span>
+<span class="sd">        ignore:     Items to ignore [default: []]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a dict, get, with get[key] = value_type for all keys to get.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;_get&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span> <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_get&#39;</span><span class="p">]</span>
+
+    <span class="n">get</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">valid_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+    <span class="c1"># Check required items:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">get</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_type</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Attribute </span><span class="si">%s</span><span class="s2"> is required for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
+
+    <span class="c1"># Check optional items:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="ow">in</span> <span class="n">opt</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">get</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_type</span>
+
+    <span class="c1"># Check items for which exacly 1 should be defined:</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">single</span><span class="p">:</span>
+        <span class="n">valid_keys</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                        <span class="s2">&quot;Only one of the attributes </span><span class="si">%s</span><span class="s2"> is allowed for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                            <span class="n">s</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
+                <span class="n">get</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_type</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;One of the attributes </span><span class="si">%s</span><span class="s2"> is required for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">s</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
+
+    <span class="c1"># Check that there aren&#39;t any extra keys in config aside from a few we expect:</span>
+    <span class="n">valid_keys</span> <span class="o">+=</span> <span class="n">ignore</span>
+    <span class="n">valid_keys</span> <span class="o">+=</span> <span class="n">standard_ignore</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="c1"># Generators are allowed to use item names that start with _, which we ignore here.</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unexpected attribute </span><span class="si">%s</span><span class="s2"> found&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_get&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get</span>
+    <span class="k">return</span> <span class="n">get</span></div>
+
+
+<div class="viewcode-block" id="GetAllParams"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetAllParams">[docs]</a><span class="k">def</span> <span class="nf">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="p">{},</span> <span class="n">opt</span><span class="o">=</span><span class="p">{},</span> <span class="n">single</span><span class="o">=</span><span class="p">[],</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and get all the parameters for a particular item</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The config dict from which to get items.</span>
+<span class="sd">        req:        The required items [default: {}]</span>
+<span class="sd">        opt:        The optional items [default: {}]</span>
+<span class="sd">        single:     List of items where exactly one is required [default: []]</span>
+<span class="sd">        ignore:     Items to ignore [default: []]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the tuple (kwargs, safe).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">get</span> <span class="o">=</span> <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">req</span><span class="p">,</span><span class="n">opt</span><span class="p">,</span><span class="n">single</span><span class="p">,</span><span class="n">ignore</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">get</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span></div>
+
+
+
+
+<span class="c1">#</span>
+<span class="c1"># Now the functions for directly converting an item in the config dict into a value.</span>
+<span class="c1"># The ones that need a special function are: Angle, PositionD, and bool.</span>
+<span class="c1">#</span>
+
+<span class="k">def</span> <span class="nf">_GetAngleValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string consisting of a value and an angle unit into an Angle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="n">hours</span> <span class="ow">and</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Angle</span><span class="o">.</span><span class="n">from_hms</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">unit</span> <span class="ow">is</span> <span class="n">degrees</span> <span class="ow">and</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Angle</span><span class="o">.</span><span class="n">from_dms</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as an Angle. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_GetPositionValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a tuple or a string that looks like &quot;a,b&quot; into a galsim.PositionD.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a PositionD. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_GetBoolValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TRUE&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">param</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;FALSE&#39;</span><span class="p">,</span> <span class="s1">&#39;NO&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">val</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a bool. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># This always works.</span>
+        <span class="c1"># Everything in Python is convertible to bool.</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Now all the GenerateFrom functions:</span>
+<span class="c1">#</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromG1G2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g1, g2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;g2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from G1G2: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromE1E2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e1, e2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;e2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from E1E2: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromEta1Eta2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta1, eta2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;eta2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Eta1Eta2: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromGBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g, beta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from GBeta: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromEBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e, beta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from EBeta: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromEtaBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta, beta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from EtaBeta: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromQBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (q, beta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;q&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from QBeta: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromXY</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (x,y)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from XY: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromRTheta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (r,theta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;r&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from RTheta: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">cos</span><span class="p">(),</span> <span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromRADec</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a CelestialCoord constructed from given (ra,dec)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ra&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;dec&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from RADec: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromRad</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in radians</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Rad: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromDeg</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in degrees</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Deg: kwargs = &#39;,kwargs)</span>
+    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromSequence</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next in a sequence of integers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;default&#39;</span> <span class="p">]</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;first&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span> <span class="s1">&#39;last&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span> <span class="p">:</span> <span class="n">value_type</span><span class="p">,</span>
+            <span class="s1">&#39;repeat&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;nitems&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;first&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">repeat</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;repeat&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;last&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">nitems</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nitems&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">repeat</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid repeat for type = Sequence (must be &gt; 0)&quot;</span><span class="p">,</span> <span class="n">repeat</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">last</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nitems</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="s2">&quot;At most one of the attributes last and nitems is allowed for type = Sequence&quot;</span><span class="p">)</span>
+
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#print(&#39;in GenFromSequence: index = &#39;,index,index_key)</span>
+
+    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># Then there are only really two valid sequences: Either 010101... or 101010...</span>
+        <span class="c1"># Aside from the repeat value of course.</span>
+        <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">nitems</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">nitems</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">last</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nitems</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="n">first</span><span class="p">)</span><span class="o">/</span><span class="n">step</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">last</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nitems</span> <span class="o">=</span> <span class="p">(</span><span class="n">last</span> <span class="o">-</span> <span class="n">first</span><span class="p">)</span><span class="o">//</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1">#print(&#39;nitems = &#39;,nitems)</span>
+    <span class="c1">#print(&#39;repeat = &#39;,repeat)</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">//</span> <span class="n">repeat</span>
+    <span class="c1">#print(&#39;index =&gt; &#39;,index)</span>
+
+    <span class="k">if</span> <span class="n">nitems</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nitems</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">%</span> <span class="n">nitems</span>
+        <span class="c1">#print(&#39;index =&gt; &#39;,index)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">index</span><span class="o">*</span><span class="n">step</span>
+    <span class="c1">#print(base[index_key],&#39;Sequence index = %s + %d*%s = %s&#39;%(first,index,step,value))</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_GenerateFromNumberedFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a file_name using a root, a number, and an extension</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;num&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Sequence&#39;</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;root&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ext&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span> <span class="s1">&#39;digits&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;root&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;digits&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%%</span><span class="s1">0</span><span class="si">%d</span><span class="s1">d&#39;</span><span class="o">%</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;digits&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span>
+    <span class="k">if</span> <span class="s1">&#39;ext&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">+=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ext&#39;</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="si">%%%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">template</span><span class="p">,</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]))</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;NumberedFile = &#39;,s)</span>
+    <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromFormattedStr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a string from a format string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;format&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="c1"># Ignore items for now, we&#39;ll deal with it differently.</span>
+    <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Figure out what types we are expecting for the list elements:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="nb">format</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">)</span>
+    <span class="n">val_types</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>  <span class="c1"># skip first one.</span>
+        <span class="c1"># It we have set skip, then skip this one.</span>
+        <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+        <span class="c1"># If token == &#39;&#39;, then this is a %% in the original string.  Skip this and the next token.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">continue</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;0123456789lLh&#39;</span><span class="p">)</span> <span class="c1"># ignore field size, and long/short specification</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;diouxX&#39;</span><span class="p">:</span>
+            <span class="n">val_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;eEfFgG&#39;</span><span class="p">:</span>
+            <span class="n">val_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;rs&#39;</span><span class="p">:</span>
+            <span class="n">val_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_types</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="s2">&quot;Number of items for FormatStr (</span><span class="si">%d</span><span class="s2">) does not match number expected from &quot;</span>
+            <span class="s2">&quot;format string (</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_types</span><span class="p">)))</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)):</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">val_types</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="n">vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="n">final_str</span> <span class="o">=</span> <span class="nb">format</span><span class="o">%</span><span class="nb">tuple</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;FormattedStr = &#39;,final_str)</span>
+    <span class="k">return</span> <span class="n">final_str</span><span class="p">,</span> <span class="n">safe</span>
+
+
+<span class="k">def</span> <span class="nf">_GenerateFromList</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="n">items</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;items&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the length of items.</span>
+    <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for type=List&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">val</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+    <span class="c1">#print(base[&#39;obj_num&#39;],&#39;List index = %d, val = %s&#39;%(index,val))</span>
+    <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromSum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return next item from a provided list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+    <span class="n">items</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;items&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="nb">sum</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)):</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+        <span class="nb">sum</span> <span class="o">+=</span> <span class="n">val</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromFile</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a LookupTable from reading a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;interpolant&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;x_log&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="s1">&#39;f_log&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="s1">&#39;amplitude&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="kc">False</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromCurrent</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current value of another config item.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;_kd&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;key&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">,</span><span class="s1">&#39;num&#39;</span><span class="p">])</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
+        <span class="c1">#print(&#39;GetCurrent %s.  value_type = %s&#39;%(key,value_type))</span>
+
+        <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span><span class="p">,</span><span class="n">d</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EvaluateCurrentValue</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">Error generating Current value with key = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">k</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="RegisterValueType"><a class="viewcode-back" href="../../../config_values.html#galsim.config.RegisterValueType">[docs]</a><span class="k">def</span> <span class="nf">RegisterValueType</span><span class="p">(</span><span class="n">type_name</span><span class="p">,</span> <span class="n">gen_func</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a value type for use by the config apparatus.</span>
+
+<span class="sd">    A few notes about the signature of the generating function:</span>
+
+<span class="sd">    1. The config parameter is the dict for the current value to be generated.  So it should</span>
+<span class="sd">       be the case that config[&#39;type&#39;] == type_name.</span>
+<span class="sd">    2. The base parameter is the original config dict being processed.</span>
+<span class="sd">    3. The value_type parameter is the intended type of the generated value.  It should</span>
+<span class="sd">       be one of the values that you specify as valid in valid_types.</span>
+<span class="sd">    4. The return value of gen_func should be a tuple consisting of the value and a boolean,</span>
+<span class="sd">       safe, which indicates whether the generated value is safe to use again rather than</span>
+<span class="sd">       regenerate for subsequent objects.  This will be used upstream to determine if</span>
+<span class="sd">       objects constructed using this value are safe to keep or if they have to be rebuilt.</span>
+
+<span class="sd">    The allowed types to include in valid_types are: float, int, bool, str, galsim.Angle,</span>
+<span class="sd">    galsim.Shear, galsim.PositionD.  In addition, including None in this list means that</span>
+<span class="sd">    it is valid to use this type if you don&#39;t necessarily know what type you are expecting.</span>
+<span class="sd">    This happens when building a truth catalog where each item should already be generated</span>
+<span class="sd">    and the current value and type stored, so currently the only two types that allow</span>
+<span class="sd">    None as a valid type are Current and Eval.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        type_name:      The name of the &#39;type&#39; specification in the config dict.</span>
+<span class="sd">        gen_func:       A function to generate a value from the config information.</span>
+<span class="sd">                        The call signature is::</span>
+
+<span class="sd">                            value, safe = Generate(config, base, value_type)</span>
+
+<span class="sd">        valid_types:    A list of types for which this type name is valid.</span>
+<span class="sd">        input_type:     If the generator utilises an input object, give the key name of the</span>
+<span class="sd">                        input type here.  (If it uses more than one, this may be a list.)</span>
+<span class="sd">                        [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
+
+    <span class="n">valid_value_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gen_func</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">valid_types</span><span class="p">))</span>
+    <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_types</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">valid_types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">RegisterValueType</span><span class="p">(</span><span class="n">type_name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">gen_func</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span><span class="p">])</span></div>
+
+
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="n">_GenerateFromList</span><span class="p">,</span>
+                  <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">,</span> <span class="n">LookupTable</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">_GenerateFromCurrent</span><span class="p">,</span>
+                  <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">,</span>
+                    <span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="kc">None</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Sum&#39;</span><span class="p">,</span> <span class="n">_GenerateFromSum</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Sequence&#39;</span><span class="p">,</span> <span class="n">_GenerateFromSequence</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;NumberedFile&#39;</span><span class="p">,</span> <span class="n">_GenerateFromNumberedFile</span><span class="p">,</span> <span class="p">[</span> <span class="nb">str</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;FormattedStr&#39;</span><span class="p">,</span> <span class="n">_GenerateFromFormattedStr</span><span class="p">,</span> <span class="p">[</span> <span class="nb">str</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Rad&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Radians&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Deg&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Degrees&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;E1E2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromE1E2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;G1G2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromG1G2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;GBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromGBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Eta1Eta2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEta1Eta2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EtaBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEtaBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;QBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromQBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;XY&#39;</span><span class="p">,</span> <span class="n">_GenerateFromXY</span><span class="p">,</span> <span class="p">[</span> <span class="n">PositionD</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RTheta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRTheta</span><span class="p">,</span> <span class="p">[</span> <span class="n">PositionD</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RADec&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRADec</span><span class="p">,</span> <span class="p">[</span> <span class="n">CelestialCoord</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;File&#39;</span><span class="p">,</span> <span class="n">_GenerateFromFile</span><span class="p">,</span> <span class="p">[</span> <span class="n">LookupTable</span> <span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

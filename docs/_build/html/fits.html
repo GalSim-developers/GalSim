@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interfacing with FITS Files &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Integration" href="integ.html" />
+    <link rel="prev" title="Interpolants" href="interpolant.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html">Interpolants</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Interfacing with FITS Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reading-fits-files">Reading FITS Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.readMulti"><code class="docutils literal notranslate"><span class="pre">readMulti()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.readCube"><code class="docutils literal notranslate"><span class="pre">readCube()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.readFile"><code class="docutils literal notranslate"><span class="pre">readFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.closeHDUList"><code class="docutils literal notranslate"><span class="pre">closeHDUList()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#writing-fits-files">Writing FITS Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.writeMulti"><code class="docutils literal notranslate"><span class="pre">writeMulti()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.writeCube"><code class="docutils literal notranslate"><span class="pre">writeCube()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.writeFile"><code class="docutils literal notranslate"><span class="pre">writeFile()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#fits-headers">FITS Headers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.fits.FitsHeader"><code class="docutils literal notranslate"><span class="pre">FitsHeader</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="utilities.html">Helper Functions and Classes</a></li>
+      <li class="breadcrumb-item active">Interfacing with FITS Files</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/fits.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="interfacing-with-fits-files">
+<h1>Interfacing with FITS Files<a class="headerlink" href="#interfacing-with-fits-files" title="Permalink to this heading"></a></h1>
+<p>As many astronomical images are stored as FITS files, GalSim includes functionality for
+reading and writing these files with GalSim <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances.</p>
+<p>We include routines for reading and writing an individual <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> to/from FITS files, and also
+routines for handling multiple <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances in a single FITS file.</p>
+<p>We also have a wrapper around the FITS header information to make it work more like a Python
+<code class="docutils literal notranslate"><span class="pre">dict</span></code>, called <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These routines are largely wrappers of the astropy.io.fits package.  They are still fairly
+useful for connecting GalSim objects with the AstroPy API.  However, they used to be critically
+important for providing a stable API across different PyFITS and then AstroPy versions.
+For instance, now the <code class="docutils literal notranslate"><span class="pre">astropy.io.fits.Header</span></code> API is very similar to our own <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>,
+but we used to have many checks for different PyFITS and AstroPy versions to call things in
+different ways while maintaining an intuitive front-end user interface.</p>
+</div>
+<section id="reading-fits-files">
+<h2>Reading FITS Files<a class="headerlink" href="#reading-fits-files" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.read">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition"></a></dt>
+<dd><p>Construct an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from a FITS file or HDUList.</p>
+<p>The normal usage for this function is to read a fits file and return the image contained
+therein, automatically decompressing it if necessary.  However, you may also pass it
+an HDUList, in which case it will select the indicated hdu (with the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> parameter)
+from that.</p>
+<p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
+<p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
+<p>This function is called as <code class="docutils literal notranslate"><span class="pre">im</span> <span class="pre">=</span> <span class="pre">galsim.fits.read(...)</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to read in.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – Either an astropy.io.fits.HDUList, astropy.io.fits.PrimaryHDU, or
+astropy.io.fits..ImageHDU.  In the former case, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> in the list
+will be selected.  In the latter two cases, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> parameter is
+ignored.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>hdu</strong> – The number of the HDU to return.  [default: None, which means to return
+either the primary or first extension as appropriate for the given
+compression.  (e.g. for ‘rice’, the first extension is the one you normally
+want.)]</p></li>
+<li><p><strong>compression</strong> – <p>Which decompression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no decompression</p></li>
+<li><p>’rice’ = use rice decompression in tiles</p></li>
+<li><p>’gzip’ = use gzip to decompress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to decompress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
+<li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
+<li><p>’plio’ = use plio decompression in tiles</p></li>
+<li><p>’auto’ = determine the decompression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+<li><p><strong>read_header</strong> – Whether to read the header and store it as image.header.[default: False]</p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the image as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.readMulti">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">readMulti</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition"></a></dt>
+<dd><p>Construct a list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS file or HDUList.</p>
+<p>The normal usage for this function is to read a fits file and return a list of all the images
+contained therein, automatically decompressing them if necessary.  However, you may also pass
+it an HDUList, in which case it will build the images from these directly.</p>
+<p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
+<p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
+<p>This function is called as <code class="docutils literal notranslate"><span class="pre">im</span> <span class="pre">=</span> <span class="pre">galsim.fits.readMulti(...)</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function along with <a class="reference internal" href="#galsim.fits.writeMulti" title="galsim.fits.writeMulti"><code class="xref any py py-func docutils literal notranslate"><span class="pre">writeMulti</span></code></a> can be used to effect the equivalent of a simple
+version of fpack or funpack. To Rice compress a fits file, you can call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.fz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To uncompress:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits.fz&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to read in.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – An astropy.io.fits.HDUList from which to read the images.  [Either
+<code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>compression</strong> – <p>Which decompression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no decompression</p></li>
+<li><p>’rice’ = use rice decompression in tiles</p></li>
+<li><p>’gzip’ = use gzip to decompress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to decompress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
+<li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
+<li><p>’plio’ = use plio decompression in tiles</p></li>
+<li><p>’auto’ = determine the decompression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+<li><p><strong>read_headers</strong> – Whether to read the headers and store them as image.header.[default: False]</p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.readCube">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">readCube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readCube"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.readCube" title="Permalink to this definition"></a></dt>
+<dd><p>Construct a Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS data cube.</p>
+<p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
+<p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
+<p>This function is called as <code class="docutils literal notranslate"><span class="pre">image_list</span> <span class="pre">=</span> <span class="pre">galsim.fits.readCube(...)</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to read in.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or
+astropy.io.fits.ImageHDU.  In the former case, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> in the list will
+be selected.  In the latter two cases, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> parameter is ignored.
+[Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>hdu</strong> – The number of the HDU to return.  [default: None, which means to return
+either the primary or first extension as appropriate for the given
+compression.  (e.g. for rice, the first extension is the one you normally
+want.)]</p></li>
+<li><p><strong>compression</strong> – <p>Which decompression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no decompression</p></li>
+<li><p>’rice’ = use rice decompression in tiles</p></li>
+<li><p>’gzip’ = use gzip to decompress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to decompress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
+<li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
+<li><p>’plio’ = use plio decompression in tiles</p></li>
+<li><p>’auto’ = determine the decompression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.readFile">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">readFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.readFile" title="Permalink to this definition"></a></dt>
+<dd><p>Read in a Pyfits hdu_list from a FITS file, taking care of the GalSim compression options.</p>
+<p>If you want to do something different with an hdu or hdu_list than one of our other read
+functions, you can use this function.  It handles the compression options in the standard
+GalSim way and just returns the hdu (and hdu_list) for you to use as you see fit.</p>
+<p>This function is called as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">hdu</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readFile</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first item in the returned tuple is the specified hdu (or the primary if none was
+specifically requested).  The other two are returned so you can properly close them.
+They are the full HDUList and possibly a file handle.  The appropriate cleanup can be
+done with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to read in.</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu</strong> – The number of the HDU to return.  [default: None, which means to return
+either the primary or first extension as appropriate for the given
+compression.  (e.g. for rice, the first extension is the one you normally
+want.)]</p></li>
+<li><p><strong>compression</strong> – <p>Which decompression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no decompression</p></li>
+<li><p>’rice’ = use rice decompression in tiles</p></li>
+<li><p>’gzip’ = use gzip to decompress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to decompress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
+<li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
+<li><p>’plio’ = use plio decompression in tiles</p></li>
+<li><p>’auto’ = determine the decompression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(hdu,</span> <span class="pre">hdu_list,</span> <span class="pre">fin)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a tuple with three items</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.closeHDUList">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">closeHDUList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fin</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#closeHDUList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.closeHDUList" title="Permalink to this definition"></a></dt>
+<dd><p>If necessary, close the file handle that was opened to read in the <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code></p>
+</dd></dl>
+
+</section>
+<section id="writing-fits-files">
+<h2>Writing FITS Files<a class="headerlink" href="#writing-fits-files" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.write">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.write" title="Permalink to this definition"></a></dt>
+<dd><p>Write a single image to a FITS file.</p>
+<p>Write the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">image</span></code> to a FITS file, with details depending on the arguments.
+This function can be called directly as <code class="docutils literal notranslate"><span class="pre">galsim.fits.write(image,</span> <span class="pre">...)</span></code>, with the image as the
+first argument, or as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> method: <code class="docutils literal notranslate"><span class="pre">image.write(...)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> to write to file.  Per the description of this method, it may be
+given explicitly via <code class="docutils literal notranslate"><span class="pre">galsim.fits.write(image,</span> <span class="pre">...)</span></code> or the method may be
+called directly as an image method, <code class="docutils literal notranslate"><span class="pre">image.write(...)</span></code>.  Note that if the
+image has a ‘header’ attribute containing a <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>, then the
+<a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a> is written to the header in the PrimaryHDU, followed by the
+WCS as usual.</p></li>
+<li><p><strong>file_name</strong> – The name of the file to write to.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – An astropy.io.fits.HDUList.  If this is provided instead of <code class="docutils literal notranslate"><span class="pre">file_name</span></code>,
+then the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> is appended to the end of the HDUList as a new HDU. In
+that case, the user is responsible for calling either
+<code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.
+[Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
+[default: True]</p></li>
+<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no compression</p></li>
+<li><p>’rice’ = use rice compression in tiles (preserves header readability)</p></li>
+<li><p>’gzip’ = use gzip to compress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
+<li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
+<li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
+<li><p>’auto’ = determine the compression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.writeMulti">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">writeMulti</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeMulti"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.writeMulti" title="Permalink to this definition"></a></dt>
+<dd><p>Write a Python list of images to a multi-extension FITS file.</p>
+<p>The details of how the images are written to file depends on the arguments.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function along with <a class="reference internal" href="#galsim.fits.readMulti" title="galsim.fits.readMulti"><code class="xref any py py-func docutils literal notranslate"><span class="pre">readMulti</span></code></a> can be used to effect the equivalent of a simple
+version of fpack or funpack. To Rice compress a fits file, you can call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.fz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To uncompress:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits.fz&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_list</strong> – A Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances.  (For convenience, some items in this
+list may be HDUs already.  Any <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> will be converted into an
+astropy.io.fits.HDU.)</p></li>
+<li><p><strong>file_name</strong> – The name of the file to write to.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – An astropy.io.fits.HDUList.  If this is provided instead of <code class="docutils literal notranslate"><span class="pre">file_name</span></code>,
+then the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> is appended to the end of the HDUList as a new HDU. In
+that case, the user is responsible for calling either
+<code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.
+[Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
+[default: True]</p></li>
+<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no compression</p></li>
+<li><p>’rice’ = use rice compression in tiles (preserves header readability)</p></li>
+<li><p>’gzip’ = use gzip to compress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
+<li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
+<li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
+<li><p>’auto’ = determine the compression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.writeCube">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">writeCube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeCube"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.writeCube" title="Permalink to this definition"></a></dt>
+<dd><p>Write a Python list of images to a FITS file as a data cube.</p>
+<p>The details of how the images are written to file depends on the arguments.  Unlike for
+writeMulti, when writing a data cube it is necessary that each <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> in <code class="docutils literal notranslate"><span class="pre">image_list</span></code> has
+the same size <code class="docutils literal notranslate"><span class="pre">(nx,</span> <span class="pre">ny)</span></code>.  No check is made to confirm that all images have the same origin
+and pixel scale (or WCS).</p>
+<p>In fact, the WCS of the first image is the one that gets put into the FITS header (since only
+one WCS can be put into a FITS header).  Thus, if the images have different WCS functions,
+only the first one will be rendered correctly by plotting programs such as ds9.  The FITS
+standard does not support any way to have the various images in a data cube to have different
+WCS solutions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_list</strong> – The <code class="docutils literal notranslate"><span class="pre">image_list</span></code> can also be either an array of NumPy arrays or a 3d NumPy
+array, in which case this is written to the fits file directly.  In the
+former case, no explicit check is made that the NumPy arrays are all the
+same shape, but a NumPy exception will be raised which we let pass upstream
+unmolested.</p></li>
+<li><p><strong>file_name</strong> – The name of the file to write to.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is
+required.]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – An astropy.io.fits.HDUList.  If this is provided instead of <code class="docutils literal notranslate"><span class="pre">file_name</span></code>,
+then the cube is appended to the end of the HDUList as a new HDU. In that
+case, the user is responsible for calling either <code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code>
+or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or
+<code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
+[default: True]</p></li>
+<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no compression</p></li>
+<li><p>’rice’ = use rice compression in tiles (preserves header readability)</p></li>
+<li><p>’gzip’ = use gzip to compress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
+<li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
+<li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
+<li><p>’auto’ = determine the compression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.fits.writeFile">
+<span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">writeFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.writeFile" title="Permalink to this definition"></a></dt>
+<dd><p>Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.</p>
+<p>If you have used the write(), writeMulti() or writeCube() functions with the <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code>
+option rather than writing directly to a file, you may subsequently use the command
+<code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code>.  However, it may be more convenient to use this function, writeFile()
+instead, since it treats the compression option consistently with how that option is handled in
+the above functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to write to.</p></li>
+<li><p><strong>hdu_list</strong> – An astropy.io.fits.HDUList.</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
+[default: True]</p></li>
+<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no compression</p></li>
+<li><p>’gzip’ = use gzip to compress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
+<li><p>’auto’ = determine the compression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
+<ul>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>Note that the other options, such as ‘rice’, that operate on the image
+directly are not available at this point.  If you want to use one of them,
+it must be applied when writing each hdu.
+[default: ‘auto’]</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fits-headers">
+<h2>FITS Headers<a class="headerlink" href="#fits-headers" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.fits.</span></span><span class="sig-name descname"><span class="pre">FitsHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader" title="Permalink to this definition"></a></dt>
+<dd><p>A class storing key/value pairs from a FITS Header</p>
+<p>This class works a lot like the regular read() function, but rather than returning
+the image part of the FITS file, it gives you access to the header information.</p>
+<p>After construction, you can access a header value by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">fits_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>or write to it with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fits_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>                <span class="c1"># If you just want to set a value.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fits_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">comment</span><span class="p">)</span>     <span class="c1"># If you want to include a comment field.</span>
+</pre></div>
+</div>
+<p>In fact, most of the normal functions available for a dict are available::</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="n">fits_header</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="n">fits_header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fits_header</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">value</span> <span class="o">=</span> <span class="n">fits_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">fits_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">fits_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">etc</span><span class="o">.</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This used to be a particularly useful abstraction, since PyFITS and then AstroPy used to
+keep changing their syntax for how to write to a fits header rather often, so this class
+had numerous checks for which version of PPyFITS or AstroPy was installed and call things
+the right way depending on the version.  Thus, it was able to maintain a stable, intuitive
+API that would work with any version on the backend.  We no longer support PyFITS or older
+versions of AstroPy, so now much of the syntax of this class is very similar in interface
+to the current version of astropy.io.fits.Header.  Indeed it is now a rather light wrapper
+around their Header class with just a few convenience features to make it easier to work
+with GalSim objects.</p>
+</div>
+<p>The underlying Header object is available as a <code class="docutils literal notranslate"><span class="pre">.header</span></code> attribute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apy_header</span> <span class="o">=</span> <span class="n">fits_header</span><span class="o">.</span><span class="n">header</span>
+</pre></div>
+</div>
+<p>A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList
+object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with
+no parameters, in which case a blank Header will be constructed with no keywords yet if
+you want to add the keywords you want by hand.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h3</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">hdu_list</span> <span class="o">=</span> <span class="n">hdu_list</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h4</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>For convenience, the first parameter may be unnamed as either a header or a file_name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header</strong> – An astropy.io.fits.Header object or in fact any dict-like object or list of
+(key,value) pairs.  [default: None]</p></li>
+<li><p><strong>file_name</strong> – The name of the file to read in.  [default: None]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> does not
+already include it. [default: None]</p></li>
+<li><p><strong>hdu_list</strong> – Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or
+astropy.io.fits.ImageHDU.  In the former case, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> in the list will
+be selected.  In the latter two cases, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code> parameter is ignored.
+[default: None]</p></li>
+<li><p><strong>hdu</strong> – The number of the HDU to return.  [default: None, which means to return
+either the primary or first extension as appropriate for the given
+compression.  (e.g. for rice, the first extension is the one you normally
+want.)]</p></li>
+<li><p><strong>compression</strong> – <p>Which decompression scheme to use (if any).  Options are:</p>
+<ul>
+<li><p>None or ‘none’ = no decompression</p></li>
+<li><p>’rice’ = use rice decompression in tiles</p></li>
+<li><p>’gzip’ = use gzip to decompress the full file</p></li>
+<li><p>’bzip2’ = use bzip2 to decompress the full file</p></li>
+<li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
+<li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
+<li><p>’plio’ = use plio decompression in tiles</p></li>
+<li><p>’auto’ = determine the decompression from the extension of the file name
+(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
+<ul>
+<li><p>’.fz’ =&gt; ‘rice’</p></li>
+<li><p>’.gz’ =&gt; ‘gzip’</p></li>
+<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
+<li><p>otherwise None</p></li>
+</ul>
+</li>
+</ul>
+<p>[default: ‘auto’]</p>
+</p></li>
+<li><p><strong>text_file</strong> – Normally a file is taken to be a fits file, but you can also give it a
+text file with the header information (like the .head file output from
+SCamp).  In this case you should set <code class="docutils literal notranslate"><span class="pre">text_file</span> <span class="pre">=</span> <span class="pre">True</span></code> to tell GalSim
+to parse the file this way.  [default: False]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useblanks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition"></a></dt>
+<dd><p>Append an item to the end of the header.</p>
+<p>This breaks convention a bit by treating the header more like a list than a dict,
+but sometimes that is necessary to get the header structured the way you want it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The key of the entry to append</p></li>
+<li><p><strong>value</strong> – The value of the entry to append [default: ‘’]</p></li>
+<li><p><strong>comment</strong> – A comment field if desired [default: None]</p></li>
+<li><p><strong>useblanks</strong> – If there are blank entries currently at the end, should they be
+overwritten with the new entry? [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.clear" title="Permalink to this definition"></a></dt>
+<dd><p>Clear all values in the header.  Works like dict.clear.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.comment">
+<span class="sig-name descname"><span class="pre">comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.comment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.comment" title="Permalink to this definition"></a></dt>
+<dd><p>Get the comment field for the given key.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>key:    The header key for which to get the comment field.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the comment field.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.extend">
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useblanks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.extend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.extend" title="Permalink to this definition"></a></dt>
+<dd><p>Extend this <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a> with items from another <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>.</p>
+<p>Equivalent to appending all the other’s items to the end of this one with the
+exception that it ignores items that are already in self.
+If you want to replace existing values rather than ignore duplicates, use
+<code class="docutils literal notranslate"><span class="pre">replace=True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> – Another FitsHeader object.</p></li>
+<li><p><strong>replace</strong> – Replace duplicate entries rather than ignore them. [default: False]</p></li>
+<li><p><strong>useblanks</strong> – If there are blank entries currently at the end, should they be
+overwritten with the new entry? [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.get" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of a given key.  Works like dict.get.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The header key for which to get the value</p></li>
+<li><p><strong>default</strong> – Optionally, A value to use if the key is not present. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the value of the given key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.items" title="Permalink to this definition"></a></dt>
+<dd><p>Get all header items.  Works like dict.items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of (key, value) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.iteritems">
+<span class="sig-name descname"><span class="pre">iteritems</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.iteritems"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.iteritems" title="Permalink to this definition"></a></dt>
+<dd><p>Synonym for self.items()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.iterkeys">
+<span class="sig-name descname"><span class="pre">iterkeys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.iterkeys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.iterkeys" title="Permalink to this definition"></a></dt>
+<dd><p>Synonym for self.keys()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.itervalues">
+<span class="sig-name descname"><span class="pre">itervalues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.itervalues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.itervalues" title="Permalink to this definition"></a></dt>
+<dd><p>Synonym for self.values()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.keys" title="Permalink to this definition"></a></dt>
+<dd><p>Get all header keys.  Works like dict.keys</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of keys.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.pop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.pop" title="Permalink to this definition"></a></dt>
+<dd><p>Pop off a value from the header.  Works like dict.pop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The header key for which to get the value</p></li>
+<li><p><strong>default</strong> – Optionally, A value to use if the key is not present. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the value of the given key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the header with a dict-like object.  Works like dict.update.</p>
+<p>If there are any items in <code class="docutils literal notranslate"><span class="pre">dict2</span></code> that are duplicates of items already in the header,
+the current items will ber overwritten.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dict2</strong> – Another header or dict-like object with keys and values to update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.fits.FitsHeader.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.fits.FitsHeader.values" title="Permalink to this definition"></a></dt>
+<dd><p>Get all header values.  Works like dict.values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="interpolant.html" class="btn btn-neutral float-left" title="Interpolants" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="integ.html" class="btn btn-neutral float-right" title="Integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.roman.roman_detectors &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.roman.roman_detectors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.roman.roman_detectors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@file roman_detectors.py</span>
+
+<span class="sd">Part of the Roman Space Telescope module.  This file includes helper routines to apply image</span>
+<span class="sd">defects that are specific to Roman.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">persistence_coefficients</span><span class="p">,</span> <span class="n">nonlinearity_beta</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dark_current</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">gain</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">reciprocity_alpha</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ipc_kernel</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">persistence_fermi_parameters</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">PoissonNoise</span><span class="p">,</span> <span class="n">DeviateNoise</span><span class="p">,</span> <span class="n">GaussianNoise</span><span class="p">,</span> <span class="n">PoissonDeviate</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
+
+
+<span class="k">def</span> <span class="nf">NLfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">nonlinearity_beta</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="applyNonlinearity"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyNonlinearity">[docs]</a><span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies the Roman nonlinearity function to the supplied image ``im``.</span>
+
+<span class="sd">    For more information about nonlinearity, see the docstring for galsim.Image.applyNonlinearity.</span>
+<span class="sd">    Unlike that routine, this one does not require any arguments, since it uses the nonlinearity</span>
+<span class="sd">    function defined within the Roman module.</span>
+
+<span class="sd">    After calling this method, the Image instance ``img`` is transformed to include the</span>
+<span class="sd">    nonlinearity.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        img:        The Image to be transformed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">NLfunc</span><span class="o">=</span><span class="n">NLfunc</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="addReciprocityFailure"><a class="viewcode-back" href="../../../roman.html#galsim.roman.addReciprocityFailure">[docs]</a><span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">exp_time</span><span class="o">=</span><span class="n">exptime</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">reciprocity_alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></div>
+
+<span class="c1"># Note: Formatted doc strings don&#39;t work if put in the normal place.  Unless the function is</span>
+<span class="c1"># actually called, the formatting statement is never executed.  So put it here instead.</span>
+<span class="n">addReciprocityFailure</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Accounts for the reciprocity failure for the Roman directors and includes it in the original</span>
+<span class="s2">Image ``img`` directly.</span>
+
+<span class="s2">For more information about reciprocity failure, see the docstring for</span>
+<span class="s2">galsim.Image.addReciprocityFailure.  Unlike that routine, this one does not need the parameters</span>
+<span class="s2">for reciprocity failure to be provided, though it still takes exposure time as an optional</span>
+<span class="s2">argument.</span>
+
+<span class="s2">Parameters:</span>
+<span class="s2">    img:            The Image to be transformed.</span>
+<span class="s2">    exptime:        The exposure time (t) in seconds, which goes into the expression for</span>
+<span class="s2">                    reciprocity failure given in the docstring.  If None, then the routine</span>
+<span class="s2">                    will use the default Roman exposure time in galsim.roman.exptime.</span>
+<span class="s2">                    [default: </span><span class="si">{exptime}</span><span class="s2">]</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="applyIPC"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyIPC">[docs]</a><span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies the effect of interpixel capacitance (IPC) to the Image instance.</span>
+
+<span class="sd">    For more information about IPC, see the docstring for galsim.Image.applyIPC.  Unlike that</span>
+<span class="sd">    routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel</span>
+<span class="sd">    defined within the Roman module.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        img:                The Image to be transformed.</span>
+<span class="sd">        edge_treatment:     Specifies the method of handling edges and should be one of</span>
+<span class="sd">                            &#39;crop&#39;, &#39;extend&#39; or &#39;wrap&#39;. See galsim.Image.applyIPC docstring</span>
+<span class="sd">                            for more information.</span>
+<span class="sd">                            [default: &#39;extend&#39;]</span>
+<span class="sd">        fill_value:         Specifies the value (including nan) to fill the edges with when</span>
+<span class="sd">                            edge_treatment is &#39;crop&#39;. If unspecified or set to &#39;None&#39;, the</span>
+<span class="sd">                            original pixel values are retained at the edges. If</span>
+<span class="sd">                            edge_treatment is not &#39;crop&#39;, then this is ignored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">applyIPC</span><span class="p">(</span><span class="n">ipc_kernel</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="n">edge_treatment</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="applyPersistence"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyPersistence">[docs]</a><span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In roman.applyPersistence, prev_exposures must be a list of Image instances&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">persistence_coefficients</span><span class="p">))</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">applyPersistence</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">[:</span><span class="n">n_exp</span><span class="p">],</span> <span class="n">persistence_coefficients</span><span class="p">[:</span><span class="n">n_exp</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;fermi&#39;</span><span class="p">:</span>
+
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_exp</span><span class="p">):</span>
+            <span class="c1"># The slew/settle time and the reset time should be specified.</span>
+            <span class="c1"># Now we simply assume them as 0 and take the persitence current at the mid-time of</span>
+            <span class="c1"># exposures as the average persistence until we get more information about the</span>
+            <span class="c1"># observation timeline.</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">+=</span> <span class="n">fermi_linear</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">exptime</span><span class="p">)</span><span class="o">*</span><span class="n">exptime</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;applyPersistence only accepts &#39;linear&#39; or &#39;fermi&#39; methods, got&quot;</span><span class="p">,</span>
+                               <span class="n">method</span><span class="p">)</span></div>
+
+<span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
+<span class="n">applyPersistence</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">This method applies either of the two different persistence models: &#39;linear&#39; and &#39;fermi&#39;.</span>
+<span class="s2">Slew between pointings and consecutive resets after illumination are not considered.</span>
+
+<span class="s2">&#39;linear&#39; persistence model</span>
+<span class="s2">    Applies the persistence effect to the Image instance by adding a small fraction of the</span>
+<span class="s2">    previous exposures (up to </span><span class="si">{ncoeff}</span><span class="s2">) supplied as the &#39;prev_exposures&#39; argument.</span>
+<span class="s2">    For more information about persistence, see `galsim.Image.applyPersistence`.</span>
+<span class="s2">    Unlike that routine, this one does not need the coefficients to be specified. However,</span>
+<span class="s2">    the list of previous </span><span class="si">{ncoeff}</span><span class="s2"> exposures will have to be supplied. Earlier exposures, if</span>
+<span class="s2">    supplied, will be ignored.</span>
+
+<span class="s2">&#39;fermi&#39; persistence model</span>
+<span class="s2">    Applies the persistence effect to the Image instance by adding the accumulated persistence</span>
+<span class="s2">    dark current of previous exposures supplied as the &#39;prev_exposures&#39; argument.</span>
+<span class="s2">    Unlike galsim.Image.applyPersistence, this one does not use constant coefficients but a</span>
+<span class="s2">    fermi model plus a linear tail below half of saturation.</span>
+
+<span class="s2">    For more info about the fermi model, see:</span>
+
+<span class="s2">    http://www.stsci.edu/hst/wfc3/ins_performance/persistence/</span>
+
+<span class="s2">Parameters:</span>
+<span class="s2">    img:                The Image to be transformed.</span>
+<span class="s2">    prev_exposures:     List of Image instances in the order of exposures, with the recent</span>
+<span class="s2">                        exposure being the first element. In the linear model, the exposures</span>
+<span class="s2">                        exceeding the limit (</span><span class="si">{ncoeff}</span><span class="s2"> exposures) will be ignored.</span>
+<span class="s2">    method:             The persistence model (&#39;linear&#39; or &#39;fermi&#39;) to be applied.</span>
+<span class="s2">                        [default: &#39;fermi&#39;]</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ncoeff</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">persistence_coefficients</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">fermi_linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )</span>
+<span class="sd">    For influence level below the half well, the persistence is linear in x.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x:      Array of pixel influence levels in unit of electron counts.</span>
+<span class="sd">        t:      Time (in seconds) since reset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The persistence signal of the input exposure x.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">half_well</span> <span class="o">=</span> <span class="n">persistence_fermi_parameters</span>
+    <span class="n">ps</span>    <span class="o">=</span> <span class="n">A</span><span class="o">*</span> <span class="p">(</span>    <span class="n">x</span>    <span class="o">/</span><span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="mf">1000.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">x0</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span> <span class="o">+</span><span class="mf">1.</span><span class="p">)</span>
+    <span class="n">ps_hf</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span> <span class="p">(</span><span class="n">half_well</span><span class="o">/</span><span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="mf">1000.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="n">half_well</span><span class="o">-</span><span class="n">x0</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span> <span class="o">+</span><span class="mf">1.</span><span class="p">)</span>
+
+    <span class="n">mask1</span> <span class="o">=</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">half_well</span>
+    <span class="n">mask2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">half_well</span><span class="p">)</span>
+
+    <span class="n">y</span><span class="p">[</span><span class="n">mask1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ps</span><span class="p">[</span><span class="n">mask1</span><span class="p">]</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">mask2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ps_hf</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">mask2</span><span class="p">]</span><span class="o">/</span><span class="n">half_well</span>
+
+    <span class="k">return</span> <span class="n">y</span>
+
+<span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
+<div class="viewcode-block" id="allDetectorEffects"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allDetectorEffects">[docs]</a><span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+    <span class="c1"># Make sure we don&#39;t have any negative values.</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">replaceNegative</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+
+    <span class="c1"># Add Poisson noise.</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">poisson_noise</span> <span class="o">=</span> <span class="n">PoissonNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">poisson_noise</span><span class="p">)</span>
+
+    <span class="c1"># Quantize: have an integer number of photons in every pixel after inclusion of sky noise.</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>
+
+    <span class="c1"># Reciprocity failure (use Roman routine, with the supplied exposure time).</span>
+    <span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
+
+    <span class="c1"># Dark current (use exposure time).</span>
+    <span class="n">total_dark_current</span> <span class="o">=</span> <span class="n">dark_current</span><span class="o">*</span><span class="n">exptime</span>
+    <span class="n">dark_noise</span> <span class="o">=</span> <span class="n">DeviateNoise</span><span class="p">(</span><span class="n">PoissonDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">total_dark_current</span><span class="p">))</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">dark_noise</span><span class="p">)</span>
+
+    <span class="c1"># Persistence (use Roman H4RG-lo fermi model)</span>
+    <span class="n">prev_exposures</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">)</span>
+    <span class="n">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">)</span>
+    <span class="c1"># Update the &#39;prev_exposures&#39; queue.</span>
+    <span class="n">prev_exposures</span> <span class="o">=</span> <span class="p">[</span><span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()]</span> <span class="o">+</span> <span class="n">prev_exposures</span><span class="p">[:]</span>
+
+    <span class="c1"># Nonlinearity (use Roman routine).</span>
+    <span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="c1"># IPC (use Roman routine).</span>
+    <span class="n">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="c1"># Read noise.</span>
+    <span class="n">gn</span> <span class="o">=</span> <span class="n">GaussianNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">read_noise</span><span class="p">)</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">gn</span><span class="p">)</span>
+
+    <span class="c1"># Gain.</span>
+    <span class="n">img</span> <span class="o">/=</span> <span class="n">gain</span>
+
+    <span class="c1"># Quantize.</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">prev_exposures</span></div>
+
+<span class="n">allDetectorEffects</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">This utility applies all sources of noise and detector effects for Roman that are implemented</span>
+<span class="s2">in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +</span>
+<span class="s2">background), dark current, and read noise.  The detector effects that are included are</span>
+<span class="s2">reciprocity failure, quantization, persistence, nonlinearity, and interpixel capacitance. It</span>
+<span class="s2">also includes the necessary factors of gain.  In short, the user should be able to pass in an</span>
+<span class="s2">Image with all sources of signal (background plus astronomical objects), and the Image will be</span>
+<span class="s2">modified to include all subsequent steps in the image generation process for Roman that are</span>
+<span class="s2">implemented in GalSim. However, to include the effect of persistence, the user needs to provide</span>
+<span class="s2">a list of recent exposures (without the readout effects) and the routine</span>
+<span class="s2">returns an updated list of recent exposures.</span>
+
+<span class="s2">Parameters:</span>
+<span class="s2">    img:            The Image to be modified.</span>
+<span class="s2">    prev_exposures: List of Image instances in the order of exposures, with</span>
+<span class="s2">                    the recent exposure being the first element. [default: ()]</span>
+<span class="s2">    rng:            An optional galsim.BaseDeviate to use for the addition of noise.  If</span>
+<span class="s2">                    None, a new one will be initialized.  [default: None]</span>
+<span class="s2">    exptime:        The exposure time, in seconds.  If None, then the Roman default</span>
+<span class="s2">                    exposure time will be used.  [default: </span><span class="si">{exptime}</span><span class="s2">]</span>
+
+<span class="s2">Returns:</span>
+<span class="s2">    prev_exposures: Updated list of previous exposures Image instances.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

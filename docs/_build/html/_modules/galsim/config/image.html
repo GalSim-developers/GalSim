@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.image &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.image</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.image</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">UpdateNProc</span><span class="p">,</span> <span class="n">MultiProcess</span><span class="p">,</span> <span class="n">SetupConfigRNG</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">SetupInput</span><span class="p">,</span> <span class="n">SetupInputsForImage</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BuildWCS</span>
+<span class="kn">from</span> <span class="nn">.sensor</span> <span class="kn">import</span> <span class="n">BuildSensor</span>
+<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">BuildBandpass</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">BuildStamp</span><span class="p">,</span> <span class="n">MakeStampTasks</span><span class="p">,</span> <span class="n">ParseDType</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">stamp_image_keys</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">..noise</span> <span class="kn">import</span> <span class="n">VariableGaussianNoise</span>
+
+<span class="c1"># This file handles the building of an image by parsing config[&#39;image&#39;].</span>
+<span class="c1"># This file includes the basic functionality, but it calls out to helper functions</span>
+<span class="c1"># for parts of the process that are different for different image types.  It includes</span>
+<span class="c1"># those helper functions for the simplest image type, Single.  See image_tiled.py and</span>
+<span class="c1"># image_scattered.py for the implementation of the Tiled and Scattered image types.</span>
+
+<span class="c1"># This module-level dict will store all the registered image types.</span>
+<span class="c1"># See the RegisterImageType function at the end of this file.</span>
+<span class="c1"># The keys are the (string) names of the image types, and the values will be builder objects</span>
+<span class="c1"># that will perform the different stages of processing to build each full image.</span>
+<span class="n">valid_image_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="BuildImages"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildImages">[docs]</a><span class="k">def</span> <span class="nf">BuildImages</span><span class="p">(</span><span class="n">nimages</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a number of postage stamp images as specified by the config dict.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nimages:        How many images to build.</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        image_num:      If given, the current image number. [default: 0]</span>
+<span class="sd">        obj_num:        If given, the first object number in the image. [default: 0]</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a list of images</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: BuildImages nimages = </span><span class="si">%d</span><span class="s1">: image, obj = </span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
+                 <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">nimages</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nimages</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No images were built, since nimages == 0.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># Figure out how many processes we will use for building the images.</span>
+    <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">nimages</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Update this in case the config value is -1</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="n">UpdateNProc</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">nimages</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="s1">&#39;timeout&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="mi">900</span>
+
+    <span class="n">jobs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nimages</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;image_num&#39;</span> <span class="p">:</span> <span class="n">image_num</span><span class="p">,</span> <span class="s1">&#39;obj_num&#39;</span> <span class="p">:</span> <span class="n">obj_num</span> <span class="p">}</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">obj_num</span> <span class="o">+=</span> <span class="n">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">image_num</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">done_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Note: numpy shape is y,x</span>
+            <span class="n">ys</span><span class="p">,</span> <span class="n">xs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">s0</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">s0</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: &#39;</span><span class="o">%</span><span class="n">proc</span>
+            <span class="n">image_num</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;image_num&#39;</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">s0</span> <span class="o">+</span> <span class="s1">&#39;Image </span><span class="si">%d</span><span class="s1">: size = </span><span class="si">%d</span><span class="s1"> x </span><span class="si">%d</span><span class="s1">, time = </span><span class="si">%f</span><span class="s1"> sec&#39;</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">except_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">tr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">proc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">s0</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">s0</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: &#39;</span><span class="o">%</span><span class="n">proc</span>
+        <span class="n">image_num</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;image_num&#39;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">s0</span> <span class="o">+</span> <span class="s1">&#39;Exception caught when building image </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">image_num</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">tr</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Aborting the rest of this file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Convert to the tasks structure we need for MultiProcess</span>
+    <span class="n">tasks</span> <span class="o">=</span> <span class="n">MakeImageTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">images</span> <span class="o">=</span> <span class="n">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">BuildImage</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                          <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                          <span class="n">done_func</span><span class="o">=</span><span class="n">done_func</span><span class="p">,</span> <span class="n">except_func</span><span class="o">=</span><span class="n">except_func</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Done making images&#39;</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No images were built.  All were either skipped or had errors.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">images</span></div>
+
+<div class="viewcode-block" id="SetupConfigImageNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigImageNum">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigImageNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the image processing level.</span>
+
+<span class="sd">    Includes:</span>
+<span class="sd">    - Set config[&#39;image_num&#39;] = image_num</span>
+<span class="sd">    - Set config[&#39;obj_num&#39;] = obj_num</span>
+<span class="sd">    - Set config[&#39;index_key&#39;] = &#39;image_num&#39;</span>
+<span class="sd">    - Make sure config[&#39;image&#39;] exists</span>
+<span class="sd">    - Set default config[&#39;image&#39;][&#39;type&#39;] to &#39;Single&#39; if not specified</span>
+<span class="sd">    - Check that the specified image type is valid.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        image_num:      The current image number.</span>
+<span class="sd">        obj_num:        The first object number in the image.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_num</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_num</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
+
+    <span class="c1"># Make config[&#39;image&#39;] exist if it doesn&#39;t yet.</span>
+    <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;config.image is not a dict.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;file_num&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+        <span class="n">image</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Single&#39;</span>
+    <span class="n">image_type</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">image_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_image_types</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid image.type.&quot;</span><span class="p">,</span> <span class="n">image_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_image_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+    <span class="c1"># In case this hasn&#39;t been done yet.</span>
+    <span class="n">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Build the rng to use at the image level.</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">seed</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SetupConfigImageSize"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigImageSize">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigImageSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do some further setup of the config dict at the image processing level based on</span>
+<span class="sd">    the provided image size.</span>
+
+<span class="sd">    - Set config[&#39;image_xsize&#39;], config[&#39;image_ysize&#39;] to the size of the image</span>
+<span class="sd">    - Set config[&#39;image_origin&#39;] to the origin of the image</span>
+<span class="sd">    - Set config[&#39;image_center&#39;] to the center of the image</span>
+<span class="sd">    - Set config[&#39;image_bounds&#39;] to the bounds of the image</span>
+<span class="sd">    - Build the WCS based on either config[&#39;image&#39;][&#39;wcs&#39;] or config[&#39;image&#39;][&#39;pixel_scale&#39;]</span>
+<span class="sd">    - Set config[&#39;wcs&#39;] to be the built wcs</span>
+<span class="sd">    - If wcs.isPixelScale(), also set config[&#39;pixel_scale&#39;] for convenience.</span>
+<span class="sd">    - Set config[&#39;world_center&#39;] to either a given value or based on wcs and image_center</span>
+<span class="sd">    - Create a blank image if possible and store as config[&#39;current_image&#39;]</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        xsize:      The size of the image in the x-dimension.</span>
+<span class="sd">        ysize:      The size of the image in the y-dimension.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_xsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xsize</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_ysize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ysize</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+
+    <span class="n">origin</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># default</span>
+    <span class="k">if</span> <span class="s1">&#39;index_convention&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+        <span class="n">convention</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;index_convention&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">):</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;fortran&#39;</span><span class="p">,</span> <span class="s1">&#39;fits&#39;</span><span class="p">):</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Unknown index_convention&quot;</span><span class="p">,</span> <span class="n">convention</span><span class="p">,</span>
+                                         <span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;fortran&#39;</span><span class="p">,</span> <span class="s1">&#39;fits&#39;</span><span class="p">))</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PositionI</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span><span class="n">origin</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span> <span class="n">origin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xsize</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="n">origin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ysize</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span> <span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">BoundsI</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">origin</span><span class="o">+</span><span class="n">xsize</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">origin</span><span class="o">+</span><span class="n">ysize</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds</span>
+
+    <span class="c1"># Build the wcs</span>
+    <span class="n">wcs</span> <span class="o">=</span> <span class="n">BuildWCS</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wcs</span>
+
+    <span class="c1"># If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The</span>
+    <span class="c1"># config apparatus does not use it -- we always use the wcs -- but we keep it in case</span>
+    <span class="c1"># the user wants to use it for an Eval item.  It&#39;s one of the variables they are allowed</span>
+    <span class="c1"># to assume will be present for them.</span>
+    <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;pixel_scale&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">scale</span>
+
+    <span class="c1"># Set world_center</span>
+    <span class="k">if</span> <span class="s1">&#39;world_center&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">ParseDType</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<span class="c1"># Ignore these when parsing the parameters for specific Image types:</span>
+<span class="n">image_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;random_seed&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;pixel_scale&#39;</span><span class="p">,</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="s1">&#39;sky_level&#39;</span><span class="p">,</span> <span class="s1">&#39;sky_level_pixel&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="s1">&#39;index_convention&#39;</span><span class="p">,</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="s1">&#39;bandpass&#39;</span><span class="p">,</span> <span class="s1">&#39;sensor&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;use_flux_sky_areas&#39;</span>
+               <span class="p">]</span> <span class="o">+</span> <span class="n">stamp_image_keys</span>
+
+<div class="viewcode-block" id="BuildImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildImage">[docs]</a><span class="k">def</span> <span class="nf">BuildImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build an Image according to the information in config.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        image_num:      If given, the current image number. [default: 0]</span>
+<span class="sd">        obj_num:        If given, the first object number in the image. [default: 0]</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the final image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.extra</span> <span class="kn">import</span> <span class="n">SetupExtraOutputsForImage</span><span class="p">,</span> <span class="n">ProcessExtraOutputsForImage</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: BuildImage: image, obj = </span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+
+    <span class="c1"># Setup basic things in the top-level config dict that we will need.</span>
+    <span class="n">SetupConfigImageNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">cfg_image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>  <span class="c1"># Use cfg_image to avoid name confusion with the actual image</span>
+                                 <span class="c1"># we will build later.</span>
+    <span class="n">image_type</span> <span class="o">=</span> <span class="n">cfg_image</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Do the necessary initial setup for this image type.</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span>
+    <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">cfg_image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">image_ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Given this image size (which may be 0,0, in which case it will be set automatically later),</span>
+    <span class="c1"># do some basic calculations</span>
+    <span class="n">SetupConfigImageSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_size = </span><span class="si">%d</span><span class="s1">, </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_origin = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Sometimes an input field needs to do something special at the start of an image.</span>
+    <span class="n">SetupInputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Likewise for the extra output items.</span>
+    <span class="n">SetupExtraOutputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># If there is a bandpass field, load it into config[&#39;bandpass&#39;]</span>
+    <span class="n">bp</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildBandpass</span><span class="p">(</span><span class="n">cfg_image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;bandpass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bp</span>
+
+    <span class="c1"># If there is a sensor, build it now.</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildSensor</span><span class="p">(</span><span class="n">cfg_image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;sensor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sensor</span>
+
+    <span class="c1"># Actually build the image now.  This is the main working part of this function.</span>
+    <span class="c1"># It calls out to the appropriate build function for this image type.</span>
+    <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildImage</span><span class="p">(</span><span class="n">cfg_image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Store the current image in the base-level config for reference</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span>
+
+    <span class="c1"># Just in case these changed from their initial values, make sure they are correct now:</span>
+    <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">origin</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">true_center</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_origin =&gt; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_center =&gt; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: image_bounds =&gt; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Mark that we are no longer doing a single galaxy by deleting image_pos from config top</span>
+    <span class="c1"># level, so it cannot be used for things like wcs.pixelArea(image_pos).</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Go back to using image_num for any indexing.</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
+
+    <span class="c1"># Do whatever processing is required for the extra output items.</span>
+    <span class="n">ProcessExtraOutputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cfg_image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="GetNObjForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetNObjForImage">[docs]</a><span class="k">def</span> <span class="nf">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the number of objects that will be made for the image number image_num based on</span>
+<span class="sd">    the information in the config dict.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        image_num:      The current image number.</span>
+<span class="sd">        logger:         If given, a logger object to log progress.</span>
+<span class="sd">        approx:         Whether an approximate/overestimate is ok [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the number of objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,{})</span>
+    <span class="n">image_type</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="s1">&#39;Single&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">image_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_image_types</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid image.type.&quot;</span><span class="p">,</span> <span class="n">image_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_image_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span><span class="o">.</span><span class="n">getNObj</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span>
+                                                 <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="n">approx</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlattenNoiseVariance"><a class="viewcode-back" href="../../../config_process.html#galsim.config.FlattenNoiseVariance">[docs]</a><span class="k">def</span> <span class="nf">FlattenNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This is a helper function to bring the noise level up to a constant value</span>
+<span class="sd">    across the image.  If some of the galaxies are RealGalaxy objects and noise whitening</span>
+<span class="sd">    (or symmetrizing) is turned on, then there will already be some noise in the</span>
+<span class="sd">    stamps that get built.  This function goes through and figures out what the maximum</span>
+<span class="sd">    current variance is anywhere in the full image and adds noise to the other pixels</span>
+<span class="sd">    to bring everything up to that level.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        full_image:     The full image onto which the noise should be added.</span>
+<span class="sd">        stamps:         A list of the individual postage stamps.</span>
+<span class="sd">        current_vars:   A list of the current variance in each postage stamps.</span>
+<span class="sd">        logger:         If given, a logger object to log progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the final variance in the image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_num_rng&#39;</span><span class="p">]</span>
+    <span class="n">nobjects</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stamps</span><span class="p">)</span>
+    <span class="n">max_current_var</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">current_vars</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,))</span>  <span class="c1"># Include 0 in case current_vars is empty.</span>
+    <span class="k">if</span> <span class="n">max_current_var</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: maximum noise varance in any stamp is </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">],</span> <span class="n">max_current_var</span><span class="p">)</span>
+        <span class="c1"># Then there was whitening applied in the individual stamps.</span>
+        <span class="c1"># But there could be a different variance in each postage stamp, so the first</span>
+        <span class="c1"># thing we need to do is bring everything up to a common level.</span>
+        <span class="n">noise_image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">full_image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobjects</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span> <span class="n">noise_image</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">current_vars</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="c1"># Update this, since overlapping postage stamps may have led to a larger</span>
+        <span class="c1"># value in some pixels.</span>
+        <span class="n">max_current_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">noise_image</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: maximum noise varance in any pixel is </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">],</span> <span class="n">max_current_var</span><span class="p">)</span>
+        <span class="c1"># Figure out how much noise we need to add to each pixel.</span>
+        <span class="n">noise_image</span> <span class="o">=</span> <span class="n">max_current_var</span> <span class="o">-</span> <span class="n">noise_image</span>
+        <span class="c1"># Add it.</span>
+        <span class="n">full_image</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">VariableGaussianNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span><span class="n">noise_image</span><span class="p">))</span>
+    <span class="c1"># Now max_current_var is how much noise is in each pixel.</span>
+    <span class="k">return</span> <span class="n">max_current_var</span></div>
+
+
+<div class="viewcode-block" id="MakeImageTasks"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MakeImageTasks">[docs]</a><span class="k">def</span> <span class="nf">MakeImageTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+
+<span class="sd">    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.</span>
+
+<span class="sd">    For most image types, there is just one job per task, so the tasks list is just:</span>
+
+<span class="sd">        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]</span>
+
+<span class="sd">    But some image types may need groups of jobs to be done sequentially by the same process.</span>
+<span class="sd">    The image type=Single for instance uses whatever grouping is needed for the stamp type.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict</span>
+<span class="sd">        jobs:       A list of jobs to split up into tasks.  Each job in the list is a</span>
+<span class="sd">                    dict of parameters that includes &#39;image_num&#39; and &#39;obj_num&#39;.</span>
+<span class="sd">        logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a list of tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">image_type</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Single&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span><span class="o">.</span><span class="n">makeTasks</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder">[docs]</a><span class="k">class</span> <span class="nc">ImageBuilder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building full images.</span>
+
+<span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
+<span class="sd">    It also includes the implementation of the default image type: Single.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ImageBuilder.setup"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the initialization and setup for building the image.</span>
+
+<span class="sd">        This figures out the size that the image will be, but doesn&#39;t actually build it yet.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            ignore:     A list of parameters that are allowed to be in config that we can</span>
+<span class="sd">                        ignore here. i.e. it won&#39;t be an error if these parameters are present.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            xsize, ysize</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: Build Single Image: image, obj = </span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">image_num</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+
+        <span class="n">extra_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span> <span class="p">]</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;size&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;xsize&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;ysize&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="o">+</span><span class="n">extra_ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># If image_force_xsize and image_force_ysize were set in base, this overrides the</span>
+        <span class="c1"># read-in params.</span>
+        <span class="k">if</span> <span class="s1">&#39;image_force_xsize&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="s1">&#39;image_force_ysize&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">xsize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_xsize&#39;</span><span class="p">]</span>
+            <span class="n">ysize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_ysize&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">xsize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+            <span class="n">ysize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ysize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">xsize</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">ysize</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Both (or neither) of image.xsize and image.ysize need to be defined and != 0.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.buildBandpass"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">buildBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If thre is a &#39;bandpass&#39; field in config[&#39;image&#39;], load it.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a gasim.Bandpass or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;bandpass&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BuildBandpass</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;bandpass&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.buildSensor"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildSensor">[docs]</a>    <span class="k">def</span> <span class="nf">buildSensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the sensor if given in the config dict.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a galsim.Sensor or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;sensor&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BuildSensor</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;sensor&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.buildImage"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.buildImage">[docs]</a>    <span class="k">def</span> <span class="nf">buildImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an Image based on the parameters in the config dict.</span>
+
+<span class="sd">        For Single, this is just an image consisting of a single postage stamp.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the final image and the current noise variance in the image as a tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xsize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_xsize&#39;</span><span class="p">]</span>
+        <span class="n">ysize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_ysize&#39;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: Single Image: size = </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
+
+        <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span> <span class="o">=</span> <span class="n">BuildStamp</span><span class="p">(</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">xsize</span><span class="o">=</span><span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="o">=</span><span class="n">ysize</span><span class="p">,</span> <span class="n">do_noise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>   <span class="c1"># in case stamp has a local jacobian.</span>
+
+        <span class="n">current_image</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">current_image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">current_image</span><span class="o">.</span><span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="n">current_image</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">image</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">current_image</span>
+
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.makeTasks"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.makeTasks">[docs]</a>    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+
+<span class="sd">        Each task is performed separately in multi-processing runs, so this provides a mechanism</span>
+<span class="sd">        to have multiple jobs depend on each other without being messed up by multi-processing.</span>
+<span class="sd">        E.g. you could have blends where each task consists of building several overlapping</span>
+<span class="sd">        galaxies (each of which would be a single job).  Perhaps the first job would include</span>
+<span class="sd">        a calculation to determine where all the overlapping galaxies should go, and the later</span>
+<span class="sd">        jobs would use the results of this calculation and just place the later galaxies in the</span>
+<span class="sd">        appropriate place.</span>
+
+<span class="sd">        Normally, though, each task is just a single job, in which case, this function is very</span>
+<span class="sd">        simple.</span>
+
+<span class="sd">        For Single, this passes the job onto the MakeStampTasks function (which in turn is</span>
+<span class="sd">        normally quite simple).  Most other types though probably want one job per task, for which</span>
+<span class="sd">        the appropriate code would be:</span>
+
+<span class="sd">            return [ [ (job, k) ] for k, job in enumerate(jobs) ]</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            jobs:       A list of jobs to split up into tasks.  Each job in the list is a</span>
+<span class="sd">                        dict of parameters that includes &#39;image_num&#39; and &#39;obj_num&#39;.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MakeStampTasks</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.addNoise"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the final noise to the image.</span>
+
+<span class="sd">        In the base class, this is a no op, since it directs the BuildStamp function to build</span>
+<span class="sd">        the noise at that level.  But some image types need to do extra work at the end to</span>
+<span class="sd">        add the noise properly.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image:          The image onto which to add the noise.</span>
+<span class="sd">            config:         The configuration dict for the image field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            image_num:      The current image number.</span>
+<span class="sd">            obj_num:        The first object number in the image.</span>
+<span class="sd">            current_var:    The current noise variance in each postage stamps.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ImageBuilder.getNObj"><a class="viewcode-back" href="../../../config_image.html#galsim.config.ImageBuilder.getNObj">[docs]</a>    <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of objects that will be built for this image.</span>
+
+<span class="sd">        For Single, this is just 1, but other image types would figure this out from the</span>
+<span class="sd">        configuration parameters.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:         The configuration dict for the image field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            image_num:      The current image number.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">            approx:         Whether an approximate/overestimate is ok [default: False]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the number of objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span></div></div>
+
+<div class="viewcode-block" id="RegisterImageType"><a class="viewcode-back" href="../../../config_image.html#galsim.config.RegisterImageType">[docs]</a><span class="k">def</span> <span class="nf">RegisterImageType</span><span class="p">(</span><span class="n">image_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an image type for use by the config apparatus.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        image_type:     The name of the type in config[&#39;image&#39;]</span>
+<span class="sd">        builder:        A builder object to use for building the images.  It should be an</span>
+<span class="sd">                        instance of ImageBuilder or a subclass thereof.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_image_types</span><span class="p">[</span><span class="n">image_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span></div>
+
+<span class="n">RegisterImageType</span><span class="p">(</span><span class="s1">&#39;Single&#39;</span><span class="p">,</span> <span class="n">ImageBuilder</span><span class="p">())</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

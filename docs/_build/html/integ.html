@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integration &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Bessel Functions" href="bessel.html" />
+    <link rel="prev" title="Interfacing with FITS Files" href="fits.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.int1d"><code class="docutils literal notranslate"><span class="pre">int1d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.hankel"><code class="docutils literal notranslate"><span class="pre">hankel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.IntegrationRule"><code class="docutils literal notranslate"><span class="pre">IntegrationRule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.MidptRule"><code class="docutils literal notranslate"><span class="pre">MidptRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.integ.MidptRule.calculateWeights"><code class="docutils literal notranslate"><span class="pre">MidptRule.calculateWeights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.TrapzRule"><code class="docutils literal notranslate"><span class="pre">TrapzRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.integ.TrapzRule.calculateWeights"><code class="docutils literal notranslate"><span class="pre">TrapzRule.calculateWeights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.QuadRule"><code class="docutils literal notranslate"><span class="pre">QuadRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.integ.QuadRule.calculateWeights"><code class="docutils literal notranslate"><span class="pre">QuadRule.calculateWeights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.midptRule"><code class="docutils literal notranslate"><span class="pre">midptRule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.trapzRule"><code class="docutils literal notranslate"><span class="pre">trapzRule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.quadRule"><code class="docutils literal notranslate"><span class="pre">quadRule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.ImageIntegrator"><code class="docutils literal notranslate"><span class="pre">ImageIntegrator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.integ.ImageIntegrator.__call__"><code class="docutils literal notranslate"><span class="pre">ImageIntegrator.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.SampleIntegrator"><code class="docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.integ.ContinuousIntegrator"><code class="docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="utilities.html">Helper Functions and Classes</a></li>
+      <li class="breadcrumb-item active">Integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/integ.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="integration">
+<h1>Integration<a class="headerlink" href="#integration" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.integ.int1d">
+<span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">int1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#int1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.int1d" title="Permalink to this definition"></a></dt>
+<dd><p>Integrate a 1-dimensional function from min to max.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.33333333333333337</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">2.666666666666667</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.66666666666666674</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This uses an adaptive Gauss-Kronrod-Patterson method for doing the integration.</p>
+<p>cf. <a class="reference external" href="https://www.jstor.org/stable/2004583">https://www.jstor.org/stable/2004583</a></p>
+<p>If one or both endpoints are infinite, it will automatically use an appropriate
+transformation to turn it into a finite integral.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function to be integrated.  y = func(x) should be valid.</p></li>
+<li><p><strong>min</strong> – The lower end of the integration bounds (anything &lt; -1.e10 is treated as
+negative infinity).</p></li>
+<li><p><strong>max</strong> – The upper end of the integration bounds (anything &gt; 1.e10 is treated as positive
+infinity).</p></li>
+<li><p><strong>rel_err</strong> – The desired relative error [default: 1.e-6]</p></li>
+<li><p><strong>abs_err</strong> – The desired absolute error [default: 1.e-12]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the value of the integral.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.integ.hankel">
+<span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">hankel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#hankel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.hankel" title="Permalink to this definition"></a></dt>
+<dd><p>Perform an order nu Hankel transform of the given function f(r) at a specific k value.</p>
+<div class="math notranslate nohighlight">
+\[F(k) = \int_0^\infty f(r) J_\nu(k r) r dr\]</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For non-truncated Hankel integrals, this uses the method outlined in Ogata, 2005:
+<a class="reference external" href="http://www.kurims.kyoto-u.ac.jp/~prims/pdf/41-4/41-4-40.pdf">http://www.kurims.kyoto-u.ac.jp/~prims/pdf/41-4/41-4-40.pdf</a></p>
+<p>For truncated integrals (and k=0), it uses the same adaptive Gauss-Kronrod-Patterson
+method used for <a class="reference internal" href="#galsim.integ.int1d" title="galsim.integ.int1d"><code class="xref any py py-func docutils literal notranslate"><span class="pre">int1d</span></code></a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function f(r)</p></li>
+<li><p><strong>k</strong> – (float or numpy array) The value(s) of k for which to calculate F(k).</p></li>
+<li><p><strong>nu</strong> – The order of the Bessel function to use for the transform. [default: 0]</p></li>
+<li><p><strong>rmax</strong> – An optional truncation radius at which to have f(r) drop to 0. [default: None]</p></li>
+<li><p><strong>rel_err</strong> – The desired relative accuracy [default: 1.e-6]</p></li>
+<li><p><strong>abs_err</strong> – The desired absolute accuracy [default: 1.e-12]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An estimate of F(k)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.IntegrationRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">IntegrationRule</span></span><a class="reference internal" href="_modules/galsim/integ.html#IntegrationRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.IntegrationRule" title="Permalink to this definition"></a></dt>
+<dd><p>A class that can be used to integrate something more complicated than a normal
+scalar function.</p>
+<p>In GalSim, we use it to do the integration of chromatic images over a bandpass.
+Typically f is some kind of draw function, xs are the wavelengths, and w is the
+bandpass throughput.  But this class is abstracted away from all of that and can be used
+for anything where the function returns something complicated, but which can be added
+together to compute the quadrature.</p>
+<p>Specifically the return value from f must be closed under both addition and multiplication
+by a scalar (a float value).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.MidptRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">MidptRule</span></span><a class="reference internal" href="_modules/galsim/integ.html#MidptRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.MidptRule" title="Permalink to this definition"></a></dt>
+<dd><p>Midpoint rule for integration.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.integ.MidptRule.calculateWeights">
+<span class="sig-name descname"><span class="pre">calculateWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#MidptRule.calculateWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.MidptRule.calculateWeights" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the apporpriate weights for the midpoint rule integration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xs</strong> – Locations at which to evaluate f.</p></li>
+<li><p><strong>w</strong> – Weight function if desired [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The net weights to use at each location.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.TrapzRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">TrapzRule</span></span><a class="reference internal" href="_modules/galsim/integ.html#TrapzRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.TrapzRule" title="Permalink to this definition"></a></dt>
+<dd><p>Trapezoidal rule for integration.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.integ.TrapzRule.calculateWeights">
+<span class="sig-name descname"><span class="pre">calculateWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#TrapzRule.calculateWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.TrapzRule.calculateWeights" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the apporpriate weights for the trapezoidal rule integration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xs</strong> – Locations at which to evaluate f.</p></li>
+<li><p><strong>w</strong> – Weight function if desired [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The net weights to use at each location.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.QuadRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">QuadRule</span></span><a class="reference internal" href="_modules/galsim/integ.html#QuadRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.QuadRule" title="Permalink to this definition"></a></dt>
+<dd><p>Quadratic rule for integration</p>
+<p>This models both f and w as linear between the evaluation points, so the product is
+quadratic.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.integ.QuadRule.calculateWeights">
+<span class="sig-name descname"><span class="pre">calculateWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#QuadRule.calculateWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.QuadRule.calculateWeights" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the apporpriate weights for the quadratic rule integration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xs</strong> – Locations at which to evaluate f.</p></li>
+<li><p><strong>w</strong> – Weight function if desired [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The net weights to use at each location.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="galsim.integ.midptRule">
+<span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">midptRule</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;galsim.integ.MidptRule</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#galsim.integ.midptRule" title="Permalink to this definition"></a></dt>
+<dd><p>For convenience, an instance of <a class="reference internal" href="#galsim.integ.MidptRule" title="galsim.integ.MidptRule"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MidptRule</span></code></a></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="galsim.integ.trapzRule">
+<span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">trapzRule</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;galsim.integ.TrapzRule</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#galsim.integ.trapzRule" title="Permalink to this definition"></a></dt>
+<dd><p>For convenience, an instance of <a class="reference internal" href="#galsim.integ.TrapzRule" title="galsim.integ.TrapzRule"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrapzRule</span></code></a></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="galsim.integ.quadRule">
+<span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">quadRule</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;galsim.integ.QuadRule</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#galsim.integ.quadRule" title="Permalink to this definition"></a></dt>
+<dd><p>For convenience, an instance of <a class="reference internal" href="#galsim.integ.QuadRule" title="galsim.integ.QuadRule"><code class="xref any py py-class docutils literal notranslate"><span class="pre">QuadRule</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.ImageIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">ImageIntegrator</span></span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for integrators used by <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> to integrate the drawn images
+over wavelengthh using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.integ.ImageIntegrator.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluateAtWavelength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandpass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drawImageKwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doK</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator.__call__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evaluateAtWavelength</strong> – Function that returns a monochromatic surface brightness
+profile as a function of wavelength.</p></li>
+<li><p><strong>bandpass</strong> – <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> object representing the filter being imaged through.</p></li>
+<li><p><strong>image</strong> – <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> used to set size and scale of output</p></li>
+<li><p><strong>drawImageKwargs</strong> – dict with other kwargs to send to <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a>
+function.</p></li>
+<li><p><strong>doK</strong> – Integrate up results of <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawKImage" title="galsim.ChromaticObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawKImage</span></code></a> instead of
+results of <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a>.  [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the result of integral as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.SampleIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">SampleIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rule</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#SampleIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.SampleIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.integ.ImageIntegrator" title="galsim.integ.ImageIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageIntegrator</span></code></a></p>
+<p>Create a chromatic surface brightness profile integrator, which will integrate over
+wavelength using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
+<p>This integrator will evaluate the integrand only at the wavelengths in <code class="docutils literal notranslate"><span class="pre">bandpass.wave_list</span></code>.
+See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
+points equally spaced apart.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rule</strong> – <p>Which integration rule to apply to the wavelength and monochromatic surface
+brightness samples.  Options include:</p>
+<ul class="simple">
+<li><p>galsim.integ.midptRule: Use the midpoint integration rule</p></li>
+<li><p>galsim.integ.trapzRule: Use the trapezoidal integration rule</p></li>
+<li><p>galsim.integ.quadRule: Use the quadratic integration rule</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.integ.ContinuousIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.integ.</span></span><span class="sig-name descname"><span class="pre">ContinuousIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_endpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ContinuousIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.integ.ContinuousIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.integ.ImageIntegrator" title="galsim.integ.ImageIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageIntegrator</span></code></a></p>
+<p>Create a chromatic surface brightness profile integrator, which will integrate over
+wavelength using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
+<p>This integrator will evaluate the integrand at a given number <code class="docutils literal notranslate"><span class="pre">N</span></code> of equally spaced
+wavelengths over the interval defined by bandpass.blue_limit and bandpass.red_limit.  See
+SampleIntegrator for an integrator that only evaluates the integrand at the predefined set of
+wavelengths in <code class="docutils literal notranslate"><span class="pre">bandpass.wave_list</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rule</strong> – <p>Which integration rule to apply to the wavelength and monochromatic
+surface brightness samples.  Options include:</p>
+<ul>
+<li><p>galsim.integ.midptRule: Use the midpoint integration rule</p></li>
+<li><p>galsim.integ.trapzRule: Use the trapezoidal integration rule</p></li>
+<li><p>galsim.integ.quadRule: Use the quadratic integration rule</p></li>
+</ul>
+</p></li>
+<li><p><strong>N</strong> – Number of equally-wavelength-spaced monochromatic surface brightness
+samples to evaluate. [default: 250]</p></li>
+<li><p><strong>use_endpoints</strong> – Whether to sample the endpoints <code class="docutils literal notranslate"><span class="pre">bandpass.blue_limit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bandpass.red_limit</span></code>.  This should probably be True for a rule like
+numpy.trapz, which explicitly samples the integration limits.  For a
+rule like the midpoint rule, however, the integration limits are not
+generally sampled, (only the midpoint between each integration limit and
+its nearest interior point is sampled), thus <code class="docutils literal notranslate"><span class="pre">use_endpoints</span></code> should be
+set to False in this case.  [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fits.html" class="btn btn-neutral float-left" title="Interfacing with FITS Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="bessel.html" class="btn btn-neutral float-right" title="Bessel Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.hsm &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.hsm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.hsm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageD</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+
+<div class="viewcode-block" id="ShapeData"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a><span class="k">class</span> <span class="nc">ShapeData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to contain the outputs of the HSM shape and moments measurement routines.</span>
+
+<span class="sd">    The ShapeData class contains the following information about moment measurement (from either</span>
+<span class="sd">    `EstimateShear` or `FindAdaptiveMom`:</span>
+
+<span class="sd">    - ``image_bounds``: a `BoundsI` object describing the image.</span>
+
+<span class="sd">    - ``moments_status``: the status flag resulting from moments measurement; -1 indicates no</span>
+<span class="sd">      attempt to measure, 0 indicates success.</span>
+
+<span class="sd">    - ``observed_shape``: a `Shear` object representing the observed shape based on adaptive</span>
+<span class="sd">      moments.</span>
+
+<span class="sd">    - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;</span>
+<span class="sd">      -1 if not measured.  (If `FindAdaptiveMom` is called with ``use_sky_coords=True``, then</span>
+<span class="sd">      the units will be arcsec.)</span>
+
+<span class="sd">    - ``moments_amp``: total image intensity for best-fit elliptical Gaussian from adaptive moments.</span>
+<span class="sd">      Normally, this field is simply equal to the image flux (for objects that follow a Gaussian</span>
+<span class="sd">      light distribution, otherwise it is something approximating the flux).  However, if the image</span>
+<span class="sd">      was drawn using ``drawImage(method=&#39;sb&#39;)`` then moments_amp relates to the flux via</span>
+<span class="sd">      ``flux=(moments_amp)*(pixel scale)^2``.</span>
+
+<span class="sd">    - ``moments_centroid``: a `PositionD` object representing the centroid based on adaptive</span>
+<span class="sd">      moments, in units of pixels.  The indexing convention is defined with respect to the `BoundsI`</span>
+<span class="sd">      object defining the bounds of the input `Image`, i.e., the center of the lower left pixel is</span>
+<span class="sd">      ``(image.xmin, image.ymin)``.  An object drawn at the center of the image should generally</span>
+<span class="sd">      have moments_centroid equal to ``image.true_center``.  (If `FindAdaptiveMom` is called with</span>
+<span class="sd">      ``use_sky_coords=True``, then the units will be arcsec, measured in sky coordinates with</span>
+<span class="sd">      respect to the image center.)</span>
+
+<span class="sd">    - ``moments_rho4``: the weighted radial fourth moment of the image (dimensionless).</span>
+
+<span class="sd">    - ``moments_n_iter``: number of iterations needed to get adaptive moments, or 0 if not measured.</span>
+
+<span class="sd">    If `EstimateShear` was used, then the following fields related to PSF-corrected shape will also</span>
+<span class="sd">    be populated:</span>
+
+<span class="sd">    - ``correction_status``: the status flag resulting from PSF correction; -1 indicates no attempt</span>
+<span class="sd">      to measure, 0 indicates success.</span>
+
+<span class="sd">    - ``corrected_e1``, ``corrected_e2``, ``corrected_g1``, ``corrected_g2``: floats representing</span>
+<span class="sd">      the estimated shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ</span>
+<span class="sd">      from the default values of -10, with the choice of shape to use determined by the correction</span>
+<span class="sd">      method (since the correction method determines what quantity is estimated, either the shear or</span>
+<span class="sd">      the distortion).  After a measurement is made, the type of shape measurement is stored in the</span>
+<span class="sd">      ShapeData structure as &#39;meas_type&#39; (a string that equals either &#39;e&#39; or &#39;g&#39;).</span>
+
+<span class="sd">    - ``corrected_shape_err``: shape measurement uncertainty sigma_gamma per component.  The</span>
+<span class="sd">      estimate of the uncertainty will only be non-zero if an estimate of the sky variance was</span>
+<span class="sd">      passed to `EstimateShear`.</span>
+
+<span class="sd">    - ``correction_method``: a string indicating the method of PSF correction (will be &quot;None&quot; if</span>
+<span class="sd">      PSF-correction was not carried out).</span>
+
+<span class="sd">    - ``resolution_factor``: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1</span>
+<span class="sd">      indicates perfect resolution.</span>
+
+<span class="sd">    - ``psf_sigma``: size ``sigma=(det M)^(1/4)`` of the PSF from the adaptive moments, in units of</span>
+<span class="sd">      pixels; -1 if not measured.</span>
+
+<span class="sd">    - ``psf_shape``: a `Shear` object representing the observed PSF shape based on adaptive moments.</span>
+
+<span class="sd">    - ``error_message``: a string containing any error messages from the attempt to carry out</span>
+<span class="sd">      PSF-correction.</span>
+
+<span class="sd">    The `ShapeData` object can be initialized completely empty, or can be returned from the</span>
+<span class="sd">    routines that measure object moments (`FindAdaptiveMom`) and carry out PSF correction</span>
+<span class="sd">    (`EstimateShear`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_bounds</span><span class="o">=</span><span class="n">BoundsI</span><span class="p">(),</span> <span class="n">moments_status</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">observed_shape</span><span class="o">=</span><span class="n">Shear</span><span class="p">(),</span> <span class="n">moments_sigma</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">moments_amp</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">moments_centroid</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(),</span> <span class="n">moments_rho4</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">moments_n_iter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">correction_status</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">corrected_e1</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span> <span class="n">corrected_e2</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span>
+                 <span class="n">corrected_g1</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span> <span class="n">corrected_g2</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span> <span class="n">meas_type</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span>
+                 <span class="n">corrected_shape_err</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">correction_method</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span>
+                 <span class="n">resolution_factor</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">psf_sigma</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">psf_shape</span><span class="o">=</span><span class="n">Shear</span><span class="p">(),</span> <span class="n">error_message</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+
+        <span class="c1"># Avoid empty string, which can caus problems in C++ layer.</span>
+        <span class="k">if</span> <span class="n">error_message</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image_bounds</span><span class="p">,</span> <span class="n">BoundsI</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;image_bounds must be a BoundsI instance&quot;</span><span class="p">)</span>
+
+        <span class="c1"># The others will raise an appropriate TypeError from the call to _galsim.ShapeData</span>
+        <span class="c1"># when converting to int, float, etc.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">ShapeData</span><span class="p">(</span>
+            <span class="n">image_bounds</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">moments_status</span><span class="p">),</span> <span class="n">observed_shape</span><span class="o">.</span><span class="n">e1</span><span class="p">,</span> <span class="n">observed_shape</span><span class="o">.</span><span class="n">e2</span><span class="p">,</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">moments_sigma</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">moments_amp</span><span class="p">),</span> <span class="n">moments_centroid</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">moments_rho4</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">moments_n_iter</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">correction_status</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">corrected_e1</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">corrected_e2</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">corrected_g1</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">corrected_g2</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">meas_type</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">corrected_shape_err</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">correction_method</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">resolution_factor</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">psf_sigma</span><span class="p">),</span> <span class="n">psf_shape</span><span class="o">.</span><span class="n">e1</span><span class="p">,</span> <span class="n">psf_shape</span><span class="o">.</span><span class="n">e2</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">error_message</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">image_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">BoundsI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">image_bounds</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_status</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observed_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="n">e1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e1</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_sigma</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_amp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_amp</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_centroid</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_rho4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_rho4</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moments_n_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_n_iter</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">correction_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">correction_status</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">corrected_e1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">corrected_e1</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">corrected_e2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">corrected_e2</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">corrected_g1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">corrected_g1</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">corrected_g2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">corrected_g2</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meas_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">meas_type</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">corrected_shape_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">corrected_shape_err</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">correction_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">correction_method</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolution_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">resolution_factor</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">psf_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">psf_sigma</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">psf_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="n">e1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">psf_e1</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">psf_e2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">error_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We use &quot;None&quot; in C++ ShapeData to indicate no error messages to avoid problems on</span>
+        <span class="c1"># (some) Macs using zero-length strings.  Here, we revert that back to &quot;&quot;.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">error_message</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">error_message</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.hsm.ShapeData(&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;image_bounds=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;moments_status=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span>
+        <span class="c1"># Always include this one:</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;observed_shape=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_shape</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_sigma</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, moments_sigma=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_sigma</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_amp</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, moments_amp=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_amp</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_centroid</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, moments_centroid=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_centroid</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_rho4</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, moments_rho4=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_rho4</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_n_iter</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, moments_n_iter=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_n_iter</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_status</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, correction_status=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">correction_status</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_e1</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">10.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, corrected_e1=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">corrected_e1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_e2</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">10.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, corrected_e2=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">corrected_e2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_g1</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">10.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, corrected_g1=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">corrected_g1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_g2</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">10.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, corrected_g2=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">corrected_g2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">meas_type</span> <span class="o">!=</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, meas_type=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_type</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_shape_err</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1.</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, corrected_shape_err=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">corrected_shape_err</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_method</span> <span class="o">!=</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, correction_method=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">correction_method</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution_factor</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, resolution_factor=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution_factor</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_sigma</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, psf_sigma=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_sigma</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_shape</span> <span class="o">!=</span> <span class="n">Shear</span><span class="p">():</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, psf_shape=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_shape</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_message</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, error_message=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">error_message</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">ShapeData</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.hsm.ShapeData&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">_getinitargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_shape</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">moments_sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_amp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_centroid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_rho4</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">moments_n_iter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">correction_status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_e1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_e2</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corrected_g1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_g2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">meas_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corrected_shape_err</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">correction_method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_sigma</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">psf_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_message</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ShapeData.applyWCS"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData.applyWCS">[docs]</a>    <span class="k">def</span> <span class="nf">applyWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert moments in pixel coordinates to moments in sky coordinates.</span>
+
+<span class="sd">        Natively, the HSM algorithm computes second moments in (x,y) coordinates in the</span>
+<span class="sd">        sensor coordinate system.  However, many applications of second moments for shape</span>
+<span class="sd">        measurements need the measurements in sky coordinates.  This method converts the</span>
+<span class="sd">        moments to (u,v) coordinates, where +v is towards North and +u is towards West.</span>
+
+<span class="sd">        The values that are different from the original are:</span>
+
+<span class="sd">        * ``moments_sigma`` is changed to be in units of arcsec.</span>
+<span class="sd">        * ``observed_shape`` is changed to be in (u,v) coordinates.</span>
+<span class="sd">        * ``moments_centroid`` is changed to be in (u,v) coordinates relative to image_pos.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            This currently only works for the measurements from `FindAdaptiveMom`.</span>
+<span class="sd">            If the input ShapeData instance has any values set from `EstimateShear`, they will</span>
+<span class="sd">            not be present in the return value.  We would welcome a PR adding the ability to</span>
+<span class="sd">            work on corrected shapes if someone wants it for their science case.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            wcs:            The WCS to apply.</span>
+<span class="sd">            image_pos:      The position in image coordinates (x,y) of the object whose moments</span>
+<span class="sd">                            have been measured.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">image_pos</span><span class="o">=</span><span class="n">image_pos</span><span class="p">)</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">flip</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">getDecomposition</span><span class="p">()</span>
+
+        <span class="c1"># Fix moments_sigma</span>
+        <span class="n">moments_sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_sigma</span> <span class="o">*</span> <span class="n">scale</span>
+
+        <span class="c1"># Fix observed_shape</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_shape</span>
+        <span class="c1"># First the flip, if any.</span>
+        <span class="k">if</span> <span class="n">flip</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span> <span class="o">=</span> <span class="o">-</span><span class="n">shape</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">g2</span><span class="p">)</span>
+        <span class="c1"># Next the rotation</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">g</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">beta</span> <span class="o">+</span> <span class="n">theta</span><span class="p">)</span>
+        <span class="c1"># Finally the shear</span>
+        <span class="n">observed_shape</span> <span class="o">=</span> <span class="n">shear</span> <span class="o">+</span> <span class="n">shape</span>
+
+        <span class="c1"># Fix moments_centroid</span>
+        <span class="n">moments_centroid</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_centroid</span><span class="p">)</span> <span class="o">-</span> <span class="n">jac</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">image_bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span><span class="p">,</span>
+                         <span class="n">moments_status</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span><span class="p">,</span>
+                         <span class="n">observed_shape</span><span class="o">=</span><span class="n">observed_shape</span><span class="p">,</span>
+                         <span class="n">moments_sigma</span><span class="o">=</span><span class="n">moments_sigma</span><span class="p">,</span>
+                         <span class="n">moments_amp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_amp</span><span class="p">,</span>
+                         <span class="n">moments_centroid</span><span class="o">=</span><span class="n">moments_centroid</span><span class="p">,</span>
+                         <span class="n">moments_rho4</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_rho4</span><span class="p">,</span>
+                         <span class="n">moments_n_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_n_iter</span><span class="p">,</span>
+                         <span class="n">error_message</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">error_message</span><span class="p">)</span></div></div>
+                         <span class="c1"># The other values are reset to the defaults, since they are</span>
+                         <span class="c1"># results from EstimateShear.</span>
+
+
+<div class="viewcode-block" id="HSMParams"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams">[docs]</a><span class="k">class</span> <span class="nc">HSMParams</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A collection of parameters that govern how the HSM functions operate.</span>
+
+<span class="sd">    HSMParams stores a set of numbers that determine how the moments/shape estimation</span>
+<span class="sd">    routines make speed/accuracy tradeoff decisions and/or store their results.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nsig_rg:                A parameter used to optimize convolutions by cutting off the galaxy</span>
+<span class="sd">                                profile.  In the first step of the re-Gaussianization method of PSF</span>
+<span class="sd">                                correction, a Gaussian approximation to the pre-seeing galaxy is</span>
+<span class="sd">                                calculated. If ``nsig_rg &gt; 0``, then this approximation is cut off</span>
+<span class="sd">                                at ``nsig_rg`` sigma to save computation time in convolutions.</span>
+<span class="sd">                                [default: 3.0]</span>
+
+<span class="sd">        nsig_rg2:               A parameter used to optimize convolutions by cutting off the PSF</span>
+<span class="sd">                                residual profile.  In the re-Gaussianization method of PSF</span>
+<span class="sd">                                correction, a &#39;PSF residual&#39; (the difference between the true PSF</span>
+<span class="sd">                                and its best-fit Gaussian approximation) is constructed. If</span>
+<span class="sd">                                ``nsig_rg2 &gt; 0``, then this PSF residual is cut off at ``nsig_rg2``</span>
+<span class="sd">                                sigma to save computation time in convolutions. [default: 3.6]</span>
+
+<span class="sd">        max_moment_nsig2:       No longer used.  (Now calculated based on convergence_threshold.)</span>
+
+<span class="sd">        regauss_too_small:      A parameter for how strictly the re-Gaussianization code treats</span>
+<span class="sd">                                small galaxies. If this parameter is 1, then the re-Gaussianization</span>
+<span class="sd">                                code does not impose a cut on the apparent resolution before trying</span>
+<span class="sd">                                to measure the PSF-corrected shape of the galaxy; if 0, then it is</span>
+<span class="sd">                                stricter.  Using the default value of 1 prevents the</span>
+<span class="sd">                                re-Gaussianization PSF correction from completely failing at the</span>
+<span class="sd">                                beginning, before trying to do PSF correction, due to the crudest</span>
+<span class="sd">                                possible PSF correction (Gaussian approximation) suggesting that</span>
+<span class="sd">                                the galaxy is very small.  This could happen for some usable</span>
+<span class="sd">                                galaxies particularly when they have very non-Gaussian surface</span>
+<span class="sd">                                brightness profiles -- for example, if there&#39;s a prominent bulge</span>
+<span class="sd">                                that the adaptive moments attempt to fit, ignoring a more</span>
+<span class="sd">                                extended disk.  Setting a value of 1 is useful for keeping galaxies</span>
+<span class="sd">                                that would have failed for that reason.  If they later turn out to</span>
+<span class="sd">                                be too small to really use, this will be reflected in the final</span>
+<span class="sd">                                estimate of the resolution factor, and they can be rejected after</span>
+<span class="sd">                                the fact. [default: 1]</span>
+
+<span class="sd">        adapt_order:            The order to which circular adaptive moments should be calculated</span>
+<span class="sd">                                for KSB method. This parameter only affects calculations using the</span>
+<span class="sd">                                KSB method of PSF correction.  Warning: deviating from default</span>
+<span class="sd">                                value of 2 results in code running more slowly, and results have</span>
+<span class="sd">                                not been significantly tested. [default: 2]</span>
+
+<span class="sd">        convergence_threshold:  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)</span>
+<span class="sd">                                when calculating adaptive moments. [default: 1.e-6]</span>
+
+<span class="sd">        max_mom2_iter:          Maximum number of iterations to use when calculating adaptive</span>
+<span class="sd">                                moments.  This should be sufficient in nearly all situations, with</span>
+<span class="sd">                                the possible exception being very flattened profiles. [default: 400]</span>
+
+<span class="sd">        num_iter_default:       Number of iterations to report in the output ShapeData structure</span>
+<span class="sd">                                when code fails to converge within max_mom2_iter iterations.</span>
+<span class="sd">                                [default: -1]</span>
+
+<span class="sd">        bound_correct_wt:       Maximum shift in centroids and sigma between iterations for</span>
+<span class="sd">                                adaptive moments. [default: 0.25]</span>
+
+<span class="sd">        max_amoment:            Maximum value for adaptive second moments before throwing</span>
+<span class="sd">                                exception.  Very large objects might require this value to be</span>
+<span class="sd">                                increased. [default: 8000]</span>
+
+<span class="sd">        max_ashift:             Maximum allowed x / y centroid shift (units: pixels) between</span>
+<span class="sd">                                successive iterations for adaptive moments before throwing</span>
+<span class="sd">                                exception. [default: 15]</span>
+
+<span class="sd">        ksb_moments_max:        Use moments up to ksb_moments_max order for KSB method of PSF</span>
+<span class="sd">                                correction. [default: 4]</span>
+
+<span class="sd">        ksb_sig_weight:         The width of the weight function (in pixels) to use for the KSB</span>
+<span class="sd">                                method.  Normally, this is derived from the measured moments of the</span>
+<span class="sd">                                galaxy image; this keyword overrides this calculation.  Can be</span>
+<span class="sd">                                combined with ksb_sig_factor. [default: 0.0]</span>
+
+<span class="sd">        ksb_sig_factor:         Factor by which to multiply the weight function width for the KSB</span>
+<span class="sd">                                method (default: 1.0).  Can be combined with ksb_sig_weight.</span>
+<span class="sd">                                [default: 1.0]</span>
+
+<span class="sd">        failed_moments:         Value to report for ellipticities and resolution factor if shape</span>
+<span class="sd">                                measurement fails. [default: -1000.]</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        Parameters that are given in units of pixels should still be in pixels, even if one is</span>
+<span class="sd">        calling `FindAdaptiveMom` with the option ``use_sky_coords=True``.</span>
+
+<span class="sd">    After construction, all of the above are available as read-only attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsig_rg</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">nsig_rg2</span><span class="o">=</span><span class="mf">3.6</span><span class="p">,</span> <span class="n">max_moment_nsig2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">regauss_too_small</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">adapt_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">convergence_threshold</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">max_mom2_iter</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                 <span class="n">num_iter_default</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bound_correct_wt</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">max_amoment</span><span class="o">=</span><span class="mf">8000.</span><span class="p">,</span> <span class="n">max_ashift</span><span class="o">=</span><span class="mf">15.</span><span class="p">,</span>
+                 <span class="n">ksb_moments_max</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">ksb_sig_weight</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ksb_sig_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">failed_moments</span><span class="o">=-</span><span class="mf">1000.</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">max_moment_nsig2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;max_moment_nsig2&#39;</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;This parameter is no longer used.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nsig_rg</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nsig_rg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nsig_rg2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nsig_rg2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regauss_too_small</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">regauss_too_small</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adapt_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adapt_order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convergence_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">convergence_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_mom2_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_mom2_iter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_iter_default</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_iter_default</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bound_correct_wt</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">bound_correct_wt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_amoment</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_amoment</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_ashift</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_ashift</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_moments_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ksb_moments_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_sig_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ksb_sig_weight</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_sig_factor</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ksb_sig_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_failed_moments</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">failed_moments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_make_hsmp</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_make_hsmp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hsmp</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">HSMParams</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_getinitargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: For now, leave 3rd param as unused max_moment_nsig2.</span>
+        <span class="c1">#       Remove it at version 3.0 to avoid changing C++ API yet.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsig_rg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsig_rg2</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">regauss_too_small</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_mom2_iter</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_iter_default</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound_correct_wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_amoment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_ashift</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ksb_moments_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksb_sig_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ksb_sig_factor</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failed_moments</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nsig_rg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsig_rg</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nsig_rg2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsig_rg2</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_moment_nsig2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="mf">0.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">regauss_too_small</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_regauss_too_small</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adapt_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adapt_order</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convergence_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convergence_threshold</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_mom2_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_mom2_iter</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_iter_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_iter_default</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bound_correct_wt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bound_correct_wt</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_amoment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_amoment</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_ashift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_ashift</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ksb_moments_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_moments_max</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ksb_sig_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_sig_weight</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ksb_sig_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ksb_sig_factor</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">failed_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_failed_moments</span>
+
+<div class="viewcode-block" id="HSMParams.check"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams.check">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that hsmparams is either a valid HSMParams instance or None.</span>
+
+<span class="sd">        In the former case, it returns hsmparams, in the latter it returns default</span>
+<span class="sd">        (HSMParams.default if no other default specified).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">hsmparams</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">HSMParams</span><span class="o">.</span><span class="n">default</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">,</span> <span class="n">HSMParams</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid HSMParams: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">hsmparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">hsmparams</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.hsm.HSMParams(&#39;</span> <span class="o">+</span> <span class="mi">14</span><span class="o">*</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1">,&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">HSMParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s1">&#39;galsim.hsm.HSMParams&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;_hsmp&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_make_hsmp</span><span class="p">()</span></div>
+
+<span class="c1"># We use the default a lot, so make it a class attribute.</span>
+<span class="n">HSMParams</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="p">()</span>
+
+
+<span class="c1"># A helper function for taking input weight and badpix Images, and returning a weight Image in the</span>
+<span class="c1"># format that the C++ functions want</span>
+<span class="k">def</span> <span class="nf">_convertMask</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Convert from input weight and badpix images to a single mask image needed by C++ functions.</span>
+    <span class="c1"># This is used by EstimateShear() and FindAdaptiveMom().</span>
+
+    <span class="c1"># if no weight image was supplied, make an int array (same size as gal image) filled with 1&#39;s</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">ImageI</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if weight image was supplied, check if it has the right bounds and is non-negative</span>
+        <span class="k">if</span> <span class="n">weight</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Weight image does not have same bounds as the input Image.&quot;</span><span class="p">,</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+
+        <span class="c1"># also make sure there are no negative values</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">array</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Weight image cannot contain negative values.&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+        <span class="c1"># if weight is an ImageI, then we can use it as the mask image:</span>
+        <span class="k">if</span> <span class="n">weight</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">badpix</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">weight</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If we need to mask bad pixels, we&#39;ll need a copy anyway.</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">ImageI</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="c1"># otherwise, we need to convert it to the right type</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">ImageI</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">weight</span><span class="o">.</span><span class="n">array</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight</span>
+    <span class="c1"># image; also check bounds</span>
+    <span class="k">if</span> <span class="n">badpix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">badpix</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Badpix image does not have the same bounds as the input Image.&quot;</span><span class="p">,</span>
+                <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">badpix</span><span class="o">.</span><span class="n">array</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># if no pixels are used, raise an exception</span>
+    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimHSMError</span><span class="p">(</span><span class="s2">&quot;No pixels are being used!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># finally, return the Image for the weight map</span>
+    <span class="k">return</span> <span class="n">mask</span>
+
+
+<span class="c1"># A simpler helper function to force images to be of type ImageF or ImageD</span>
+<span class="k">def</span> <span class="nf">_convertImage</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="c1"># Convert the given image to the correct format needed to pass to the C++ layer.</span>
+    <span class="c1"># This is used by EstimateShear() and FindAdaptiveMom().</span>
+
+    <span class="c1"># if weight is not of type float/double, convert to float/double</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<div class="viewcode-block" id="EstimateShear"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.EstimateShear">[docs]</a><span class="k">def</span> <span class="nf">EstimateShear</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">PSF_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_var</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                  <span class="n">shear_est</span><span class="o">=</span><span class="s2">&quot;REGAUSS&quot;</span><span class="p">,</span> <span class="n">recompute_flux</span><span class="o">=</span><span class="s2">&quot;FIT&quot;</span><span class="p">,</span> <span class="n">guess_sig_gal</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+                  <span class="n">guess_sig_PSF</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Carry out moments-based PSF correction routines.</span>
+
+<span class="sd">    Carry out PSF correction using one of the methods of the HSM package (see references in</span>
+<span class="sd">    docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the</span>
+<span class="sd">    PSF.</span>
+
+<span class="sd">    This method works from `Image` inputs rather than `GSObject` inputs, which provides</span>
+<span class="sd">    additional flexibility (e.g., it is possible to work from an `Image` that was read from file and</span>
+<span class="sd">    corresponds to no particular `GSObject`), but this also means that users who wish to apply it to</span>
+<span class="sd">    compount `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing</span>
+<span class="sd">    their `GSObject` into `Image` instances.</span>
+
+<span class="sd">    This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with</span>
+<span class="sd">    no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        There is not currently an option to ``use_sky_coords`` as we have for `FindAdaptiveMom`.</span>
+<span class="sd">        We would welcome a PR adding this feature if someone wants it for their science case.</span>
+
+<span class="sd">    Note that the method will fail if the PSF or galaxy are too point-like to easily fit an</span>
+<span class="sd">    elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set</span>
+<span class="sd">    ``strict=False`` and catch errors explicitly, as in the second example below.</span>
+
+<span class="sd">    This function has a number of keyword parameters, many of which a typical user will not need to</span>
+<span class="sd">    change from the default.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    Typical application to a single object::</span>
+
+<span class="sd">        &gt;&gt;&gt; galaxy = galsim.Gaussian(flux=1.0, sigma=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the</span>
+<span class="sd">        &gt;&gt;&gt;                                         # |g| = (a-b)/(a+b) definition</span>
+<span class="sd">        &gt;&gt;&gt; psf = galsim.Kolmogorov(flux=1.0, fwhm=0.7)</span>
+<span class="sd">        &gt;&gt;&gt; final = galsim.Convolve(galaxy, psf)</span>
+<span class="sd">        &gt;&gt;&gt; final_image = final.drawImage(scale=0.2)</span>
+<span class="sd">        &gt;&gt;&gt; final_epsf_image = psf.drawImage(scale=0.2)</span>
+<span class="sd">        &gt;&gt;&gt; result = galsim.hsm.EstimateShear(final_image, final_epsf_image)</span>
+
+<span class="sd">    After running the above code, ``result.observed_shape`` is a `Shear` object with a value of</span>
+<span class="sd">    ``(0.0438925349133, -2.85747392701e-18)`` and ``result.corrected_e1``, ``result_corrected_e2``</span>
+<span class="sd">    are ``(0.09934103488922119, -3.746108423463568e-10)``, compared with the expected ``(0.09975,</span>
+<span class="sd">    0)`` for a perfect PSF correction method.</span>
+
+<span class="sd">    The code below gives an example of how one could run this routine on a large batch of galaxies,</span>
+<span class="sd">    explicitly catching and tracking any failures::</span>
+
+<span class="sd">        &gt;&gt;&gt; n_image = 100</span>
+<span class="sd">        &gt;&gt;&gt; n_fail = 0</span>
+<span class="sd">        &gt;&gt;&gt; for i=0, range(n_image):</span>
+<span class="sd">        &gt;&gt;&gt;     #...some code defining this_image, this_final_epsf_image...</span>
+<span class="sd">        &gt;&gt;&gt;     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict=False)</span>
+<span class="sd">        &gt;&gt;&gt;     if result.error_message != &quot;&quot;:</span>
+<span class="sd">        &gt;&gt;&gt;         n_fail += 1</span>
+<span class="sd">        &gt;&gt;&gt; print &quot;Number of failures: &quot;, n_fail</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        gal_image:      The `Image` of the galaxy being measured.</span>
+<span class="sd">        PSF_image:      The `Image` for the PSF.</span>
+<span class="sd">        weight:         The optional weight image for the galaxy being measured.  Can be an int</span>
+<span class="sd">                        or a float array.  Currently, GalSim does not account for the variation</span>
+<span class="sd">                        in non-zero weights, i.e., a weight map is converted to an image with 0</span>
+<span class="sd">                        and 1 for pixels that are not and are used.  Full use of spatial</span>
+<span class="sd">                        variation in non-zero weights will be included in a future version of</span>
+<span class="sd">                        the code.</span>
+
+<span class="sd">        badpix:         The optional bad pixel mask for the image being used.  Zero should be</span>
+<span class="sd">                        used for pixels that are good, and any nonzero value indicates a bad</span>
+<span class="sd">                        pixel.</span>
+
+<span class="sd">        sky_var:        The variance of the sky level, used for estimating uncertainty on the</span>
+<span class="sd">                        measured shape. [default: 0.]</span>
+
+<span class="sd">        shear_est:      A string indicating the desired method of PSF correction: &#39;REGAUSS&#39;,</span>
+<span class="sd">                        &#39;LINEAR&#39;, &#39;BJ&#39;, or &#39;KSB&#39;. The first three options return an e-type</span>
+<span class="sd">                        distortion, whereas the last option returns a g-type shear.  [default:</span>
+<span class="sd">                        &#39;REGAUSS&#39;]</span>
+
+<span class="sd">        recompute_flux: A string indicating whether to recompute the object flux, which</span>
+<span class="sd">                        should be &#39;NONE&#39; (for no recomputation), &#39;SUM&#39; (for recomputation via</span>
+<span class="sd">                        an unweighted sum over unmasked pixels), or &#39;FIT&#39; (for</span>
+<span class="sd">                        recomputation using the Gaussian + quartic fit). [default: &#39;FIT&#39;]</span>
+
+<span class="sd">        guess_sig_gal:  Optional argument with an initial guess for the Gaussian sigma of the</span>
+<span class="sd">                        galaxy (in pixels). [default: 5.]</span>
+
+<span class="sd">        guess_sig_PSF:  Optional argument with an initial guess for the Gaussian sigma of the</span>
+<span class="sd">                        PSF (in pixels). [default: 3.]</span>
+
+<span class="sd">        precision:      The convergence criterion for the moments. [default: 1e-6]</span>
+
+<span class="sd">        guess_centroid: An initial guess for the object centroid (useful in</span>
+<span class="sd">                        case it is not located at the center, which is used if this keyword is</span>
+<span class="sd">                        not set).  The convention for centroids is such that the center of</span>
+<span class="sd">                        the lower-left pixel is (image.xmin, image.ymin).</span>
+<span class="sd">                        [default: gal_image.true_center]</span>
+
+<span class="sd">        strict:         Whether to require success. If ``strict=True``, then there will be a</span>
+<span class="sd">                        ``GalSimHSMError`` exception if shear estimation fails.  If set to</span>
+<span class="sd">                        ``False``, then information about failures will be silently stored in</span>
+<span class="sd">                        the output ShapeData object. [default: True]</span>
+
+<span class="sd">        hsmparams:      The hsmparams keyword can be used to change the settings used by</span>
+<span class="sd">                        `EstimateShear` when estimating shears; see `HSMParams` documentation</span>
+<span class="sd">                        for more information. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a `ShapeData` object containing the results of shape measurement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map</span>
+    <span class="n">gal_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">gal_image</span><span class="p">)</span>
+    <span class="n">PSF_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">PSF_image</span><span class="p">)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
+    <span class="n">hsmparams</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">guess_centroid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">guess_centroid</span> <span class="o">=</span> <span class="n">gal_image</span><span class="o">.</span><span class="n">true_center</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ShapeData</span><span class="p">()</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">EstimateShearView</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span>
+                                  <span class="n">gal_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">PSF_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span>
+                                  <span class="nb">float</span><span class="p">(</span><span class="n">sky_var</span><span class="p">),</span> <span class="n">shear_est</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">recompute_flux</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+                                  <span class="nb">float</span><span class="p">(</span><span class="n">guess_sig_gal</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">guess_sig_PSF</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">precision</span><span class="p">),</span>
+                                  <span class="n">guess_centroid</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">.</span><span class="n">_hsmp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">strict</span> <span class="o">==</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimHSMError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span> <span class="kn">from</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="FindAdaptiveMom"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.FindAdaptiveMom">[docs]</a><span class="k">def</span> <span class="nf">FindAdaptiveMom</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_sig</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
+                    <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">round_moments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">use_sky_coords</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure adaptive moments of an object.</span>
+
+<span class="sd">    This method estimates the best-fit elliptical Gaussian to the object (see Hirata &amp; Seljak 2003</span>
+<span class="sd">    for more discussion of adaptive moments).  This elliptical Gaussian is computed iteratively</span>
+<span class="sd">    by initially guessing a circular Gaussian that is used as a weight function, computing the</span>
+<span class="sd">    weighted moments, recomputing the moments using the result of the previous step as the weight</span>
+<span class="sd">    function, and so on until the moments that are measured are the same as those used for the</span>
+<span class="sd">    weight function.  `FindAdaptiveMom` can be used either as a free function, or as a method of the</span>
+<span class="sd">    `Image` class.</span>
+
+<span class="sd">    By default, this routine computes moments in pixel coordinates, which generally use (x,y)</span>
+<span class="sd">    for the coordinate variables, so the underlying second moments are Ixx, Iyy, and Ixy.</span>
+<span class="sd">    If the WCS is (at least approximately) just a `PixelScale`, then this scale can be applied to</span>
+<span class="sd">    convert the moments&#39; units from pixels to arcsec.  The derived shapes are unaffected by</span>
+<span class="sd">    the pixel scale.</span>
+
+<span class="sd">    However, there is also an option to apply a non-trivial WCS, which may potentially rotate</span>
+<span class="sd">    and/or shear the (x,y) moments to the local sky coordinates, which generally use (u,v)</span>
+<span class="sd">    for the coordinate variables. These coordinates are measured in arcsec and are oriented</span>
+<span class="sd">    such that +v is towards North and +u is towards West. In this case, the returned values are</span>
+<span class="sd">    all in arcsec, and are based instead on Iuu, Ivv, and Iuv.  To enable this feature, use</span>
+<span class="sd">    ``use_sky_coords=True``.  See also the method `ShapeData.applyWCS` for more details.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        The application of the WCS implicitly assumes that the WCS is locally uniform across the</span>
+<span class="sd">        size of the object being measured.  This is normally a very good approximation for most</span>
+<span class="sd">        applications of interest.</span>
+
+<span class="sd">    Like `EstimateShear`, `FindAdaptiveMom` works on `Image` inputs, and fails if the object is</span>
+<span class="sd">    small compared to the pixel scale.  For more details, see `EstimateShear`.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; my_gaussian = galsim.Gaussian(flux=1.0, sigma=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; my_gaussian_image = my_gaussian.drawImage(scale=0.2, method=&#39;no_pixel&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)</span>
+
+<span class="sd">    or::</span>
+
+<span class="sd">        &gt;&gt;&gt; my_moments = my_gaussian_image.FindAdaptiveMom()</span>
+
+<span class="sd">    Assuming a successful measurement, the most relevant pieces of information are</span>
+<span class="sd">    ``my_moments.moments_sigma``, which is ``|det(M)|^(1/4)`` (= ``sigma`` for a circular Gaussian)</span>
+<span class="sd">    and ``my_moments.observed_shape``, which is a `Shear`.  In this case,</span>
+<span class="sd">    ``my_moments.moments_sigma`` is precisely 5.0 (in units of pixels), and</span>
+<span class="sd">    ``my_moments.observed_shape`` is consistent with zero.</span>
+
+<span class="sd">    Methods of the `Shear` class can be used to get the distortion ``e``, the shear ``g``, the</span>
+<span class="sd">    conformal shear ``eta``, and so on.</span>
+
+<span class="sd">    As an example of how to use the optional ``hsmparams`` argument, consider cases where the input</span>
+<span class="sd">    images have unusual properties, such as being very large.  This could occur when measuring the</span>
+<span class="sd">    properties of a very over-sampled image such as that generated using::</span>
+
+<span class="sd">        &gt;&gt;&gt; my_gaussian = galsim.Gaussian(sigma=5.0)</span>
+<span class="sd">        &gt;&gt;&gt; my_gaussian_image = my_gaussian.drawImage(scale=0.01, method=&#39;no_pixel&#39;)</span>
+
+<span class="sd">    If the user attempts to measure the moments of this very large image using the standard syntax,</span>
+<span class="sd">    ::</span>
+
+<span class="sd">        &gt;&gt;&gt; my_moments = my_gaussian_image.FindAdaptiveMom()</span>
+
+<span class="sd">    then the result will be a ``GalSimHSMError`` due to moment measurement failing because the</span>
+<span class="sd">    object is so large.  While the list of all possible settings that can be changed is accessible</span>
+<span class="sd">    in the docstring of the `HSMParams` class, in this case we need to modify ``max_amoment`` which</span>
+<span class="sd">    is the maximum value of the moments in units of pixel^2.  The following measurement, using the</span>
+<span class="sd">    default values for every parameter except for ``max_amoment``, will be</span>
+<span class="sd">    successful::</span>
+
+<span class="sd">        &gt;&gt;&gt; new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)</span>
+<span class="sd">        &gt;&gt;&gt; my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams=new_params)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        object_image:       The `Image` for the object being measured.</span>
+<span class="sd">        weight:             The optional weight image for the object being measured.  Can be an int</span>
+<span class="sd">                            or a float array.  Currently, GalSim does not account for the variation</span>
+<span class="sd">                            in non-zero weights, i.e., a weight map is converted to an image with 0</span>
+<span class="sd">                            and 1 for pixels that are not and are used.  Full use of spatial</span>
+<span class="sd">                            variation in non-zero weights will be included in a future version of</span>
+<span class="sd">                            the code. [default: None]</span>
+<span class="sd">        badpix:             The optional bad pixel mask for the image being used.  Zero should be</span>
+<span class="sd">                            used for pixels that are good, and any nonzero value indicates a bad</span>
+<span class="sd">                            pixel. [default: None]</span>
+<span class="sd">        guess_sig:          Optional argument with an initial guess for the Gaussian sigma of the</span>
+<span class="sd">                            object (in pixels). [default: 5.0]</span>
+<span class="sd">        precision:          The convergence criterion for the moments. [default: 1e-6]</span>
+<span class="sd">        guess_centroid:     An initial guess for the object centroid (useful in case it is not</span>
+<span class="sd">                            located at the center, which is used if this keyword is not set).  The</span>
+<span class="sd">                            convention for centroids is such that the center of the lower-left pixel</span>
+<span class="sd">                            is (image.xmin, image.ymin).</span>
+<span class="sd">                            [default: object_image.true_center]</span>
+<span class="sd">        strict:             Whether to require success. If ``strict=True``, then there will be a</span>
+<span class="sd">                            ``GalSimHSMError`` exception if shear estimation fails.  If set to</span>
+<span class="sd">                            ``False``, then information about failures will be silently stored in</span>
+<span class="sd">                            the output ShapeData object. [default: True]</span>
+<span class="sd">        round_moments:      Use a circular weight function instead of elliptical.</span>
+<span class="sd">                            [default: False]</span>
+<span class="sd">        hsmparams:          The hsmparams keyword can be used to change the settings used by</span>
+<span class="sd">                            FindAdaptiveMom when estimating moments; see `HSMParams` documentation</span>
+<span class="sd">                            for more information. [default: None]</span>
+<span class="sd">        use_sky_coords:     Whether to convert the measured moments to sky_coordinates.</span>
+<span class="sd">                            Setting this to true is equivalent to running</span>
+<span class="sd">                            ``applyWCS(object_image.wcs, image_pos=object_image.true_center)``</span>
+<span class="sd">                            on the result.  [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a `ShapeData` object containing the results of moment measurement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map</span>
+    <span class="n">object_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">object_image</span><span class="p">)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
+    <span class="n">hsmparams</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">guess_centroid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">guess_centroid</span> <span class="o">=</span> <span class="n">object_image</span><span class="o">.</span><span class="n">true_center</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ShapeData</span><span class="p">()</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">FindAdaptiveMomView</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span>
+                                    <span class="n">object_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span>
+                                    <span class="nb">float</span><span class="p">(</span><span class="n">guess_sig</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">precision</span><span class="p">),</span> <span class="n">guess_centroid</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
+                                    <span class="nb">bool</span><span class="p">(</span><span class="n">round_moments</span><span class="p">),</span> <span class="n">hsmparams</span><span class="o">.</span><span class="n">_hsmp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_sky_coords</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">applyWCS</span><span class="p">(</span><span class="n">object_image</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="n">object_image</span><span class="o">.</span><span class="n">true_center</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">strict</span> <span class="o">==</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimHSMError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span> <span class="kn">from</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
+
+<span class="c1"># make FindAdaptiveMom a method of Image class</span>
+<span class="n">Image</span><span class="o">.</span><span class="n">FindAdaptiveMom</span> <span class="o">=</span> <span class="n">FindAdaptiveMom</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

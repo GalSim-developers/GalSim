@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Objects &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Stamp Field" href="config_stamp.html" />
+    <link rel="prev" title="Top Level Fields" href="config_top.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Objects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#psf-types">PSF Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galaxy-types">Galaxy Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generic-types">Generic Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-attributes">Other Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-object-types">Custom Object Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterObjectType"><code class="docutils literal notranslate"><span class="pre">RegisterObjectType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.gsobject._BuildAdd"><code class="docutils literal notranslate"><span class="pre">_BuildAdd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.gsobject._BuildConvolve"><code class="docutils literal notranslate"><span class="pre">_BuildConvolve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.gsobject._BuildList"><code class="docutils literal notranslate"><span class="pre">_BuildList()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.gsobject._BuildOpticalPSF"><code class="docutils literal notranslate"><span class="pre">_BuildOpticalPSF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sed-field">SED Field</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.SEDBuilder"><code class="docutils literal notranslate"><span class="pre">SEDBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterSEDType"><code class="docutils literal notranslate"><span class="pre">RegisterSEDType()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Config Objects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_objects.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-objects">
+<h1>Config Objects<a class="headerlink" href="#config-objects" title="Permalink to this heading"></a></h1>
+<p>GalSim defines a number of object types, which correspond to the GSObject types in the python code.
+Some are designed to be appropriate for describing PSFs and others for describing galaxies.
+GalSim does not enforce this distinction in any way; you can use any object type in the <code class="docutils literal notranslate"><span class="pre">psf</span></code>
+or <code class="docutils literal notranslate"><span class="pre">gal</span></code> fields.  But normally, the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field would use types from the <a class="reference internal" href="#psf-types"><span class="std std-ref">PSF Types</span></a>
+below, and the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field would use types from the <a class="reference internal" href="#galaxy-types"><span class="std std-ref">Galaxy Types</span></a>.
+There are also some <a class="reference internal" href="#generic-types"><span class="std std-ref">Generic Types</span></a> that can be appropriate for either.</p>
+<p>Each object type sets a number of other items that either must or may be present in the dict
+for the object (i.e. in the top level <code class="docutils literal notranslate"><span class="pre">psf</span></code> or <code class="docutils literal notranslate"><span class="pre">gal</span></code> field or farther down in the dict where
+an object is being defined, such is in a ‘List’ object type).  These attributes are given as
+bullet items for each type defined below.</p>
+<p>There are also some <a class="reference internal" href="#other-attributes"><span class="std std-ref">Other Attributes</span></a> that are allowed for any object (or
+sometimes just galaxies), regardless of what type they are.</p>
+<p>And finally, it is possible to define your own object type,
+which we describe in <a class="reference internal" href="#custom-object-types"><span class="std std-ref">Custom Object Types</span></a>.</p>
+<section id="psf-types">
+<h2>PSF Types<a class="headerlink" href="#psf-types" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p>‘Moffat’  A Moffat profile: <span class="math notranslate nohighlight">\(I(r) \sim (1 + (r/r_0)^2)^{-\beta}\)</span>, where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fwhm</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trunc</span></code> = <em>float_value</em> (optional)  The profile can be truncated to 0 at some radius if desired. The default is no truncation.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Airy’  A simple Airy disk. (Typically one would convolve this by some model of the atmospheric component of the PSF.  cf. ‘Convolution’ below.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required)  Lambda / telescope_diameter converted to units of arcsec (or whatever units you want your profile to use).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required).  This should be the wavelength in nanometers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required).  This should be the telescope diameter in meters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0)  The linear size of an obstructing secondary mirror as a fraction of the full mirror size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> = <em>str_value</em> (default = ‘arcsec’) Units to be used for internal calculations when calculating lam/diam.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Kolmogorov’  A Kolmogorov turbulent spectrum: <span class="math notranslate nohighlight">\(T(k) \sim \exp(-D(k)/2)\)</span>, where <span class="math notranslate nohighlight">\(D(k) = 6.8839 (\lambda k/2\pi r0)^{5/3}\)</span>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">r0</span></code> is required) Lambda / r0 converted to units of arcsec (or whatever units you want your profile to use).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">r0</span></code> is required) The wavelength in nanometers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r0</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">r0</span></code> is required) The Fried parameter in meters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r0_500</span></code> = <em>float_value</em> (optional, in lieu of <code class="docutils literal notranslate"><span class="pre">r0</span></code>).  The Fried parameter in meters at a wavelength of 500 nm.  The correct <code class="docutils literal notranslate"><span class="pre">r0</span></code> value will be calculated using the standard relation r0 = r0_500 * (lam/500)``1.2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fwhm</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">r0</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">lam_over_r0</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">r0</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> = <em>str_value</em> (default = ‘arcsec’) Units to be used for internal calculations when calculating lam/r0.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘OpticalPSF’  A PSF from aberrated telescope optics.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required).  This should be the wavelength in nanometers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diam</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> or both <code class="docutils literal notranslate"><span class="pre">lam</span></code> and <code class="docutils literal notranslate"><span class="pre">diam</span></code> required).  This should be the telescope diameter in meters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">defocus</span></code> = <em>float_value</em> (default = 0) The defocus value, using the Noll convention for the normalization. (Noll index 4)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">astig1</span></code> = <em>float_value</em> (default = 0) The astigmatism in the y direction, using the Noll convention for the normalization. (Noll index 5)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">astig2</span></code> = <em>float_value</em> (default = 0) The astigmatism in the x direction, using the Noll convention for the normalization. (Noll index 6)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coma1</span></code> = <em>float_value</em> (default = 0)The defocus value, using the Noll convention for the normalization. (Noll index 7)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coma2</span></code> = <em>float_value</em> (default = 0)The defocus value, using the Noll convention for the normalization. (Noll index 8)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trefoil1</span></code> = <em>float_value</em> (default = 0)The defocus value, using the Noll convention for the normalization. (Noll index 9)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trefoil2</span></code> = <em>float_value</em> (default = 0) The defocus value, using the Noll convention for the normalization. (Noll index 10)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spher</span></code> = <em>float_value</em> (default = 0)The defocus value, using the Noll convention for the normalization. (Noll index 11)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aberrations</span></code> = <em>list</em> (optional) This is an alternative way to specify the above aberrations.  You can just give them as a list of values using the Noll convention for the ordering (starting at Noll index 1, since there is no 0).  With this syntax, you may go to as high order as you want.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">circular_pupil</span></code> = <em>bool_value</em> (default = True) Whether the pupil should be circular (True, the default) or square (False).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0) The linear dimension of a central obscuration as a fraction of the pupil linear dimension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolant</span></code> = <em>str_value</em> (default = ‘quintic’) Which interpolant to use for the constructed InterpolatedImage object describing the PSF profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oversampling</span></code> = <em>float_value</em> (default = 1.5) How much oversampling of the internal image is needed relative to the Nyquist scale of the corresponding Airy profile.  The more aberrated the PSF, the higher this needs to be.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> = <em>float_value</em> (default = 1.5) How much padding to put around the edge of the internal image of the PSF.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">suppress_warning</span></code> = <em>bool_value</em> (default = False) Whether to suppress warnings about possible aliasing problems due to the choices of <code class="docutils literal notranslate"><span class="pre">oversampling</span></code> and <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_size</span></code> = <em>float_value</em> (optional) If the PSF will only be used to draw images of some size, you can set the OpticalPSF class to not build the internal image of the PSF (much) larger than that.  This can help speed up calculations if GalSim natively decides to build a very large image of the PSF, when the wings never actually affect the final image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nstruts</span></code> = <em>int_value</em> (default = 0) How many support struts to include.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_thick</span></code> = <em>float_value</em> (default = 0.05) How thick the struts should be as a fraction of the pupil diameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_angle</span></code> = <em>angle_value</em> (default = 0 degrees) The counter-clockwise angle between the vertical and one of the struts.  The rest will be spaced equally from there.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> = <em>str_value</em> (optional) Instead of using strut-related parameters to define the pupil plane geometry, you can use this parameter to specify a file-name containing an image of the pupil plane.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_angle</span></code> = <em>angle_value</em> (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> = <em>str_value</em> (default = ‘arcsec’) Units to be used for internal calculations when calculating lam/diam.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt>‘ChromaticAtmosphere’  A chromatic PSF implementing both differential chromatic diffraction (DCR) and wavelength-dependent seeing.  See <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a> for valid combinations that can be used to set the zenith and parallactic angles needed for DCR.</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_profile</span></code> = <em>object</em> (required) The base profile to use for the profile shape at a given reference wavelength</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_wavelength</span></code> = <em>float_value</em> (required) The wavelength at which the PSF has the base profile</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> = <em>float_value</em> (default = -0.2)  Power law index for wavelength-dependent seeing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> = <em>Angle_value</em> (optional) The zenith angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> = <em>Angle_value</em>  (optional) The parallactic angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> = <em>CelestialCoord</em>  (optional)  The (ra,dec) coordinate of the zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> = <em>Angle_value</em> (optional)  Hour angle of the observation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latitude</span></code> = <em>Angle_value</em> (optional)  Latitude of the observatory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pressure</span></code> = <em>float_value</em> (default = 69.328)  Air pressure in kPa.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">temperature</span></code> = <em>float_value</em> (default = 293.15)  Temperature in K.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2O_pressure</span></code> = <em>float_value</em> (default = 1.067)  Water vapor pressure in kPa.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="galaxy-types">
+<h2>Galaxy Types<a class="headerlink" href="#galaxy-types" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p>‘Exponential’  A radial exponential profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-r/r_0)\)</span>, where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sersic’  A Sersic profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-(r/r_0)^{1/n}) = \exp(-b (r/r_e)^{1/n})\)</span>, where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> and <span class="math notranslate nohighlight">\(r_e\)</span> is the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trunc</span></code> = <em>float_value</em> (optional)  The profile can be truncated to 0 at some radius if desired. The default is no truncation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux_untruncated</span></code> = <em>bool_value</em> (default = False)  Set the profile such that the specified flux corresponds to that of the untruncated profile.  Valid only when <code class="docutils literal notranslate"><span class="pre">trunc</span></code> &gt; 0; ignored otherwise.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘DeVaucouleurs’  A DeVaucouleurs profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-(r/r_0)^{1/4}) = \exp(-b (r/r_e)^{1/4})\)</span> (aka n=4 Sersic).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trunc</span></code> = <em>float_value</em> (optional)  The profile can be truncated to 0 at some radius if desired. The default is no truncation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux_untruncated</span></code> = <em>bool_value</em> (default = False)  Set the profile such that the specified flux corresponds to that of the untruncated profile.  Valid only when <code class="docutils literal notranslate"><span class="pre">trunc</span></code> &gt; 0; ignored otherwise.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Spergel’  A profile based on the Spergel (2010) paper with the form: <span class="math notranslate nohighlight">\(I(r) \sim (r/r_0)^\nu * K_\nu(r/r_0)\)</span> where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> and <span class="math notranslate nohighlight">\(K_\nu\)</span> is the modified Bessel function of the second kind.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nu</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RealGalaxy’  A real galaxy image, typically taken from a deep HST image, deconvolved by the original PSF.  Note that the deconvolution implies that this cannot be draw with photon shooting (<code class="docutils literal notranslate"><span class="pre">image.draw_method</span> <span class="pre">=</span> <span class="pre">'phot'</span></code>). This requires that <code class="docutils literal notranslate"><span class="pre">input.real_catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">real_catalog.nobjects</span></code>-1; only one of <code class="docutils literal notranslate"><span class="pre">id</span></code> or <code class="docutils literal notranslate"><span class="pre">index</span></code> may be specified)  Which item in the catalog to use. Special: If <code class="docutils literal notranslate"><span class="pre">index</span></code> is either a ‘Sequence’ or ‘Random’ and <code class="docutils literal notranslate"><span class="pre">last</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> (respectively) is not specified, then it is automatically set to <code class="docutils literal notranslate"><span class="pre">real_catalog.nobjects-1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code> = <em>str_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">id</span></code> or <code class="docutils literal notranslate"><span class="pre">index</span></code> may be specified)  The ID in the catalog of the object to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> = <em>str_value</em> (default = ‘Quintic’)  What to use for interpolating between pixel centers.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’, ‘Quintic’, ‘Sinc’, or ‘LanczosN’, where the ‘N’ after ‘Lanczos’ should be replaced with the integer order to use for the Lanczos filter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code> = <em>str_value</em> (default = ‘Quintic’)  What to use for interpolating between pixel centers in Fourier space, for convolution.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’, ‘Quintic’, ‘Sinc’, or ‘LanczosN’, where the ‘N’ after ‘Lanczos’ should be replaced with the integer order to use for the Lanczos filter.  See docstring for this class for caveats about changing this parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux</span></code> = <em>float_value</em> (default = catalog value) If set, this works as described below.  However, ‘RealGalaxy’ has a different default.  If <code class="docutils literal notranslate"><span class="pre">flux</span></code> is omitted, the flux of the actual galaxy in the catalog is used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> = <em>float_value</em> (default = 4) Amount of zero-padding to use around the image when creating the InterpolatedImage.  See docstring for this class for caveats about changing this parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float</em> (optional) If provided, then the original image is padded to a larger image of this size using the noise profile of the original image.  This is important if you are using <code class="docutils literal notranslate"><span class="pre">noise.whiten</span></code> or <code class="docutils literal notranslate"><span class="pre">noise.symmetrize</span></code>.  You want to make sure the image has the original noise all the way to the edge of the postage stamp.  Otherwise, the edges will have the wrong noise profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.real_catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RealGalaxyOriginal’  This is the same as ‘RealGalaxy’ except that the profile is _not_ deconvolved by the original PSF.  So this is the galaxy <em>as observed</em> in the original image. This requires that <code class="docutils literal notranslate"><span class="pre">input.real_catalog</span></code> be specified and uses the same fields as ‘RealGalaxy’.  This may be more useful than the deconvolved version.  For example, unlike ‘RealGalaxy’, it can be drawn with photon shooting (<code class="docutils literal notranslate"><span class="pre">image.draw_method</span> <span class="pre">=</span> <span class="pre">'phot'</span></code>).</p></li>
+<li><p>‘COSMOSGalaxy’  Either a real or parametric galaxy from the COSMOS catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.cosmos_catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">cosmos_catalog.nobjects</span></code>-1)  Which item in the catalog to use. Special: If <code class="docutils literal notranslate"><span class="pre">index</span></code> is either a ‘Sequence’ or ‘Random’ and <code class="docutils literal notranslate"><span class="pre">last</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> (respectively) is not specified, then it is automatically set to <code class="docutils literal notranslate"><span class="pre">real_catalog.nobjects-1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gal_type</span></code> = <em>str_vale</em> (required, unless <code class="docutils literal notranslate"><span class="pre">real_catalog.use_real</span></code> is False, in which case ‘parametric’) Which type of galaxy to use.  Options are ‘real’ or ‘parametric’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float_val</em> (default = 5) The size of a padding region in arcsec around the HST image when <code class="docutils literal notranslate"><span class="pre">gal_type='real'</span></code>.  Only applies to galaxies whose original potage stamp size is smaller than this value; it effectively sets a minimum stamp size with the HST correlated noise for small galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deep</span></code> = <em>bool_value</em> (default = False) Whether the flux and size should be rescaled to approximate a galaxy catalog with a limiting mag of 25 in F814W, rather than 23.5.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float</em> (optional) If provided, then the original image is padded to a larger image of this size using the noise profile of the original image.  This is important if you are using <code class="docutils literal notranslate"><span class="pre">noise.whiten</span></code> or <code class="docutils literal notranslate"><span class="pre">noise.symmetrize</span></code>.  You want to make sure the image has the original noise all the way to the edge of the postage stamp.  Otherwise, the edges will have the wrong noise profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> = <em>float_value</em> (default = 0.05) The desired precision on the Sersic index n in parametric galaxies.  GalSim is significantly faster if it gets a smallish number of Sersic values, so it can cache some of the calculations and use them again the next time it gets a galaxy with the same index.  If <code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> is 0.0, then use the exact value of index n from the catalog.  But if it is &gt;0, then round the index to that precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chromatic</span></code> = <em>bool_value</em> (default = False) Whether to build chromatic profiles. (Only valid if <code class="docutils literal notranslate"><span class="pre">gal_type='parametric'</span></code>.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">area</span></code> = <em>float_value</em> (default = None, which will use the HST collecting area.)  The effective collecting area in cm**2 of the telescope being simulated.  Used for rescaling the flux values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exptime</span></code> = <em>float_value</em> (default = 1)  The exposure time in seconds.  Used for rescaling the flux values. (Note: The processed COSMOS ACS/HST science images have units of counts/second; i.e. they have an effective exposure time of 1 second in terms of their flux levels. The default value corresponds to a 1 second exposure on HST, which will match these processed images.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.cosmos_catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘SampleGalaxy’  Either a real or parametric galaxy from an input galaxy sample. This requires that <code class="docutils literal notranslate"><span class="pre">input.galaxy_sample</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">cosmos_catalog.nobjects</span></code>-1)  Which item in the catalog to use. Special: If <code class="docutils literal notranslate"><span class="pre">index</span></code> is either a ‘Sequence’ or ‘Random’ and <code class="docutils literal notranslate"><span class="pre">last</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> (respectively) is not specified, then it is automatically set to <code class="docutils literal notranslate"><span class="pre">real_catalog.nobjects-1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gal_type</span></code> = <em>str_vale</em> (required, unless <code class="docutils literal notranslate"><span class="pre">real_catalog.use_real</span></code> is False, in which case ‘parametric’) Which type of galaxy to use.  Options are ‘real’ or ‘parametric’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float_val</em> (default = 5) The size of a padding region in arcsec around the HST image when <code class="docutils literal notranslate"><span class="pre">gal_type='real'</span></code>.  Only applies to galaxies whose original potage stamp size is smaller than this value; it effectively sets a minimum stamp size with the HST correlated noise for small galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deep</span></code> = <em>bool_value</em> (default = False) Whether the flux and size should be rescaled to approximate a galaxy catalog with a limiting mag of 25 in F814W, rather than 23.5.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float</em> (optional) If provided, then the original image is padded to a larger image of this size using the noise profile of the original image.  This is important if you are using <code class="docutils literal notranslate"><span class="pre">noise.whiten</span></code> or <code class="docutils literal notranslate"><span class="pre">noise.symmetrize</span></code>.  You want to make sure the image has the original noise all the way to the edge of the postage stamp.  Otherwise, the edges will have the wrong noise profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> = <em>float_value</em> (default = 0.05) The desired precision on the Sersic index n in parametric galaxies.  GalSim is significantly faster if it gets a smallish number of Sersic values, so it can cache some of the calculations and use them again the next time it gets a galaxy with the same index.  If <code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> is 0.0, then use the exact value of index n from the catalog.  But if it is &gt;0, then round the index to that precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chromatic</span></code> = <em>bool_value</em> (default = False) Whether to build chromatic profiles. (Only valid if <code class="docutils literal notranslate"><span class="pre">gal_type='parametric'</span></code>.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">area</span></code> = <em>float_value</em> (default = None, which will use the HST collecting area.)  The effective collecting area in cm**2 of the telescope being simulated.  Used for rescaling the flux values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exptime</span></code> = <em>float_value</em> (default = 1)  The exposure time in seconds.  Used for rescaling the flux values. (Note: The processed COSMOS ACS/HST science images have units of counts/second; i.e. they have an effective exposure time of 1 second in terms of their flux levels. The default value corresponds to a 1 second exposure on HST, which will match these processed images.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.galaxy_sample</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘InclinedExponential’  The 2D projection of a 3D exponential profile: <span class="math notranslate nohighlight">\(I(R,z) \sim \mathrm{sech}^2 (z/h_s) * \exp(-R/R_s)\)</span> at an arbitrary inclination angle, where <span class="math notranslate nohighlight">\(h_s\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_height</span></code> and <span class="math notranslate nohighlight">\(R_s\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>  The base profile is inclined along the y-axis, so if you want a different position angle, you should add a <code class="docutils literal notranslate"><span class="pre">rotate</span></code> field.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inclination</span></code> = <em>angle_value</em> (required) The inclination angle, defined such that 0 degrees is face-on and 90 degrees is edge-on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required) The half-light radius as an alternative to <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required) The scale_radius, R_s.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_height</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_height</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> is required) The scale height, h_s.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_height</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> is required) The ratio h_s/R_s as an alternative to <code class="docutils literal notranslate"><span class="pre">scale_height</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘InclinedSersic’  Like ‘InclinedExponential’, but using a <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile in the plane of the disc.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required) The half-light radius as an alternative to <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> is required) The scale radius, R_s.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trunc</span></code> = <em>float_value</em> (optional)  The profile can be truncated to 0 at some radius if desired. The default is no truncation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux_untruncated</span></code> = <em>bool_value</em> (default = False)  Set the profile such that the specified flux corresponds to that of the untruncated profile.  Valid only when <code class="docutils literal notranslate"><span class="pre">trunc</span></code> &gt; 0; ignored otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_height</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_height</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> is required) The scale height, h_s.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">scale_height</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_h_over_r</span></code> is required) The ratio h_s/R_s as an alternative to <code class="docutils literal notranslate"><span class="pre">scale_height</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘DeltaFunction’  A delta function profile with a specified flux.  This is typically not used for galaxies, but rather for stars in a scene that includes both.  So when convolved by the PSF, the stars will have the profile from the PSF, but the correct flux.</p></li>
+<li><p>‘RandomKnots’  A profile made of a sum of a number of delta functions distributed according to either a Gaussian profile or a given specified profile.  This is intended to represent knots of star formation, so it would typically be added to a smooth disk component and have the same size and shape.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> = <em>int_value</em> (required) How many points to include.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">profile</span></code> is required) The expectation of the half light radius, setting the overall scale of the Gaussian profile.  Note: any given realized profile will not necessarily have exactly this half-light radius.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">profile</span></code> = <em>GSObject</em> (either <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">profile</span></code> is required) The profile you want to use for the distribution of knots.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="generic-types">
+<h2>Generic Types<a class="headerlink" href="#generic-types" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p>‘Gaussian’  A circular Gaussian profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-r^2 / (2 \sigma^2))\)</span>.  This is not all that appropriate for either PSFs or galaxies, but as it is extremely simple, it is often useful for very basic testing, as many measured properties of the profile have analytic values.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fwhm</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (exactly one of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘InterpolatedImage’  A profile described simply by a provided image (given in a fits file).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">image</span></code> = <em>str_value</em> (required)  The file name from which to read the image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> = <em>str_value</em> (default = ‘Quintic’)  What to use for interpolating between pixel centers.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’, ‘Quintic’, ‘Sinc’, or ‘LanczosN’, where the ‘N’ after ‘Lanczos’ should be replaced with the integer order to use for the Lanczos filter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code> = <em>str_value</em> (default = ‘Quintic’)  What to use for interpolating between pixel centers in Fourier space, for convolution.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’, ‘Quintic’, ‘Sinc’, or ‘LanczosN’, where the ‘N’ after ‘Lanczos’ should be replaced with the integer order to use for the Lanczos filter.  See docstring for this class for caveats about changing this parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalization</span></code> = <em>str_value</em> (default = ‘flux’)  What normalization to assume for the input image.  Options are (‘flux’ or ‘f’) or (‘surface brightness’ or ‘sb’).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> = <em>float_value</em> (default = ‘GS_SCALE’ entry from the fits header, or 1 if not present)  What pixel scale to use for the image pixels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> = <em>float_value</em> (default = 4) Amount of zero-padding to use around the image when creating the SBInterpolatedImage.  See docstring for this class for caveats about changing this parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float_value</em> (optional; required if <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> is provided) If non-zero, then the original image is padded to a larger image of this size using the noise specified in <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> = <em>str_value</em> (optional; required if <code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> is provided) Either a filename to use for padding the <code class="docutils literal notranslate"><span class="pre">image</span></code> with noise according to a noise correlation function, or a variance value to pad with Gaussian noise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_image</span></code> = <em>str_value</em> (optional) The name of an image file to use for directly padding the <code class="docutils literal notranslate"><span class="pre">image</span></code> (deterministically) rather than padding with noise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">calculate_stepk</span></code> = <em>bool_value</em> (default = True) Recalculate optimal Fourier space separation for convolutions?  Can lead to significant optimization compared to default values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">calculate_maxk</span></code> = <em>bool_value</em> (default = True) Recalculate optimal Fourier space total k range for convolutions?  Can lead to significant optimization compared to default values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_true_center</span></code> = <em>bool_value</em> (default = True) Whether to use the true center of the provided image as the nominal center of the profile (True) or round up to the nearest integer value (False).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (default = the primary HDU for uncompressed images, or the first extension for compressed images) Which HDU to use from the input FITS file.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Box’  A rectangular boxcar profile: <span class="math notranslate nohighlight">\(I(x,y) \sim H(w/2-|x|) H(h/2-|y|)\)</span>,
+where <span class="math notranslate nohighlight">\(H\)</span> is the Heaviside function, <span class="math notranslate nohighlight">\(w\)</span> is <code class="docutils literal notranslate"><span class="pre">width</span></code> and <span class="math notranslate nohighlight">\(h\)</span> is <code class="docutils literal notranslate"><span class="pre">height</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> = <em>float_value</em> (required)  The full width of the profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">height</span></code> = <em>float_value</em> (required)  The full height of the profile.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Pixel’  A square boxcar profile: <span class="math notranslate nohighlight">\(I(x,y) \sim H(s/2-|x|) H(s/2-|y|)\)</span>,
+where <span class="math notranslate nohighlight">\(H\)</span> is the Heaviside function and <span class="math notranslate nohighlight">\(s\)</span> is <code class="docutils literal notranslate"><span class="pre">scale</span></code>.
+This is equivalent to a ‘Box’ type with <code class="docutils literal notranslate"><span class="pre">width</span></code> = <code class="docutils literal notranslate"><span class="pre">height</span></code> (called <code class="docutils literal notranslate"><span class="pre">scale</span></code> here).  Note however, that the default rendering method already correctly accounts for the pixel response, so normally you will not need to use this as part of the PSF (or galaxy).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> = <em>float_value</em> The pixel scale, which is the width and height of the pixel.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘TopHat’  A circular tophat profile: <span class="math notranslate nohighlight">\(I(r) \sim H(r-|r|)\)</span>, where <span class="math notranslate nohighlight">\(H\)</span> is the
+Heaviside function and <span class="math notranslate nohighlight">\(r\)</span> is <code class="docutils literal notranslate"><span class="pre">radius</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">radius</span></code> = <em>float_value</em> The radius of the circular tophat profile.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’ or ‘Add’  Add several profiles together.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of profiles to be added.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Convolution’ or ‘Convolve’  Convolve several profiles together.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of profiles to be convolved.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select profile from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of profiles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)  Which item in the list to select each time.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Use Python’s <code class="docutils literal notranslate"><span class="pre">eval</span></code> function to evaluate a given string as a GSObject.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code> = <em>str_value</em> (required)  The string to evaluate.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="other-attributes">
+<h2>Other Attributes<a class="headerlink" href="#other-attributes" title="Permalink to this heading"></a></h2>
+<p>There are a number of transformation attributes that are always allowed for any object type.
+Some of these operations do not commute with each other, so the order is important.
+The following transformations will be applied in the order given here, which corresponds
+roughly to when they occur to the light packet traveling through the universe.</p>
+<p>The first few, <code class="docutils literal notranslate"><span class="pre">flux</span></code>, <code class="docutils literal notranslate"><span class="pre">dilate</span></code>, <code class="docutils literal notranslate"><span class="pre">ellip</span></code>, and <code class="docutils literal notranslate"><span class="pre">rotate</span></code>, are typically used to define the
+intrinsic profile of the object.
+The next two, <code class="docutils literal notranslate"><span class="pre">magnify</span></code> and <code class="docutils literal notranslate"><span class="pre">shear</span></code>, are typically used to define how the profile is
+modified by lensing.
+The next one, <code class="docutils literal notranslate"><span class="pre">shift</span></code>, is used to shift the position of the galaxy relative to its nominal
+position on the sky.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">flux</span></code> = <em>float_value</em> (default = 1.0)  Set the flux of the object in ADU. Note that the component <code class="docutils literal notranslate"><span class="pre">items</span></code> in a ‘Sum’ can also have fluxes specified, which can be used as fractional fluxes (e.g. 0.6 for the disk and 0.4 for the bulge). Then the outer level profile can set the real flux for the whole thing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dilate</span></code> or <code class="docutils literal notranslate"><span class="pre">dilation</span></code> = <em>float_value</em> (optional)  Dilate the profile by a given scale, preserving the flux.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ellip</span></code> = <em>shear_value</em> (optional)  Shear the profile by a given shear to give the profile some non-round intrinsic shape.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rotate</span></code> or <code class="docutils literal notranslate"><span class="pre">rotation</span></code> = <em>angle_value</em> (optional)  Rotate the profile by a given angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_flux</span></code> = <em>float_value</em> (optional) Factor by which to scale the flux of the galaxy profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">magnify</span></code> or <code class="docutils literal notranslate"><span class="pre">magnification</span></code> = <em>float_value</em> (optional)  Magnify the profile by a given scale, preserving the surface brightness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shear</span></code> = <em>shear_value</em> (optional)  Shear the profile by a given shear.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shift</span></code> = <em>pos_value</em> (optional)  Shift the centroid of the profile by a given amount relative to the center of the image on which it will be drawn.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default=False)  Skip this object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sed</span></code> = <em>SED</em> (optional)  If desired, you may set an SED to use for the object.  See <a class="reference internal" href="#sed-field"><span class="std std-ref">SED Field</span></a> below for details.</p></li>
+</ul>
+<p>There are also a few special attributes that are only allowed for the top-level <code class="docutils literal notranslate"><span class="pre">gal</span></code> field,
+not for objects that are part of an aggregate object like ‘Sum’, ‘Convolution’ or ‘List’
+and not for <code class="docutils literal notranslate"><span class="pre">psf</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">resolution</span></code> = <em>float_value</em> (optional)  If the base profile allows a <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> parameter, and the psf is able to calculate a <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>, then it is permissible to specify a resolution: resolution = r_gal / r_psf  (where r_gal and r_psf are the half-light radii) in lieu of specifying the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> of the galaxy explicitly. This is especially useful if the PSF size is generated randomly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">signal_to_noise</span></code> = <em>float_value</em> (optional)  You may specify a signal-to-noise value rather than a <code class="docutils literal notranslate"><span class="pre">flux</span></code>. Our definition of the S/N derives from a weighted integral of the flux in the drawn image:
+<span class="math notranslate nohighlight">\(S = \sum W(x,y) I(x,y) / \sum W(x,y)\)</span> where <span class="math notranslate nohighlight">\(W(x,y)\)</span> is taken to be a matched filter, so <span class="math notranslate nohighlight">\(W(x,y) = I(x,y)\)</span>. (Note: This currently requires <code class="docutils literal notranslate"><span class="pre">draw_method</span> <span class="pre">=</span> <span class="pre">'fft'</span></code>.  It is a bit trickier to do this for photon shooting, and we have not enabled that yet.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  The redshift of the galaxy.  This is required when using ‘NFWHaloShear’ or ‘NFWHaloMagnification’.</p></li>
+</ul>
+</section>
+<section id="custom-object-types">
+<h2>Custom Object Types<a class="headerlink" href="#custom-object-types" title="Permalink to this heading"></a></h2>
+<p>To define your own object type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a function that will be used
+to build a GalSim <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+<p>The build function should have the following functional form:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">BuildCustomObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a custom GSObject of some sort</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict of the object being built</span>
+<span class="sd">        base:       The base configuration dict.</span>
+<span class="sd">        ignore:     A list of parameters that might be in the config dict,</span>
+<span class="sd">                    but which may be ignored.  i.e. it is not an error for</span>
+<span class="sd">                    these items to be present.</span>
+<span class="sd">        gsparams:   An optional dict of items used to build a GSParams object</span>
+<span class="sd">                    (may be None).</span>
+<span class="sd">        logger:     An optional logger object to log progress (may be None).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        gsobject, safe</span>
+
+<span class="sd">    The returned gsobject is the built GSObject instance, and safe is a bool</span>
+<span class="sd">    value that indicates whether the object is safe to reuse for future stamps</span>
+<span class="sd">    (e.g. if all the parameters used to build this object are constant and will</span>
+<span class="sd">    not change for later stamps).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If desired, log some output.</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting work on building CustomObject&quot;</span><span class="p">)</span>
+
+    <span class="c1"># The gsparams are passed around using a dict so they can be easily added to.</span>
+    <span class="c1"># At this point, we would typically convert them to a regular GSParams</span>
+    <span class="c1"># instance to use when building the GSObject.</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span>
+        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span> <span class="o">**</span><span class="n">gsparams</span> <span class="p">)</span>
+
+    <span class="c1"># If you need a random number generator, this is the one to use.</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Build the GSObject</span>
+    <span class="c1"># Probably something complicated that you want this function to do.</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># typically, but set to True if this object is safe to reuse.</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being used for running the
+simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict that defines the object
+being built, e.g. <code class="docutils literal notranslate"><span class="pre">config</span></code> might be <code class="docutils literal notranslate"><span class="pre">base['gal']</span></code> or it might be farther down as an item in
+the <code class="docutils literal notranslate"><span class="pre">items</span></code> attribute of a ‘List’ or ‘Sum’ object.</p>
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute that triggers running this function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;CustomObject&#39;</span><span class="p">,</span> <span class="n">BuildCustomObject</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterObjectType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterObjectType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#RegisterObjectType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterObjectType" title="Permalink to this definition"></a></dt>
+<dd><p>Register an object type for use by the config apparatus.</p>
+<p>A few notes about the signature of the build functions:</p>
+<ol class="arabic simple">
+<li><p>The config parameter is the dict for the current object to be generated.  So it should
+be the case that config[‘type’] == type_name.</p></li>
+<li><p>The base parameter is the original config dict being processed.</p></li>
+<li><p>The ignore parameter  is a list of items that should be ignored in the config dict if they
+are present and not valid for the object being built.</p></li>
+<li><p>The gsparams parameter is a dict of kwargs that should be used to build a GSParams object
+to use when building this object.</p></li>
+<li><p>The logger parameter is a logging.Logger object to use for logging progress if desired.</p></li>
+<li><p>The return value of build_func should be a tuple consisting of the object and a boolean,
+safe, which indicates whether the generated object is safe to use again rather than
+regenerate for subsequent postage stamps. e.g. if a PSF has all constant values, then it
+can be used for all the galaxies in a simulation, which lets it keep any FFTs that it has
+performed internally.  OpticalPSF is a good example of where this can have a significant
+speed up.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_name</strong> – The name of the ‘type’ specification in the config dict.</p></li>
+<li><p><strong>build_func</strong> – <p>A function to build a GSObject from the config information.
+The call signature is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">Build</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>input_type</strong> – If the type requires an input object, give the key name of the input
+type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>If the builder will use a particular input type, you should let GalSim know this by specifying
+the <code class="docutils literal notranslate"><span class="pre">input_type</span></code> when registering.  E.g. if the builder expects to use an input <code class="docutils literal notranslate"><span class="pre">dict</span></code> file
+to define some properties that will be used, you would register this fact using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;CustomObject&#39;</span><span class="p">,</span> <span class="n">BuildCustomObject</span><span class="p">,</span>
+                                 <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;dict&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The input object can be accessed in the build function as e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">input_dict</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;dict&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;CustomObject&#39;</span><span class="p">)</span>
+<span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The last argument is just used to help give sensible error messages if there is some problem,
+but it should typically be the name of the object type being built.  When you are using an
+input object, the ‘num’ attribute is reserved for indicating which of possibly several input
+objects (<code class="docutils literal notranslate"><span class="pre">dict</span></code> in this case) to use.  You should not also define a num attribute that has
+some meaning for this object type.  If you are using the <code class="docutils literal notranslate"><span class="pre">ignore</span></code> parameter to check for extra
+invalid parameters, you would thus want to add ‘num’ to the list.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_object.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_object</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_object</span></code>,
+which will read your file and execute the registration command to add the object to the list
+of valid object types.</p>
+<p>Then you can use this as a valid object type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomObject</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For examples of custom objects, see <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/galsim/des/des_psfex.py"><code class="file docutils literal notranslate"><span class="pre">des_psfex.py</span> </code></a>
+and <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/galsim/des/des_shapelet.py"><code class="file docutils literal notranslate"><span class="pre">des_shapelet.py</span> </code></a>
+in the galsim.des module, which define custom object types DES_PSFEx and DES_Shapelet.  These objects are used by <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/draw_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">draw_psf.yaml</span> </code></a>
+in the <code class="docutils literal notranslate"><span class="pre">GalSim/examples/des</span></code> directory.
+It may also be helpful to look at the GalSim implementation of some of the included object builders (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.gsobject._BuildAdd">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.gsobject.</span></span><span class="sig-name descname"><span class="pre">_BuildAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.gsobject._BuildAdd" title="Permalink to this definition"></a></dt>
+<dd><p>Build a Sum object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.gsobject._BuildConvolve">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.gsobject.</span></span><span class="sig-name descname"><span class="pre">_BuildConvolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildConvolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.gsobject._BuildConvolve" title="Permalink to this definition"></a></dt>
+<dd><p>Build a Convolution object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.gsobject._BuildList">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.gsobject.</span></span><span class="sig-name descname"><span class="pre">_BuildList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.gsobject._BuildList" title="Permalink to this definition"></a></dt>
+<dd><p>Build a GSObject selected from a List.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.gsobject._BuildOpticalPSF">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.gsobject.</span></span><span class="sig-name descname"><span class="pre">_BuildOpticalPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildOpticalPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.gsobject._BuildOpticalPSF" title="Permalink to this definition"></a></dt>
+<dd><p>Build an OpticalPSF.</p>
+</dd></dl>
+
+</section>
+<section id="sed-field">
+<h2>SED Field<a class="headerlink" href="#sed-field" title="Permalink to this heading"></a></h2>
+<p>If you want your object to have a non-trivial wavelength dependence, you can include an
+<code class="docutils literal notranslate"><span class="pre">sed</span></code> parameter to define its <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.  Currently, there is only one defined
+type to use for the SED, but the code is written in a modular way to allow for
+other types, including custom SED types.</p>
+<ul>
+<li><p>‘FileSED’ is the default type here, and you may omit the type name when using it.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The file to read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wave_type</span></code> = <em>str_value</em> (required)  The unit of the wavelengths in the file (‘nm’ or ‘Ang’ or variations on these – cf. <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux_type</span></code> = <em>str_value</em> (required)  The type of spectral density or dimensionless normalization used in the file (‘flambda’, ‘fnu’, ‘fphotons’ or ‘1’ – cf. <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  If given, shift the spectrum to the given redshift.  You can also specify the redshift as an object-level parameter if preferred.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_flux_density</span></code> = <em>float_value</em> (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, <code class="docutils literal notranslate"><span class="pre">norm_wavelength</span></code> is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_wavelength</span></code> = <em>float_value</em> (optional)  The wavelength to use for the normalization flux density.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_flux</span></code> = <em>float_value</em> (optional)  Set a normalization value of the flux over a specific bandpass.  If given, <code class="docutils literal notranslate"><span class="pre">norm_bandpass</span></code> is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_bandpass</span></code> = <em>Bandpass</em> (optional)  The bandpass to use for the normalization flux.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom SED type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.SEDBuilder" title="galsim.config.SEDBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.SEDBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.SEDBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">SEDBuilder</span></span><a class="reference internal" href="_modules/galsim/config/sed.html#SEDBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SEDBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building SED objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.SEDBuilder.buildSED">
+<span class="sig-name descname"><span class="pre">buildSED</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sed.html#SEDBuilder.buildSED"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SEDBuilder.buildSED" title="Permalink to this definition"></a></dt>
+<dd><p>Build the SED based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the SED type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the constructed SED object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterSEDType</span><span class="p">(</span><span class="s1">&#39;CustomSED&#39;</span><span class="p">,</span> <span class="n">CustomSEDBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterSEDType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterSEDType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sed_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sed.html#RegisterSEDType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterSEDType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a SED type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sed_type</strong> – The name of the type in the config dict.</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the SED object.  It should
+be an instance of a subclass of SEDBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the SED builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_sed</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid sed type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">sed</span><span class="p p-Indicator">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomSED</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_top.html" class="btn btn-neutral float-left" title="Top Level Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_stamp.html" class="btn btn-neutral float-right" title="Config Stamp Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

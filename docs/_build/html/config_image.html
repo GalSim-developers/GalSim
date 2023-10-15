@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Image Field &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Input Field" href="config_input.html" />
+    <link rel="prev" title="Config Stamp Field" href="config_stamp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Image Field</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#image-field-attributes">Image Field Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#image-types">Image Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-image-types">Custom Image Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.ImageBuilder"><code class="docutils literal notranslate"><span class="pre">ImageBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterImageType"><code class="docutils literal notranslate"><span class="pre">RegisterImageType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.image_scattered.ScatteredImageBuilder"><code class="docutils literal notranslate"><span class="pre">ScatteredImageBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.image_tiled.TiledImageBuilder"><code class="docutils literal notranslate"><span class="pre">TiledImageBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#noise">Noise</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.NoiseBuilder"><code class="docutils literal notranslate"><span class="pre">NoiseBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterNoiseType"><code class="docutils literal notranslate"><span class="pre">RegisterNoiseType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.GaussianNoiseBuilder"><code class="docutils literal notranslate"><span class="pre">GaussianNoiseBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.PoissonNoiseBuilder"><code class="docutils literal notranslate"><span class="pre">PoissonNoiseBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.CCDNoiseBuilder"><code class="docutils literal notranslate"><span class="pre">CCDNoiseBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.COSMOSNoiseBuilder"><code class="docutils literal notranslate"><span class="pre">COSMOSNoiseBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#wcs-field">WCS Field</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.WCSBuilder"><code class="docutils literal notranslate"><span class="pre">WCSBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterWCSType"><code class="docutils literal notranslate"><span class="pre">RegisterWCSType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.SimpleWCSBuilder"><code class="docutils literal notranslate"><span class="pre">SimpleWCSBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.OriginWCSBuilder"><code class="docutils literal notranslate"><span class="pre">OriginWCSBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.TanWCSBuilder"><code class="docutils literal notranslate"><span class="pre">TanWCSBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.ListWCSBuilder"><code class="docutils literal notranslate"><span class="pre">ListWCSBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bandpass-field">Bandpass Field</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.BandpassBuilder"><code class="docutils literal notranslate"><span class="pre">BandpassBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterBandpassType"><code class="docutils literal notranslate"><span class="pre">RegisterBandpassType()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sensor-field">Sensor Field</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.SensorBuilder"><code class="docutils literal notranslate"><span class="pre">SensorBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterSensorType"><code class="docutils literal notranslate"><span class="pre">RegisterSensorType()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Config Image Field</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_image.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-image-field">
+<h1>Config Image Field<a class="headerlink" href="#config-image-field" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">image</span></code> field defines some properties about how to draw the images.</p>
+<section id="image-field-attributes">
+<h2>Image Field Attributes<a class="headerlink" href="#image-field-attributes" title="Permalink to this heading"></a></h2>
+<p>Some attributes that are allowed for all image types are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> = <em>float_value</em> (default = 1.0)  The pixel scale, typically taken to be arcsec/pixel. Most size parameters for the profiles are taken to be specified in arcsec. If you would rather specify everything in pixels, just leave off the pixel_scale (or set it to 1.0) and then 1 pixel = 1 arcsec, so everything should work the way you expect.  Or if you want all your units to be degrees or radians or something else, then just set this pixel scale in the same units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level</span></code> = <em>float_value</em> (default = 0.0; only one of <code class="docutils literal notranslate"><span class="pre">sky_level</span></code> and <code class="docutils literal notranslate"><span class="pre">sky_level_pixel</span></code> is allowed)  The background level of the image in ADU/arcsec^2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level_pixel</span></code> = <em>float_value</em> (default = 0.0; only one of <code class="docutils literal notranslate"><span class="pre">sky_level</span></code> and <code class="docutils literal notranslate"><span class="pre">sky_level_pixel</span></code> is allowed)  The background level of the image in ADU/pixel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index_convention</span></code> = <em>str_value</em> (default = ‘FITS’)  The convention for what to call the lower left pixel of the image.  The standard FITS convention is to call this pixel (1,1).  However, this can be counter-intuitive to people used to C or python indexing.  So if <code class="docutils literal notranslate"><span class="pre">index_convention</span></code> is ‘C’ or ‘python’ or ‘0’, then the image origin will be considered (0,0) instead.  (While unnecessary to specify explicitly since it is the default, the (1,1) convention may be called ‘FITS’, ‘Fortran’ or ‘1’.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> = <em>str_value</em> (default = ‘np.float32’)  The data type to use for the output image.  Allowed values include all the Python and numpy types that are allowed for an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> = <em>int_value</em> or <em>list</em> (optional) The random seed to use for random numbers in the simulation.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The typical use case is that this is a simple integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is a string, then it is parsed as a integer and treated in the same way as above.  This allows you to do a simple calculation using the <code class="docutils literal notranslate"><span class="pre">$</span></code> Eval shorthand to e.g. compute the initial seed from some other kind of ID number you might have in the config file.  It also means you don’t have to be careful in your YAML writing to not accidentally write e.g. <code class="docutils literal notranslate"><span class="pre">'1234'</span></code> rather than <code class="docutils literal notranslate"><span class="pre">1234</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is a dict, it should parse as an <em>int_value</em>, but in this case, GalSim will not convert it into a sequence based on a single value.  Rather, it will respect your specification and evaluate the seed for each object as you specifiy.  This let’s you do advanced things like use a different cadence for your random numbers (e.g. potentially to repeat the same seed for multiple objects; cf. <a class="reference internal" href="tutorials.html#demo-7"><span class="std std-ref">Demo 7</span></a>).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number behave normally for noise and such, and another one repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add <code class="docutils literal notranslate"><span class="pre">rng_num</span></code> to the field and set it to the number of the rng you want to use in this list.  Each item in the list is parsed as above.</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Within this <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> list, any items that are either an int or str will be
+evaluated once and converted into a sequence in the normal way.  So if you want an item
+to be some complex Eval operation, you should make it a dict with an explicit
+<code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">Eval</span></code>, rather than use the <code class="docutils literal notranslate"><span class="pre">$</span></code> shorthand notation.</p>
+</div>
+<ul class="simple">
+<li><p>The default behavior, if <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is not given, is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nproc</span></code> = <em>int_value</em>  (default = 1)  Specify the number of processors to use when drawing images. If nproc &lt;= 0, then this means to try to automatically figure out the number of cpus and use that.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> = <em>float_value</em>  (default = 900)  Specify the number of seconds to allow for each job when multiprocessing before the multiprocessing queue times out.  The default is generally appropriate to prevent jobs from hanging forever from some kind of multiprocessing snafu, but if your jobs are expected to take more than 15 minutes per image, you might need to increase this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wcs</span></code> See <a class="reference internal" href="#wcs-field"><span class="std std-ref">WCS Field</span></a> below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bandpass</span></code> See <a class="reference internal" href="#bandpass-field"><span class="std std-ref">Bandpass Field</span></a> below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor</span></code>  See <a class="reference internal" href="#sensor-field"><span class="std std-ref">Sensor Field</span></a> below.</p></li>
+</ul>
+</section>
+<section id="image-types">
+<h2>Image Types<a class="headerlink" href="#image-types" title="Permalink to this heading"></a></h2>
+<p>The default image type is ‘Single’, which means that the image contains just a single
+postage stamp.  Other types are possible (and common) that draw more than one postage stamp
+on a full image in different ways.  Each type define extra attributes that are either
+allowed or required.
+The image types defined by GalSim are:</p>
+<ul>
+<li><p>‘Single’ The image contains a single object at the center (unless it has been shifted of course – see shift attribute above).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> = <em>int_value</em> (optional)  If you want square images for each object (common), you just need to set this one value and the images will be <code class="docutils literal notranslate"><span class="pre">size</span></code> x <code class="docutils literal notranslate"><span class="pre">size</span></code>. The default is for GalSim to automatically determine a good size for the image that will encompass most of the flux of the object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xsize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">size</span></code>)  If you want non-square images, you can specify <code class="docutils literal notranslate"><span class="pre">xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">ysize</span></code> separately instead. It is an error for only one of them to be non-zero.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ysize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">size</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = <em>pos_value</em> The position of the object in world coordinates.  For the Single image type, this is unconnected to the object rendering on the image, which is always at the center.  However, it may be provided as something that other calculations need to access.  e.g. shear from a PowerSpectrum or NFWHalo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = <em>pos_value</em> The nominal position on the image at which to center of the object.  For the Single image type, the object is always placed as close as possible to the center of the image (unless an explicit offset is specified), but the bounds will be adjusted so that position is equal to <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Tiled’ The image consists of a tiled array of postage stamps.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nx_tiles</span></code> = <em>int_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ny_tiles</span></code> = <em>int_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> or both <code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> are required)  The size of square stamps on which to draw the objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> or both <code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> are required)  The xsize of the stamps on which to draw the objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> or both <code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> are required)  The ysize of the stamps on which to draw the objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">border</span></code> = <em>int_value</em> (default = 0) number of pixels between tiles. Note: the border value may be negative, in which case the tiles will overlap each other.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xborder</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">border</span></code>) number of pixels between tiles in the x direction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yborder</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">border</span></code>) number of pixels between tiles in the y direction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order</span></code> = <em>str_value</em> (default = ‘row’)  Which order to fill the stamps.  ‘row’ means to proceed row by row starting at the bottom row (each row is filled from left to right).  ‘column’ means to fill the columns from left to right (each column is filled from bottom to top).  ‘random’ means to place the tiles in a random order.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Scattered’  The image consists of a large contiguous area on which postage stamps of each object are placed at arbitrary positions, possibly overlapping each other (in which case the fluxes are added together for the final pixel value).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">size</span></code> or both <code class="docutils literal notranslate"><span class="pre">xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">ysize</span></code> are required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xsize</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">size</span></code> or both <code class="docutils literal notranslate"><span class="pre">xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">ysize</span></code> are required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ysize</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">size</span></code> or both <code class="docutils literal notranslate"><span class="pre">xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">ysize</span></code> are required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nobjects</span></code> = <em>int_value</em> (default if using an input catalog and the output type is ‘Fits’ is the number of entries in the input catalog; otherwise required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> = <em>int_value</em> (optional)  The <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> attribute works like the <code class="docutils literal notranslate"><span class="pre">size</span></code> attribute for ‘Single’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed) The position in world coordinates relative to the center of the image at which to center of the object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed; default if neither is given is to use type ‘XY’ with <code class="docutils literal notranslate"><span class="pre">x</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">ysize</span></code>)  The position on the image at which to center of the object.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="custom-image-types">
+<h2>Custom Image Types<a class="headerlink" href="#custom-image-types" title="Permalink to this heading"></a></h2>
+<p>To define your own image type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a class that will be used
+to build the image.</p>
+<p>The class should be a subclass of <a class="reference internal" href="#galsim.config.ImageBuilder" title="galsim.config.ImageBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.ImageBuilder</span></code></a>, which is the class used for
+the default ‘Single’ type.  There are a number of class methods, and you only need to override
+the ones for which you want different behavior than that of the ‘Single’ type.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">ImageBuilder</span></span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building full images.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.
+It also includes the implementation of the default image type: Single.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.addNoise">
+<span class="sig-name descname"><span class="pre">addNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.addNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.addNoise" title="Permalink to this definition"></a></dt>
+<dd><p>Add the final noise to the image.</p>
+<p>In the base class, this is a no op, since it directs the BuildStamp function to build
+the noise at that level.  But some image types need to do extra work at the end to
+add the noise properly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The image onto which to add the noise.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>current_var</strong> – The current noise variance in each postage stamps.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.buildBandpass">
+<span class="sig-name descname"><span class="pre">buildBandpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildBandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildBandpass" title="Permalink to this definition"></a></dt>
+<dd><p>If thre is a ‘bandpass’ field in config[‘image’], load it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a gasim.Bandpass or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.buildImage">
+<span class="sig-name descname"><span class="pre">buildImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildImage" title="Permalink to this definition"></a></dt>
+<dd><p>Build an Image based on the parameters in the config dict.</p>
+<p>For Single, this is just an image consisting of a single postage stamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the final image and the current noise variance in the image as a tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.buildSensor">
+<span class="sig-name descname"><span class="pre">buildSensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildSensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildSensor" title="Permalink to this definition"></a></dt>
+<dd><p>Build the sensor if given in the config dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a galsim.Sensor or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.getNObj">
+<span class="sig-name descname"><span class="pre">getNObj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition"></a></dt>
+<dd><p>Get the number of objects that will be built for this image.</p>
+<p>For Single, this is just 1, but other image types would figure this out from the
+configuration parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>approx</strong> – Whether an approximate/overestimate is ok [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the number of objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.makeTasks">
+<span class="sig-name descname"><span class="pre">makeTasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.makeTasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.makeTasks" title="Permalink to this definition"></a></dt>
+<dd><p>Turn a list of jobs into a list of tasks.</p>
+<p>Each task is performed separately in multi-processing runs, so this provides a mechanism
+to have multiple jobs depend on each other without being messed up by multi-processing.
+E.g. you could have blends where each task consists of building several overlapping
+galaxies (each of which would be a single job).  Perhaps the first job would include
+a calculation to determine where all the overlapping galaxies should go, and the later
+jobs would use the results of this calculation and just place the later galaxies in the
+appropriate place.</p>
+<p>Normally, though, each task is just a single job, in which case, this function is very
+simple.</p>
+<p>For Single, this passes the job onto the MakeStampTasks function (which in turn is
+normally quite simple).  Most other types though probably want one job per task, for which
+the appropriate code would be:</p>
+<blockquote>
+<div><p>return [ [ (job, k) ] for k, job in enumerate(jobs) ]</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>jobs</strong> – A list of jobs to split up into tasks.  Each job in the list is a
+dict of parameters that includes ‘image_num’ and ‘obj_num’.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of tasks</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ImageBuilder.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ImageBuilder.setup" title="Permalink to this definition"></a></dt>
+<dd><p>Do the initialization and setup for building the image.</p>
+<p>This figures out the size that the image will be, but doesn’t actually build it yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>ignore</strong> – A list of parameters that are allowed to be in config that we can
+ignore here. i.e. it won’t be an error if these parameters are present.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>xsize, ysize</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being used for running the
+simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict that defines the image
+being built, which would typically be <code class="docutils literal notranslate"><span class="pre">base['image']</span></code>.</p>
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute that triggers the use of this Builder object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterImageType</span><span class="p">(</span><span class="s1">&#39;CustomImage&#39;</span><span class="p">,</span> <span class="n">CustomImageLoader</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterImageType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterImageType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#RegisterImageType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterImageType" title="Permalink to this definition"></a></dt>
+<dd><p>Register an image type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_type</strong> – The name of the type in config[‘image’]</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the images.  It should be an
+instance of ImageBuilder or a subclass thereof.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Note that we register an instance of the class, not the class itself.  This opens up the
+possibility of having multiple image types use the same class instantiated with different
+initialization parameters.  This is not used by the GalSim image types, but there may be use
+cases where it would be useful for custom image types.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_image.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_image</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_image</span></code>,
+which will read your file and execute the registration command to add the builder to the list
+of valid image types.</p>
+<p>Then you can use this as a valid image type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomImage</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>We don’t currently have any examples of custom images, but it may be helpful to look at the GalSim
+implementation of the included image types (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.image_scattered.ScatteredImageBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.image_scattered.</span></span><span class="sig-name descname"><span class="pre">ScatteredImageBuilder</span></span><a class="reference internal" href="_modules/galsim/config/image_scattered.html#ScatteredImageBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.image_scattered.ScatteredImageBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ImageBuilder" title="galsim.config.image.ImageBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageBuilder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.image_tiled.TiledImageBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.image_tiled.</span></span><span class="sig-name descname"><span class="pre">TiledImageBuilder</span></span><a class="reference internal" href="_modules/galsim/config/image_tiled.html#TiledImageBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.image_tiled.TiledImageBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ImageBuilder" title="galsim.config.image.ImageBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageBuilder</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="noise">
+<h2>Noise<a class="headerlink" href="#noise" title="Permalink to this heading"></a></h2>
+<p>Typically, you will want to add noise to the image.  The noise attribute should be a dict
+with a <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute to define what kind of noise should be added.  The noise types
+that are defined by GalSim are:</p>
+<ul>
+<li><p>‘Gaussian’ is the simplest kind of noise.  Just Gaussian noise across the whole image with a given sigma (or variance).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">sigma</span></code> or <code class="docutils literal notranslate"><span class="pre">variance</span></code> is required)  The rms of the noise in ADU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variance</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">sigma</span></code> or <code class="docutils literal notranslate"><span class="pre">variance</span></code> is required)  The variance of the noise in ADU^2.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Poisson’ adds Poisson noise for the flux value in each pixel, with an optional sky background level.  This is the default noise if you don’t specify a different noise type.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level</span></code> = <em>float_value</em> (default = 0.0)  The sky level in ADU/arcsec^2 to use for the noise.  If both this and <code class="docutils literal notranslate"><span class="pre">image.sky_level</span></code> are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be <code class="docutils literal notranslate"><span class="pre">image.sky_level</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level_pixel</span></code> = <em>float_value</em> (default = 0.0)  The sky level in ADU/pixel to use for the noise.  If both this and <code class="docutils literal notranslate"><span class="pre">image.sky_level_pixel</span></code> are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be <code class="docutils literal notranslate"><span class="pre">image.sky_level_pixel</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘CCD’ includes both Poisson noise for the flux value in each pixel (with an optional gain) and an optional Gaussian read noise.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level</span></code> = <em>float_value</em> (default = 0.0)  The sky level in ADU/arcsec^2 to use for the noise.  If both this and <code class="docutils literal notranslate"><span class="pre">image.sky_level</span></code> are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be <code class="docutils literal notranslate"><span class="pre">image.sky_level</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_level_pixel</span></code> = <em>float_value</em> (default = 0.0)  The sky level in ADU/pixel to use for the noise.  If both this and <code class="docutils literal notranslate"><span class="pre">image.sky_level_pixel</span></code> are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be <code class="docutils literal notranslate"><span class="pre">image.sky_level_pixel</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gain</span></code> = <em>float_value</em> (default = 1.0)  The CCD gain in e-/ADU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read_noise</span></code> = <em>float_value</em> (default = 0.0)  The CCD read noise in e-.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘COSMOS’ provides spatially correlated noise of the sort found in the F814W HST COSMOS science images described by Leauthaud et al (2007).  The point variance (given by the zero distance correlation function value) may be normalized by the user as required, as well as the dimensions of the correlation function.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (optional) The path and filename of the FITS file containing the correlation function data used to generate the COSMOS noise field.  The default is to use the file packaged with GalSim as ‘share/acs_I_unrot_sci_20_cf.fits’, but this option lets you override this if desired.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cosmos_scale</span></code> = <em>float_value</em> (default = 0.03) The ACS coadd images in COSMOS have a pixel scale of 0.03 arcsec, and so the pixel scale <code class="docutils literal notranslate"><span class="pre">cosmos_scale</span></code> adopted in the representation of of the correlation function takes a default value of 0.03.  If you wish to use other units ensure that <code class="docutils literal notranslate"><span class="pre">cosmos_scale</span></code> takes the value corresponding to 0.03 arcsec in your chosen system.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variance</span></code> = <em>float_value</em> (default = 0.) Scale the point variance of the noise field to the desired value, equivalent to scaling the correlation function to have this value at zero separation distance.  Choosing the default scaling of 0. uses the variance in the original COSMOS noise fields.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Correlated’ is a more general version of COSMOS, allowing any arbitrary correlated noise spectrum to be used.  It requires the user to provide the appropriate file giving an image of the correlation function.  See <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise.from_file" title="galsim.BaseCorrelatedNoise.from_file"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.from_file</span></code></a> for details about how this file must look.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required) The path and filename of the FITS file containing the correlation function data used to generate the Correlated noise field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> = <em>float_value</em> (required) The pixel scale of the original image data from which the correlated noise was constructed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variance</span></code> = <em>float_value</em> (default = 0.) Scale the point variance of the noise field to the desired value, equivalent to scaling the correlation function to have this value at zero separation distance.  Choosing the default scaling of 0. uses the variance in the file without modification.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">noise</span></code> field can also take the following attributes, which are relevant when using
+object types that have some intrinsic noise already, such as ‘RealGalaxy’:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">whiten</span></code> = <em>bool_value</em> (default = False) Whether or not a noise-whitening procedure should be done on the image after it is drawn to make the noise uncorrelated (white noise).  This is only relevant when using the <code class="docutils literal notranslate"><span class="pre">gal</span></code> type ‘RealGalaxy’.  Note: After the whitening process, there is white Gaussian noise in the image.  We subtract this much noise from the variance of whatever is given in the <code class="docutils literal notranslate"><span class="pre">image.noise</span></code> field.  However, unless this is <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">=</span> <span class="pre">'Gaussian'</span></code>, the final noise field will not precisely match what you request.  e.g. ‘Poisson’ noise would have a portion of the variance be Gaussian rather than Poisson.  This probably does not matter in most cases, but if you are whitening, the most coherent noise profile is ‘Gaussian’, since that works seamlessly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symmetrize</span></code> = <em>int_value</em> (default = None) The order at which to impose N-fold symmetry on the noise in the image after it is drawn, after which there will be correlated Gaussian noise with the desired symmetry in the image (usually much less than must be added to achieve a fully white noise field).  Similar caveats apply to this option as to the <code class="docutils literal notranslate"><span class="pre">white</span></code> option.</p></li>
+</ul>
+<p>In addition to the above, you may also define your own custom noise type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.NoiseBuilder" title="galsim.config.NoiseBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.NoiseBuilder</span></code></a>.  This is really an abstract
+base class.  At least the first two of these methods need to be overridden:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.NoiseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">NoiseBuilder</span></span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.NoiseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building noise objects and applying the noise to images.</p>
+<p>The base class doesn’t do anything, but it defines the call signatures of the methods
+that derived classes should use for the different specific noise types.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.NoiseBuilder.addNoise">
+<span class="sig-name descname"><span class="pre">addNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoise" title="Permalink to this definition"></a></dt>
+<dd><p>Read the noise parameters from the config dict and add the appropriate noise to the
+given image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the noise field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>im</strong> – The image onto which to add the noise</p></li>
+<li><p><strong>rng</strong> – The random number generator to use for adding the noise.</p></li>
+<li><p><strong>current_var</strong> – The current noise variance present in the image already.</p></li>
+<li><p><strong>draw_method</strong> – The method that was used to draw the objects on the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the variance of the noise model (units are ADU if gain != 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.NoiseBuilder.addNoiseVariance">
+<span class="sig-name descname"><span class="pre">addNoiseVariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_obj_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoiseVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoiseVariance" title="Permalink to this definition"></a></dt>
+<dd><p>Read the noise parameters from the config dict and add the appropriate noise variance
+to the given image.</p>
+<p>This is used for constructing the weight map iamge.  It doesn’t add a random value to
+each pixel.  Rather, it adds the variance of the noise that was used in the main image to
+each pixel in this image.</p>
+<p>This method has a default implemenation that is appropriate for noise models that have
+a constant noise variance.  It just gets the variance from getNoiseVariance and adds
+that constant value to every pixel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the noise field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>im</strong> – The image onto which to add the noise variance</p></li>
+<li><p><strong>include_obj_var</strong> – Whether the noise variance values should the photon noise from
+object flux in addition to the sky flux.  Only relevant for
+noise models that are based on the image flux values such as
+Poisson and CCDNoise.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.NoiseBuilder.getNoiseVariance">
+<span class="sig-name descname"><span class="pre">getNoiseVariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.getNoiseVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.getNoiseVariance" title="Permalink to this definition"></a></dt>
+<dd><p>Read the noise parameters from the config dict and return the variance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the noise field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>full</strong> – If the noise is variable across the image, return the full image with the
+noise variance at every pixel.  Otherwise, just return the value at the
+center.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the variance of the noise model (units are ADU if gain != 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterNoiseType</span><span class="p">(</span><span class="s1">&#39;CustomNoise&#39;</span><span class="p">,</span> <span class="n">CustomNoiseBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterNoiseType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterNoiseType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#RegisterNoiseType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterNoiseType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a noise type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noise_type</strong> – The name of the type in config[‘image’][‘noise’]</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the noise.  It should be an
+instance of a subclass of NoiseBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_noise</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid noise type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">noise</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomNoise</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>We don’t currently have any examples of custom noise types, but it may be helpful to look at the GalSim implementation of the various included noise types (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.GaussianNoiseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">GaussianNoiseBuilder</span></span><a class="reference internal" href="_modules/galsim/config/noise.html#GaussianNoiseBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.GaussianNoiseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.NoiseBuilder" title="galsim.config.noise.NoiseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseBuilder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.PoissonNoiseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">PoissonNoiseBuilder</span></span><a class="reference internal" href="_modules/galsim/config/noise.html#PoissonNoiseBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.PoissonNoiseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.NoiseBuilder" title="galsim.config.noise.NoiseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseBuilder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.CCDNoiseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">CCDNoiseBuilder</span></span><a class="reference internal" href="_modules/galsim/config/noise.html#CCDNoiseBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.CCDNoiseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.NoiseBuilder" title="galsim.config.noise.NoiseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseBuilder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.COSMOSNoiseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">COSMOSNoiseBuilder</span></span><a class="reference internal" href="_modules/galsim/config/noise.html#COSMOSNoiseBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.COSMOSNoiseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CorrelatedNoiseBuilder</span></code></p>
+</dd></dl>
+
+</section>
+<section id="wcs-field">
+<h2>WCS Field<a class="headerlink" href="#wcs-field" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> attribute mentioned above is the usual way to define the connection between
+pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
+which is known as a World Coordinate System (WCS) if desired.  To do this, use the <code class="docutils literal notranslate"><span class="pre">wcs</span></code>
+attribute instead of the <code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> attribute.  This should be a dict with a <code class="docutils literal notranslate"><span class="pre">type</span></code>
+attribute that defines what kind of WCS to use.  The wcs types that are defined by GalSim are:</p>
+<ul>
+<li><p>‘PixelScale’ implements a regular square pixel grid.  If you do not specify any <code class="docutils literal notranslate"><span class="pre">wcs</span></code> item, this is what will be used, and the scale will be the <code class="docutils literal notranslate"><span class="pre">image.pixel_scale</span></code> value.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> = <em>float_value</em> (default = <code class="docutils literal notranslate"><span class="pre">image.pixel_scale</span></code>)  The scale size of the pixels.  The area is <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">scale</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Shear’ implements a uniform shear of a regular square pixel grid.  After the shear, the pixel area will still be <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">scale</span></code>, but they will be parallelograms (rhombi actually) rather than squares.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> = <em>float_value</em> (required)  The pixel scale of the grid before being sheared.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shear</span></code> = <em>shear_value</em> (required)  The shear to apply.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Jacobian’ or ‘Affine’ implements an arbitrary affine transform.  This is the most general WCS that has a uniform pixel shape.  The world (u,v) coordinates are linearly related to the image (i.e. pixel) (x,y) coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dudx</span></code> = <em>float_value</em> (required) du/dx</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dudy</span></code> = <em>float_value</em> (required) du/dy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dvdx</span></code> = <em>float_value</em> (required) dv/dx</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dvdy</span></code> = <em>float_value</em> (required) dv/dy</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘UVFunction’ implements an arbitrary transformation from image coordinates (x,y) to world coordinates (u,v) via two functions u(x,y) and v(x,y).  You can also provide the inverse functions x(u,v) and y(u,v).  They are not required, but if they are not given, then positions of objects cannot be given in world coordinates via <code class="docutils literal notranslate"><span class="pre">image.world_pos</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ufunc</span></code> = <em>str_value</em> (required) A string that can be turned into the function u(x,y) via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">x,y</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">ufunc)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vfunc</span></code> = <em>str_value</em> (required) A string that can be turned into the function v(x,y) via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">x,y</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">vfunc)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xfunc</span></code> = <em>str_value</em> (optional) A string that can be turned into the function x(u,v) of the inverse transformation via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">u,v</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">xfunc)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yfunc</span></code> = <em>str_value</em> (optional) A string that can be turned into the function y(u,v) of the inverse transformation via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">u,v</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">yfunc)</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RaDecFunction’ implements an arbitrary transformation from image coordinates (x,y) to celestial coordinates (ra,dec) via two functions ra(x,y) and dec(x,y).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ra_func</span></code> = <em>str_value</em> (required) A string that can be turned into the function ra(x,y) via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">x,y</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">rafunc)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dec_func</span></code> = <em>str_value</em> (required) A string that can be turned into the function dec(x,y) via the python command <code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">x,y</span> <span class="pre">:</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">decfunc)</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Fits’ reads a WCS from a FITS file.  Most common WCS types are implemented, but if the file uses something a bit unusual, the success of the read may depend on what other python packages you have installed.  See the documentation of <a class="reference internal" href="wcs.html#galsim.FitsWCS" title="galsim.FitsWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FitsWCS</span></code></a> for more details.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required) The name of the FITS file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Tan’ implements a tangent-plane projection of the celestial sphere around a given right ascension and declination.  There is an arbitrary Jacobian matrix relating the image coordinates to the coordinates in the tangent plane.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dudx</span></code> = <em>float_value</em> (required) du/dx</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dudy</span></code> = <em>float_value</em> (required) du/dy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dvdx</span></code> = <em>float_value</em> (required) dv/dx</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dvdy</span></code> = <em>float_value</em> (required) dv/dy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ra</span></code> = <em>angle_value</em> (required) the right ascension of the tangent point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dec</span></code> = <em>angle_value</em> (required) the declination of the tangent point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> = <em>str_value</em> (default = ‘arcsec’) the units to use for the intermediate (u,v) coordinates.  Options are ‘arcsec’, ‘arcmin’, ‘deg’, ‘rad’, ‘hr’.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>In addition, all wcs types can define an origin in either image coordinates, world coordinates, or
+both:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the image coordinates to use as the origin position, if not (x,y) = (0,0).  Special: You can also specify <code class="docutils literal notranslate"><span class="pre">origin</span></code> to be ‘center’, in which case the origin is taken to be the center of the image rather than the corner.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the world coordinates to use as the origin position, if not (u,v) = (0,0).  (Not available for the celestial WCS types: ‘RaDecFunction’, ‘Fits’, and ‘Tan’.)</p></li>
+</ul>
+<p>In addition to the above, you may also define your own custom WCS type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.WCSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.WCSBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.WCSBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">WCSBuilder</span></span><a class="reference internal" href="_modules/galsim/config/wcs.html#WCSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.WCSBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building WCS objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.WCSBuilder.buildWCS">
+<span class="sig-name descname"><span class="pre">buildWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#WCSBuilder.buildWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.WCSBuilder.buildWCS" title="Permalink to this definition"></a></dt>
+<dd><p>Build the WCS based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the wcs type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the constructed WCS object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterWCSType</span><span class="p">(</span><span class="s1">&#39;CustomWCS&#39;</span><span class="p">,</span> <span class="n">CustomWCSBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterWCSType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterWCSType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wcs_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#RegisterWCSType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterWCSType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a wcs type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wcs_type</strong> – The name of the type in config[‘image’][‘wcs’]</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the WCS object.  It should
+be an instance of a subclass of WCSBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the WCS builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>If the builder will use a particular input type, you should let GalSim know this by specifying
+the <code class="docutils literal notranslate"><span class="pre">input_type</span></code> when registering.  e.g. if it uses an input FitsHeader, you would write:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterWCSType</span><span class="p">(</span><span class="s1">&#39;CustomWCS&#39;</span><span class="p">,</span> <span class="n">CustomWCSBuilder</span><span class="p">(),</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;fits_header&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_wcs</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid wcs type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">wcs</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomWCS</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For examples of custom wcs types, see <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/des_wcs.py"><code class="file docutils literal notranslate"><span class="pre">des_wcs.py</span> </code></a>, which implements <code class="docutils literal notranslate"><span class="pre">DES_SlowLocal</span></code> and <code class="docutils literal notranslate"><span class="pre">DES_Local</span></code>.
+The latter is faster because it uses in input field, ‘des_wcs’, which saves on I/O time by only loading the files once.  DES_Local is used by <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>.</p>
+<p>It may also be helpful to look at the GalSim implementation of the various included wcs types (click on
+the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.SimpleWCSBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">SimpleWCSBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#SimpleWCSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SimpleWCSBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.wcs.WCSBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">WCSBuilder</span></code></a></p>
+<p>A class for building simple WCS objects.</p>
+<p>The initializer takes an init_func, which is the class or function to call to build the WCS.
+For the kwargs, it calls getKwargs, which does the normal parsing of the req_params and
+related class attributes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.OriginWCSBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">OriginWCSBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin_init_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#OriginWCSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OriginWCSBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.SimpleWCSBuilder" title="galsim.config.wcs.SimpleWCSBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleWCSBuilder</span></code></a></p>
+<p>A specialization for WCS classes that use a different type depending on whether there
+is an origin or world_origin parameter in the config dict.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.TanWCSBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">TanWCSBuilder</span></span><a class="reference internal" href="_modules/galsim/config/wcs.html#TanWCSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.TanWCSBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.wcs.WCSBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">WCSBuilder</span></code></a></p>
+<p>The TanWCS type needs special handling to get the kwargs, since the TanWCS function
+takes an AffineTransform as one of the arguments, so we need to build that from
+dudx, dudy, etc.  We also need to construct a CelestialCoord object for the world_origin,
+which we make from ra, dec paramters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.ListWCSBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">ListWCSBuilder</span></span><a class="reference internal" href="_modules/galsim/config/wcs.html#ListWCSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ListWCSBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.wcs.WCSBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">WCSBuilder</span></code></a></p>
+<p>Select a wcs from a list</p>
+</dd></dl>
+
+</section>
+<section id="bandpass-field">
+<h2>Bandpass Field<a class="headerlink" href="#bandpass-field" title="Permalink to this heading"></a></h2>
+<p>If you want to draw chromatic objects, then you also need to define the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> to use
+for the image in a <code class="docutils literal notranslate"><span class="pre">image.bandpass</span></code> field.  Currently, there is only one defined
+type to use for the Bandpass, but the code is written in a modular way to allow for
+other types, including custom Bandpass types.</p>
+<ul>
+<li><p>‘FileBandpass’ is the default type here, and you may omit the type name when using it.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The file to read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wave_type</span></code> = <em>str_value</em> (required)  The unit of the wavelengths in the file (‘nm’ or ‘Ang’ or variations on these – cf. <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blue_limit</span></code> = <em>float_value</em> (optional)  Hard cut off on the blue side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">red_limit</span></code> = <em>float value</em> (optional)  Hard cut off on the red side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zeropoint</span></code> = <em>float_value</em> (optional)  The zero-point to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thin</span></code> = <em>float_value</em> (optional)  If given, call <a class="reference internal" href="bandpass.html#galsim.Bandpass.thin" title="galsim.Bandpass.thin"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Bandpass.thin</span></code></a> on the Bandpass after reading in from the file, using this for the <code class="docutils literal notranslate"><span class="pre">rel_err</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom Bandpass type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.BandpassBuilder" title="galsim.config.BandpassBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.BandpassBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.BandpassBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">BandpassBuilder</span></span><a class="reference internal" href="_modules/galsim/config/bandpass.html#BandpassBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.BandpassBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building Bandpass objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.BandpassBuilder.buildBandpass">
+<span class="sig-name descname"><span class="pre">buildBandpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/bandpass.html#BandpassBuilder.buildBandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.BandpassBuilder.buildBandpass" title="Permalink to this definition"></a></dt>
+<dd><p>Build the Bandpass based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the bandpass type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the constructed Bandpass object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterBandpassType</span><span class="p">(</span><span class="s1">&#39;CustomBandpass&#39;</span><span class="p">,</span> <span class="n">CustomBandpassBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterBandpassType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterBandpassType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bandpass_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/bandpass.html#RegisterBandpassType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterBandpassType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a bandpass type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bandpass_type</strong> – The name of the type in the config dict.</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the Bandpass object.  It should
+be an instance of a subclass of BandpassBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the Bandpass builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_bandpass</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid bandpass type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">bandpass</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomBandpass</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</section>
+<section id="sensor-field">
+<h2>Sensor Field<a class="headerlink" href="#sensor-field" title="Permalink to this heading"></a></h2>
+<p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, one can use a <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> to model the conversion of photons
+to electrons and then the accumulation of these electrons in the pixels.</p>
+<p>The sensor types defined by GalSim are:</p>
+<ul>
+<li><p>‘Simple’ is the default, which does nothing but accumulate the photons at their (x,y)
+positions onto the corresponding pixels in the image.  Typically, in this case, you would
+omit the <code class="docutils literal notranslate"><span class="pre">sensor</span></code> field entirely.</p></li>
+<li><p>‘Silicon’ models a silicon-based CCD sensor that converts photons to electrons at a wavelength-
+dependent depth (probabilistically) and drifts them down to the wells, properly taking
+into account the repulsion of previously accumulated electrons (known as the brighter-fatter
+effect).  See <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> for details.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> = <em>str_value</em> (default = ‘lsst_itl_50_8’)  The naem of the sensor model to use.
+See <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> for the other allowed values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strength</span></code> = <em>float_value</em> (default = 1.0)  The strength of the brighter-fatter effect
+relative to the nominal value in the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diffusion_factor</span></code> = <em>float_value</em> (default = 1.0)  The magnitude of the diffusion
+relative to the nominal value in the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qdist</span></code> = <em>int_value</em> (default = 3)  The maximum number of pixels away to calculate the
+distortions due to charge accumulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nrecalc</span></code> = <em>int_value</em> (default = 10000)  The number of electrons to accumulate before
+recalculating the distortion of the pixel shapes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">treering_func</span></code> = <em>table_value</em> (optional) A <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> giving the tree ring pattern
+as a radial function f(r).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">treering_center</span></code> = <em>pos_value</em> (optional) The position of the center of the tree ring
+pattern in image coordinates (which may be off the edge of the image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transpose</span></code> = <em>bool_value</em> (default = False) Whether to transpose the meaning of (x,y)
+for the purpose of the brighter-fatter effect.  This changes which direction the BFE
+causes more elongation.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.SensorBuilder" title="galsim.config.SensorBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.SensorBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.SensorBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">SensorBuilder</span></span><a class="reference internal" href="_modules/galsim/config/sensor.html#SensorBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SensorBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building Sensor objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.SensorBuilder.buildSensor">
+<span class="sig-name descname"><span class="pre">buildSensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sensor.html#SensorBuilder.buildSensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SensorBuilder.buildSensor" title="Permalink to this definition"></a></dt>
+<dd><p>Build the Sensor based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the Sensor</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the constructed Sensor object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterSensorType</span><span class="p">(</span><span class="s1">&#39;CustomSensor&#39;</span><span class="p">,</span> <span class="n">CustomSensorBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterSensorType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterSensorType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sensor.html#RegisterSensorType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterSensorType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a sensor type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sensor_type</strong> – The name of the config type to register</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the Sensor object.  It should
+be an instance of a subclass of SensorBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the Sensor builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_sensor</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid sensor type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sensor</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomSensor</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_stamp.html" class="btn btn-neutral float-left" title="Config Stamp Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_input.html" class="btn btn-neutral float-right" title="Config Input Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

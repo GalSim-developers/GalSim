@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Output Field &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Values" href="config_values.html" />
+    <link rel="prev" title="Config Input Field" href="config_input.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Output Field</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#output-field-attributes">Output Field Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-types">Output Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-output-types">Custom Output Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.OutputBuilder"><code class="docutils literal notranslate"><span class="pre">OutputBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterOutputType"><code class="docutils literal notranslate"><span class="pre">RegisterOutputType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.output_datacube.DataCubeBuilder"><code class="docutils literal notranslate"><span class="pre">DataCubeBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.output_multifits.MultiFitsBuilder"><code class="docutils literal notranslate"><span class="pre">MultiFitsBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#extra-outputs">Extra Outputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-your-own-extra-output-type">Adding your own Extra Output Type</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.ExtraOutputBuilder"><code class="docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterExtraOutput"><code class="docutils literal notranslate"><span class="pre">RegisterExtraOutput()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.extra_psf.ExtraPSFBuilder"><code class="docutils literal notranslate"><span class="pre">ExtraPSFBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.extra_truth.TruthBuilder"><code class="docutils literal notranslate"><span class="pre">TruthBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.extra_weight.WeightBuilder"><code class="docutils literal notranslate"><span class="pre">WeightBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.extra_badpix.BadPixBuilder"><code class="docutils literal notranslate"><span class="pre">BadPixBuilder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Config Output Field</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_output.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-output-field">
+<h1>Config Output Field<a class="headerlink" href="#config-output-field" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">output</span></code> field indicates where to write the output files and what kind of output format
+they should be.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Multiprocessing</strong></p>
+<p>The config processing can use python multiprocessing to split the work among multiple
+processes on a single node.  This can be done either at the file level or the image level.
+If you set output.nproc != 1, then it will parallelize the creation of files, building
+and writing each file in a separate process.  If you instead set image.nproc != 1, then
+the files will be built one at a time, but the work for drawing the objects will be
+parallelized across the processes.</p>
+<p>There are tradeoffs between these two kinds of multiprocessing that the user should be
+aware of.  Python multiprocessing uses pickle to pass information between processes.
+In the image-based multiprocessing, each process builds a postage stamp image for each
+object and sends that stamp back to the main process to assemble into the final image.
+If the objects are all very easy to draw, this communication can end up dominating the
+run time as python will pickle the image data to send back to the main process.</p>
+<p>File-based multiprocessing has much less communication between processes, since each image
+is fully built and written all in a single process.  However, this kind of multiprocessing
+often requires more memory, since each process holds a full image to be written to disk
+as it is building it.  Users should consider this tradeoff carefully when deciding which
+kind of multiprocessing (if either) is appropriate for their use case.</p>
+<p>Finally, one last caveat about multiprocessing.  Galsim turns off OpenMP threading when
+in a multiprocessing context, so you don’t, for instance, have 64 processes, each spawning
+64 OpenMP threads at once.  This works for OpenMP, but not some other sources of threading
+that may be initiated by numpy functions.  If you get errors related to being unable to
+create threads, you should install (via pip or conda) the <code class="docutils literal notranslate"><span class="pre">threadpoolctl</span></code> package.
+If this package is installed, GalSim will use it to turn off threading for all of the
+possible backends used by numpy.</p>
+</div>
+<section id="output-field-attributes">
+<h2>Output Field Attributes<a class="headerlink" href="#output-field-attributes" title="Permalink to this heading"></a></h2>
+<p>All output types use the following attributes to specify the location and number
+of output files, or aspects of how to build and write the output files.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (default = ‘&lt;config file root name&gt;.fits’)  You would typically want to specify this explicitly, but if you do not, then if the configuration file is called my_test.yaml, the output file would be my_test.fits.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)  In which directory should the output file be put.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nfiles</span></code> = <em>int_value</em> (default = 1)  How many files to build. Note: if <code class="docutils literal notranslate"><span class="pre">nfiles</span></code> &gt; 1, then <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and/or <code class="docutils literal notranslate"><span class="pre">dir</span></code> should not be a simple string. Rather it should be some generated string that provides a different save location for each file. See the section below on setting <em>str_value</em>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nproc</span></code> = <em>int_value</em>  (default = 1)  Specify the number of processors to use when building files. If nproc &lt;= 0, then this means to try to automatically figure out the number of cpus and use that. If you are doing many files, it is often more efficient to split up the processes at this level rather than when drawing the postage stamps (which is what <code class="docutils literal notranslate"><span class="pre">image.nproc</span></code> means).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> = <em>float_value</em>  (default = 3600)  Specify the number of seconds to allow for each job when multiprocessing before the multiprocessing queue times out.  The default is generally appropriate to prevent jobs from hanging forever from some kind of multiprocessing snafu, but if your jobs are expected to take more than an hour per output file, you might need to increase this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default = False) Specify files to skip.  This would normally be an evaluated boolean rather than simply True or False of course.  e.g. To only do the fifth file, you could use <code class="docutils literal notranslate"><span class="pre">skip</span> <span class="pre">:</span> <span class="pre">{</span> <span class="pre">type</span> <span class="pre">:</span> <span class="pre">Eval,</span> <span class="pre">str</span> <span class="pre">:</span> <span class="pre">'ffile_num</span> <span class="pre">!=</span> <span class="pre">4'</span> <span class="pre">}</span></code>, which may be useful during debugging if you are trying to diagnose a problem in one particular file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = <em>bool_value</em> (default = False) Specify whether to skip building files that already exist.  This may be useful if you are running close to the memory limit on your machine with multiprocessing.  e.g. You could use <code class="docutils literal notranslate"><span class="pre">nproc</span></code> &gt; 1 for a first run using multiprocessing, and then run again with <code class="docutils literal notranslate"><span class="pre">nproc</span></code> = 1 and <code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = True to clean up any files that failed from insufficient memory during the multiprocessing run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retry_io</span></code> = <em>int_value</em> (default = 0) How many times to retry the write command if there is any kind of failure.  Some systems have trouble with multiple concurrent writes to disk, so if you are doing a big parallel job, this can be helpful.  If this is &gt; 0, then after an OSError exception on the write command, the code will wait an increasing number of seconds (starting with 1 for the first failure), and then try again up to this many times.</p></li>
+</ul>
+</section>
+<section id="output-types">
+<h2>Output Types<a class="headerlink" href="#output-types" title="Permalink to this heading"></a></h2>
+<p>The default output type is ‘Fits’, which means to write a FITS file with the constructed
+image in the first HDU.  But other types are possible, which are specified as usual with a
+<code class="docutils literal notranslate"><span class="pre">type</span></code> field.  Other types may define additional allowed and/or required fields.
+The output types defined by GalSim are:</p>
+<ul>
+<li><p>‘Fits’ A simple fits file.  This is the default if <code class="docutils literal notranslate"><span class="pre">type</span></code> is not given.</p></li>
+<li><p>‘MultiFits’ A multi-extension fits file.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nimages</span></code> = <em>int_value</em> (default if using an input catalog and the image type is ‘Single’ is the number of entries in the input catalog; otherwise required) The number of hdu extensions on which to draw an image.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘DataCube’ A fits data cube.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nimages</span></code> = <em>int_value</em> (default if using an input catalog and the image type is ‘Single’ is the number of entries in the input catalog; otherwise required) The number of images in the data cube (i.e. the third dimension of the cube).</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="custom-output-types">
+<h2>Custom Output Types<a class="headerlink" href="#custom-output-types" title="Permalink to this heading"></a></h2>
+<p>To define your own output type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a class that will be used
+to build the output file.</p>
+<p>The class should be a subclass of <code class="docutils literal notranslate"><span class="pre">galsim.config.OutputBuilder</span></code>, which is the class used for
+the default ‘Fits’ type.  There are a number of class methods, and you only need to override
+the ones for which you want different behavior than that of the ‘Fits’ type.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">OutputBuilder</span></span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building and writing the output objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.
+It also includes the implementation of the default output type: Fits.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.addExtraOutputHDUs">
+<span class="sig-name descname"><span class="pre">addExtraOutputHDUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.addExtraOutputHDUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.addExtraOutputHDUs" title="Permalink to this definition"></a></dt>
+<dd><p>If appropriate, add any extra output items that go into HDUs to the data list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>data</strong> – The data to write.  Usually a list of images.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>data (possibly updated with additional items)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.buildImages">
+<span class="sig-name descname"><span class="pre">buildImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.buildImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.buildImages" title="Permalink to this definition"></a></dt>
+<dd><p>Build the images for output.</p>
+<p>In the base class, this function just calls BuildImage to build the single image to
+put in the output file.  So the returned list only has one item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file_num.</p></li>
+<li><p><strong>image_num</strong> – The current image_num.</p></li>
+<li><p><strong>obj_num</strong> – The current obj_num.</p></li>
+<li><p><strong>ignore</strong> – A list of parameters that are allowed to be in config that we can
+ignore here.  i.e. it won’t be an error if they are present.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of the images built</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.canAddHdus">
+<span class="sig-name descname"><span class="pre">canAddHdus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.canAddHdus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.canAddHdus" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether it is permissible to add extra HDUs to the end of the data list.</p>
+<p>In the base class, this returns True.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.getFilename">
+<span class="sig-name descname"><span class="pre">getFilename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getFilename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getFilename" title="Permalink to this definition"></a></dt>
+<dd><p>Get the file_name for the current file being worked on.</p>
+<p>Note that the base class defines a default extension = ‘.fits’.
+This can be overridden by subclasses by changing the default_ext property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the filename to build.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.getNFiles">
+<span class="sig-name descname"><span class="pre">getNFiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNFiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNFiles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the number of files to be built.</p>
+<p>In the base class, this is just output.nfiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the number of files to build.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.getNImages">
+<span class="sig-name descname"><span class="pre">getNImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNImages" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the number of images to be built for a given <code class="docutils literal notranslate"><span class="pre">file_num</span></code>.</p>
+<p>In the base class, we only build a single image, so it returns 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the number of images to build.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.getNObjPerImage">
+<span class="sig-name descname"><span class="pre">getNObjPerImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNObjPerImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNObjPerImage" title="Permalink to this definition"></a></dt>
+<dd><p>Get the number of objects that will be made for each image built as part of the file
+file_num, which starts at image number image_num, based on the information in the config
+dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file number.</p></li>
+<li><p><strong>image_num</strong> – The current image number (the first one for this file).</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>approx</strong> – Whether an approximate/overestimate is ok [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of the number of objects in each image [ nobj0, nobj1, nobj2, … ]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.setup" title="Permalink to this definition"></a></dt>
+<dd><p>Do any necessary setup at the start of processing a file.</p>
+<p>The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to
+do more things before any processing gets started on this file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file_num.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.writeExtraOutputs">
+<span class="sig-name descname"><span class="pre">writeExtraOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.writeExtraOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.writeExtraOutputs" title="Permalink to this definition"></a></dt>
+<dd><p>If appropriate, write any extra output items that write their own files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>data</strong> – The data to write.  Usually a list of images.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.OutputBuilder.writeFile">
+<span class="sig-name descname"><span class="pre">writeFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.writeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.OutputBuilder.writeFile" title="Permalink to this definition"></a></dt>
+<dd><p>Write the data to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – The data to write.  Usually a list of images returned by
+buildImages, but possibly with extra HDUs tacked onto the end
+from the extra output items.</p></li>
+<li><p><strong>file_name</strong> – The file_name to write to.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being used for running the
+simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict that defines the object
+being built, which would typically be <code class="docutils literal notranslate"><span class="pre">base['output']</span></code>.</p>
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute that triggers the use of this Builder object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;CustomOutput&#39;</span><span class="p">,</span> <span class="n">CustomOutputBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterOutputType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterOutputType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#RegisterOutputType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterOutputType" title="Permalink to this definition"></a></dt>
+<dd><p>Register an output type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_type</strong> – The name of the type in config[‘output’]</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building and writing the output file.
+It should be an instance of OutputBuilder or a subclass thereof.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Note that we register an instance of the class, not the class itself.  This opens up the
+possibility of having multiple output types use the same class instantiated with different
+initialization parameters.  This is not used by the GalSim output types, but there may be use
+cases where it would be useful for custom output types.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_output.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_output</span></code>,
+which will read your file and execute the registration command to add the builder to the list
+of valid output types.</p>
+<p>Then you can use this as a valid output type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomOutput</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For an example of a custom output type, see <a class="reference internal" href="des.html#galsim.des.MEDSBuilder" title="galsim.des.MEDSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MEDSBuilder</span></code></a> in <a class="reference internal" href="des.html#the-des-module"><span class="std std-ref">The DES Module</span></a>,
+which is used by <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>.</p>
+<p>It may also be helpful to look at the GalSim implementation of the included output types
+(click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.output_datacube.DataCubeBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.output_datacube.</span></span><span class="sig-name descname"><span class="pre">DataCubeBuilder</span></span><a class="reference internal" href="_modules/galsim/config/output_datacube.html#DataCubeBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.output_datacube.DataCubeBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.OutputBuilder" title="galsim.config.output.OutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputBuilder</span></code></a></p>
+<p>Builder class for constructing and writing DataCube output types.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.output_multifits.MultiFitsBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.output_multifits.</span></span><span class="sig-name descname"><span class="pre">MultiFitsBuilder</span></span><a class="reference internal" href="_modules/galsim/config/output_multifits.html#MultiFitsBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.output_multifits.MultiFitsBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.OutputBuilder" title="galsim.config.output.OutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputBuilder</span></code></a></p>
+<p>Builder class for constructing and writing MultiFits output types.</p>
+</dd></dl>
+
+</section>
+<section id="extra-outputs">
+<h2>Extra Outputs<a class="headerlink" href="#extra-outputs" title="Permalink to this heading"></a></h2>
+<p>In addition to the fields for defining the main output file(s), there may also be fields
+specifying optional “extra” outputs.  Either extra files to be written, or sometimes extra HDUs
+to be added to the main FITS files.  These extra output fields are dicts that may have a number
+of parameters defining how they should be built or where they should be written.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">psf</span></code> will output (typically) noiseless images of the PSF used for each galaxy.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the psf image to a different file (in the same directory as the main image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required) Write the psf image to another hdu in the main file. (This option is only possible if <code class="docutils literal notranslate"><span class="pre">type</span></code> == ‘Fits’)  Note: 0 means the primary HDU, the first extension is 1.  The main image is always written in hdu 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = <code class="docutils literal notranslate"><span class="pre">output.dir</span></code> if that is provided, else ‘.’)  (Only relevant if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is provided.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">draw_method</span></code> = <em>str_value</em> (default = ‘auto’) The same options are available as for the <code class="docutils literal notranslate"><span class="pre">image.draw_method</span></code> item, but now applying to the rendering of the psf images.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shift</span></code> = <em>pos_value</em> (optional) A shift to apply to the PSF object.  Special: if this is ‘galaxy’ then apply the same shift as was applied to the galaxy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">offset</span></code> = <em>pos_value</em> (optional) An offset to apply when drawing the PSF object.  Special: if this is ‘galaxy’ then apply the same offset as was applied when drawing the galaxy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">signal_to_noise</span></code> = <em>float_value</em> (optional) If provided, noise will be added at the same level as the main image, and the flux will be rescaled to result in the provided signal-to-noise.  The default is to use flux=1 and not add any noise.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span></code> will output the weight image (an inverse variance map of the noise properties).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the weight image to a different file (in the same directory as the main image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the weight image to another hdu in the main file. (This option is only possible if <code class="docutils literal notranslate"><span class="pre">type</span></code> == ‘Fits’)  Note: 0 means the primary HDU, the first extension is 1.  The main image is always written in hdu 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = <code class="docutils literal notranslate"><span class="pre">output.dir</span></code> if that is provided, else ‘.’)  (Only relevant if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is provided.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include_obj_var</span></code> = <em>bool_value</em> (default = False)  Normally, the object variance is not included as a component for the inverse variance map.  If you would rather include it, set this to True.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">badpix</span></code> will output the bad-pixel mask image.  This will be relevant when we eventually add the ability to add defects to the images.  For now the bad-pixel mask will be all 0s.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the bad pixel mask image to a different file (in the same directory as the main image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the bad pixel mask image to another hdu in the main file. (This option is only possible if <code class="docutils literal notranslate"><span class="pre">type</span></code> == ‘Fits’)  Note: 0 means the primary HDU, the first extension is 1.  The main image is always written in hdu 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = <code class="docutils literal notranslate"><span class="pre">output.dir</span></code> if that is provided, else ‘.’)  (Only relevant if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is provided.)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">truth</span></code> will output a truth catalog.  Note: assuming you are using the <code class="docutils literal notranslate"><span class="pre">galsim</span></code> executable to process the config file, the config dict is really read in as an OrderedDict, so the columns in the output catalog will be in the same order as in the YAML file.  If you are doing this manually and just use a regular Python dict for config, then the output columns will be in some arbitrary order.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the bad pixel mask image to a different file (in the same directory as the main image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu</span></code> is required)  Write the bad pixel mask image to another hdu in the main file. (This option is only possible if <code class="docutils literal notranslate"><span class="pre">type</span></code> == ‘Fits’)  Note: 0 means the primary HDU, the first extension is 1.  The main image is always written in hdu 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = <code class="docutils literal notranslate"><span class="pre">output.dir</span></code> if that is provided, else ‘.’)  (Only relevant if <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is provided.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">columns</span></code> = <em>dict</em> (required) A dict connecting the names of the output columns to the values that should be output.  The values can be specified in a few different ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A string indicating what current value in the config dict to use.  e.g. ‘gal.shear.g1’ would grab the value of config[‘gal’][‘shear’][‘g1’] that was used for the current object.</p></li>
+<li><p>A dict that should be evaluated in the usual way values are evaluated in the config processing. Caveat: Since we do not have a way to indicate what type the return value should be, this functionality is mostly limited to ‘Eval’ and ‘Current’ types, which is normally fine, since it would mostly be useful for just doing some extra processing to some current value.</p></li>
+<li><p>An implicit Eval string starting with ‘$’, typically using ‘&#64;’ values to get Current values.  e.g. to output e1-style shapes for a Shear object that was built with (g1,g2), you could write ‘$(&#64;gal.ellip).e1’ and ‘$(&#64;gal.ellip).e2’.</p></li>
+<li><p>A straight value.  Not usually very useful, but allowed.  e.g. You might want your truth catalogs to have a consistent format, but some simulations may not define a particular value.  You could just output -999 (or anything) for that column in those cases.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="adding-your-own-extra-output-type">
+<h2>Adding your own Extra Output Type<a class="headerlink" href="#adding-your-own-extra-output-type" title="Permalink to this heading"></a></h2>
+<p>You can also add your own extra output type in a similar fashion as the other custom types that
+you can define.  (cf. e.g. [Custom Output Types](#custom-output-types))  As usual, you would
+write a custom module that can be imported, which should contain a class for building and
+writing the extra output, register it with GalSim, and add the module to the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field.</p>
+<p>The class should be a subclass of <code class="docutils literal notranslate"><span class="pre">galsim.config.ExtraOutputBuilder</span></code>.  You may override any
+of the following methods.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">ExtraOutputBuilder</span></span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building some kind of extra output object along with the main output.</p>
+<p>The base class doesn’t do anything, but it defines the function signatures that a derived
+class can override to perform specific processing at any of several steps in the processing.</p>
+<p>The builder gets initialized with a list and and dict to use as work space.
+The typical work flow is to save something in scratch[obj_num] for each object built, and then
+process them all at the end of each image into data[k].  Then finalize may do something
+additional at the end of the processing to prepare the data to be written.</p>
+<p>It’s worth remembering that the objects could potentially be processed in a random order if
+multiprocessing is being used.  The above work flow will thus work regardless of the order
+that the stamps and/or images are processed.</p>
+<p>Also, because of how objects are duplicated across processes during multiprocessing, you
+should not count on attributes you set in the builder object during the stamp or image
+processing stages to be present in the later finalize or write stages.  You should write
+any information you want to persist into the scratch or data objects, which are set up
+to handle the multiprocessing communication properly.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.ensureFinalized">
+<span class="sig-name descname"><span class="pre">ensureFinalized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.ensureFinalized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.ensureFinalized" title="Permalink to this definition"></a></dt>
+<dd><p>A helper function in the base class to make sure finalize only gets called once by the
+different possible locations that might need it to have been called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>main_data</strong> – The main file data in case it is needed.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the final version of the object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.finalize">
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.finalize" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any final processing at the end of all the image processing.</p>
+<p>This function will be called after all images have been built.</p>
+<p>It returns some sort of final version of the object.  In the base class, it just returns
+self.data, but depending on the meaning of the output object, something else might be
+more appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>main_data</strong> – The main file data in case it is needed.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The final version of the object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.initialize" title="Permalink to this definition"></a></dt>
+<dd><p>Do any initial setup for this builder at the start of a new output file.</p>
+<p>The base class implementation saves two work space items into self.data and self.scratch
+that can be used to safely communicate across multiple processes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – An empty list of length nimages to use as work space.</p></li>
+<li><p><strong>scratch</strong> – An empty dict that can be used as work space.</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.processImage">
+<span class="sig-name descname"><span class="pre">processImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_nums</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.processImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.processImage" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any necessary processing at the end of each image construction.</p>
+<p>This function will be called after each full image is built.</p>
+<p>Remember, these images may be processed out of order.  But if using the default
+constructor, the data list is already set to be the correct size, so it is safe to
+access self.data[k], where k = base[‘image_num’] - base[‘start_image_num’] is the
+appropriate index to use for this image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – The index in self.data to use for this image.  This isn’t the image_num
+(which can be accessed at base[‘image_num’] if needed), but rather
+an index that starts at 0 for the first image being worked on and
+goes up to nimages-1.</p></li>
+<li><p><strong>obj_nums</strong> – The object numbers that were used for this image.</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.processSkippedStamp">
+<span class="sig-name descname"><span class="pre">processSkippedStamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.processSkippedStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.processSkippedStamp" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any necessary processing for stamps that were skipped in the normal processing.</p>
+<p>This function will be called for stamps that are not built because they were skipped
+for some reason.  Normally, you would not want to do anything for the extra outputs in
+these cases, but in case some module needs to do something in these cases as well, this
+method can be overridden.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj_num</strong> – The object number</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.processStamp">
+<span class="sig-name descname"><span class="pre">processStamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.processStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.processStamp" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any necessary processing at the end of each stamp construction.</p>
+<p>This function will be called after each stamp is built, but before the noise is added,
+so the existing stamp image has the true surface brightness profile (unless photon shooting
+was used, in which case there will necessarily be noise from that process).</p>
+<p>Remember, these stamps may be processed out of order.  Saving data to the scratch dict
+is safe, even if multiprocessing is being used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj_num</strong> – The object number</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.setupImage">
+<span class="sig-name descname"><span class="pre">setupImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.setupImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.setupImage" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any necessary setup at the start of an image.</p>
+<p>This function will be called at the start of each image to allow for any setup that
+needs to happen at this point in the processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.writeFile">
+<span class="sig-name descname"><span class="pre">writeFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.writeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.writeFile" title="Permalink to this definition"></a></dt>
+<dd><p>Write this output object to a file.</p>
+<p>The base class implementation is appropriate for the cas that the result of finalize
+is a list of images to be written to a FITS file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The file to write to.</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.ExtraOutputBuilder.writeHdu">
+<span class="sig-name descname"><span class="pre">writeHdu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#ExtraOutputBuilder.writeHdu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.ExtraOutputBuilder.writeHdu" title="Permalink to this definition"></a></dt>
+<dd><p>Write the data to a FITS HDU with the data for this output object.</p>
+<p>The base class implementation is appropriate for the cas that the result of finalize
+is a list of images of length 1 to be written to a FITS file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an HDU with the output data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the attribute in the <code class="docutils literal notranslate"><span class="pre">output</span></code> field that triggers the use of this Builder object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;CustomExtraOutput&#39;</span><span class="p">,</span> <span class="n">CustomExtraOutputBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterExtraOutput">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterExtraOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/extra.html#RegisterExtraOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterExtraOutput" title="Permalink to this definition"></a></dt>
+<dd><p>Register an extra output field for use by the config apparatus.</p>
+<p>The builder parameter should be a subclass of galsim.config.ExtraOutputBuilder.
+See that class for the functions that should be defined and their signatures.
+Not all functions need to be overridden.  If nothing needs to be done at a particular place
+in the processing, you can leave the base class function, which doesn’t do anything.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The name of the output field in config[‘output’]</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the extra output object.
+It should be an instance of a subclass of ExtraOutputBuilder.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Note that we register an instance of the class, not the class itself.  This opens up the
+possibility of having multiple output types use the same class instantiated with different
+initialization parameters.  This is not used by the GalSim output types, but there may be use
+cases where it would be useful for custom output types.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_output.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_output</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_output</span></code>,
+which will read your file and execute the registration command to add the builder to the list
+of valid output types.</p>
+<p>Then you can use this as a valid extra output directive:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_extra_output</span><span class="p">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For examples of custom extra outputs, see</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a></p></li>
+</ul>
+<p>which use custom extra outputs <code class="docutils literal notranslate"><span class="pre">deblend</span></code> and <code class="docutils literal notranslate"><span class="pre">deblend_meds</span></code> defined in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/des/blend.py"><code class="file docutils literal notranslate"><span class="pre">blend.py</span> </code></a>.</p>
+<p>Also,</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a></p></li>
+</ul>
+<p>which uses custom extra output <code class="docutils literal notranslate"><span class="pre">noise_free</span></code> defined in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.5/examples/great3/noise_free.py"><code class="file docutils literal notranslate"><span class="pre">noise_free.py</span> </code></a>.</p>
+<p>It may also be helpful to look at the GalSim implementation of the included extra output types
+(click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.extra_psf.ExtraPSFBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.extra_psf.</span></span><span class="sig-name descname"><span class="pre">ExtraPSFBuilder</span></span><a class="reference internal" href="_modules/galsim/config/extra_psf.html#ExtraPSFBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.extra_psf.ExtraPSFBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ExtraOutputBuilder" title="galsim.config.extra.ExtraOutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code></a></p>
+<p>Build an image that draws the PSF at the same location as each object on the main image.</p>
+<p>This makes the most sense when the main image consists of non-overlapping stamps, such as
+a TiledImage, since you wouldn’t typically want the PSF images to overlap.  But it just
+follows whatever pattern of stamp locations the main image has.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.extra_truth.TruthBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.extra_truth.</span></span><span class="sig-name descname"><span class="pre">TruthBuilder</span></span><a class="reference internal" href="_modules/galsim/config/extra_truth.html#TruthBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.extra_truth.TruthBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ExtraOutputBuilder" title="galsim.config.extra.ExtraOutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code></a></p>
+<p>Build an output truth catalog with user-defined columns, typically taken from
+current values of various quantities for each constructed object.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.extra_weight.WeightBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.extra_weight.</span></span><span class="sig-name descname"><span class="pre">WeightBuilder</span></span><a class="reference internal" href="_modules/galsim/config/extra_weight.html#WeightBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.extra_weight.WeightBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ExtraOutputBuilder" title="galsim.config.extra.ExtraOutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code></a></p>
+<p>This builds a weight map image to go along with each regular data image.</p>
+<p>The weight is the inverse variance of the noise in the image.</p>
+<p>There is a option called ‘include_obj_var’ that governs whether the weight should include the
+Poisson variance of the signal.  In real data, you don’t know the true signal, and estimating
+the Poisson noise from the realized image can lead to biases.  As such, different applications
+may or may not want this included.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.extra_badpix.BadPixBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.extra_badpix.</span></span><span class="sig-name descname"><span class="pre">BadPixBuilder</span></span><a class="reference internal" href="_modules/galsim/config/extra_badpix.html#BadPixBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.extra_badpix.BadPixBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.ExtraOutputBuilder" title="galsim.config.extra.ExtraOutputBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code></a></p>
+<p>This builds a bad pixel mask image to go along with each regular data image.</p>
+<p>There’s not much here currently, since GalSim doesn’t yet have any image artifacts that
+would be appropriate to do something with here.  So this is mostly just a placeholder for
+when we eventually add defects, saturation, etc.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_input.html" class="btn btn-neutral float-left" title="Config Input Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_values.html" class="btn btn-neutral float-right" title="Config Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

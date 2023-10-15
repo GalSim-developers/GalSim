@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.fits &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.fits</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.fits</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="c1"># Most things require the full specification, e.g. galsim.fits.read.</span>
+<span class="c1"># Only FitsHeader is brought into the main galsim namespace.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;FitsHeader&#39;</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">bz2</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">._utilities</span> <span class="kn">import</span> <span class="n">basestring</span><span class="p">,</span> <span class="n">ensure_dir</span>
+<span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">readFromFitsHeader</span>
+
+
+<span class="c1">##############################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># We start off with some helper functions for some common operations that will be used in</span>
+<span class="c1"># more than one of our primary read and write functions.</span>
+<span class="c1">#</span>
+<span class="c1">##############################################################################################</span>
+
+<span class="k">def</span> <span class="nf">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+    <span class="n">file_compress</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;rice&#39;</span> <span class="ow">or</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;RICE_1&#39;</span><span class="p">:</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="s1">&#39;RICE_1&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;gzip_tile&#39;</span> <span class="ow">or</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;GZIP_1&#39;</span><span class="p">:</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="s1">&#39;GZIP_1&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;hcompress&#39;</span> <span class="ow">or</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;HCOMPRESS_1&#39;</span><span class="p">:</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="s1">&#39;HCOMPRESS_1&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;plio&#39;</span> <span class="ow">or</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;PLIO_1&#39;</span><span class="p">:</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="s1">&#39;PLIO_1&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;gzip&#39;</span><span class="p">:</span> <span class="n">file_compress</span> <span class="o">=</span> <span class="s1">&#39;gzip&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">:</span> <span class="n">file_compress</span> <span class="o">=</span> <span class="s1">&#39;bzip2&#39;</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span> <span class="ow">or</span> <span class="n">compression</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">compression</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.fz&#39;</span><span class="p">):</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="s1">&#39;RICE_1&#39;</span>
+            <span class="k">elif</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">):</span> <span class="n">file_compress</span> <span class="o">=</span> <span class="s1">&#39;gzip&#39;</span>
+            <span class="k">elif</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.bz2&#39;</span><span class="p">):</span> <span class="n">file_compress</span> <span class="o">=</span> <span class="s1">&#39;bzip2&#39;</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (Not sure why codecov thinks this isn&#39;t covered.)</span>
+                <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid compression&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="p">,</span>
+                               <span class="p">(</span><span class="s1">&#39;rice&#39;</span><span class="p">,</span> <span class="s1">&#39;gzip_tile&#39;</span><span class="p">,</span> <span class="s1">&#39;hcompress&#39;</span><span class="p">,</span> <span class="s1">&#39;plio&#39;</span><span class="p">,</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span>
+
+<span class="c1"># This is a class rather than a def, since we want to store some variable, and that&#39;s easier</span>
+<span class="c1"># to do with a class than a function.  But this will be used as though it were a normal</span>
+<span class="c1"># function: _read_file(file, file_compress)</span>
+<span class="k">class</span> <span class="nc">_ReadFile</span><span class="p">:</span>
+
+    <span class="c1"># There are two methods available for each of gzip and bzip2. Each is its own function.</span>
+    <span class="c1"># 1. The _call functions call out to an external program.  gunzip, bunzip2 as appropriate.</span>
+    <span class="c1"># 2. The _in_mem functions use the corresponding python modules to do things in memory.</span>
+    <span class="c1">#</span>
+    <span class="c1"># As of commit 2e2d643b47fa27dbdcfcb1ba7bd, the write functions were generally faster using</span>
+    <span class="c1"># the in memory functions, but the reads were faster with the external functions.</span>
+    <span class="c1"># cf. GalSim/devel/time_zip.py for details about the timing tests.</span>
+
+    <span class="k">def</span> <span class="nf">gunzip_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="c1"># cf. http://bugs.python.org/issue7471</span>
+        <span class="c1"># We use gunzip -c rather than zcat, since the latter is sometimes called gzcat</span>
+        <span class="c1"># (with zcat being a symlink to uncompress instead).</span>
+        <span class="c1"># Also, I&#39;d rather all these use `with subprocess.Popen(...) as p:`, but that&#39;s not</span>
+        <span class="c1"># supported in 2.7.  So need to keep things this way for now.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;gunzip&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                                 <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">close_fds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="c1"># This OSError should mean that the gunzip call itself was invalid on this system.</span>
+            <span class="c1"># Convert to a NotImplementedError, so we can try a different method.</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running gunzip. stderr output = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running gunzip. Return code = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+            <span class="c1"># In case astropy fails.</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span>
+
+    <span class="k">def</span> <span class="nf">gzip_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
+        <span class="c1"># pyfits doesn&#39;t actually read the file yet, so we can&#39;t close fin here.</span>
+        <span class="c1"># Need to pass it back to the caller and let them close it when they are</span>
+        <span class="c1"># done with hdu_list.</span>
+        <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span>
+
+    <span class="k">def</span> <span class="nf">bunzip2_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;bunzip2&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                                 <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">close_fds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="c1"># This OSError should mean that the gunzip call itself was invalid on this system.</span>
+            <span class="c1"># Convert to a NotImplementedError, so we can try a different method.</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running bunzip2. stderr output = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running bunzip2. Return code = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+            <span class="c1"># In case astropy fails.</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span>
+
+    <span class="k">def</span> <span class="nf">bz2_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We used to have multiple options for gzip and bzip2.  However, with recent versions of</span>
+        <span class="c1"># astropy for the fits I/O, the in memory version should always work.  So we first</span>
+        <span class="c1"># try the command line method, which is usually faster.  Then if that fails, we let</span>
+        <span class="c1"># astropy do the compression.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gz_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bz2_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gunzip_call</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gzip_in_mem</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bunzip2_call</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_in_mem</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bz2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;File </span><span class="si">%s</span><span class="s2"> not found&quot;</span><span class="o">%</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_compress</span><span class="p">:</span>
+            <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">file_compress</span> <span class="o">==</span> <span class="s1">&#39;gzip&#39;</span><span class="p">:</span>
+            <span class="c1"># First make sure the file exists and is readable.</span>
+            <span class="c1"># The easiest way to do this is to try to open it.  Just let the open command return</span>
+            <span class="c1"># its normal error message if the file doesn&#39;t exist or cannot be opened.</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span> <span class="k">pass</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">gz_index</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">gz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gz_index</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;None of the options for gunzipping were successful.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_compress</span> <span class="o">==</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span> <span class="k">pass</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">bz2_index</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">bz2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bz2_index</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;None of the options for bunzipping were successful.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (can&#39;t get here from public API)</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Unknown file_compression&quot;</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">))</span>
+<span class="n">_read_file</span> <span class="o">=</span> <span class="n">_ReadFile</span><span class="p">()</span>
+
+<span class="c1"># Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):</span>
+<span class="k">class</span> <span class="nc">_WriteFile</span><span class="p">:</span>
+    <span class="c1"># kwargs to use for the writeto function</span>
+    <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;output_verify&#39;</span> <span class="p">:</span> <span class="s1">&#39;silentfix+ignore&#39;</span><span class="p">}</span>
+
+    <span class="c1"># There are two methods available for each of gzip and bzip2. Each is its own function.</span>
+    <span class="c1"># 1. The _call functions call out to an external program.  gzip, bzip2 as appropriate.</span>
+    <span class="c1"># 2. The _in_mem functions use the corresponding python modules to do things in memory.</span>
+    <span class="c1">#</span>
+    <span class="c1"># As of commit 2e2d643b47fa27dbdcfcb1ba7bd, the write functions were generally faster using</span>
+    <span class="c1"># the in memory functions, but the reads were faster with the external functions.</span>
+    <span class="c1"># cf. GalSim/devel/time_zip.py for details about the timing tests.</span>
+    <span class="c1">#</span>
+    <span class="c1"># As a result, we no longer try multple functions here (as we still do in _ReadFile).</span>
+    <span class="c1"># If the timing status chages, the above mentioned commit has the old code, which first tried</span>
+    <span class="c1"># the external function and the reverted to the in-memory version if that failed.</span>
+
+    <span class="c1"># No longer used, but preserved for timing tests to see if we should revisit this.</span>
+    <span class="k">def</span> <span class="nf">gzip_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">],</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span>
+                                     <span class="n">close_fds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">hdu_list</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+                <span class="c1"># This OSError should mean that the gunzip call itself was invalid on this system.</span>
+                <span class="c1"># Convert to a NotImplementedError, so we can try a different method.</span>
+                <span class="c1"># The others are in case astropy fails.</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running gzip. Return code = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">gzip_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="c1"># The compression routines work better if we first write to an internal buffer</span>
+        <span class="c1"># and then output that to a file.</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="n">hdu_list</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="c1"># There is a compresslevel option (for both gzip and bz2), but we just use the</span>
+        <span class="c1"># default.</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">bzip2_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;bzip2&quot;</span><span class="p">],</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">close_fds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">hdu_list</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
+                <span class="c1"># This OSError should mean that the gunzip call itself was invalid on this system.</span>
+                <span class="c1"># Convert to a NotImplementedError, so we can try a different method.</span>
+                <span class="c1"># The others are in case astropy fails.</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error running bzip2. Return code = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">bz2_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="n">hdu_list</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="n">ensure_dir</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">clobber</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;File </span><span class="si">%r</span><span class="s1"> already exists&#39;</span><span class="o">%</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_compress</span><span class="p">:</span>
+            <span class="n">hdu_list</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_compress</span> <span class="o">==</span> <span class="s1">&#39;gzip&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gzip_in_mem</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_compress</span> <span class="o">==</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_in_mem</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (can&#39;t get here from public API)</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Unknown file_compression&quot;</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">))</span>
+
+<span class="n">_write_file</span> <span class="o">=</span> <span class="n">_WriteFile</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">_add_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pyfits_compress</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">())</span>  <span class="c1"># Need a blank PrimaryHDU</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">CompImageHDU</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">compression_type</span><span class="o">=</span><span class="n">pyfits_compress</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hdu</span>
+
+<span class="k">def</span> <span class="nf">_add_to_header</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;header&#39;</span><span class="p">):</span>
+        <span class="n">h</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="p">:</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">writeToFitsHeader</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_hdu</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that an input ``hdu`` is valid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check for fixable verify errors</span>
+    <span class="c1"># Astropy will automatically fix any errors it finds by just accessing the header and data.</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">header</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">header_only</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">except</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">VerifyError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="c1"># If just reading the data raises a VerifyError, try again with fix.</span>
+            <span class="c1"># This seems to be OS-specific, and probably astropy-version specific.</span>
+            <span class="c1"># But it&#39;s at least possible for this to happen and the verify step to help.</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s1">&#39;fix&#39;</span><span class="p">)</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="c1"># Check that the specified compression is right for the given hdu type.</span>
+    <span class="k">if</span> <span class="n">pyfits_compress</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">CompImageHDU</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Found invalid HDU type reading FITS file (expected a CompImageHDU)&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">CompImageHDU</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Found invalid HDU type reading FITS file (expected an ImageHDU)&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">):</span>
+        <span class="c1"># Note: Nothing special needs to be done when reading a compressed hdu.</span>
+        <span class="c1"># However, such compressed hdu&#39;s may not be the PrimaryHDU, so if we think we are</span>
+        <span class="c1"># reading a compressed file, skip to hdu 1.</span>
+        <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pyfits_compress</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Expecting at least one extension HDU in galsim.read&#39;</span><span class="p">)</span>
+                <span class="n">hdu</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hdu</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">hdu</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Expecting at least </span><span class="si">%d</span><span class="s1"> HDUs in galsim.read&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">hdu</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">hdu_list</span><span class="p">[</span><span class="n">hdu</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">CompImageHDU</span><span class="p">)):</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">hdu_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid hdu_list: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="n">_check_hdu</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hdu</span>
+
+
+<span class="c1"># Unlike the other helpers, this one doesn&#39;t start with an underscore, since we make it</span>
+<span class="c1"># available to people who use the function ReadFile.</span>
+<div class="viewcode-block" id="closeHDUList"><a class="viewcode-back" href="../../fits.html#galsim.fits.closeHDUList">[docs]</a><span class="k">def</span> <span class="nf">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;If necessary, close the file handle that was opened to read in the ``hdu_list``&quot;&quot;&quot;</span>
+    <span class="n">hdu_list</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fin</span><span class="p">:</span>
+        <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<span class="c1">##############################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># Now the primary write functions.  We have:</span>
+<span class="c1">#    write(image, ...)</span>
+<span class="c1">#    writeMulti(image_list, ...)</span>
+<span class="c1">#    writeCube(image_list, ...)</span>
+<span class="c1">#    writeFile(hdu_list, ...)</span>
+<span class="c1">#</span>
+<span class="c1">##############################################################################################</span>
+
+
+<div class="viewcode-block" id="write"><a class="viewcode-back" href="../../fits.html#galsim.fits.write">[docs]</a><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a single image to a FITS file.</span>
+
+<span class="sd">    Write the `Image` instance ``image`` to a FITS file, with details depending on the arguments.</span>
+<span class="sd">    This function can be called directly as ``galsim.fits.write(image, ...)``, with the image as the</span>
+<span class="sd">    first argument, or as an `Image` method: ``image.write(...)``.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        image:          The `Image` to write to file.  Per the description of this method, it may be</span>
+<span class="sd">                        given explicitly via ``galsim.fits.write(image, ...)`` or the method may be</span>
+<span class="sd">                        called directly as an image method, ``image.write(...)``.  Note that if the</span>
+<span class="sd">                        image has a &#39;header&#39; attribute containing a `FitsHeader`, then the</span>
+<span class="sd">                        `FitsHeader` is written to the header in the PrimaryHDU, followed by the</span>
+<span class="sd">                        WCS as usual.</span>
+<span class="sd">        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the `Image` is appended to the end of the HDUList as a new HDU. In</span>
+<span class="sd">                        that case, the user is responsible for calling either</span>
+<span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
+<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice compression in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
+<span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex Images to a fits file. &quot;</span>
+                               <span class="s2">&quot;Write image.real and image.imag separately.&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">()</span>
+
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">_add_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+    <span class="n">_add_to_header</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">_write_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="writeMulti"><a class="viewcode-back" href="../../fits.html#galsim.fits.writeMulti">[docs]</a><span class="k">def</span> <span class="nf">writeMulti</span><span class="p">(</span><span class="n">image_list</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a Python list of images to a multi-extension FITS file.</span>
+
+<span class="sd">    The details of how the images are written to file depends on the arguments.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function along with `readMulti` can be used to effect the equivalent of a simple</span>
+<span class="sd">        version of fpack or funpack. To Rice compress a fits file, you can call::</span>
+
+<span class="sd">            fname = &#39;some_image_file.fits&#39;</span>
+<span class="sd">            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname+&#39;.fz&#39;)</span>
+
+<span class="sd">        To uncompress::</span>
+
+<span class="sd">            fname = &#39;some_image_file.fits.fz&#39;</span>
+<span class="sd">            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname[:-3])</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        image_list:     A Python list of `Image` instances.  (For convenience, some items in this</span>
+<span class="sd">                        list may be HDUs already.  Any `Image` will be converted into an</span>
+<span class="sd">                        astropy.io.fits.HDU.)</span>
+<span class="sd">        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the `Image` is appended to the end of the HDUList as a new HDU. In</span>
+<span class="sd">                        that case, the user is responsible for calling either</span>
+<span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
+<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice compression in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
+<span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">iscomplex</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">image_list</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex Images to a fits file. &quot;</span>
+                               <span class="s2">&quot;Write image.real and image.imag separately.&quot;</span><span class="p">,</span> <span class="n">image_list</span><span class="p">)</span>
+
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">image_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">_add_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+            <span class="n">_add_to_header</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume that image is really an HDU.  If not, this should give a reasonable error</span>
+            <span class="c1"># message.  (The base type of HDUs vary among versions of pyfits, so it&#39;s hard to</span>
+            <span class="c1"># check explicitly with an isinstance call.  For newer pyfits versions, it is</span>
+            <span class="c1"># pyfits.hdu.base.ExtensionHDU, but not in older versions.)</span>
+            <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">_write_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="writeCube"><a class="viewcode-back" href="../../fits.html#galsim.fits.writeCube">[docs]</a><span class="k">def</span> <span class="nf">writeCube</span><span class="p">(</span><span class="n">image_list</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a Python list of images to a FITS file as a data cube.</span>
+
+<span class="sd">    The details of how the images are written to file depends on the arguments.  Unlike for</span>
+<span class="sd">    writeMulti, when writing a data cube it is necessary that each `Image` in ``image_list`` has</span>
+<span class="sd">    the same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin</span>
+<span class="sd">    and pixel scale (or WCS).</span>
+
+<span class="sd">    In fact, the WCS of the first image is the one that gets put into the FITS header (since only</span>
+<span class="sd">    one WCS can be put into a FITS header).  Thus, if the images have different WCS functions,</span>
+<span class="sd">    only the first one will be rendered correctly by plotting programs such as ds9.  The FITS</span>
+<span class="sd">    standard does not support any way to have the various images in a data cube to have different</span>
+<span class="sd">    WCS solutions.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        image_list:     The ``image_list`` can also be either an array of NumPy arrays or a 3d NumPy</span>
+<span class="sd">                        array, in which case this is written to the fits file directly.  In the</span>
+<span class="sd">                        former case, no explicit check is made that the NumPy arrays are all the</span>
+<span class="sd">                        same shape, but a NumPy exception will be raised which we let pass upstream</span>
+<span class="sd">                        unmolested.</span>
+<span class="sd">        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the cube is appended to the end of the HDUList as a new HDU. In that</span>
+<span class="sd">                        case, the user is responsible for calling either ``hdu_list.writeto(...)``</span>
+<span class="sd">                        or ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
+<span class="sd">                        ``hdu_list`` is required.]</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice compression in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
+<span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">is_all_numpy</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">image_list</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex numpy arrays to a fits file. &quot;</span>
+                                   <span class="s2">&quot;Write array.real and array.imag separately.&quot;</span><span class="p">,</span> <span class="n">image_list</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;In writeCube: image_list has no images&quot;</span><span class="p">,</span> <span class="n">image_list</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">image_list</span><span class="p">):</span>
+        <span class="n">is_all_numpy</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">image_list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex numpy arrays to a fits file. &quot;</span>
+                                   <span class="s2">&quot;Write array.real and array.imag separately.&quot;</span><span class="p">,</span> <span class="n">image_list</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_all_numpy</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">iscomplex</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">image_list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex images to a fits file. &quot;</span>
+                                   <span class="s2">&quot;Write image.real and image.imag separately.&quot;</span><span class="p">,</span> <span class="n">image_list</span><span class="p">)</span>
+
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">is_all_numpy</span><span class="p">:</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image_list</span><span class="p">)</span>
+        <span class="n">nimages</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># Use default values for bounds</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ny</span><span class="p">)</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nimages</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_list</span><span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">im</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="n">im</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c1"># Use the first image&#39;s wcs and bounds</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">wcs</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">bounds</span>
+        <span class="c1"># Note: numpy shape is y,x</span>
+        <span class="n">array_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nimages</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nimages</span><span class="p">):</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">nx_k</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">xmax</span><span class="o">-</span><span class="n">im</span><span class="o">.</span><span class="n">xmin</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">ny_k</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">ymax</span><span class="o">-</span><span class="n">im</span><span class="o">.</span><span class="n">ymin</span><span class="o">+</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">nx_k</span> <span class="o">!=</span> <span class="n">nx</span> <span class="ow">or</span> <span class="n">ny_k</span> <span class="o">!=</span> <span class="n">ny</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;In writeCube: image </span><span class="si">%d</span><span class="s2"> has the wrong shape. &quot;</span>
+                                       <span class="s2">&quot;Shape is (</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">) should be (</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">nx_k</span><span class="p">,</span><span class="n">ny_k</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span>
+                                       <span class="n">im</span><span class="p">)</span>
+            <span class="n">cube</span><span class="p">[</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">array</span>
+
+
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">_add_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_all_numpy</span><span class="p">:</span>
+        <span class="c1"># Use any header/wcs in the first image</span>
+        <span class="n">_add_to_header</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">image_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">_write_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="writeFile"><a class="viewcode-back" href="../../fits.html#galsim.fits.writeFile">[docs]</a><span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.</span>
+
+<span class="sd">    If you have used the write(), writeMulti() or writeCube() functions with the ``hdu_list``</span>
+<span class="sd">    option rather than writing directly to a file, you may subsequently use the command</span>
+<span class="sd">    ``hdu_list.writeto(...)``.  However, it may be more convenient to use this function, writeFile()</span>
+<span class="sd">    instead, since it treats the compression option consistently with how that option is handled in</span>
+<span class="sd">    the above functions.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:      The name of the file to write to.</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        Note that the other options, such as &#39;rice&#39;, that operate on the image</span>
+<span class="sd">                        directly are not available at this point.  If you want to use one of them,</span>
+<span class="sd">                        it must be applied when writing each hdu.</span>
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pyfits_compress</span> <span class="ow">and</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="c1"># If compression is auto and it determined that it should use rice, then we</span>
+        <span class="c1"># should presume that the hdus were already rice compressed, so we can ignore it here.</span>
+        <span class="c1"># Otherwise, any pyfits_compression options are invalid.</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Compression </span><span class="si">%s</span><span class="s2"> is invalid for writeFile&quot;</span><span class="p">,</span><span class="n">compression</span><span class="p">)</span>
+    <span class="n">_write_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span></div>
+
+
+<span class="c1">##############################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># Now the primary read functions.  We have:</span>
+<span class="c1">#    image = read(...)</span>
+<span class="c1">#    image_list = readMulti(...)</span>
+<span class="c1">#    image_list = readCube(...)</span>
+<span class="c1">#    hdu, hdu_list, fin = readFile(...)</span>
+<span class="c1">#</span>
+<span class="c1">##############################################################################################</span>
+
+
+<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../fits.html#galsim.fits.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+         <span class="n">read_header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct an `Image` from a FITS file or HDUList.</span>
+
+<span class="sd">    The normal usage for this function is to read a fits file and return the image contained</span>
+<span class="sd">    therein, automatically decompressing it if necessary.  However, you may also pass it</span>
+<span class="sd">    an HDUList, in which case it will select the indicated hdu (with the ``hdu`` parameter)</span>
+<span class="sd">    from that.</span>
+
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the</span>
+<span class="sd">    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given</span>
+<span class="sd">    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have</span>
+<span class="sd">    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS</span>
+<span class="sd">    file, will be PixelScale(1.0).</span>
+
+<span class="sd">    This function is called as ``im = galsim.fits.read(...)``</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits..ImageHDU.  In the former case, the ``hdu`` in the list</span>
+<span class="sd">                        will be selected.  In the latter two cases, the ``hdu`` parameter is</span>
+<span class="sd">                        ignored.  [Either ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
+<span class="sd">                        either the primary or first extension as appropriate for the given</span>
+<span class="sd">                        compression.  (e.g. for &#39;rice&#39;, the first extension is the one you normally</span>
+<span class="sd">                        want.)]</span>
+<span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no decompression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice decompression in tiles</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to decompress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to decompress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip decompression in tiles</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
+<span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
+<span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        read_header:    Whether to read the header and store it as image.header.[default: False]</span>
+<span class="sd">        suppress_warning: Whether to suppress a warning that the WCS could not be read from the</span>
+<span class="sd">                          FITS header, so the WCS defaulted to either a `PixelScale` or</span>
+<span class="sd">                          `AffineTransform`. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the image as an `Image` instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">_read_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;HDU is empty.  (data is None)&quot;</span><span class="p">)</span>
+
+        <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">readFromFitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">Image</span><span class="o">.</span><span class="n">valid_dtypes</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;No C++ Image template instantiation for data type </span><span class="si">%s</span><span class="s2">. &quot;</span>
+                        <span class="s2">&quot;Using numpy.float64 instead.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">dt</span><span class="p">))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
+
+        <span class="k">if</span> <span class="n">read_header</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
+        <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="n">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+<div class="viewcode-block" id="readMulti"><a class="viewcode-back" href="../../fits.html#galsim.fits.readMulti">[docs]</a><span class="k">def</span> <span class="nf">readMulti</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+              <span class="n">read_headers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a list of `Image` instances from a FITS file or HDUList.</span>
+
+<span class="sd">    The normal usage for this function is to read a fits file and return a list of all the images</span>
+<span class="sd">    contained therein, automatically decompressing them if necessary.  However, you may also pass</span>
+<span class="sd">    it an HDUList, in which case it will build the images from these directly.</span>
+
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the</span>
+<span class="sd">    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given</span>
+<span class="sd">    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have</span>
+<span class="sd">    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS</span>
+<span class="sd">    file, will be PixelScale(1.0).</span>
+
+<span class="sd">    This function is called as ``im = galsim.fits.readMulti(...)``</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function along with `writeMulti` can be used to effect the equivalent of a simple</span>
+<span class="sd">        version of fpack or funpack. To Rice compress a fits file, you can call::</span>
+
+<span class="sd">            fname = &#39;some_image_file.fits&#39;</span>
+<span class="sd">            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname+&#39;.fz&#39;)</span>
+
+<span class="sd">        To uncompress::</span>
+
+<span class="sd">            fname = &#39;some_image_file.fits.fz&#39;</span>
+<span class="sd">            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname[:-3])</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList from which to read the images.  [Either</span>
+<span class="sd">                        ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no decompression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice decompression in tiles</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to decompress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to decompress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip decompression in tiles</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
+<span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
+<span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        read_headers:   Whether to read the headers and store them as image.header.[default: False]</span>
+<span class="sd">        suppress_warning: Whether to suppress a warning that the WCS could not be read from the</span>
+<span class="sd">                          FITS header, so the WCS defaulted to either a `PixelScale` or</span>
+<span class="sd">                          `AffineTransform`. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a Python list of `Image` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">_read_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In readMulti, hdu_list is not an HDUList&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">image_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">pyfits_compress</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Expecting at least one extension HDU in galsim.read&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Expecting at least one HDU in galsim.readMulti&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)):</span>
+            <span class="n">image_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">hdu</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">pyfits_compress</span><span class="p">,</span>
+                                   <span class="n">read_header</span><span class="o">=</span><span class="n">read_headers</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="n">suppress_warning</span><span class="p">))</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
+        <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="n">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image_list</span></div>
+
+<div class="viewcode-block" id="readCube"><a class="viewcode-back" href="../../fits.html#galsim.fits.readCube">[docs]</a><span class="k">def</span> <span class="nf">readCube</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+             <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a Python list of `Image` instances from a FITS data cube.</span>
+
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the</span>
+<span class="sd">    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given</span>
+<span class="sd">    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have</span>
+<span class="sd">    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS</span>
+<span class="sd">    file, will be PixelScale(1.0).</span>
+
+<span class="sd">    This function is called as ``image_list = galsim.fits.readCube(...)``</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is</span>
+<span class="sd">                        required.]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will</span>
+<span class="sd">                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
+<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
+<span class="sd">                        either the primary or first extension as appropriate for the given</span>
+<span class="sd">                        compression.  (e.g. for rice, the first extension is the one you normally</span>
+<span class="sd">                        want.)]</span>
+<span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no decompression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice decompression in tiles</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to decompress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to decompress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip decompression in tiles</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
+<span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
+<span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        suppress_warning: Whether to suppress a warning that the WCS could not be read from the</span>
+<span class="sd">                          FITS header, so the WCS defaulted to either a `PixelScale` or</span>
+<span class="sd">                          `AffineTransform`. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a Python list of `Image` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Must provide either file_name or hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">_read_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;HDU is empty.  (data is None)&quot;</span><span class="p">)</span>
+
+        <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">readFromFitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">Image</span><span class="o">.</span><span class="n">valid_dtypes</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;No C++ Image template instantiation for data type </span><span class="si">%s</span><span class="s2">. &quot;</span>
+                        <span class="s2">&quot;Using numpy.float64 instead.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">dt</span><span class="p">))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_3d</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">nimages</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nimages</span><span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">,:,:])</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
+            <span class="n">image_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
+        <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
+            <span class="n">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image_list</span></div>
+
+<div class="viewcode-block" id="readFile"><a class="viewcode-back" href="../../fits.html#galsim.fits.readFile">[docs]</a><span class="k">def</span> <span class="nf">readFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read in a Pyfits hdu_list from a FITS file, taking care of the GalSim compression options.</span>
+
+<span class="sd">    If you want to do something different with an hdu or hdu_list than one of our other read</span>
+<span class="sd">    functions, you can use this function.  It handles the compression options in the standard</span>
+<span class="sd">    GalSim way and just returns the hdu (and hdu_list) for you to use as you see fit.</span>
+
+<span class="sd">    This function is called as::</span>
+
+<span class="sd">        &gt;&gt;&gt; hdu, hdu_list, fin = galsim.fits.readFile(...)</span>
+
+<span class="sd">    The first item in the returned tuple is the specified hdu (or the primary if none was</span>
+<span class="sd">    specifically requested).  The other two are returned so you can properly close them.</span>
+<span class="sd">    They are the full HDUList and possibly a file handle.  The appropriate cleanup can be</span>
+<span class="sd">    done with::</span>
+
+<span class="sd">        &gt;&gt;&gt; galsim.fits.closeHDUList(hdu_list, fin)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:      The name of the file to read in.</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
+<span class="sd">                        either the primary or first extension as appropriate for the given</span>
+<span class="sd">                        compression.  (e.g. for rice, the first extension is the one you normally</span>
+<span class="sd">                        want.)]</span>
+<span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no decompression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice decompression in tiles</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to decompress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to decompress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip decompression in tiles</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
+<span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
+<span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a tuple with three items: ``(hdu, hdu_list, fin)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">_read_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span></div>
+
+
+<span class="c1">##############################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># Finally, we have a class for handling FITS headers called FitsHeader.</span>
+<span class="c1">#</span>
+<span class="c1">##############################################################################################</span>
+
+
+<div class="viewcode-block" id="FitsHeader"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader">[docs]</a><span class="k">class</span> <span class="nc">FitsHeader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class storing key/value pairs from a FITS Header</span>
+
+<span class="sd">    This class works a lot like the regular read() function, but rather than returning</span>
+<span class="sd">    the image part of the FITS file, it gives you access to the header information.</span>
+
+<span class="sd">    After construction, you can access a header value by::</span>
+
+<span class="sd">        &gt;&gt;&gt; value = fits_header[key]</span>
+
+<span class="sd">    or write to it with::</span>
+
+<span class="sd">        &gt;&gt;&gt; fits_header[key] = value                # If you just want to set a value.</span>
+<span class="sd">        &gt;&gt;&gt; fits_header[key] = (value, comment)     # If you want to include a comment field.</span>
+
+<span class="sd">    In fact, most of the normal functions available for a dict are available:::</span>
+
+<span class="sd">        &gt;&gt;&gt; keys = fits_header.keys()</span>
+<span class="sd">        &gt;&gt;&gt; items = fits_header.items()</span>
+<span class="sd">        &gt;&gt;&gt; for key in fits_header:</span>
+<span class="sd">        &gt;&gt;&gt;     value = fits_header[key]</span>
+<span class="sd">        &gt;&gt;&gt; value = fits_header.get(key, default)</span>
+<span class="sd">        &gt;&gt;&gt; del fits_header[key]</span>
+<span class="sd">        &gt;&gt;&gt; etc.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        This used to be a particularly useful abstraction, since PyFITS and then AstroPy used to</span>
+<span class="sd">        keep changing their syntax for how to write to a fits header rather often, so this class</span>
+<span class="sd">        had numerous checks for which version of PPyFITS or AstroPy was installed and call things</span>
+<span class="sd">        the right way depending on the version.  Thus, it was able to maintain a stable, intuitive</span>
+<span class="sd">        API that would work with any version on the backend.  We no longer support PyFITS or older</span>
+<span class="sd">        versions of AstroPy, so now much of the syntax of this class is very similar in interface</span>
+<span class="sd">        to the current version of astropy.io.fits.Header.  Indeed it is now a rather light wrapper</span>
+<span class="sd">        around their Header class with just a few convenience features to make it easier to work</span>
+<span class="sd">        with GalSim objects.</span>
+
+<span class="sd">    The underlying Header object is available as a ``.header`` attribute::</span>
+
+<span class="sd">        &gt;&gt;&gt; apy_header = fits_header.header</span>
+
+<span class="sd">    A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList</span>
+<span class="sd">    object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with</span>
+<span class="sd">    no parameters, in which case a blank Header will be constructed with no keywords yet if</span>
+<span class="sd">    you want to add the keywords you want by hand.::</span>
+
+<span class="sd">        &gt;&gt;&gt; h1 = galsim.FitsHeader(file_name = file_name)</span>
+<span class="sd">        &gt;&gt;&gt; h2 = galsim.FitsHeader(header = header)</span>
+<span class="sd">        &gt;&gt;&gt; h3 = galsim.FitsHeader(hdu_list = hdu_list)</span>
+<span class="sd">        &gt;&gt;&gt; h4 = galsim.FitsHeader()</span>
+
+<span class="sd">    For convenience, the first parameter may be unnamed as either a header or a file_name::</span>
+
+<span class="sd">        &gt;&gt;&gt; h1 = galsim.FitsHeader(file_name)</span>
+<span class="sd">        &gt;&gt;&gt; h2 = galsim.FitsHeader(header)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        header:         An astropy.io.fits.Header object or in fact any dict-like object or list of</span>
+<span class="sd">                        (key,value) pairs.  [default: None]</span>
+<span class="sd">        file_name:      The name of the file to read in.  [default: None]</span>
+<span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
+<span class="sd">                        already include it. [default: None]</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will</span>
+<span class="sd">                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
+<span class="sd">                        [default: None]</span>
+<span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
+<span class="sd">                        either the primary or first extension as appropriate for the given</span>
+<span class="sd">                        compression.  (e.g. for rice, the first extension is the one you normally</span>
+<span class="sd">                        want.)]</span>
+<span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no decompression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice decompression in tiles</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to decompress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to decompress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip decompression in tiles</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
+<span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
+<span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        text_file:      Normally a file is taken to be a fits file, but you can also give it a</span>
+<span class="sd">                        text file with the header information (like the .head file output from</span>
+<span class="sd">                        SCamp).  In this case you should set ``text_file = True`` to tell GalSim</span>
+<span class="sd">                        to parse the file this way.  [default: False]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span> <span class="s1">&#39;hdu&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;compression&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span> <span class="s1">&#39;text_file&#39;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">file_name</span><span class="p">:</span>
+           <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+               <span class="s2">&quot;Cannot provide both file_name and header&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">hdu_list</span><span class="p">:</span>
+           <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+               <span class="s2">&quot;Cannot provide both hdu_list and header&quot;</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span><span class="p">:</span>
+           <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+               <span class="s2">&quot;Cannot provide both file_name and hdu_list&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">)</span>
+
+        <span class="c1"># Interpret a string header as though it were passed as file_name.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">header</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Used for the repr</span>
+
+        <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="s1">&#39;file_name=&#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="s1">&#39;file_name=&#39;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, hdu=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">hdu</span>
+            <span class="k">if</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, compression=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">compression</span>
+
+            <span class="k">if</span> <span class="n">text_file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, text_file=True&#39;</span>
+                <span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
+                    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fin</span> <span class="p">]</span>
+                <span class="c1"># Don&#39;t include END (or later lines)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;END&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;END&#39;</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[:</span><span class="n">end</span><span class="p">]</span>
+                <span class="c1"># Later pyfits versions changed this to a class method, so you can write</span>
+                <span class="c1"># pyfits.Card.fromstring(text).  But in older pyfits versions, it was</span>
+                <span class="c1"># a regular method.  This syntax should work in both cases.</span>
+                <span class="n">cards</span> <span class="o">=</span> <span class="p">[</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Card</span><span class="p">()</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span> <span class="p">]</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Header</span><span class="p">(</span><span class="n">cards</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span> <span class="o">=</span> <span class="n">_read_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hdu_list</span><span class="p">:</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">header</span>
+
+        <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">text_file</span><span class="p">:</span>
+            <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
+            <span class="c1"># Also need to make a copy of the header to keep it available.</span>
+            <span class="c1"># If we construct a FitsHeader from an hdu_list, then we don&#39;t want to do this,</span>
+            <span class="c1"># since we want the header to remain attached to the original hdu.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Header</span><span class="p">):</span>
+            <span class="c1"># If header is a pyfits.Header, then we just use it.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, header may be any kind of dict-like object or list of (key,value) pairs.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="s1">&#39;items&#39;</span><span class="p">):</span>
+                    <span class="c1"># update() should handle anything that acts like a dict.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># The rest of the functions are typical non-mutating functions for a dict, for which we</span>
+    <span class="c1"># generally just pass the request along to self.header.</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="FitsHeader.comment"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.comment">[docs]</a>    <span class="k">def</span> <span class="nf">comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the comment field for the given key.</span>
+
+<span class="sd">        Parameter:</span>
+<span class="sd">            key:    The header key for which to get the comment field.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the comment field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="FitsHeader.clear"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear all values in the header.  Works like dict.clear.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.get"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the value of a given key.  Works like dict.get.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            key:        The header key for which to get the value</span>
+<span class="sd">            default:    Optionally, A value to use if the key is not present. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the value of the given key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.pop"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pop off a value from the header.  Works like dict.pop.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            key:        The header key for which to get the value</span>
+<span class="sd">            default:    Optionally, A value to use if the key is not present. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the value of the given key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.items"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all header items.  Works like dict.items.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of (key, value) tuples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.iteritems"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.iteritems">[docs]</a>    <span class="k">def</span> <span class="nf">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Synonym for self.items()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.iterkeys"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.iterkeys">[docs]</a>    <span class="k">def</span> <span class="nf">iterkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Synonym for self.keys()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.itervalues"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.itervalues">[docs]</a>    <span class="k">def</span> <span class="nf">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Synonym for self.values()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.keys"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all header keys.  Works like dict.keys</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.update"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the header with a dict-like object.  Works like dict.update.</span>
+
+<span class="sd">        If there are any items in ``dict2`` that are duplicates of items already in the header,</span>
+<span class="sd">        the current items will ber overwritten.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            dict2:      Another header or dict-like object with keys and values to update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dict2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="FitsHeader.values"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all header values.  Works like dict.values.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.append"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append an item to the end of the header.</span>
+
+<span class="sd">        This breaks convention a bit by treating the header more like a list than a dict,</span>
+<span class="sd">        but sometimes that is necessary to get the header structured the way you want it.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            key:            The key of the entry to append</span>
+<span class="sd">            value:          The value of the entry to append [default: &#39;&#39;]</span>
+<span class="sd">            comment:        A comment field if desired [default: None]</span>
+<span class="sd">            useblanks:      If there are blank entries currently at the end, should they be</span>
+<span class="sd">                            overwritten with the new entry? [default: True]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">value</span><span class="p">,</span> <span class="n">comment</span><span class="p">),</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.extend"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extend this `FitsHeader` with items from another `FitsHeader`.</span>
+
+<span class="sd">        Equivalent to appending all the other&#39;s items to the end of this one with the</span>
+<span class="sd">        exception that it ignores items that are already in self.</span>
+<span class="sd">        If you want to replace existing values rather than ignore duplicates, use</span>
+<span class="sd">        ``replace=True``.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            other:          Another FitsHeader object.</span>
+<span class="sd">            replace:        Replace duplicate entries rather than ignore them. [default: False]</span>
+<span class="sd">            useblanks:      If there are blank entries currently at the end, should they be</span>
+<span class="sd">                            overwritten with the new entry? [default: True]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="ow">not</span> <span class="n">replace</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="n">replace</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=&lt;Header object at </span><span class="si">%s</span><span class="s2">&gt;)&quot;</span><span class="o">%</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">FitsHeader</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+
+<span class="c1"># inject write as method of Image class</span>
+<span class="n">Image</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">write</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installing With Pip &mdash; GalSim 2.5.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing With Conda" href="install_conda.html" />
+    <link rel="prev" title="Installation Instructions" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="install.html">Installation Instructions</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing With Pip</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overall-summary">Overall summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-python-dependencies">Installing Python Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-fftw">Installing FFTW</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#installing-fftw-yourself">Installing FFTW yourself</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-an-existing-installation-of-fftw">Using an existing installation of FFTW</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-fftw-with-conda">Installing FFTW with conda</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-fftw-with-apt-get">Installing FFTW with apt-get</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-fftw-with-fink">Installing FFTW with fink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-fftw-with-macports">Installing FFTW with MacPorts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-eigen">Installing Eigen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#installing-eigen-yourself">Installing Eigen yourself</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-an-existing-installation-of-eigen">Using an existing installation of Eigen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-conda">Installing Eigen with conda</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-apt-get">Installing Eigen with apt-get</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-fink">Installing Eigen with fink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-macports">Installing Eigen with MacPorts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-the-c-shared-library">Installing the C++ Shared Library</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="install_conda.html">Installing With Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#running-example-scripts">Running example scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="install.html">Installation Instructions</a></li>
+      <li class="breadcrumb-item active">Installing With Pip</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/install_pip.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installing-with-pip">
+<h1>Installing With Pip<a class="headerlink" href="#installing-with-pip" title="Permalink to this heading"></a></h1>
+<section id="overall-summary">
+<h2>Overall summary<a class="headerlink" href="#overall-summary" title="Permalink to this heading"></a></h2>
+<p>The usual way to install GalSim is now (starting with version 2.0) simply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>which will install the latest official release of GalSim.</p>
+<p>Note that you may need to use sudo with the above command if you are installing
+into system directories.  If you do not have write privileges for the directory
+it is trying to install into, you can use the –user flag to install into a
+local directory instead.  (Normally something like $HOME/Library/Python/2.7
+or $HOME/.local, depending on your system.)</p>
+<p>This might fail if certain libraries are installed in non-standard locations.
+In this case, add the paths for these libraries to both the LIBRARY_PATH and
+LD_LIBRARY_PATH environmental variables before running pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export LIBRARY_PATH=$LIBARY_PATH:/path/to/lib:/other/path/to/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/lib:/other/path/to/lib
+</pre></div>
+</div>
+<p>If you would rather install from source (e.g. to work on a development branch),
+you can do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GalSim</span><span class="o">-</span><span class="n">developers</span><span class="o">/</span><span class="n">GalSim</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">GalSim</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>(again possibly with either sudo or –user).</p>
+<p>Either of these installation methods should handle most of the required
+dependencies for you if you do not have them already installed on your machine.
+In particular, all of the python dependencies should be automatically installed
+for you.  See <a class="reference internal" href="#installing-python-dependencies"><span class="std std-ref">Installing Python Dependencies</span></a> if you have trouble with any of these.</p>
+<p>FFTW is not directly pip installable, so if the above installation fails,
+you may need to install it separately. See <a class="reference internal" href="#installing-fftw"><span class="std std-ref">Installing FFTW</span></a> for more details
+about how to do this.</p>
+<p>Eigen is also not pip installable, but it is a header-only library, so it doesn’t
+require any installation.  Therefore, if you don’t have it it locally in a place where
+setup.py can find it, a version of Eigen will be downloaded directly.
+See <a class="reference internal" href="#installing-eigen"><span class="std std-ref">Installing Eigen</span></a> for more details.</p>
+<p>Finally, while GalSim is officially a Python package, there are some users who
+use the compiled C++ library directly, rather than via the Python interface.
+See <a class="reference internal" href="#installing-the-c-shared-library"><span class="std std-ref">Installing the C++ Shared Library</span></a> for information about this possibility.</p>
+</section>
+<section id="installing-python-dependencies">
+<h2>Installing Python Dependencies<a class="headerlink" href="#installing-python-dependencies" title="Permalink to this heading"></a></h2>
+<p>Normally, all of the python package dependencies will be automatically installed
+by pip.  The following versions are known to work with GalSim 2.1.  In most cases,
+other recent (especially later) versions will also work:</p>
+<ul class="simple">
+<li><p>NumPy (1.16.1)</p></li>
+<li><p>Future (0.17.1)</p></li>
+<li><p>Astropy (3.0.5)</p></li>
+<li><p>PyBind11 (2.2.3)</p></li>
+<li><p>LSSTDESC.Coord (1.0.5)</p></li>
+</ul>
+<p>There are a few others modules are not technically required, but we let pip
+install them along with GalSim, because they either add useful functionality
+or efficiency to GalSim.  These are listed in the requirements.txt file that
+pip uses to determine what else to install.  But if you install with
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code>, then these will not be installed.</p>
+<ul class="simple">
+<li><p>Starlink (3.10.0)  (Improved WCS functionality)</p></li>
+<li><p>PyYaml (3.12)      (Reads YAML config files)</p></li>
+<li><p>Pandas (0.20)      (Faster reading of ASCII input files)</p></li>
+</ul>
+<p>If you want to install these yourself, the quickest way is to do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>If you want more control about which version you get or otherwise want to install
+each package individually, you can do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">numpy</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">future</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">astropy</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pybind11</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">LSSTDESC</span><span class="o">.</span><span class="n">Coord</span>
+
+<span class="n">pip</span> <span class="n">install</span> <span class="n">starlink</span><span class="o">-</span><span class="n">pyast</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pyyaml</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pandas</span>
+</pre></div>
+</div>
+<p>In all cases, you may need to precede the above commands with <code class="docutils literal notranslate"><span class="pre">sudo</span></code> or
+add <code class="docutils literal notranslate"><span class="pre">--user</span></code> to the end as you normally do when pip installing on your system.</p>
+</section>
+<section id="installing-fftw">
+<h2>Installing FFTW<a class="headerlink" href="#installing-fftw" title="Permalink to this heading"></a></h2>
+<p>GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
+fast Fourier transforms.</p>
+<p>We require FFTW version &gt;= 3.0.  Most tests have been done with FFTW 3.3.7,
+so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.</p>
+<section id="installing-fftw-yourself">
+<h3>Installing FFTW yourself<a class="headerlink" href="#installing-fftw-yourself" title="Permalink to this heading"></a></h3>
+<p>FFTW is available at the URL:</p>
+<p><a class="reference external" href="http://www.fftw.org/download.html">http://www.fftw.org/download.html</a></p>
+<p>As of this writing, version 3.3.7 is the current latest release, for which
+the following commands should work to download and install it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">fftw</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">fftw</span><span class="o">-</span><span class="mf">3.3.7</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">tar</span> <span class="n">xfz</span> <span class="n">fftw</span><span class="o">-</span><span class="mf">3.3.7</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">cd</span> <span class="n">fftw</span><span class="o">-</span><span class="mf">3.3.7</span>
+<span class="o">./</span><span class="n">configure</span> <span class="o">--</span><span class="n">enable</span><span class="o">-</span><span class="n">shared</span>
+<span class="n">make</span>
+<span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>If you want to install into a different directory (e.g. because you do not
+have sudo privileges on your machine), then specify the alternate directory
+with the –prefix flag to configure.  E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>./configure --enable-shared --prefix=$HOME
+</pre></div>
+</div>
+<p>which will install the library into $HOME/lib and the header file into
+$HOME/include.  In this case, leave off the sudo from the last line.
+Also, you should make sure these directories are in your LD_LIBRARY_PATH
+and C_INCLUDE_PATH environment variables, respectively.</p>
+<p>Alternatively, if you do not want to modify your LD_LIBRARY_PATH and/or
+C_INCLUDE_PATH, you can instead set an environment variable to tell GalSim
+where the files are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span><span class="o">/</span><span class="n">prefix</span>
+</pre></div>
+</div>
+<p>E.g. in the above case where prefix is $HOME, you would do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export FFTW_DIR=$HOME
+</pre></div>
+</div>
+<p>Probably, you should put this into your shell login file (e.g. .bash_profile)
+so it always gets set when you log in.</p>
+</section>
+<section id="using-an-existing-installation-of-fftw">
+<h3>Using an existing installation of FFTW<a class="headerlink" href="#using-an-existing-installation-of-fftw" title="Permalink to this heading"></a></h3>
+<p>If FFTW is already installed on your system, there may be nothing to do.
+If it is in a standard location like /usr/local/lib or in some other
+directory in your LD_LIBRARY_PATH, then GalSim should find it without
+any extra work on your part.</p>
+<p>If it is in a non-standard location, and you do not want to add this path
+to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
+variables from setup.py), then you can instead set the FFTW_DIR environment
+variable to tell GalSim where to look when running pip or setup.py:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span><span class="o">/</span><span class="n">lib</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span><span class="o">/</span><span class="n">lib</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>For instance, if libfftw3.so is located in /opt/cray/pe/lib64, you could use
+that with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">opt</span><span class="o">/</span><span class="n">cray</span><span class="o">/</span><span class="n">pe</span><span class="o">/</span><span class="n">lib64</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>If you want to set up your system so that you don’t have to type that each
+time you re-install galsim, you might want to set it in your .bash_profile
+file or similar location.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">opt</span><span class="o">/</span><span class="n">cray</span><span class="o">/</span><span class="n">pe</span><span class="o">/</span><span class="n">lib64</span>
+</pre></div>
+</div>
+<p>If you have multiple versions of FFTW installed on your system, this variable
+can be used to specify which version you want GalSim to use as this will be
+the first location it will check during the installation process.</p>
+<p>Furthermore, setup.py will trust this location even if it cannot load the
+library that it finds there.  This can be useful when cross-compiling, since
+the library it finds might not be loadable on the system doing the compiling.</p>
+</section>
+<section id="installing-fftw-with-conda">
+<h3>Installing FFTW with conda<a class="headerlink" href="#installing-fftw-with-conda" title="Permalink to this heading"></a></h3>
+<p>If you use conda, FFTW can be install with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">fftw</span>
+</pre></div>
+</div>
+<p>This will put it into the anaconda/lib directory on your system (within your
+active environment if appropriate).  GalSim knows to look here, so there is
+nothing additional you need to do.</p>
+</section>
+<section id="installing-fftw-with-apt-get">
+<h3>Installing FFTW with apt-get<a class="headerlink" href="#installing-fftw-with-apt-get" title="Permalink to this heading"></a></h3>
+<p>On Linux machines that use apt-get, FFTW can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">libfftw3</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+</section>
+<section id="installing-fftw-with-fink">
+<h3>Installing FFTW with fink<a class="headerlink" href="#installing-fftw-with-fink" title="Permalink to this heading"></a></h3>
+<p>If you use fink on a Mac, FFTW can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fink</span> <span class="n">install</span> <span class="n">fftw3</span>
+</pre></div>
+</div>
+<p>(Make sure to use fftw3, not fftw, since fftw is version 2.)</p>
+<p>This will put it into the /sw/lib directory on your system. GalSim knows to
+look here, so there is nothing additional you need to do.</p>
+</section>
+<section id="installing-fftw-with-macports">
+<h3>Installing FFTW with MacPorts<a class="headerlink" href="#installing-fftw-with-macports" title="Permalink to this heading"></a></h3>
+<p>If you use MacPorts, FFTW can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">port</span> <span class="n">install</span> <span class="n">fftw</span><span class="o">-</span><span class="mi">3</span>
+</pre></div>
+</div>
+<p>This will put it into the /opt/local/lib directory on your system. GalSim knows
+to look here, so there is nothing additional you need to do.</p>
+</section>
+</section>
+<section id="installing-eigen">
+<h2>Installing Eigen<a class="headerlink" href="#installing-eigen" title="Permalink to this heading"></a></h2>
+<p>GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
+header-only library, which means that nothing needs to be compiled to use it.
+You can download the header files yourself, but if you do not, then the
+installation script will download it for you automatically.  So usually,
+this dependency should require no work on your part.</p>
+<p>However, if you have a version of Eigen already installed on your system,
+you may want to use that.  If the right directory is in your path for
+include files (C_INCLUDE_PATH), it should find it.  If not, you may specify
+the right directory to use by setting the EIGEN_DIR environment variable.</p>
+<p>We require Eigen version &gt;= 3.0.  The version we download automatically is
+3.3.4, so that version is known to work.  We have also tested with versions
+3.2.8 and 3.0.4, so probably any 3.x version will work.  However, if you have
+trouble with another version, try upgrading to 3.3.4 or later.</p>
+<section id="installing-eigen-yourself">
+<h3>Installing Eigen yourself<a class="headerlink" href="#installing-eigen-yourself" title="Permalink to this heading"></a></h3>
+<p>Eigen is available at the URL</p>
+<p><a class="reference external" href="http://eigen.tuxfamily.org/index.php">http://eigen.tuxfamily.org/index.php</a></p>
+<p>As of this writing, version 3.3.4 is the current latest release, for which
+the following commands should work to download and install it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">bitbucket</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">eigen</span><span class="o">/</span><span class="n">eigen</span><span class="o">/</span><span class="n">get</span><span class="o">/</span><span class="mf">3.3.4</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">bz2</span>
+<span class="n">tar</span> <span class="n">xfj</span> <span class="mf">3.3.4</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">bz2</span>
+<span class="n">sudo</span> <span class="n">cp</span> <span class="n">eigen</span><span class="o">-</span><span class="n">eigen</span><span class="o">-</span><span class="mi">5</span><span class="n">a0156e40feb</span><span class="o">/</span><span class="n">Eigen</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">include</span>
+</pre></div>
+</div>
+<p>In the final cp line, the MD5 hash (5a0156e40feb) will presumably change for
+other versions, so use whatever directory tar expands into if you are using
+a different version than 3.3.4.</p>
+<p>If you do not have sudo privileges, you can copy to a different directory such
+as $HOME/include instead and leave off the sudo from the cp command.  In this
+case, make sure this directory is in your C_INCLUDE_PATH environment variable.</p>
+<p>Finally, you can also skip the last command above and instead set EIGEN_DIR
+as an environment variable to tell GalSim where the files are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">EIGEN_DIR</span><span class="o">=/</span><span class="n">some</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">eigen</span>
+</pre></div>
+</div>
+<p>This should be the directory in which the Eigen subdirectory is found.  E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export EIGEN_DIR=$HOME/eigen-eigen-5a0156e40feb
+</pre></div>
+</div>
+<p>Probably, you should put this into your .bash_profile file so it always gets
+set when you log in.</p>
+</section>
+<section id="using-an-existing-installation-of-eigen">
+<h3>Using an existing installation of Eigen<a class="headerlink" href="#using-an-existing-installation-of-eigen" title="Permalink to this heading"></a></h3>
+<p>If Eigen is already installed on your system, there may be nothing to do.
+If it is in a standard location like /usr/local/include or in some other
+directory in your C_INCLUDE_PATH, then GalSim should find it without
+any extra work on your part.</p>
+<p>If it is in a non-standard location, and you do not want to add this path
+to your C_INCLUDE_PATH, then you can instead set the EIGEN_DIR environment
+variable to tell GalSim where to look:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">EIGEN_DIR</span><span class="o">=/</span><span class="n">some</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">eigen</span>
+</pre></div>
+</div>
+<p>For instance, if Eigen was installed into /usr/include/eigen3, then you
+could use that with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">EIGEN_DIR</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">eigen3</span>
+</pre></div>
+</div>
+<p>This command would normally be done in your .bash_profile file so it gets
+executed every time you log in.</p>
+<p>If you have multiple versions of Eigen installed on your system, this variable
+can be used to specify which version you want GalSim to use as this will be
+the first location it will check during the installation process.</p>
+</section>
+<section id="installing-eigen-with-conda">
+<h3>Installing Eigen with conda<a class="headerlink" href="#installing-eigen-with-conda" title="Permalink to this heading"></a></h3>
+<p>If you use conda, Eigen can be install with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">eigen</span>
+</pre></div>
+</div>
+<p>This will put it into the anaconda/include directory on your system (within
+your active environment if appropriate).  GalSim knows to look here, so there
+is nothing additional you need to do.</p>
+</section>
+<section id="installing-eigen-with-apt-get">
+<h3>Installing Eigen with apt-get<a class="headerlink" href="#installing-eigen-with-apt-get" title="Permalink to this heading"></a></h3>
+<p>On Linux machines that use apt-get, Eigen can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">libeigen3</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+</section>
+<section id="installing-eigen-with-fink">
+<h3>Installing Eigen with fink<a class="headerlink" href="#installing-eigen-with-fink" title="Permalink to this heading"></a></h3>
+<p>If you use fink on a Mac, Eigen can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fink</span> <span class="n">install</span> <span class="n">eigen</span>
+</pre></div>
+</div>
+<p>This will put it into the /sw/include directory on your system. GalSim knows
+to look here, so there is nothing additional you need to do.</p>
+</section>
+<section id="installing-eigen-with-macports">
+<h3>Installing Eigen with MacPorts<a class="headerlink" href="#installing-eigen-with-macports" title="Permalink to this heading"></a></h3>
+<p>If you use MacPorts, Eigen can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">port</span> <span class="n">install</span> <span class="n">eigen</span>
+</pre></div>
+</div>
+<p>This will put it into the /opt/local/include directory on your system. GalSim
+knows to look here, so there is nothing additional you need to do.</p>
+</section>
+</section>
+<section id="installing-the-c-shared-library">
+<h2>Installing the C++ Shared Library<a class="headerlink" href="#installing-the-c-shared-library" title="Permalink to this heading"></a></h2>
+<p>GalSim is first and foremost a Python package.  However, it uses C++ functions behind
+the scenes to implement many of the numerically intensive operations.
+Some users have found it useful to link directly to the GalSim C++ library
+with their own C++ code.  This use case is supported, but at a lower level of
+API guarantees than we make for the Python code.</p>
+<p>The official public API is really only the python-layer classes and functions.
+We strive to hew closely to the <a class="reference external" href="https://semver.org/">Semantic Versioning</a>
+specifications about maintaining backwards compatibility within major release cycles,
+so user code that uses only the public API should continue to work correctly until a
+major version upgrade.</p>
+<p>This is <em>NOT</em> guaranteed for the C++ API.  These are officially implementation
+details in support of the Python API.  However, in practice, the C++ function
+signatures rarely change very much.  So for the most part, you can expect your
+code to continue to work for updated GalSim versions.  Or if a function signature
+changes slightly, it will usually be fairly simple to update to the new syntax.</p>
+<p>We provide the appropriate header files to use in the installed python library
+location in the <code class="docutils literal notranslate"><span class="pre">include</span></code> directory.  These files precisely specify the
+available C++-layer API for a given release.</p>
+<p>The compiled library file for linking user C++ code is not installed by the default
+pip or setup.py installation procedure.  The relevant functions are included
+in the Python module file, called <code class="docutils literal notranslate"><span class="pre">_galsim.so</span></code>, but this file is often not usable
+for linking your own C++ code.</p>
+<p>For this purpose, you will need to perform an extra step to build a shared library
+that has the C++-layer functions.  Run the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">build_shared_clib</span>
+</pre></div>
+</div>
+<p>The built shared library will be located in <code class="docutils literal notranslate"><span class="pre">build/shared_clib/</span></code>.  The library file
+is named <code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.dylib</span></code> on OSX or <code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.so</span></code> on Linux, where M,m
+are the major and minor version numbers for the release.  You should copy this file
+to some appropriate directory where your C++ code will be able to link to it.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install_conda.html" class="btn btn-neutral float-right" title="Installing With Conda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
