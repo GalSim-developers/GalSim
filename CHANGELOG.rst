@@ -1,7 +1,7 @@
 Changes from v2.4 to v2.5
 =========================
 
-This version adds support for Pyton 3.11.  We currently support 3.7, 3.8, 3.9, 3.10, and 3.11.
+This release adds support for Pyton 3.11 and 3.12. We currently support 3.7 through 3.12.
 
 API Changes
 -----------

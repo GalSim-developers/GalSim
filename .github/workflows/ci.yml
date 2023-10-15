@@ -19,7 +19,7 @@ jobs:
             matrix:
                 # First all python versions in basic linux
                 os: [ ubuntu-latest ]
-                py: [ 3.7, 3.8, 3.9, "3.10", 3.11 ]
+                py: [ 3.7, 3.8, 3.9, "3.10", 3.11, 3.12 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
 
@@ -30,13 +30,13 @@ jobs:
                     # Usually just restarting will fix it, but that's annoying, so minimize
                     # that by only having one of these to fight with.
                     - os: macos-latest
-                      py: 3.8
+                      py: "3.10"
                       CC: cc
                       CXX: c++
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
-                      py: 3.8
+                      py: "3.10"
                       CC: clang
                       CXX: clang++
 
