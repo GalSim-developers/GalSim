@@ -23,7 +23,7 @@ import types
 from multiprocessing.managers import NamespaceProxy
 
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
-from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum
+from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum, single_threaded
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from .value import RegisterValueType
 from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
@@ -153,7 +153,13 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     InputManager.register(tag, init_func, proxy)
             # Start up the input_manager
             config['_input_manager'] = InputManager()
-            config['_input_manager'].start()
+            with single_threaded():
+                # Starting in python 3.12, there is a deprecation warning about using fork when
+                # a process is multithreaded. This can get triggered here by the start()
+                # function, even though I'm pretty sure this is completely safe.
+                # So at least until it is shown that this is a problem, just suppress
+                # this warning here by wrapping in single_threaded()
+                config['_input_manager'].start()
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.

@@ -21,7 +21,7 @@ import logging
 import inspect
 from multiprocessing.managers import ListProxy, DictProxy
 
-from .util import LoggerWrapper, SetDefaultExt, RetryIO, SafeManager
+from .util import LoggerWrapper, SetDefaultExt, RetryIO, SafeManager, single_threaded
 from .value import ParseValue
 from .image import GetNObjForImage
 from ..utilities import ensure_dir
@@ -70,7 +70,8 @@ def SetupExtraOutput(config, logger=None):
         OutputManager.register('list', list, ListProxy)
         # Start up the output_manager
         config['output_manager'] = OutputManager()
-        config['output_manager'].start()
+        with single_threaded():
+            config['output_manager'].start()
 
     if 'extra_builder' not in config:
         config['extra_builder'] = {}

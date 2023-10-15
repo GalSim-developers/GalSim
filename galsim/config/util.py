@@ -267,7 +267,8 @@ def GetLoggerProxy(logger):
         logger_generator = SimpleGenerator(logger)
         LoggerManager.register('logger', callable = logger_generator)
         logger_manager = LoggerManager()
-        logger_manager.start()
+        with single_threaded():
+            logger_manager.start()
         logger_proxy = logger_manager.logger()
     else:
         logger_proxy = None

@@ -1859,34 +1859,35 @@ def test_multiprocess():
 
     nproc = 4  # Each process will do 4 lists (typically)
 
-    # First make lists in the single process:
-    ref_lists = dict()
-    for seed in seeds:
-        list = generate_list(seed)
-        ref_lists[seed] = list
+    with single_threaded():
+        # First make lists in the single process:
+        ref_lists = dict()
+        for seed in seeds:
+            list = generate_list(seed)
+            ref_lists[seed] = list
 
-    # Now do this with multiprocessing
-    # Put the seeds in a queue
-    task_queue = Queue()
-    for seed in seeds:
-        task_queue.put( [seed] )
+        # Now do this with multiprocessing
+        # Put the seeds in a queue
+        task_queue = Queue()
+        for seed in seeds:
+            task_queue.put( [seed] )
 
-    # Run the tasks:
-    done_queue = Queue()
-    for k in range(nproc):
-        Process(target=worker, args=(task_queue, done_queue)).start()
+        # Run the tasks:
+        done_queue = Queue()
+        for k in range(nproc):
+            Process(target=worker, args=(task_queue, done_queue)).start()
 
-    # Check the results in the order they finished
-    for i in range(len(seeds)):
-        list, proc, args = done_queue.get()
-        seed = args[0]
-        np.testing.assert_array_equal(
-                list, ref_lists[seed],
-                err_msg="Random numbers are different when using multiprocessing")
+        # Check the results in the order they finished
+        for i in range(len(seeds)):
+            list, proc, args = done_queue.get()
+            seed = args[0]
+            np.testing.assert_array_equal(
+                    list, ref_lists[seed],
+                    err_msg="Random numbers are different when using multiprocessing")
 
-    # Stop the processes:
-    for k in range(nproc):
-        task_queue.put('STOP')
+        # Stop the processes:
+        for k in range(nproc):
+            task_queue.put('STOP')
 
 
 @timer
