@@ -50,6 +50,7 @@ __all__ = [
     "CaptureLog",
     "assert_raises",
     "assert_warns",
+    "Profile",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
