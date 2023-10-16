@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import sys
 import logging
 import os
 import numpy as np
