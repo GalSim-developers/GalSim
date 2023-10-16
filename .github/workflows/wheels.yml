@@ -19,7 +19,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*manylinux*"
-          CIBW_SKIP: cp36* pp* cp*1686
+          CIBW_ARCH: auto64
+          CIBW_SKIP: cp36* pp*
           # I think yum might always work here.  But leave all options available.
           CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
 
@@ -39,7 +40,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*musllinux*"
-          CIBW_SKIP: cp36* pp* cp*i686
+          CIBW_ARCH: auto64
+          CIBW_SKIP: cp36* pp*
           # I think musl always uses apk, but keep all options available.
           CIBW_BEFORE_ALL: apk add --upgrade fftw-dev || apt-get install libfftw3-dev || yum install -y fftw-devel
 
@@ -59,7 +61,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*macosx*"
-          CIBW_SKIP: cp36* pp* cp*i686
+          CIBW_ARCH: auto64
+          CIBW_SKIP: cp36* pp*
           CIBW_BEFORE_ALL_MACOS: brew install fftw || true
 
       - uses: actions/upload-artifact@v3
