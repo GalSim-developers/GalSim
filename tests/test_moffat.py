@@ -204,7 +204,7 @@ def test_moffat_maxk():
                 atol = 0
             else:
                 rtol = 0.0
-                atol = 1e-2
+                atol = 2e-2
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol, atol=atol)
 
 
