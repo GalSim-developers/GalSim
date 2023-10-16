@@ -34,7 +34,6 @@ from collections import Counter
 from numbers import Integral, Real, Complex
 import pickle
 import copy
-from distutils.version import LooseVersion
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
