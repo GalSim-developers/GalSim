@@ -488,8 +488,8 @@ def test_fluxnorm():
     # Finally make an InterpolatedImage but give it some other flux value
     interp_flux = galsim.InterpolatedImage(im, flux=test_flux)
     # Check that it has that flux
-    np.testing.assert_equal(test_flux, interp_flux.flux,
-                            err_msg = 'InterpolatedImage did not use flux keyword')
+    np.testing.assert_array_equal(test_flux, interp_flux.flux,
+                                  err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
     im5 = interp_flux.drawImage(scale = im_scale, method='no_pixel')
     np.testing.assert_almost_equal(test_flux/im5.array.sum(), 1.0, decimal=6,
