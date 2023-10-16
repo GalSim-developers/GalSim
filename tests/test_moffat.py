@@ -136,36 +136,36 @@ def test_moffat_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxk, 11.634597424960159)
-    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795873)
-    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
-    np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
+    np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
+    np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795873)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
+    np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
+    np.testing.assert_array_almost_equal(psf.fwhm, fwhm_backwards_compatible)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_array_almost_equal(psf.flux, test_flux)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid, cen)
-    np.testing.assert_almost_equal(psf.maxk, 11.634597426100862)
-    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795862)
-    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
-    np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
+    np.testing.assert_array_almost_equal(psf.maxk, 11.634597426100862)
+    np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795862)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
+    np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
+    np.testing.assert_array_almost_equal(psf.fwhm, fwhm_backwards_compatible)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_array_almost_equal(psf.flux, test_flux)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.Moffat(2.0, fwhm=fwhm_backwards_compatible,
                                 trunc=2*fwhm_backwards_compatible, flux=inFlux)
         outFlux = psfFlux.flux
-        np.testing.assert_almost_equal(outFlux, inFlux)
+        np.testing.assert_array_almost_equal(outFlux, inFlux)
 
 @timer
 def test_moffat_maxk():
