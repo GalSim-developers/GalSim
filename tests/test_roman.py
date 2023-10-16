@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+import os
 import numpy as np
 import datetime
 from unittest import mock
