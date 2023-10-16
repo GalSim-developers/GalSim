@@ -11,13 +11,15 @@ jobs:
     name: Build wheels on standard linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v3
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*manylinux*"
-          CIBW_SKIP: cp36* pp*
+          CIBW_SKIP: cp36* cp37* pp*
           # I think yum might always work here.  But leave all options available.
           CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
 
@@ -29,10 +31,12 @@ jobs:
     name: Build wheels on musl linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v3
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*musllinux*"
           CIBW_SKIP: cp36* pp*
@@ -47,10 +51,12 @@ jobs:
     name: Build wheels on macosx
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v3
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: "*macosx*"
           CIBW_SKIP: cp36* pp*
@@ -67,11 +73,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
 
       - name: Install fftw
         run: |
