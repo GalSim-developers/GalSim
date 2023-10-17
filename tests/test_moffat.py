@@ -199,12 +199,12 @@ def test_moffat_maxk():
 
             fk = psf.kValue(psf.maxk,0).real/psf.flux
             print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e}')
-            if hasattr(galsim, "_galsim"):
-                rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
-                atol = 0
-            else:
-                rtol = 0.0
-                atol = 1e-1
+            # if hasattr(galsim, "_galsim"):
+            rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
+            atol = 0
+            # else:
+            #     rtol = 0.0
+            #     atol = 1e-1
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol, atol=atol)
 
 
