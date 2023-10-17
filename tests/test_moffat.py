@@ -191,21 +191,15 @@ def test_moffat_maxk():
         galsim.Moffat(beta=3.6, scale_radius=9, flux=23, trunc=50),
         galsim.Moffat(beta=12.9, scale_radius=11, flux=23, trunc=1000),
     ]
+    rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
     threshs = [1.e-3, 1.e-4, 0.03]
     print('beta \t trunc \t thresh \t kValue(maxk)')
     for psf in psfs:
         for thresh in threshs:
             psf = psf.withGSParams(maxk_threshold=thresh)
-
             fk = psf.kValue(psf.maxk,0).real/psf.flux
             print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e}')
-            # if hasattr(galsim, "_galsim"):
-            rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
-            atol = 0
-            # else:
-            #     rtol = 0.0
-            #     atol = 1e-1
-            np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol, atol=atol)
+            np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol)
 
 
 @timer
