@@ -140,7 +140,7 @@ def test_moffat_properties():
     if hasattr(galsim, "_galsim"):
         np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
     else:
-        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159, atol=0, rtol=0.25)
+        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.25)
     np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795873)
     np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
@@ -157,7 +157,7 @@ def test_moffat_properties():
     if hasattr(galsim, "_galsim"):
         np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
     else:
-        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159, atol=0, rtol=0.25)
+        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.25)
     np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795862)
     np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
