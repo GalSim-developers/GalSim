@@ -36,10 +36,6 @@ import pickle
 import copy
 from distutils.version import LooseVersion
 
-# import these here so JAX-GalSim can patch them
-import galsim
-import coord
-
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
@@ -1580,6 +1576,8 @@ def check_pickle(obj, func = lambda x : x, irreprable=False, random=None):
                         it has an rng attribute or it is a galsim.BaseDeviate]
     """
     # In case the repr uses these:
+    import galsim
+    import coord
     import astropy
     from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
