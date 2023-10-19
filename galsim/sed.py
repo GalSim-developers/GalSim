@@ -527,7 +527,7 @@ class SED:
         # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
         if isinstance(self._spec, LookupTable):
             wave_type = self.wave_type
-            flux_type = self.flux_type
+            flux_type = self._flux_type
             x = self._spec.getArgs()
             f = np.array(self._spec.getVals()) * other
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
