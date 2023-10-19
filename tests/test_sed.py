@@ -1186,6 +1186,37 @@ def test_emission_line():
                 sed.atRedshift(-2.0)
 
 
+@timer
+def test_flux_type_calculateFlux():
+    sed1 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='flambda'
+    )
+    sed2 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='fnu'
+    )
+    sed3 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='fphotons'
+    )
+    sed4 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type="nm", flux_type=units.Lsun / units.Hz / units.Mpc**2
+    )
+    bp = galsim.Bandpass(galsim.LookupTable([2,4], [1,2]), wave_type='nm')
+
+    for sed in [sed1, sed2, sed3, sed4]:
+        flux1 = sed.calculateFlux(bp)
+        flux2 = (1 * sed).calculateFlux(bp)
+        print('flux = {}, {}'.format(flux1, flux2))
+        wave = np.linspace(bp.blue_limit, bp.red_limit, 10000)
+        f = sed(wave) * bp(wave)
+        flux3 = np.trapz(f, wave)
+        np.testing.assert_allclose(flux1, flux3)
+        np.testing.assert_allclose(flux2, flux3)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
