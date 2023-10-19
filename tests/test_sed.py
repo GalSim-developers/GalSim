@@ -1204,17 +1204,31 @@ def test_flux_type_calculateFlux():
         galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
         wave_type="nm", flux_type=units.Lsun / units.Hz / units.Mpc**2
     )
+    flat_sed = galsim.SED(
+        '1',
+        wave_type="nm", flux_type="1"
+    )
     bp = galsim.Bandpass(galsim.LookupTable([2,4], [1,2]), wave_type='nm')
+    # bp = galsim.Bandpass('1', 'nm', blue_limit=1, red_limit=5)
 
     for sed in [sed1, sed2, sed3, sed4]:
         flux1 = sed.calculateFlux(bp)
         flux2 = (1 * sed).calculateFlux(bp)
-        print('flux = {}, {}'.format(flux1, flux2))
+        flux3 = (galsim.Exponential(half_light_radius=0.5, flux=1) * sed).calculateFlux(bp)
+        flux4 = (flat_sed * sed).calculateFlux(bp)
+        print('flux = {}, {}, {}'.format(flux1, flux2, flux3))
         wave = np.linspace(bp.blue_limit, bp.red_limit, 10000)
         f = sed(wave) * bp(wave)
-        flux3 = np.trapz(f, wave)
+        flux5 = np.trapz(f, wave)
         np.testing.assert_allclose(flux1, flux3)
         np.testing.assert_allclose(flux2, flux3)
+        np.testing.assert_allclose(flux1, flux4)
+        np.testing.assert_allclose(flux2, flux4)
+        np.testing.assert_allclose(flux3, flux4)
+        np.testing.assert_allclose(flux1, flux5)
+        np.testing.assert_allclose(flux2, flux5)
+        np.testing.assert_allclose(flux3, flux5)
+        np.testing.assert_allclose(flux4, flux5)
 
 
 if __name__ == "__main__":
