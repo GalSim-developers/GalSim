@@ -1635,7 +1635,10 @@ def test_ne():
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
     # repr string will report.
     perturb_image = ref_image.copy()
-    perturb_image.array[64, 64] *= 1000
+    if hasattr(galsim, "_galsim"):
+        perturb_image.array[64, 64] *= 1000
+    else:
+        perturb_image._array = perturb_image._array.at[64, 64].set(perturb_image._array[64, 64] * 1000)
     obj2 = galsim.InterpolatedImage(perturb_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     with galsim.utilities.printoptions(threshold=128*128):
