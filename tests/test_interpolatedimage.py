@@ -1637,9 +1637,9 @@ def test_ne():
     # repr string will report.
     perturb_image = ref_image.copy()
     if hasattr(galsim, "_galsim"):
-        perturb_image.array[64, 64] *= 1000
+        perturb_image.array[64, 64] *= 100
     else:
-        perturb_image._array = perturb_image._array.at[64, 64].set(perturb_image._array[64, 64] * 1000)
+        perturb_image._array = perturb_image._array.at[64, 64].set(perturb_image._array[64, 64] * 100)
     obj2 = galsim.InterpolatedImage(perturb_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     with galsim.utilities.printoptions(threshold=128*128):
