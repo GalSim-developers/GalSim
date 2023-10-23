@@ -133,27 +133,9 @@ class SED:
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None):
         self._flux_type = flux_type  # Need to save the original for repr
+
         # Parse the various options for wave_type
-        if isinstance(wave_type, str):
-            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
-                self.wave_type = 'nm'
-                self.wave_factor = 1.
-            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
-                self.wave_type = 'Angstrom'
-                self.wave_factor = 10.
-            else:
-                raise GalSimValueError("Unknown wave_type", wave_type, ('nm', 'Angstrom'))
-        else:
-            self.wave_type = wave_type
-            try:
-                self.wave_factor = (1*units.nm).to(self.wave_type).value
-                if self.wave_factor == 1.:
-                    self.wave_type = 'nm'
-                elif abs(self.wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
-                    self.wave_type = 'Angstrom'
-                    self.wave_factor = 10.
-            except units.UnitConversionError:
-                self.wave_factor = None
+        self.wave_type, self.wave_factor = self._parse_wave_type(wave_type)
 
         # Parse the various options for flux_type
         self.flux_factor = None
@@ -234,6 +216,29 @@ class SED:
 
         # Define the appropriate functions to call
         self._setup_funcs()
+
+    @staticmethod
+    def _parse_wave_type(wave_type):
+        # Parse the various options for wave_type.
+        # Returns wave_type, wave_factor
+        if isinstance(wave_type, str):
+            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
+                return 'nm', 1.
+            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
+                return 'Angstrom', 10.
+            else:
+                raise GalSimValueError("Unknown wave_type", wave_type, ('nm', 'Angstrom'))
+        else:
+            try:
+                wave_factor = (1*units.nm).to(wave_type).value
+                if wave_factor == 1.:
+                    return 'nm', 1.
+                elif abs(wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
+                    return 'Angstrom', 10.
+                else:
+                    return units.Unit(wave_type), wave_factor
+            except units.UnitConversionError:
+                return units.Unit(wave_type), None
 
     def _setup_funcs(self):
         # Set up the various functions we use to do the right calculation based on which
