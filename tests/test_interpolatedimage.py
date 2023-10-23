@@ -511,12 +511,13 @@ def test_exceptions():
         galsim.InterpolatedImage(image=galsim.ImageF(5, 5))
 
     # Image must be real type (F or D)
-    with assert_raises(galsim.GalSimValueError):
-        galsim.InterpolatedImage(image=galsim.ImageI(5, 5, scale=1))
+    if hasattr(galsim, "_galsim"):
+        with assert_raises(galsim.GalSimValueError):
+            galsim.InterpolatedImage(image=galsim.ImageI(5, 5, scale=1))
 
-    # Image must have non-zero flux
-    with assert_raises(galsim.GalSimValueError):
-        galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.))
+        # Image must have non-zero flux
+        with assert_raises(galsim.GalSimValueError):
+            galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.))
 
     # Can't shoot II with SincInterpolant
     ii = galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=1.),
