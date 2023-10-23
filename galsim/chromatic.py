@@ -1895,6 +1895,14 @@ class ChromaticTransformation(ChromaticObject):
             s += '.atRedshift(%s)'%(self._redshift)
         return s
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def _getTransformations(self, wave):
         if hasattr(self._jac, '__call__'):
             jac = self._jac(wave)
@@ -2084,6 +2092,14 @@ class SimpleChromaticTransformation(ChromaticTransformation):
     def __str__(self):
         return str(self.original) + ' * ' + str(self.sed)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def _getTransformations(self, wave):
         flux_ratio = self._flux_ratio(wave)
         return self._jac, self._offset, flux_ratio
@@ -2268,6 +2284,14 @@ class ChromaticSum(ChromaticObject):
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.ChromaticSum([%s])'%', '.join(str_list)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
@@ -2579,6 +2603,14 @@ class ChromaticConvolution(ChromaticObject):
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
 
     def _approxWavelength(self, wave):
         # If any of the components prefer a different wavelength, use that for all.
@@ -2985,6 +3017,14 @@ class ChromaticAutoConvolution(ChromaticObject):
     def __str__(self):
         return 'galsim.ChromaticAutoConvolution(%s)'%self._obj
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
 
@@ -3081,6 +3121,14 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def __str__(self):
         return 'galsim.ChromaticAutoCorrelation(%s)'%self._obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
