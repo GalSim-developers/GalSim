@@ -1180,8 +1180,12 @@ def test_emission_line():
             with np.testing.assert_raises(galsim.GalSimSEDError):
                 spectral / sed
 
-            sed = sed.atRedshift(1.1)
-            assert sed is sed.atRedshift(1.1)
+            z = 1.1
+            sed = sed.atRedshift(z)
+            assert sed is sed.atRedshift(z)
+            np.testing.assert_allclose(sed.calculateFlux(None), (1+z))
+            np.testing.assert_allclose(sed(wavelength*(1+z)), 1/fwhm)
+
             with np.testing.assert_raises(galsim.GalSimRangeError):
                 sed.atRedshift(-2.0)
 
