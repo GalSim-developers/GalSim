@@ -129,6 +129,7 @@ class SED:
     _c = constants.c.to('nm/s').value
     _h = constants.h.to('erg s').value
     _dimensionless = units.dimensionless_unscaled
+    _bolo_max_wave = 1.e30  # What we use as "infinity" for bolometric flux calculations.
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None):
@@ -795,7 +796,7 @@ class SED:
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless SED.", self)
         if bandpass is None: # compute bolometric flux
-            bandpass = Bandpass(lambda w: 1., 'nm', blue_limit=0., red_limit=1e100)
+            bandpass = Bandpass(lambda w: 1., 'nm', blue_limit=0., red_limit=SED._bolo_max_wave)
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             slop = 1e-6 # nm
             if (self.blue_limit > bandpass.blue_limit + slop
@@ -1117,9 +1118,11 @@ class EmissionLine(SED):
                        constructor for options.  [default: 'nm']
         flux_type:     The units of flux used for this SED.  See SED constructor
                        for options.  [default: 'fphotons']
+        max_wave       The maximum wavelength to use in the LookupTable for the SED.
+                       [default: {}; must be > wavelength+fwhm]
         **kwargs:      Any additional keyword arguments to pass to the `SED`
                        constructor.
-    """
+    """.format(SED._bolo_max_wave)
     def __init__(
         self,
         wavelength,
@@ -1127,13 +1130,17 @@ class EmissionLine(SED):
         flux=1.0,
         wave_type='nm',
         flux_type='fphotons',
+        max_wave=SED._bolo_max_wave,
         **kwargs
     ):
         self.wavelength = wavelength
         self.fwhm = fwhm
         self.flux = flux
+        _, wave_factor = SED._parse_wave_type(wave_type)
+        assert max_wave > wavelength + fwhm
+
         spec = LookupTable(
-            [0.0, wavelength-fwhm, wavelength, wavelength+fwhm, np.inf],
+            [0.0, wavelength-fwhm, wavelength, wavelength+fwhm, max_wave*wave_factor],
             [0, 0, flux/fwhm, 0, 0],
             interpolant='linear'
         )
