@@ -1190,6 +1190,8 @@ def test_emission_line():
 
             with np.testing.assert_raises(galsim.GalSimRangeError):
                 sed.atRedshift(-2.0)
+        with np.testing.assert_raises(galsim.GalSimValueError):
+            galsim.EmissionLine(wavelength, fwhm, wave_type=units.Hz),
 
 
 @timer
