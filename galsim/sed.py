@@ -1164,10 +1164,9 @@ class EmissionLine(SED):
             return self
         if redshift <= -1:
             raise GalSimRangeError("Invalid redshift", redshift, -1.)
-        zfactor = (1.0 + redshift) / (1.0 + self.redshift)
         return EmissionLine(
-            self.wavelength * zfactor,
-            self.fwhm * zfactor,
+            self.wavelength,
+            self.fwhm,
             flux=self.flux,
             wave_type=self.wave_type,
             flux_type=self.flux_type,
