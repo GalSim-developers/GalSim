@@ -1139,9 +1139,13 @@ class EmissionLine(SED):
         _, wave_factor = SED._parse_wave_type(wave_type)
         assert max_wave > wavelength + fwhm
 
+        w = wavelength
+        # Some operations can turn a 0 into 1.e-15, which can lead to large errors
+        # when integrating from w+fwhm to max_wave.  So add a second set of 0's at
+        # w +- 2*fwhm to make sure it's exactly 0 for most of the range.
         spec = LookupTable(
-            [0.0, wavelength-fwhm, wavelength, wavelength+fwhm, max_wave*wave_factor],
-            [0, 0, flux/fwhm, 0, 0],
+            [0.0, w-2*fwhm, w-fwhm, w, w+fwhm, w+2*fwhm, max_wave*wave_factor],
+            [0, 0, 0, flux/fwhm, 0, 0, 0],
             interpolant='linear'
         )
         super().__init__(

@@ -1155,8 +1155,10 @@ def test_emission_line():
     ]:
         for sed in [
             galsim.EmissionLine(wavelength, fwhm),
-            galsim.EmissionLine(wavelength*10, fwhm*10, wave_type='ang')
+            galsim.EmissionLine(wavelength*10, fwhm*10, wave_type='ang'),
+            galsim.EmissionLine(wavelength*1.e-9, fwhm*1.e-9, wave_type=units.m),
         ]:
+            print(sed)
             np.testing.assert_allclose(sed.calculateFlux(None), 1.0)
             np.testing.assert_allclose((sed*2).calculateFlux(None), 2.0)
             np.testing.assert_allclose((3*sed).calculateFlux(None), 3.0)
