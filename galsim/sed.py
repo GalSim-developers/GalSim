@@ -1137,6 +1137,8 @@ class EmissionLine(SED):
         self.fwhm = fwhm
         self.flux = flux
         _, wave_factor = SED._parse_wave_type(wave_type)
+        if wave_factor is None:
+            raise GalSimValueError("wave_type must be a distance unit", wave_type)
         assert max_wave > wavelength + fwhm
 
         w = wavelength
