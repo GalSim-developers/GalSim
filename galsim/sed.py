@@ -1023,13 +1023,10 @@ class SED:
             else:
                 sed = self._mul_bandpass(bandpass)
 
-            if isinstance(sed._fast_spec, LookupTable):
-                dev = DistDeviate(function=sed._fast_spec, npoints=npoints)
-            else:
-                xmin = sed.blue_limit / (1.+self.redshift)
-                xmax = sed.red_limit / (1.+self.redshift)
-                dev = DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
-                                  npoints=npoints)
+            xmin = sed.blue_limit / (1.+self.redshift)
+            xmax = sed.red_limit / (1.+self.redshift)
+            dev = DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
+                              npoints=npoints, clip_neg=True)
             self._cache_deviate[key] = dev
 
         # Reset the deviate explicitly
