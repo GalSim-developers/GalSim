@@ -769,9 +769,11 @@ class DistDeviate(BaseDeviate):
         npoints:        Number of points DistDeviate should create for its internal interpolation
                         tables. [default: 256, unless the function is a non-log `LookupTable`, in
                         which case it uses the table's x values]
+        clip_neg:       Clip any negative input values to zero. [default: False; an error will
+                        be raised if any negative probabilities are found.]
     """
     def __init__(self, seed=None, function=None, x_min=None,
-                 x_max=None, interpolant=None, npoints=None):
+                 x_max=None, interpolant=None, npoints=None, clip_neg=False):
 
         # Set up the PRNG
         self._rng_type = _galsim.UniformDeviateImpl
@@ -859,7 +861,11 @@ class DistDeviate(BaseDeviate):
             pdf = np.array(pdf)
 
         # Check that the probability is nonnegative
-        if not np.all(pdf >= 0.):
+        if clip_neg:
+            # Write it this way so nan -> 0 as well as negative values.
+            w = np.where(~(pdf >= 0))
+            pdf[w] = 0.
+        elif not np.all(pdf >= 0.):
             raise GalSimValueError('Negative probability found in DistDeviate.',function)
 
         # Compute the cumulative distribution function = int(pdf(x),x)
