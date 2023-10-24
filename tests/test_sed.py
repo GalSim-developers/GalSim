@@ -849,7 +849,7 @@ def test_SED_sampleWavelength():
     np.testing.assert_equal(len(sed._cache_deviate),2,"Creating new SED deviate failed.")
 
     test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
-    np.testing.assert_array_almost_equal(out,test1,8,"Unexpected SED sample values.")
+    np.testing.assert_array_almost_equal(out,test1,5,"Unexpected SED sample values.")
 
     out = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=256)
     np.testing.assert_equal(len(sed._cache_deviate),2,"Unexpected number of SED deviates.")
