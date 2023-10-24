@@ -344,6 +344,7 @@ class LookupTable:
         Returns:
             an estimate of the integral
         """
+        from .utilities import merge_sorted
         if self.x_log:
             raise GalSimNotImplementedError("log x spacing not implemented yet.")
         if self.f_log:
@@ -372,7 +373,7 @@ class LookupTable:
         else:
             gx = self.x / x_factor
             gx = gx[(gx >= x_min) & (gx <= x_max)]
-            gx = np.union1d(gx, [x_min, x_max])
+            gx = merge_sorted([gx, [x_min, x_max]])
             # Let this raise an appropriate error if g is not a valid function over this domain.
             gf = g(gx)
             # If g is a constant function (like lambda wave: 1), then this doesn't return
