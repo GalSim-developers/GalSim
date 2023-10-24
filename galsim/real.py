@@ -28,7 +28,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .position import PositionD
 from .bounds import BoundsI
-from .utilities import lazy_property, doc_inherit, convert_interpolant
+from .utilities import lazy_property, doc_inherit, convert_interpolant, merge_sorted
 from .interpolant import Quintic
 from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
 from .convolve import Convolve, Deconvolve
@@ -1291,7 +1291,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Use polynomial SEDs by default; up to the number of bands provided.
         waves = []
         for bp in bands:
-            waves = np.union1d(waves, bp.wave_list)
+            waves = merge_sorted([waves, bp.wave_list])
         SEDs = []
         for i in range(len(bands)):
             SEDs.append(

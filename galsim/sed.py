@@ -819,7 +819,7 @@ class SED:
                     # When not fast, the SED definition is not linear between the wave_list
                     # points, so this can be slightly inaccurate if the waves are too far apart.
                     # Add in 100 uniformly spaced points to achieve relative accurace ~few e-6.
-                    w = np.union1d(w, np.linspace(w[0], w[-1], 100))
+                    w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
                 return _LookupTable(w,bandpass(w),'linear').integrate_product(self)
         else:
             return integ.int1d(lambda w: bandpass(w)*self(w),
@@ -985,7 +985,7 @@ class SED:
             # bandpass points. The error goes like dx**3, so 100 points should give relative
             # errors of order ~few e-6.
             w, _, _ = utilities.combine_wave_list([self, bandpass])
-            w = np.union1d(w, np.linspace(w[0], w[-1], 100))
+            w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
             bp = _LookupTable(w,bandpass(w),'linear')
             return bp.integrate_product(lambda w: self(w) * (w/base_wavelength)**(2*alpha)) / flux
         else:
