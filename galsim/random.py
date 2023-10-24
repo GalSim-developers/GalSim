@@ -825,7 +825,7 @@ class DistDeviate(BaseDeviate):
                     "Cannot provide an interpolant with a callable function argument",
                     interpolant=interpolant, function=function)
             if isinstance(function, LookupTable):
-                if x_min or x_max:
+                if (x_min not in (None, function.x_min)) or (x_max not in (None, function.x_max)):
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide x_min or x_max with a LookupTable function",
                         function=function, x_min=x_min, x_max=x_max)
