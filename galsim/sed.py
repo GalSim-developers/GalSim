@@ -824,7 +824,9 @@ class SED:
                     # points, so this can be slightly inaccurate if the waves are too far apart.
                     # Add in 100 uniformly spaced points to achieve relative accurace ~few e-6.
                     w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
-                return _LookupTable(w,bandpass(w),'linear').integrate_product(self)
+                interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                                else 'linear')
+                return _LookupTable(w, bandpass(w), interpolant).integrate_product(self)
         else:
             return integ.int1d(lambda w: bandpass(w)*self(w),
                                bandpass.blue_limit, bandpass.red_limit)
@@ -944,7 +946,9 @@ class SED:
         flux = self.calculateFlux(bandpass)
         if len(self.wave_list) > 0 or len(bandpass.wave_list) > 0:
             w, _, _ = utilities.combine_wave_list(self, bandpass)
-            bp = _LookupTable(w,bandpass(w),'linear')
+            interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                            else 'linear')
+            bp = _LookupTable(w, bandpass(w), interpolant)
             R = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
             Rbar = bp.integrate_product(lambda w: self(w) * R(w)) / flux
             V = bp.integrate_product(lambda w: self(w) * (R(w)-Rbar)**2) / flux
@@ -992,7 +996,9 @@ class SED:
             # errors of order ~few e-6.
             w, _, _ = utilities.combine_wave_list([self, bandpass])
             w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
-            bp = _LookupTable(w,bandpass(w),'linear')
+            interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                            else 'linear')
+            bp = _LookupTable(w, bandpass(w), interpolant)
             return bp.integrate_product(lambda w: self(w) * (w/base_wavelength)**(2*alpha)) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
