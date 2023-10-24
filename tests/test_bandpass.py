@@ -269,6 +269,12 @@ def test_Bandpass_wave_type():
                                    err_msg="Bandpass.effective_wavelength doesn't respect"
                                            +" wave_type")
 
+    # Spline interpolation changes the effective wavelength slightly, but not much.
+    a2 = galsim.Bandpass('LSST_r.dat', wave_type='nm', interpolant='spline')
+    np.testing.assert_equal(a2.red_limit, a0.red_limit)
+    np.testing.assert_equal(a2.blue_limit, a0.blue_limit)
+    np.testing.assert_allclose(a2.effective_wavelength, a0.effective_wavelength, rtol=1.e-3)
+
     b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), wave_type='nm')
     b1 = galsim.Bandpass(galsim.LookupTable([10,20,30,40,50], [1,2,3,4,5]), wave_type='ang')
     np.testing.assert_approx_equal(b0.red_limit, b1.red_limit,
