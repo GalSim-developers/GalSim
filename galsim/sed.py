@@ -109,14 +109,15 @@ class SED:
     in this case.
 
     Parameters:
-        spec:        Function defining the z=0 spectrum at each wavelength.  See above for
-                     valid options for this parameter.
-        wave_type:   String or astropy.unit specifying units for wavelength input to ``spec``.
-        flux_type:   String or astropy.unit specifying what type of spectral density or
-                     dimensionless normalization ``spec`` represents.  See above for valid options
-                     for this parameter.
-        redshift:    Optionally shift the spectrum to the given redshift. [default: 0]
-        fast:        Convert units on initialization instead of on __call__. [default: True]
+        spec:           Function defining the z=0 spectrum at each wavelength.  See above for
+                        valid options for this parameter.
+        wave_type:      String or astropy.unit specifying units for wavelength input to ``spec``.
+        flux_type:      String or astropy.unit specifying what type of spectral density or
+                        dimensionless normalization ``spec`` represents.  See above for valid
+                        options for this parameter.
+        redshift:       Optionally shift the spectrum to the given redshift. [default: 0]
+        fast:           Convert units on initialization instead of on __call__. [default: True]
+        interpolant:    If reading from a file, what interpolant to use. [default: 'linear']
     """
     # We'll use these multiple times below, and they are ridiculously slow to construct,
     # so just make them once at the class level.
@@ -131,9 +132,10 @@ class SED:
     _dimensionless = units.dimensionless_unscaled
     _bolo_max_wave = 1.e30  # What we use as "infinity" for bolometric flux calculations.
 
-    def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
+    def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True, interpolant='linear',
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None):
         self._flux_type = flux_type  # Need to save the original for repr
+        self.interpolant = interpolant
 
         # Parse the various options for wave_type
         self.wave_type, self.wave_factor = self._parse_wave_type(wave_type)
@@ -322,7 +324,7 @@ class SED:
         elif isinstance(self._orig_spec, basestring):
             isfile, filename = utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
-                self._spec = LookupTable.from_file(filename, interpolant='linear')
+                self._spec = LookupTable.from_file(filename, interpolant=self.interpolant)
             else:
                 # If a constant function is input as a string (e.g. '1'), then we want to
                 # make sure it is flagged as a const SED.
@@ -1082,10 +1084,10 @@ class SED:
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,'
-                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r, '
+                  'interpolant=%r, _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
                       self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
-                      self.wave_list, self.blue_limit,
+                      self.interpolant, self.wave_list, self.blue_limit,
                       "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
 
