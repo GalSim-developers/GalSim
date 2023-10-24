@@ -513,8 +513,9 @@ def test_SED_withFlux():
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
             for sed in [
-                galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                           flux_type='flambda', fast=fast),
+                galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast),
+                galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast,
+                           interpolant='spline'),
                 galsim.SED('wave', wave_type='nm', flux_type='fphotons'),
                 galsim.EmissionLine(620.0, 1.0) + 2*galsim.EmissionLine(450.0, 0.5)
             ]:
@@ -573,8 +574,7 @@ def test_SED_withFluxDensity():
     """ Check that setting the flux density works.
     """
 
-    a0 = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                    flux_type='flambda')
+    a0 = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda')
     for z in [0, 0.2, 0.4]:
         a = a0.atRedshift(z)
         a = a.withFluxDensity(1.0, 500)
@@ -723,6 +723,21 @@ def test_redshift_calculateFlux():
     # Regression tests
     np.testing.assert_allclose(flux0, 2.993792e+15, rtol=1.e-4)
     np.testing.assert_allclose(flux1, 4.395954e+14, rtol=1.e-4)
+
+    # With spline, it's almost the same, but slightly different of course.
+    sed = galsim.SED('CWW_Sbc_ext.sed', 'nm', 'flambda', interpolant='spline')
+    bp = galsim.Bandpass('ACS_wfc_F606W.dat', 'nm', interpolant='spline')
+    t0 = time.time()
+    flux0 = sed.calculateFlux(bp)
+    t1 = time.time()
+    flux1 = sed.atRedshift(1).calculateFlux(bp)
+    t2 = time.time()
+    print('z=0 disk in HST V band: flux = ',flux0, t1-t0)
+    print('z=1 disk in HST V band: flux = ',flux1, t2-t1)
+
+    # Regression tests
+    np.testing.assert_allclose(flux0, 3.023368e+15, rtol=1.e-4)
+    np.testing.assert_allclose(flux1, 4.303569e+14, rtol=1.e-4)
 
 
 @timer
