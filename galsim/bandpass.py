@@ -590,7 +590,9 @@ class Bandpass:
                                                          trim_zeros=trim_zeros,
                                                          preserve_range=preserve_range,
                                                          fast_search=fast_search)
-            tp = _LookupTable(newx, newf, 'linear')
+            interpolant = (self.interpolant if not isinstance(self._tp, LookupTable)
+                           else self._tp.interpolant)
+            tp = _LookupTable(newx, newf, interpolant)
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
