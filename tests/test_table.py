@@ -1086,6 +1086,8 @@ def test_integrate():
     t6 = time.time()
     ans7 = np.trapz(y,x)
     t7 = time.time()
+    ans8 = galsim.trapz(y,x, interpolant='spline')
+    t8 = time.time()
     # Amazingly, LookupTable(linear) is more than 2x faster than np.trapz, and equally accurate.
     # Spline is a bit slower, but about 2x more accurate.
     # Floor and ceil are slightly faster still, but not nearly as accurate.
@@ -1097,6 +1099,7 @@ def test_integrate():
     print('nearest        %.6f          %.6e'%(t5-t4,ans5-np.pi))
     print('trapz          %.6f          %.6e'%(t6-t5,ans6-np.pi))
     print('np.trapz       %.6f          %.6e'%(t7-t6,ans7-np.pi))
+    print('trapz(spline)  %.6f          %.6e'%(t8-t7,ans8-np.pi))
     np.testing.assert_allclose(ans1, np.pi, atol=2.e-9)
     np.testing.assert_allclose(ans2, np.pi, atol=1.e-9)
     np.testing.assert_allclose(ans3, np.pi, atol=3.e-6)
@@ -1104,6 +1107,7 @@ def test_integrate():
     np.testing.assert_allclose(ans5, np.pi, atol=2.e-9)
     np.testing.assert_allclose(ans6, np.pi, atol=2.e-9)
     np.testing.assert_allclose(ans7, np.pi, atol=2.e-9)
+    np.testing.assert_allclose(ans8, np.pi, atol=1.e-9)
 
     # Check errors
     with assert_raises(NotImplementedError):

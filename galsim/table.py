@@ -553,21 +553,23 @@ def _LookupTable(x, f, interpolant='spline', x_log=False, f_log=False):
     return ret
 
 
-def trapz(f, x):
+def trapz(f, x, interpolant='linear'):
     """Integrate f(x) using the trapezoidal rule.
 
     Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,
     which is usually faster.
 
     Parameters:
-        f:      The ordinates of the function to integrate.
-        x:      The abscissae of the function to integrate.
+        f:              The ordinates of the function to integrate.
+        x:              The abscissae of the function to integrate.
+        interpolant:    The interpolant to use between the tabulated points.  [default: 'linear',
+                        which matches the behavior of np.trapz]
 
     Returns:
         Estimate of the integral.
     """
     if len(x) >= 2:
-        return _LookupTable(x,f,'linear').integrate()
+        return _LookupTable(x, f, interpolant=interpolant).integrate()
     else:
         return 0.
 
