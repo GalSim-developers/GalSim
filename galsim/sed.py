@@ -891,12 +891,13 @@ class SED:
             spec_native = self._spec(rest_wave_native)
 
             # Note that this is thinning in native units, not nm and photons/nm.
-            newx, newf = utilities.thin_tabulated_values(
-                    rest_wave_native, spec_native, rel_err=rel_err,
-                    trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
-
             interpolant = (self.interpolant if not isinstance(self._spec, LookupTable)
                            else self._spec.interpolant)
+            newx, newf = utilities.thin_tabulated_values(
+                    rest_wave_native, spec_native, rel_err=rel_err,
+                    trim_zeros=trim_zeros, preserve_range=preserve_range,
+                    fast_search=fast_search, interpolant=interpolant)
+
             newspec = _LookupTable(newx, newf, interpolant=interpolant)
             return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
                        fast=self.fast)

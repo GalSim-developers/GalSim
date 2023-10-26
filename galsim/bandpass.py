@@ -596,9 +596,8 @@ class Bandpass:
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          trim_zeros=trim_zeros,
                                                          preserve_range=preserve_range,
-                                                         fast_search=fast_search)
-            interpolant = (self.interpolant if not isinstance(self._tp, LookupTable)
-                           else self._tp.interpolant)
+                                                         fast_search=fast_search,
+                                                         interpolant=interpolant)
             tp = _LookupTable(newx, newf, interpolant)
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
