@@ -319,28 +319,32 @@ def test_ne():
 def test_thin():
     """Test that bandpass thinning works with the requested accuracy."""
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
-    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
-    flux = s.calculateFlux(bp)
-    print("Original number of bandpass samples = ",len(bp.wave_list))
-    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print("Test err = ",err)
-        thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        thin_bp = bp.thin(rel_err=err, preserve_range=True)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
-        thin_bp = bp.thin(rel_err=err, preserve_range=False)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
+    bp1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    bp2 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm', interpolant='spline')
+
+    for bp in [bp1, bp2]:
+        flux = s.calculateFlux(bp)
+        print("Original number of bandpass samples = ",len(bp.wave_list))
+        for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+            print("Test err = ",err)
+            thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True, fast_search = False: ",
+                  len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            thin_bp = bp.thin(rel_err=err, preserve_range=True)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
+            thin_bp = bp.thin(rel_err=err, preserve_range=False)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
 
 @timer
