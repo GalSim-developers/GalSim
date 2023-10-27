@@ -82,3 +82,18 @@ Bug Fixes
 - Fixed a slight inaccuracy in the FFT phase shifts for single-precision images. (#1231, #1234)
 - Fixed a bug that prevented a convolution of two PhaseScreenPSF objects from being drawn with
   photon shooting. (#1242)
+
+
+Changes from v2.5.0 to v2.5.1
+=============================
+
+- Fixed an incompatibility with Python 3.12 that we had missed.
+- Fixed a bug in the SED class normalization when using astropy.units for flux_type.  Thanks
+  to Sid Mau for finding and fixing this bug. (#1254, #1256)
+- Fixed a bug in the `EmissionLine.atRedshift` method. (#1257)
+- Added interpolant option to `SED` and `Bandpass` classes to use when reading from a file.
+  (#1257)
+- Improved the behavior of SEDs when using spline interpolant. (#1187, #1257)
+- No longer pickle the SED of chromatic objects when the SED is a derived value. (#1257)
+- Added interpolant option to `utilities.trapz`. (#1257)
+- Added clip_neg option to `DistDeviate` class. (#1257)
