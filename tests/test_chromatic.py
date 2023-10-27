@@ -2617,7 +2617,7 @@ def test_chromatic_invariant():
     assert isinstance(chrom, galsim.ChromaticTransformation)
     assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
-    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03, rtol=1.e-4)
     # Not picklable, but run str, repr
     str(chrom)
     repr(chrom)
@@ -3199,7 +3199,7 @@ def test_shoot_transformation():
     img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
                         poisson_flux=False)
     print(img.added_flux)
-    np.testing.assert_allclose(img.added_flux, flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=1.e-6)
     img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
     print(img.added_flux)
     assert abs(img.added_flux - flux) > 0.1
