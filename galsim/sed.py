@@ -501,9 +501,27 @@ class SED:
 
         wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
         if fast:
-            zfactor1 = (1.+redshift) / (1.+self.redshift)
-            zfactor2 = (1.+redshift) / (1.+other.redshift)
-            spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
+            if (isinstance(self._fast_spec, LookupTable)
+                    and not self._fast_spec.x_log
+                    and not self._fast_spec.f_log):
+                x = wave_list / (1.0 + self.redshift)
+                # Add in 500 uniformly spaced values to help improve accuracy.
+                x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
+                zfactor2 = (1.+redshift) / (1.+other.redshift)
+                f = self._fast_spec(x) * other._fast_spec(x*zfactor2)
+                spec = _LookupTable(x, f, self._fast_spec.interpolant)
+            elif (isinstance(other._fast_spec, LookupTable)
+                    and not other._fast_spec.x_log
+                    and not other._fast_spec.f_log):
+                x = wave_list / (1.0 + other.redshift)
+                x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
+                zfactor1 = (1.+redshift) / (1.+other.redshift)
+                f = self._fast_spec(x*zfactor1) * other._fast_spec(x)
+                spec = _LookupTable(x, f, other._fast_spec.interpolant)
+            else:
+                zfactor1 = (1.+redshift) / (1.+self.redshift)
+                zfactor2 = (1.+redshift) / (1.+other.redshift)
+                spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
         else:
             spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
         spectral = self.spectral or other.spectral

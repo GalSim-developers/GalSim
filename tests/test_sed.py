@@ -287,9 +287,12 @@ def test_SED_mul():
         f = a*e
         np.testing.assert_almost_equal(f(x), a(x) * e(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        f = e*a
-        np.testing.assert_almost_equal(f(x), e(x) * a(x), 10,
+        f2 = e*a
+        np.testing.assert_almost_equal(f2(x), e(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        if sed is sed0:
+            check_pickle(f)
+            check_pickle(f2)
 
         # SED multiplied by dimensionless, non-constant SED
         g = galsim.SED('wave', 'nm', '1')
@@ -299,6 +302,9 @@ def test_SED_mul():
         h2 = g*a
         np.testing.assert_almost_equal(h2(x), g(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        if sed is sed0:
+            check_pickle(h)
+            check_pickle(h2)
 
         assert_raises(TypeError, a.__mul__, 'invalid')
 
