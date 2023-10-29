@@ -421,7 +421,7 @@ class SED:
                     f = self._rest_nm_to_photons(x)
                 else:
                     f = self._rest_nm_to_dimensionless(x)
-                interp = self._spec.interpolant if isinstance(self._spec, LookupTable) else 'spline'
+                interp = self._spec.interpolant if isinstance(self._spec, LookupTable) else 'linear'
                 return _LookupTable(x, f, interpolant=interp)
 
     def _call_fast(self, wave):
