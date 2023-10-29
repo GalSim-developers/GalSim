@@ -550,9 +550,9 @@ namespace galsim {
             double ty = (double)j + poly[n].y - _treeRingCenter.y + (double)orig_center.y;
             xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
             double r = sqrt(tx * tx + ty * ty);
-            shift = _tr_radial_table.lookup(r);
-            xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-            if (r > 0) {
+            if (r > 0 && r < _tr_radial_table.argMax()) {
+                shift = _tr_radial_table.lookup(r);
+                xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
                 // Shifts are along the radial vector in direction of the doping gradient
                 double dx = shift * tx / r;
                 double dy = shift * ty / r;
@@ -583,7 +583,7 @@ namespace galsim {
                              double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
                              //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
                              double r = sqrt(tx * tx + ty * ty);
-                             if (r > 0) {
+                             if (r > 0 && r < _tr_radial_table.argMax()) {
                                 double shift = _tr_radial_table.lookup(r);
                                 //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
                                 // Shifts are along the radial vector in direction of the doping gradient
