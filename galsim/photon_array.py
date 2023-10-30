@@ -440,28 +440,51 @@ class PhotonArray:
 
     def assignAt(self, istart, rhs):
         """Assign the contents of another `PhotonArray` to this one starting at istart.
+
+        Parameters:
+            istart:     The first index at which to insert new values.
+            rhs:        The other `PhotonArray` from which to get the values.
         """
         if istart + rhs.size() > self.size():
             raise GalSimValueError(
                 "The given rhs does not fit into this array starting at %d"%istart, rhs)
         s = slice(istart, istart + rhs.size())
-        self.x[s] = rhs.x
-        self.y[s] = rhs.y
-        self.flux[s] = rhs.flux
+        self._copyFrom(rhs, s, slice(None))
+
+    def _copyFrom(self, rhs, s1, s2):
+        """Copy some contents of another `PhotonArray` to some elements of this one.
+
+        Specifically each element of rhs[s2] is mapped to self[s1].  The values s1 and s2
+        may be slices, list of indices or any other type that is a valid key for a
+        numpy array.
+
+        .. warning::
+
+            There are no checks that the given s1 and s2 are valid keys for the two
+            photon arrays.  It is up to the user to ensure these are valid.
+
+        Parameters:
+            rhs:        The `PhotonArray` from which to get values.
+            s1:         The indices at which to assign values in the current PhotonArray (self).
+            s2:         The indices from which to get values from the PhotonArray, ``rhs``.
+        """
+        self.x[s1] = rhs.x[s2]
+        self.y[s1] = rhs.y[s2]
+        self.flux[s1] = rhs.flux[s2]
         if rhs.hasAllocatedAngles():
             self.allocateAngles()
-            self.dxdz[s] = rhs.dxdz
-            self.dydz[s] = rhs.dydz
+            self.dxdz[s1] = rhs.dxdz[s2]
+            self.dydz[s1] = rhs.dydz[s2]
         if rhs.hasAllocatedWavelengths():
             self.allocateWavelengths()
-            self.wavelength[s] = rhs.wavelength
+            self.wavelength[s1] = rhs.wavelength[s2]
         if rhs.hasAllocatedPupil():
             self.allocatePupil()
-            self.pupil_u[s] = rhs.pupil_u
-            self.pupil_v[s] = rhs.pupil_v
+            self.pupil_u[s1] = rhs.pupil_u[s2]
+            self.pupil_v[s1] = rhs.pupil_v[s2]
         if rhs.hasAllocatedTimes():
             self.allocateTimes()
-            self.time[s] = rhs.time
+            self.time[s1] = rhs.time[s2]
 
     def convolve(self, rhs, rng=None):
         """Convolve this `PhotonArray` with another.
