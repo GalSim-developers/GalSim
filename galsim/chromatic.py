@@ -2306,7 +2306,32 @@ class ChromaticSum(ChromaticObject):
                    gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
-        raise GalSimNotImplementedError("ChromaticSum cannot be used as a PhotonOp")
+        w = photons.wavelength
+
+        # We probabilistically choose a component for each photon based on the
+        # relative flux density of that component for the given wavelength.
+        comp_flux = np.array([obj.sed(w) for obj in self._obj_list])
+        total_flux = np.sum(comp_flux, axis=0)
+
+        prob = comp_flux / total_flux
+        cdf = np.cumsum(prob, axis=0)
+
+        u = np.empty(len(photons))
+        UniformDeviate(rng).generate(u)
+        use_k = np.sum((u >= cdf), axis=0)
+        n = len(self._obj_list)
+        use_k[use_k==n] = n-1  # This shouldn't be possible, but maybe with numerical rounding...
+
+        # Draw photons from the components.
+        for kk, obj in enumerate(self._obj_list):
+            use = (use_k == kk)  # True for each photon where this is the object to shoot from
+            this_n = np.sum(use)
+            if this_n == 0:
+                continue
+            temp = PhotonArray(np.sum(use))
+            temp._copyFrom(photons, slice(None), use)
+            obj._shoot(temp, rng)
+            photons._copyFrom(temp, use, slice(None))
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Slightly optimized draw method for `ChromaticSum` instances.
