@@ -243,6 +243,69 @@ def test_photon_array():
     # Error if it doesn't fit.
     assert_raises(ValueError, pa2.assignAt, 90, pa1)
 
+    # Check copyFrom
+    pa2 = galsim.PhotonArray(100)
+    pa2.copyFrom(pa1, slice(0,50))
+    pa2.copyFrom(pa1, target_indices=slice(50,100), source_indices=slice(49,None,-1))
+    np.testing.assert_array_equal(pa2.x[:50], pa1.x)
+    np.testing.assert_array_equal(pa2.y[:50], pa1.y)
+    np.testing.assert_array_equal(pa2.flux[:50], pa1.flux)
+    np.testing.assert_array_equal(pa2.dxdz[:50], pa1.dxdz)
+    np.testing.assert_array_equal(pa2.dydz[:50], pa1.dydz)
+    np.testing.assert_array_equal(pa2.wavelength[:50], pa1.wavelength)
+    np.testing.assert_array_equal(pa2.pupil_u[:50], pa1.pupil_u)
+    np.testing.assert_array_equal(pa2.pupil_v[:50], pa1.pupil_v)
+    np.testing.assert_array_equal(pa2.time[:50], pa1.time)
+    np.testing.assert_array_equal(pa2.x[50:], pa1.x[::-1])
+    np.testing.assert_array_equal(pa2.y[50:], pa1.y[::-1])
+    np.testing.assert_array_equal(pa2.flux[50:], pa1.flux[::-1])
+    np.testing.assert_array_equal(pa2.dxdz[50:], pa1.dxdz[::-1])
+    np.testing.assert_array_equal(pa2.dydz[50:], pa1.dydz[::-1])
+    np.testing.assert_array_equal(pa2.wavelength[50:], pa1.wavelength[::-1])
+    np.testing.assert_array_equal(pa2.pupil_u[50:], pa1.pupil_u[::-1])
+    np.testing.assert_array_equal(pa2.pupil_v[50:], pa1.pupil_v[::-1])
+    np.testing.assert_array_equal(pa2.time[50:], pa1.time[::-1])
+
+    # Can copy a single photon if desired.
+    pa2.copyFrom(pa1, 17, 20)
+    assert pa2.flux[17] == pa1.flux[20]
+    assert pa2.x[17] == pa1.x[20]
+    assert pa2.time[17] == pa1.time[20]
+
+    # Can choose not to copy flux
+    pa2.flux[27] = -1
+    pa2.copyFrom(pa1, 27, 10, do_flux=False)
+    assert pa2.flux[27] != pa1.flux[10]
+    assert pa2.x[27] == pa1.x[10]
+    assert pa2.time[27] == pa1.time[10]
+
+    # ... or positions
+    pa2.copyFrom(pa1, 37, 8, do_xy=False)
+    assert pa2.flux[37] == pa1.flux[8]
+    assert pa2.x[37] != pa1.x[8]
+    assert pa2.y[37] != pa1.y[8]
+    assert pa2.time[37] == pa1.time[8]
+
+    # ... or the other arrays
+    pa2.dxdz[47] = pa2.dydz[47] = pa2.wavelength[47] = -1
+    pa2.pupil_u[47] = pa2.pupil_v[47] = pa2.time[47] = -1
+    pa2.copyFrom(pa1, 47, 18, do_other=False)
+    assert pa2.flux[47] == pa1.flux[18]
+    assert pa2.x[47] == pa1.x[18]
+    assert pa2.y[47] == pa1.y[18]
+    assert pa2.dxdz[47] != pa1.dxdz[18]
+    assert pa2.dydz[47] != pa1.dydz[18]
+    assert pa2.wavelength[47] != pa1.wavelength[18]
+    assert pa2.pupil_u[47] != pa1.pupil_u[18]
+    assert pa2.pupil_v[47] != pa1.pupil_v[18]
+    assert pa2.time[47] != pa1.time[18]
+
+    # Error if indices are invalid
+    assert_raises(ValueError, pa2.copyFrom, pa1, slice(50,None), slice(50,None))
+    assert_raises(ValueError, pa2.copyFrom, pa1, 100, 0)
+    assert_raises(ValueError, pa2.copyFrom, pa1, 0, slice(None))
+    assert_raises(ValueError, pa2.copyFrom, pa1)
+
     # Test some trivial usage of makeFromImage
     zero = galsim.Image(4,4,init_value=0)
     photons = galsim.PhotonArray.makeFromImage(zero)
@@ -300,21 +363,21 @@ def test_convolve():
     np.testing.assert_allclose(np.sum(conv_y**2)/nphotons, 2.*2.3**2, rtol=0.01)
 
     pa3 = galsim.PhotonArray(nphotons)
-    pa3.assignAt(0, pa1)  # copy from pa1
+    pa3.copyFrom(pa1)  # copy from pa1
     pa3.convolve(pa2)
     np.testing.assert_allclose(pa3.x, conv_x)
     np.testing.assert_allclose(pa3.y, conv_y)
     np.testing.assert_allclose(pa3.flux, conv_flux)
 
     # If one of them is correlated, it is still deterministic.
-    pa3.assignAt(0, pa1)
+    pa3.copyFrom(pa1)
     pa3.setCorrelated()
     pa3.convolve(pa2)
     np.testing.assert_allclose(pa3.x, conv_x)
     np.testing.assert_allclose(pa3.y, conv_y)
     np.testing.assert_allclose(pa3.flux, conv_flux)
 
-    pa3.assignAt(0, pa1)
+    pa3.copyFrom(pa1)
     pa3.setCorrelated(False)
     pa2.setCorrelated()
     pa3.convolve(pa2)
@@ -323,7 +386,7 @@ def test_convolve():
     np.testing.assert_allclose(pa3.flux, conv_flux)
 
     # But if both are correlated, then it's not this simple.
-    pa3.assignAt(0, pa1)
+    pa3.copyFrom(pa1)
     pa3.setCorrelated()
     assert pa3.isCorrelated()
     assert pa2.isCorrelated()
@@ -337,7 +400,7 @@ def test_convolve():
     np.testing.assert_allclose(np.sum(pa3.y**2)/nphotons, 2*2.3**2, rtol=0.01)
 
     # Can also effect the convolution by treating the psf as a PhotonOp
-    pa3.assignAt(0, pa1)
+    pa3.copyFrom(pa1)
     pa3.setCorrelated()
     obj.applyTo(pa3, rng=rng2)
     np.testing.assert_allclose(pa3.x, conv_x)
