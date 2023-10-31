@@ -166,16 +166,6 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
     np.testing.assert_array_equal(photon_array.time, 0.0)
 
-
-    # Check toggling is_corr
-    assert not photon_array.isCorrelated()
-    photon_array.setCorrelated()
-    assert photon_array.isCorrelated()
-    photon_array.setCorrelated(False)
-    assert not photon_array.isCorrelated()
-    photon_array.setCorrelated(True)
-    assert photon_array.isCorrelated()
-
     # Check rescaling the total flux
     flux = photon_array.flux.sum()
     np.testing.assert_almost_equal(photon_array.getTotalFlux(), flux)
@@ -345,7 +335,7 @@ def test_convolve():
     rng2 = rng.duplicate()  # Save this state.
     pa2 = obj.shoot(nphotons, rng)
 
-    # If not correlated then convolve is deterministic
+    # Check that convolve is deterministic
     conv_x = pa1.x + pa2.x
     conv_y = pa1.y + pa2.y
     conv_flux = pa1.flux * pa2.flux * nphotons
@@ -369,39 +359,8 @@ def test_convolve():
     np.testing.assert_allclose(pa3.y, conv_y)
     np.testing.assert_allclose(pa3.flux, conv_flux)
 
-    # If one of them is correlated, it is still deterministic.
-    pa3.copyFrom(pa1)
-    pa3.setCorrelated()
-    pa3.convolve(pa2)
-    np.testing.assert_allclose(pa3.x, conv_x)
-    np.testing.assert_allclose(pa3.y, conv_y)
-    np.testing.assert_allclose(pa3.flux, conv_flux)
-
-    pa3.copyFrom(pa1)
-    pa3.setCorrelated(False)
-    pa2.setCorrelated()
-    pa3.convolve(pa2)
-    np.testing.assert_allclose(pa3.x, conv_x)
-    np.testing.assert_allclose(pa3.y, conv_y)
-    np.testing.assert_allclose(pa3.flux, conv_flux)
-
-    # But if both are correlated, then it's not this simple.
-    pa3.copyFrom(pa1)
-    pa3.setCorrelated()
-    assert pa3.isCorrelated()
-    assert pa2.isCorrelated()
-    pa3.convolve(pa2)
-    with assert_raises(AssertionError):
-        np.testing.assert_allclose(pa3.x, conv_x)
-    with assert_raises(AssertionError):
-        np.testing.assert_allclose(pa3.y, conv_y)
-    np.testing.assert_allclose(np.sum(pa3.flux), 1.7*1.7)
-    np.testing.assert_allclose(np.sum(pa3.x**2)/nphotons, 2*2.3**2, rtol=0.01)
-    np.testing.assert_allclose(np.sum(pa3.y**2)/nphotons, 2*2.3**2, rtol=0.01)
-
     # Can also effect the convolution by treating the psf as a PhotonOp
     pa3.copyFrom(pa1)
-    pa3.setCorrelated()
     obj.applyTo(pa3, rng=rng2)
     np.testing.assert_allclose(pa3.x, conv_x)
     np.testing.assert_allclose(pa3.y, conv_y)
@@ -1598,11 +1557,6 @@ def test_fromArrays():
     np.testing.assert_array_equal(pa_2.pupil_u, pa_batch.pupil_u[Nsplit:])
     np.testing.assert_array_equal(pa_2.pupil_v, pa_batch.pupil_v[Nsplit:])
     np.testing.assert_array_equal(pa_2.time, pa_batch.time[Nsplit:])
-
-    # Check the is_corr flag gets set
-    assert not pa_batch.isCorrelated()
-    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength, is_corr=True)
-    assert pa_batch.isCorrelated()
 
     # Check some invalid inputs are caught
     with np.testing.assert_raises(TypeError):

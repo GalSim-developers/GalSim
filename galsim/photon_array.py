@@ -205,7 +205,13 @@ class PhotonArray:
         ret._pupil_u = pupil_u
         ret._pupil_v = pupil_v
         ret._time = time
-        ret._is_corr = is_corr
+        ret._is_corr = False
+        if is_corr:
+            from .deprecated import depr
+            depr('is_corr=True', 2.5, '',
+                "We don't think this is necessary anymore.  If you have a use case that "
+                "requires it, please open an issue.")
+            ret._is_corr = is_corr
         return ret
 
     def size(self):
@@ -400,11 +406,19 @@ class PhotonArray:
     def isCorrelated(self):
         """Returns whether the photons are correlated
         """
+        from .deprecated import depr
+        depr('isCorrelated', 2.5, '',
+                "We don't think this is necessary anymore.  If you have a use case that "
+                "requires it, please open an issue.")
         return self._is_corr
 
     def setCorrelated(self, is_corr=True):
         """Set whether the photons are correlated
         """
+        from .deprecated import depr
+        depr('setCorrelated', 2.5, '',
+                "We don't think this is necessary anymore.  If you have a use case that "
+                "requires it, please open an issue.")
         self._is_corr = is_corr
         self.__dict__.pop('_pa', None)
 
