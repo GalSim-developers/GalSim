@@ -451,38 +451,76 @@ class PhotonArray:
         s = slice(istart, istart + rhs.size())
         self._copyFrom(rhs, s, slice(None))
 
-    def _copyFrom(self, rhs, s1, s2):
+    def copyFrom(self, rhs, target_indices=slice(None), source_indices=slice(None),
+                 do_xy=True, do_flux=True, do_other=True):
         """Copy some contents of another `PhotonArray` to some elements of this one.
 
-        Specifically each element of rhs[s2] is mapped to self[s1].  The values s1 and s2
-        may be slices, list of indices or any other type that is a valid key for a
-        numpy array.
-
-        .. warning::
-
-            There are no checks that the given s1 and s2 are valid keys for the two
-            photon arrays.  It is up to the user to ensure these are valid.
+        Specifically each element of rhs[source_indices] is mapped to self[target_indices].
+        The values s1 and s2 may be slices, list of indices, or anything else that is a valid
+        key for a numpy array.
 
         Parameters:
-            rhs:        The `PhotonArray` from which to get values.
-            s1:         The indices at which to assign values in the current PhotonArray (self).
-            s2:         The indices from which to get values from the PhotonArray, ``rhs``.
+            rhs:            The `PhotonArray` from which to get values.
+            target_indices: The indices at which to assign values in the current PhotonArray (self).
+                            [default: slice(None)]
+            source_indices: The indices from which to get values from the PhotonArray, ``rhs``.
+                            [default: slice(None)]
+            do_xy:          Whether to include copying the x and y arrays. [default: True]
+            do_flux:        Whether to include copying the flux array. [default: True]
+            do_other:       Whether to include copying the other arrays (angles, wavelength,
+                            pupil positions, time). [default: True]
         """
-        self.x[s1] = rhs.x[s2]
-        self.y[s1] = rhs.y[s2]
-        self.flux[s1] = rhs.flux[s2]
-        if rhs.hasAllocatedAngles():
+        try:
+            a1 = self.flux[target_indices]
+            # Numpy is flexible about allowing slices outside the range of the array.
+            # Rather than try to check all possible ways the indices can be invalid, we
+            # just make sure that at least some elements come back from the numpy call.
+            n1 = len(np.atleast_1d(a1))
+            assert n1 > 0
+        except (IndexError, AssertionError):
+            raise GalSimValueError("target_indices is invalid for the target PhotonArray",
+                                   target_indices)
+        try:
+            a2 = rhs.flux[source_indices]
+            n2 = len(np.atleast_1d(a2))
+            assert n2 > 0
+        except (IndexError, AssertionError) as e:
+            raise GalSimValueError("source_indices is invalid for the source PhotonArray",
+                                   source_indices)
+        if n1 != n2:
+            raise GalSimIncompatibleValuesError(
+                "target_indices and source_indices do not reference the same number of elements"
+                "in their respective PhotonArrays ({} and {} respectively)".format(n1, n2),
+                dict(target_indices=target_indices, source_indices=source_indices))
+
+        self._copyFrom(rhs, target_indices, source_indices, do_xy, do_flux, do_other)
+
+    def _copyFrom(self, rhs, target_indices, source_indices, do_xy=True, do_flux=True,
+                  do_other=True):
+        """Equivalent to self.copyFrom(rhs, target_indices, source_indices), but without any
+        checks that the indices are valid.
+        """
+        # Aliases for notational convenience.
+        s1 = target_indices
+        s2 = source_indices
+
+        if do_xy:
+            self.x[s1] = rhs.x[s2]
+            self.y[s1] = rhs.y[s2]
+        if do_flux:
+            self.flux[s1] = rhs.flux[s2]
+        if do_other and rhs.hasAllocatedAngles():
             self.allocateAngles()
             self.dxdz[s1] = rhs.dxdz[s2]
             self.dydz[s1] = rhs.dydz[s2]
-        if rhs.hasAllocatedWavelengths():
+        if do_other and rhs.hasAllocatedWavelengths():
             self.allocateWavelengths()
             self.wavelength[s1] = rhs.wavelength[s2]
-        if rhs.hasAllocatedPupil():
+        if do_other and rhs.hasAllocatedPupil():
             self.allocatePupil()
             self.pupil_u[s1] = rhs.pupil_u[s2]
             self.pupil_v[s1] = rhs.pupil_v[s2]
-        if rhs.hasAllocatedTimes():
+        if do_other and rhs.hasAllocatedTimes():
             self.allocateTimes()
             self.time[s1] = rhs.time[s2]
 
