@@ -678,7 +678,7 @@ def test_autocorrelate():
 
     (See the Signal processing Section of http://en.wikipedia.org/wiki/Autocorrelation)
     """
-    dx = 0.7
+    dx = 0.8
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
     myImg2 = galsim.ImageF(80,80, scale=dx)
