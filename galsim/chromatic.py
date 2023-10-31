@@ -615,12 +615,7 @@ class ChromaticObject:
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
-        p1._wave = photon_array._wave
-        if photon_array.hasAllocatedPupil():
-            p1._pupil_u = photon_array._pupil_u
-            p1._pupil_v = photon_array._pupil_v
-        if photon_array.hasAllocatedTimes():
-            p1._time = photon_array._time
+        p1._copyFrom(photon_array, slice(None), slice(None))
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         rng = BaseDeviate(rng)
         obj._shoot(p1, rng)
@@ -1388,12 +1383,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         for kk, obj in enumerate(self.objs):
             use = (use_k == kk)  # True for each photon where this is the object to shoot from
             temp = PhotonArray(np.sum(use))
+            temp._copyFrom(photons, slice(None), use)
             obj._shoot(temp, rng)
-            photons.x[use] = temp.x
-            photons.y[use] = temp.y
             # It will have tried to shoot the right total flux.  But that's not correct.
             # Rescale it down by the fraction of the total flux we actually want in this set.
-            photons.flux[use] = temp.flux * (len(temp)/len(photons))
+            temp.scaleFlux(len(temp)/len(photons))
+            photons._copyFrom(temp, use, slice(None))
 
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
@@ -3565,18 +3560,21 @@ class ChromaticOpticalPSF(ChromaticObject):
             temp1 = PhotonArray(np.sum(use_p1))
             temp2 = PhotonArray(np.sum(use_p2))
             temp3 = PhotonArray(np.sum(use_p3))
+            temp1._copyFrom(photons, slice(None), use_p1)
+            temp2._copyFrom(photons, slice(None), use_p2)
+            temp3._copyFrom(photons, slice(None), use_p3)
             prof1._shoot(temp1, rng)
             prof2._shoot(temp2, rng)
             prof3._shoot(temp3, rng)
-            photons.x[use_p1] = temp1.x * (w[use_p1] / wave1)
-            photons.y[use_p1] = temp1.y * (w[use_p1] / wave1)
-            photons.flux[use_p1] = temp1.flux * (len(temp1)/len(photons))
-            photons.x[use_p2] = temp2.x * (w[use_p2] / wave2)
-            photons.y[use_p2] = temp2.y * (w[use_p2] / wave2)
-            photons.flux[use_p2] = temp2.flux * (len(temp2)/len(photons))
-            photons.x[use_p3] = temp3.x * (w[use_p3] / wave3)
-            photons.y[use_p3] = temp3.y * (w[use_p3] / wave3)
-            photons.flux[use_p3] = temp3.flux * (len(temp3)/len(photons))
+            temp1.scaleXY(w[use_p1]/wave1)
+            temp1.scaleFlux(len(temp1)/len(photons))
+            temp2.scaleXY(w[use_p2]/wave2)
+            temp2.scaleFlux(len(temp2)/len(photons))
+            temp3.scaleXY(w[use_p3]/wave3)
+            temp3.scaleFlux(len(temp3)/len(photons))
+            photons._copyFrom(temp1, use_p1, slice(None))
+            photons._copyFrom(temp2, use_p2, slice(None))
+            photons._copyFrom(temp3, use_p3, slice(None))
 
 
 class ChromaticAiry(ChromaticObject):
