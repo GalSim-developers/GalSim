@@ -615,7 +615,7 @@ class ChromaticObject:
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
-        p1._copyFrom(photon_array, slice(None), slice(None))
+        p1._copyFrom(photon_array, slice(None), slice(None), do_xy=False, do_flux=False)
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         rng = BaseDeviate(rng)
         obj._shoot(p1, rng)
@@ -1383,7 +1383,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         for kk, obj in enumerate(self.objs):
             use = (use_k == kk)  # True for each photon where this is the object to shoot from
             temp = PhotonArray(np.sum(use))
-            temp._copyFrom(photons, slice(None), use)
+            temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
             obj._shoot(temp, rng)
             # It will have tried to shoot the right total flux.  But that's not correct.
             # Rescale it down by the fraction of the total flux we actually want in this set.
@@ -2324,7 +2324,7 @@ class ChromaticSum(ChromaticObject):
             if this_n == 0:
                 continue
             temp = PhotonArray(np.sum(use))
-            temp._copyFrom(photons, slice(None), use)
+            temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
             obj._shoot(temp, rng)
             photons._copyFrom(temp, use, slice(None))
 
@@ -3560,9 +3560,9 @@ class ChromaticOpticalPSF(ChromaticObject):
             temp1 = PhotonArray(np.sum(use_p1))
             temp2 = PhotonArray(np.sum(use_p2))
             temp3 = PhotonArray(np.sum(use_p3))
-            temp1._copyFrom(photons, slice(None), use_p1)
-            temp2._copyFrom(photons, slice(None), use_p2)
-            temp3._copyFrom(photons, slice(None), use_p3)
+            temp1._copyFrom(photons, slice(None), use_p1, do_xy=False, do_flux=False)
+            temp2._copyFrom(photons, slice(None), use_p2, do_xy=False, do_flux=False)
+            temp3._copyFrom(photons, slice(None), use_p3, do_xy=False, do_flux=False)
             prof1._shoot(temp1, rng)
             prof2._shoot(temp2, rng)
             prof3._shoot(temp3, rng)
