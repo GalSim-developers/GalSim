@@ -101,6 +101,8 @@ Changes from v2.5.0 to v2.5.1
   (#1258)
 - Implemented missing `ChromaticSum._shoot` method, so `ChromaticSum` can be used as a
   photon_op. (#1259)
-- Added `PhotonArray._copyFrom` method. (#1259)
+- Added `PhotonArray.copyFrom` method. (#1259)
 - Deprecated `PhotonArray.setCorrelated` and `PhotonArray.isCorrelated`, since they are not
   necessary anymore. (#1259)
+- Deprecated `PhotonArray.assignAt` in favor of the more flexible `PhotonArray.copyFrom`
+  method. (#1259)

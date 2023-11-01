@@ -603,6 +603,38 @@ def test_photon_array_depr():
     u[:] = 6.0
     np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
 
+    # Check assignAt
+    pa1 = galsim.PhotonArray(50)
+    pa1.x = photon_array.x[:50]
+    for i in range(50):
+        pa1.y[i] = photon_array.y[i]
+    pa1.flux[0:50] = photon_array.flux[:50]
+    pa1.dxdz = photon_array.dxdz[:50]
+    pa1.dydz = photon_array.dydz[:50]
+    pa1.pupil_u = photon_array.pupil_u[:50]
+    pa1.pupil_v = photon_array.pupil_v[:50]
+    pa2 = galsim.PhotonArray(100)
+    check_dep(pa2.assignAt, 0, pa1)
+    check_dep(pa2.assignAt, 50, pa1)
+    np.testing.assert_almost_equal(pa2.x[:50], pa1.x)
+    np.testing.assert_almost_equal(pa2.y[:50], pa1.y)
+    np.testing.assert_almost_equal(pa2.flux[:50], pa1.flux)
+    np.testing.assert_almost_equal(pa2.dxdz[:50], pa1.dxdz)
+    np.testing.assert_almost_equal(pa2.dydz[:50], pa1.dydz)
+    np.testing.assert_almost_equal(pa2.pupil_u[:50], pa1.pupil_u)
+    np.testing.assert_almost_equal(pa2.pupil_v[:50], pa1.pupil_v)
+    np.testing.assert_almost_equal(pa2.x[50:], pa1.x)
+    np.testing.assert_almost_equal(pa2.y[50:], pa1.y)
+    np.testing.assert_almost_equal(pa2.flux[50:], pa1.flux)
+    np.testing.assert_almost_equal(pa2.dxdz[50:], pa1.dxdz)
+    np.testing.assert_almost_equal(pa2.dydz[50:], pa1.dydz)
+    np.testing.assert_almost_equal(pa2.pupil_u[50:], pa1.pupil_u)
+    np.testing.assert_almost_equal(pa2.pupil_v[50:], pa1.pupil_v)
+
+    # Error if it doesn't fit.
+    with assert_raises(ValueError):
+        check_dep(pa2.assignAt, 90, pa1)
+
 @timer
 def test_chromatic_flux():
     # This is based on a snippet of test_chromatic_flux in test_chromatic.py.
