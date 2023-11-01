@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.table &mdash; GalSim 2.5.0 documentation</title>
+  <title>galsim.table &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -436,6 +436,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            an estimate of the integral</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">merge_sorted</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_log</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span><span class="s2">&quot;log x spacing not implemented yet.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_log</span><span class="p">:</span>
@@ -464,7 +465,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">gx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">/</span> <span class="n">x_factor</span>
             <span class="n">gx</span> <span class="o">=</span> <span class="n">gx</span><span class="p">[(</span><span class="n">gx</span> <span class="o">&gt;=</span> <span class="n">x_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">gx</span> <span class="o">&lt;=</span> <span class="n">x_max</span><span class="p">)]</span>
-            <span class="n">gx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">gx</span><span class="p">,</span> <span class="p">[</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">])</span>
+            <span class="n">gx</span> <span class="o">=</span> <span class="n">merge_sorted</span><span class="p">([</span><span class="n">gx</span><span class="p">,</span> <span class="p">[</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">]])</span>
             <span class="c1"># Let this raise an appropriate error if g is not a valid function over this domain.</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">gx</span><span class="p">)</span>
             <span class="c1"># If g is a constant function (like lambda wave: 1), then this doesn&#39;t return</span>
@@ -482,11 +483,13 @@
     <span class="k">def</span> <span class="nf">_check_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">slop</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.e-6</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">initial</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span> <span class="o">-</span> <span class="n">slop</span><span class="p">:</span>
+            <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;x value(s) below the range of the LookupTable.&quot;</span><span class="p">,</span>
-                                   <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span>
+                                   <span class="n">xx</span><span class="p">[</span><span class="n">xx</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">initial</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">+</span> <span class="n">slop</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+            <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;x value(s) above the range of the LookupTable.&quot;</span><span class="p">,</span>
-                                   <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span>
+                                   <span class="n">xx</span><span class="p">[</span><span class="n">xx</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">getArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
@@ -644,21 +647,23 @@
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<div class="viewcode-block" id="trapz"><a class="viewcode-back" href="../../table.html#galsim.utilities.trapz">[docs]</a><span class="k">def</span> <span class="nf">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="trapz"><a class="viewcode-back" href="../../table.html#galsim.utilities.trapz">[docs]</a><span class="k">def</span> <span class="nf">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate f(x) using the trapezoidal rule.</span>
 
 <span class="sd">    Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,</span>
 <span class="sd">    which is usually faster.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        f:      The ordinates of the function to integrate.</span>
-<span class="sd">        x:      The abscissae of the function to integrate.</span>
+<span class="sd">        f:              The ordinates of the function to integrate.</span>
+<span class="sd">        x:              The abscissae of the function to integrate.</span>
+<span class="sd">        interpolant:    The interpolant to use between the tabulated points.  [default: &#39;linear&#39;,</span>
+<span class="sd">                        which matches the behavior of np.trapz]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Estimate of the integral.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">integrate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="n">interpolant</span><span class="p">)</span><span class="o">.</span><span class="n">integrate</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">0.</span></div>
 

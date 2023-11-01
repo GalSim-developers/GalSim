@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.wcs &mdash; GalSim 2.5.0 documentation</title>
+  <title>galsim.wcs &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -2715,7 +2715,7 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>  <span class="c1"># Raise the original if this fails, since it&#39;s probably more relevant.</span>
+                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>  <span class="c1"># Raise the original if this fails, since it&#39;s probably more relevant.</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
@@ -2723,7 +2723,7 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_v</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">:</span>
@@ -2733,7 +2733,7 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_vfunc</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vfunc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
@@ -2741,7 +2741,7 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_vfunc</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                    <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2755,7 +2755,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)])</span>
                     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
@@ -2763,7 +2763,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)])</span>
                     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2777,7 +2777,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)])</span>
                     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
@@ -2785,7 +2785,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)])</span>
                     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>
+                        <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_newOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">UVFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_vfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_xfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span><span class="p">,</span>
@@ -2945,7 +2945,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">world</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">y1</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="p">]</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="bp">None</span>  <span class="c1"># Raise the original one if this fails, since it&#39;s probably more relevant.</span>
+                <span class="k">raise</span> <span class="n">e</span> <span class="kn">from</span> <span class="kc">None</span>  <span class="c1"># Raise the original one if this fails, since it&#39;s probably more relevant.</span>
             <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">world</span> <span class="p">])</span>
             <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">world</span> <span class="p">])</span>
             <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span>

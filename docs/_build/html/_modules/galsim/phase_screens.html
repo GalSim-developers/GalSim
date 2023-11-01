@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_screens &mdash; GalSim 2.5.0 documentation</title>
+  <title>galsim.phase_screens &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -192,7 +192,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">held</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">held</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">held</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
             <span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
 
 

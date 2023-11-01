@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photon Arrays &mdash; GalSim 2.5.0 documentation</title>
+  <title>Photon Arrays &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -66,6 +66,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateWavelengths"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateWavelengths()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.assignAt"><code class="docutils literal notranslate"><span class="pre">PhotonArray.assignAt()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.convolve"><code class="docutils literal notranslate"><span class="pre">PhotonArray.convolve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.copyFrom"><code class="docutils literal notranslate"><span class="pre">PhotonArray.copyFrom()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.dxdz"><code class="docutils literal notranslate"><span class="pre">PhotonArray.dxdz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.dydz"><code class="docutils literal notranslate"><span class="pre">PhotonArray.dydz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.flux"><code class="docutils literal notranslate"><span class="pre">PhotonArray.flux</span></code></a></li>
@@ -260,6 +261,14 @@ Photons past the edges of the image are discarded.</p>
 <dt class="sig sig-object py" id="galsim.PhotonArray.assignAt">
 <span class="sig-name descname"><span class="pre">assignAt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.assignAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.assignAt" title="Permalink to this definition"></a></dt>
 <dd><p>Assign the contents of another <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to this one starting at istart.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istart</strong> – The first index at which to insert new values.</p></li>
+<li><p><strong>rhs</strong> – The other <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> from which to get the values.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -271,6 +280,30 @@ Photons past the edges of the image are discarded.</p>
 <span class="n">then</span> <span class="n">the</span> <span class="n">values</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">first</span> <span class="n">array</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="bp">self</span><span class="p">)</span> <span class="n">take</span> <span class="n">precedence</span><span class="o">.</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.copyFrom">
+<span class="sig-name descname"><span class="pre">copyFrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">slice(None,</span> <span class="pre">None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">slice(None,</span> <span class="pre">None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_other</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.copyFrom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.copyFrom" title="Permalink to this definition"></a></dt>
+<dd><p>Copy some contents of another <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to some elements of this one.</p>
+<p>Specifically each element of rhs[source_indices] is mapped to self[target_indices].
+The values s1 and s2 may be slices, list of indices, or anything else that is a valid
+key for a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – The <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> from which to get values.</p></li>
+<li><p><strong>target_indices</strong> – The indices at which to assign values in the current PhotonArray (self).
+[default: slice(None)]</p></li>
+<li><p><strong>source_indices</strong> – The indices from which to get values from the PhotonArray, <code class="docutils literal notranslate"><span class="pre">rhs</span></code>.
+[default: slice(None)]</p></li>
+<li><p><strong>do_xy</strong> – Whether to include copying the x and y arrays. [default: True]</p></li>
+<li><p><strong>do_flux</strong> – Whether to include copying the flux array. [default: True]</p></li>
+<li><p><strong>do_other</strong> – Whether to include copying the other arrays (angles, wavelength,
+pupil positions, time). [default: True]</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

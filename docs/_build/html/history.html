@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.5.0 documentation</title>
+  <title>Revision History &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -74,6 +74,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-0-to-v2-5-1">Changes from v2.5.0 to v2.5.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="older.html">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
@@ -208,6 +209,29 @@ rather than raising an exception. (#1227)</p></li>
 photon shooting. (#1242)</p></li>
 </ul>
 </section>
+</section>
+<section id="changes-from-v2-5-0-to-v2-5-1">
+<h2>Changes from v2.5.0 to v2.5.1<a class="headerlink" href="#changes-from-v2-5-0-to-v2-5-1" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fixed an incompatibility with Python 3.12 that we had missed.</p></li>
+<li><p>Fixed a bug in the SED class normalization when using astropy.units for flux_type.  Thanks
+to Sid Mau for finding and fixing this bug. (#1254, #1256)</p></li>
+<li><p>Fixed a bug in the <a class="reference internal" href="sed.html#galsim.EmissionLine.atRedshift" title="galsim.EmissionLine.atRedshift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">EmissionLine.atRedshift</span></code></a> method. (#1257)</p></li>
+<li><p>Added interpolant option to <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> and <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> classes to use when reading from a file.
+(#1257)</p></li>
+<li><p>Improved the behavior of SEDs when using spline interpolant. (#1187, #1257)</p></li>
+<li><p>No longer pickle the SED of chromatic objects when the SED is a derived value. (#1257)</p></li>
+<li><p>Added interpolant option to <a class="reference internal" href="table.html#galsim.trapz" title="galsim.trapz"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.trapz</span></code></a>. (#1257)</p></li>
+<li><p>Added clip_neg option to <a class="reference internal" href="deviate.html#galsim.DistDeviate" title="galsim.DistDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistDeviate</span></code></a> class. (#1257)</p></li>
+<li><p>Fixed a bug in <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> if the image is outside the range where tree rings are defined.
+(#1258)</p></li>
+<li><p>Implemented algorith for <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> to be used as a photon_op. (#1259)</p></li>
+<li><p>Added <a class="reference internal" href="photon_array.html#galsim.PhotonArray.copyFrom" title="galsim.PhotonArray.copyFrom"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.copyFrom</span></code></a> method. (#1259)</p></li>
+<li><p>Deprecated <a class="reference internal" href="photon_array.html#galsim.PhotonArray.setCorrelated" title="galsim.PhotonArray.setCorrelated"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.setCorrelated</span></code></a> and <a class="reference internal" href="photon_array.html#galsim.PhotonArray.isCorrelated" title="galsim.PhotonArray.isCorrelated"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.isCorrelated</span></code></a>, since they are not
+necessary anymore. (#1259)</p></li>
+<li><p>Deprecated <a class="reference internal" href="photon_array.html#galsim.PhotonArray.assignAt" title="galsim.PhotonArray.assignAt"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.assignAt</span></code></a> in favor of the more flexible <a class="reference internal" href="photon_array.html#galsim.PhotonArray.copyFrom" title="galsim.PhotonArray.copyFrom"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.copyFrom</span></code></a>
+method. (#1259)</p></li>
+</ul>
 </section>
 <section id="older-versions">
 <h2>Older Versions<a class="headerlink" href="#older-versions" title="Permalink to this heading"></a></h2>

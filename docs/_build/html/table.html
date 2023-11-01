@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lookup Tables &mdash; GalSim 2.5.0 documentation</title>
+  <title>Lookup Tables &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -544,7 +544,7 @@ in the normal initializer.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.trapz">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">trapz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#trapz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.trapz" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">trapz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#trapz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.trapz" title="Permalink to this definition"></a></dt>
 <dd><p>Integrate f(x) using the trapezoidal rule.</p>
 <p>Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,
 which is usually faster.</p>
@@ -553,6 +553,8 @@ which is usually faster.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>f</strong> – The ordinates of the function to integrate.</p></li>
 <li><p><strong>x</strong> – The abscissae of the function to integrate.</p></li>
+<li><p><strong>interpolant</strong> – The interpolant to use between the tabulated points.  [default: ‘linear’,
+which matches the behavior of np.trapz]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.convolve &mdash; GalSim 2.5.0 documentation</title>
+  <title>galsim.convolve &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -480,7 +480,7 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
-                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Cannot use real_space convolution for &gt;2 profiles&quot;</span><span class="p">)</span>
 
@@ -498,7 +498,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
-                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Cannot use real_space convolution for &gt;2 profiles&quot;</span><span class="p">)</span>
 

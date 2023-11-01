@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.photon_array &mdash; GalSim 2.5.0 documentation</title>
+  <title>galsim.photon_array &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -297,7 +297,13 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_pupil_u</span> <span class="o">=</span> <span class="n">pupil_u</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_pupil_v</span> <span class="o">=</span> <span class="n">pupil_v</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="n">time</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">is_corr</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;is_corr=True&#39;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;We don&#39;t think this is necessary anymore.  If you have a use case that &quot;</span>
+                <span class="s2">&quot;requires it, please open an issue.&quot;</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
         <span class="k">return</span> <span class="n">ret</span>
 
 <div class="viewcode-block" id="PhotonArray.size"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -492,11 +498,19 @@
 <div class="viewcode-block" id="PhotonArray.isCorrelated"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.isCorrelated">[docs]</a>    <span class="k">def</span> <span class="nf">isCorrelated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the photons are correlated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;isCorrelated&#39;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;We don&#39;t think this is necessary anymore.  If you have a use case that &quot;</span>
+                <span class="s2">&quot;requires it, please open an issue.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span></div>
 
 <div class="viewcode-block" id="PhotonArray.setCorrelated"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.setCorrelated">[docs]</a>    <span class="k">def</span> <span class="nf">setCorrelated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set whether the photons are correlated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;setCorrelated&#39;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;We don&#39;t think this is necessary anymore.  If you have a use case that &quot;</span>
+                <span class="s2">&quot;requires it, please open an issue.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_pa&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
@@ -532,28 +546,91 @@
 
 <div class="viewcode-block" id="PhotonArray.assignAt"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.assignAt">[docs]</a>    <span class="k">def</span> <span class="nf">assignAt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">istart</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign the contents of another `PhotonArray` to this one starting at istart.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            istart:     The first index at which to insert new values.</span>
+<span class="sd">            rhs:        The other `PhotonArray` from which to get the values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s2">&quot;PhotonArray.assignAt&quot;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;copyFrom(rhs, slice(istart, istart+rhs.size()))&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">istart</span> <span class="o">+</span> <span class="n">rhs</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
                 <span class="s2">&quot;The given rhs does not fit into this array starting at </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">istart</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">istart</span> <span class="o">+</span> <span class="n">rhs</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">flux</span>
-        <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedAngles</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_copyFrom</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PhotonArray.copyFrom"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.copyFrom">[docs]</a>    <span class="k">def</span> <span class="nf">copyFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">target_indices</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">source_indices</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+                 <span class="n">do_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_other</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy some contents of another `PhotonArray` to some elements of this one.</span>
+
+<span class="sd">        Specifically each element of rhs[source_indices] is mapped to self[target_indices].</span>
+<span class="sd">        The values s1 and s2 may be slices, list of indices, or anything else that is a valid</span>
+<span class="sd">        key for a numpy array.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            rhs:            The `PhotonArray` from which to get values.</span>
+<span class="sd">            target_indices: The indices at which to assign values in the current PhotonArray (self).</span>
+<span class="sd">                            [default: slice(None)]</span>
+<span class="sd">            source_indices: The indices from which to get values from the PhotonArray, ``rhs``.</span>
+<span class="sd">                            [default: slice(None)]</span>
+<span class="sd">            do_xy:          Whether to include copying the x and y arrays. [default: True]</span>
+<span class="sd">            do_flux:        Whether to include copying the flux array. [default: True]</span>
+<span class="sd">            do_other:       Whether to include copying the other arrays (angles, wavelength,</span>
+<span class="sd">                            pupil positions, time). [default: True]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">target_indices</span><span class="p">]</span>
+            <span class="c1"># Numpy is flexible about allowing slices outside the range of the array.</span>
+            <span class="c1"># Rather than try to check all possible ways the indices can be invalid, we</span>
+            <span class="c1"># just make sure that at least some elements come back from the numpy call.</span>
+            <span class="n">n1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">a1</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">n1</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;target_indices is invalid for the target PhotonArray&quot;</span><span class="p">,</span>
+                                   <span class="n">target_indices</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">source_indices</span><span class="p">]</span>
+            <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">a2</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">n2</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;source_indices is invalid for the source PhotonArray&quot;</span><span class="p">,</span>
+                                   <span class="n">source_indices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n1</span> <span class="o">!=</span> <span class="n">n2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;target_indices and source_indices do not reference the same number of elements&quot;</span>
+                <span class="s2">&quot;in their respective PhotonArrays (</span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> respectively)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">target_indices</span><span class="o">=</span><span class="n">target_indices</span><span class="p">,</span> <span class="n">source_indices</span><span class="o">=</span><span class="n">source_indices</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_copyFrom</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">target_indices</span><span class="p">,</span> <span class="n">source_indices</span><span class="p">,</span> <span class="n">do_xy</span><span class="p">,</span> <span class="n">do_flux</span><span class="p">,</span> <span class="n">do_other</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_copyFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">target_indices</span><span class="p">,</span> <span class="n">source_indices</span><span class="p">,</span> <span class="n">do_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">do_other</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to self.copyFrom(rhs, target_indices, source_indices), but without any</span>
+<span class="sd">        checks that the indices are valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Aliases for notational convenience.</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">target_indices</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="n">source_indices</span>
+
+        <span class="k">if</span> <span class="n">do_xy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">do_flux</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">do_other</span> <span class="ow">and</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedAngles</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">allocateAngles</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dxdz</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">dxdz</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dydz</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">dydz</span>
-        <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dxdz</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">dxdz</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dydz</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">dydz</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">do_other</span> <span class="ow">and</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">allocateWavelengths</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">wavelength</span>
-        <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedPupil</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">wavelength</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">do_other</span> <span class="ow">and</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedPupil</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">allocatePupil</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pupil_u</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">pupil_u</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pupil_v</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">pupil_v</span>
-        <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedTimes</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pupil_u</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">pupil_u</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pupil_v</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">pupil_v</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">do_other</span> <span class="ow">and</span> <span class="n">rhs</span><span class="o">.</span><span class="n">hasAllocatedTimes</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">allocateTimes</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">time</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">s2</span><span class="p">]</span>
 
 <div class="viewcode-block" id="PhotonArray.convolve"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.convolve">[docs]</a>    <span class="k">def</span> <span class="nf">convolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convolve this `PhotonArray` with another.</span>

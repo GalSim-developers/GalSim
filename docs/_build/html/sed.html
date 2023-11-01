@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spectral Energy Distributions &mdash; GalSim 2.5.0 documentation</title>
+  <title>Spectral Energy Distributions &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -130,7 +130,7 @@
 <h1>Spectral Energy Distributions<a class="headerlink" href="#spectral-energy-distributions" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.SED">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">SED</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wave_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_blue_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_red_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_wave_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.SED" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">SED</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wave_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_blue_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_red_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_wave_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.SED" title="Permalink to this definition"></a></dt>
 <dd><p>Object to represent the spectral energy distributions of stars and galaxies.</p>
 <p>SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of
 wavelength, though SEDs are also used by GalSim to track dimensionless wavelength-dependent
@@ -204,10 +204,11 @@ in this case.</p>
 valid options for this parameter.</p></li>
 <li><p><strong>wave_type</strong> – String or astropy.unit specifying units for wavelength input to <code class="docutils literal notranslate"><span class="pre">spec</span></code>.</p></li>
 <li><p><strong>flux_type</strong> – String or astropy.unit specifying what type of spectral density or
-dimensionless normalization <code class="docutils literal notranslate"><span class="pre">spec</span></code> represents.  See above for valid options
-for this parameter.</p></li>
+dimensionless normalization <code class="docutils literal notranslate"><span class="pre">spec</span></code> represents.  See above for valid
+options for this parameter.</p></li>
 <li><p><strong>redshift</strong> – Optionally shift the spectrum to the given redshift. [default: 0]</p></li>
 <li><p><strong>fast</strong> – Convert units on initialization instead of on __call__. [default: True]</p></li>
+<li><p><strong>interpolant</strong> – If reading from a file, what interpolant to use. [default: ‘linear’]</p></li>
 </ul>
 </dd>
 </dl>
@@ -510,26 +511,8 @@ normalization affects <a class="reference internal" href="chromaticobject.html#g
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.EmissionLine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">EmissionLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wave_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fphotons'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#EmissionLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.EmissionLine" title="Permalink to this definition"></a></dt>
-<dd><p>Emission line SED.</p>
-<p>Creates a simple triangle-shaped emission line with a given wavelength and
-FWHM.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>wavelength</strong> – The wavelength of the line.</p></li>
-<li><p><strong>fwhm</strong> – The full-width-half-max of the line.  [default: 1.0]</p></li>
-<li><p><strong>flux</strong> – The integrated flux of the line.  [default: 1.0]</p></li>
-<li><p><strong>wave_type</strong> – The units of <code class="docutils literal notranslate"><span class="pre">wavelength</span></code> and <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> above.  See SED
-constructor for options.  [default: ‘nm’]</p></li>
-<li><p><strong>flux_type</strong> – The units of flux used for this SED.  See SED constructor
-for options.  [default: ‘fphotons’]</p></li>
-<li><p><strong>**kwargs</strong> – Any additional keyword arguments to pass to the <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>
-constructor.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">EmissionLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wave_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fphotons'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_wave</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e+30</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#EmissionLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.EmissionLine" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
 <dt class="sig sig-object py" id="galsim.EmissionLine.atRedshift">
 <span class="sig-name descname"><span class="pre">atRedshift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">redshift</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#EmissionLine.atRedshift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.EmissionLine.atRedshift" title="Permalink to this definition"></a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.EmissionLine" title="galsim.EmissionLine"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EmissionLine</span></code></a> with redshifted wavelengths.</p>

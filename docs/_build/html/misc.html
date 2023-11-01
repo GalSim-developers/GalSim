@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Miscellaneous Utilities &mdash; GalSim 2.5.0 documentation</title>
+  <title>Miscellaneous Utilities &mdash; GalSim 2.5.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -331,7 +331,7 @@ overwritten on a cache miss.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="c1"># A slow-to-evaluate python function</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">...</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">k1</span><span class="p">)</span>  <span class="c1"># Calling function is slow</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v1</span> <span class="o">=</span> <span class="n">slow_function</span><span class="p">(</span><span class="o">*</span><span class="n">k1</span><span class="p">)</span>  <span class="c1"># Calling again with same args is still slow</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">LRU_Cache</span><span class="p">(</span><span class="n">slow_function</span><span class="p">)</span>
@@ -999,7 +999,7 @@ image (False)? [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.thin_tabulated_values">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.thin_tabulated_values" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.thin_tabulated_values" title="Permalink to this definition"></a></dt>
 <dd><p>Remove items from a set of tabulated f(x) values so that the error in the integral is still
 accurate to a given relative accuracy.</p>
 <p>The input <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">f</span></code> values can be lists, NumPy arrays, or really anything that can be
@@ -1025,6 +1025,7 @@ If set to False, then a slower O(N^2) algorithm will be used.  We have
 found that the slower algorithm tends to yield a thinned representation
 that retains fewer samples while still meeting the relative error
 requirement.  [default: True]</p></li>
+<li><p><strong>interpolant</strong> – The interpolant to assume for the tabulated values. [default: ‘linear’]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
