@@ -100,7 +100,7 @@ def acquire_lock(lock, block=True, timeout=None):
     try:
         yield held
     finally:
-        if held:
+        if held:  # pragma: no branch
             lock.release()
 
 
