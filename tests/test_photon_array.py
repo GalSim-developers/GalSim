@@ -290,11 +290,24 @@ def test_photon_array():
     assert pa2.pupil_v[47] != pa1.pupil_v[18]
     assert pa2.time[47] != pa1.time[18]
 
+    # Can also use complicated numpy expressions for indexing.
+    nleft = np.sum(pa1.x < 0)
+    pa2.copyFrom(pa1, slice(nleft), (pa1.x<0))
+    assert np.all(pa2.x[:nleft] < 0)
+    np.testing.assert_array_equal(pa2.x[:nleft], pa1.x[pa1.x<0])
+    np.testing.assert_array_equal(pa2.y[:nleft], pa1.y[pa1.x<0])
+    pa2.copyFrom(pa1, slice(nleft,50), np.where(pa1.x>=0))
+    assert np.all(pa2.x[nleft:50] > 0)
+    np.testing.assert_array_equal(pa2.x[nleft:50], pa1.x[pa1.x>=0])
+    np.testing.assert_array_equal(pa2.y[nleft:50], pa1.y[pa1.x>=0])
+
     # Error if indices are invalid
     assert_raises(ValueError, pa2.copyFrom, pa1, slice(50,None), slice(50,None))
     assert_raises(ValueError, pa2.copyFrom, pa1, 100, 0)
     assert_raises(ValueError, pa2.copyFrom, pa1, 0, slice(None))
     assert_raises(ValueError, pa2.copyFrom, pa1)
+    assert_raises(ValueError, pa2.copyFrom, pa1, slice(None), pa1.x<0)
+    assert_raises(ValueError, pa2.copyFrom, pa1, slice(None), np.where(pa1.x<0))
 
     # Test some trivial usage of makeFromImage
     zero = galsim.Image(4,4,init_value=0)
