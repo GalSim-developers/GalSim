@@ -893,6 +893,8 @@ def test_treerings():
     im.setCenter(2000,2000)
     obj.drawImage(im, method='phot', sensor=sensor6, rng=rng6)
     print('im.sum = ',im.array.sum(), im.added_flux)
+    np.testing.assert_allclose(im.array.sum(), im.added_flux)
+    np.testing.assert_allclose(im.array.sum(), init_flux, rtol=1.e-2)
 
     areas6a = sensor6.calculate_pixel_areas(im, use_flux=True)
     assert np.min(areas6a.array) > 0
