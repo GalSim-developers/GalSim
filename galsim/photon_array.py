@@ -459,6 +459,8 @@ class PhotonArray:
             istart:     The first index at which to insert new values.
             rhs:        The other `PhotonArray` from which to get the values.
         """
+        from .deprecated import depr
+        depr("PhotonArray.assignAt", 2.5, "copyFrom(rhs, slice(istart, istart+rhs.size()))")
         if istart + rhs.size() > self.size():
             raise GalSimValueError(
                 "The given rhs does not fit into this array starting at %d"%istart, rhs)
