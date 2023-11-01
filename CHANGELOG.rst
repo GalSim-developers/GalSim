@@ -95,12 +95,11 @@ Changes from v2.5.0 to v2.5.1
   (#1257)
 - Improved the behavior of SEDs when using spline interpolant. (#1187, #1257)
 - No longer pickle the SED of chromatic objects when the SED is a derived value. (#1257)
-- Added interpolant option to `utilities.trapz`. (#1257)
+- Added interpolant option to `galsim.trapz`. (#1257)
 - Added clip_neg option to `DistDeviate` class. (#1257)
 - Fixed a bug in `SiliconSensor` if the image is outside the range where tree rings are defined.
   (#1258)
-- Implemented missing `ChromaticSum._shoot` method, so `ChromaticSum` can be used as a
-  photon_op. (#1259)
+- Implemented algorith for `ChromaticSum` to be used as a photon_op. (#1259)
 - Added `PhotonArray.copyFrom` method. (#1259)
 - Deprecated `PhotonArray.setCorrelated` and `PhotonArray.isCorrelated`, since they are not
   necessary anymore. (#1259)
