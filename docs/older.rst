@@ -37,10 +37,9 @@ v2.5
 - Added `EmissionLine` class to represent emission line SEDs. (#1247, #1249)
 - Updated data in `roman` module to Phase C (Cycle 9) information. (#1017, #1251)
 - Added interpolant option to `SED` and `Bandpass` classes. (#1257)
-- Added interpolant option to `utilities.trapz`. (#1257)
+- Added interpolant option to `galsim.trapz`. (#1257)
 - Added clip_neg option to `DistDeviate` class. (#1257)
-- Implemented missing `ChromaticSum._shoot` method, so `ChromaticSum` can be used as a
-  photon_op. (#1259)
+- Implemented algorithm for `ChromaticSum` to let it be used as a photon_op. (#1259)
 - Added `PhotonArray.copyFrom` method. (#1259)
 
 
