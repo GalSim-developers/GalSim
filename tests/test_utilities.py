@@ -1149,7 +1149,7 @@ def test_horner():
 
     # Check using a different dtype
     result = galsim.utilities.horner(x, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that a single element coef gives the right answer
     result = galsim.utilities.horner([1,2,3], [17])
