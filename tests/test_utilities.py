@@ -1215,58 +1215,58 @@ def test_horner2d():
     truth += (coef[1,0] + coef[1,1]*y + coef[1,2]*y**2 + coef[1,3]*y**3 + coef[1,4]*y**4)*x
     truth += (coef[2,0] + coef[2,1]*y + coef[2,2]*y**2 + coef[2,3]*y**3 + coef[2,4]*y**4)*x**2
     result = galsim.utilities.horner2d(x, y, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Also check against the (slower) numpy code
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef))
 
     # Check that trailing zeros give the same answer
     result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,1))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,6))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((1,5))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((6,5))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that leading zeros give the right answer
     result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,1)), coef]))
-    np.testing.assert_almost_equal(result, truth*y)
+    np.testing.assert_array_almost_equal(result, truth*y)
     result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,6)), coef]))
-    np.testing.assert_almost_equal(result, truth*y**6)
+    np.testing.assert_array_almost_equal(result, truth*y**6)
     result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((1,5)), coef]))
-    np.testing.assert_almost_equal(result, truth*x)
+    np.testing.assert_array_almost_equal(result, truth*x)
     result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((6,5)), coef]))
-    np.testing.assert_almost_equal(result, truth*x**6)
+    np.testing.assert_array_almost_equal(result, truth*x**6)
 
     # Check using a different dtype
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that x,y may be non-contiguous
     result = galsim.utilities.horner2d(x[::3], y[:7], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[::3],y[:7],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[::3],y[:7],coef))
     result = galsim.utilities.horner2d(x[:7], y[::-3], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:7],y[::-3],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:7],y[::-3],coef))
 
     # Check that coef may be non-contiguous
     result = galsim.utilities.horner2d(x, y, coef[:,::-1])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
     result = galsim.utilities.horner2d(x, y, coef[::-1,:])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
 
     # Check odd length
     result = galsim.utilities.horner2d(x[:15], y[:15], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:15],y[:15],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:15],y[:15],coef))
 
     # Check unaligned array
     result = galsim.utilities.horner2d(x[1:], y[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[1:],coef))
     result = galsim.utilities.horner2d(x[1:], y[:-1], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[:-1],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[:-1],coef))
     result = galsim.utilities.horner2d(x[:-1], y[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:-1],y[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:-1],y[1:],coef))
 
     # Check length > 64
     xx = np.empty(2000)
@@ -1274,11 +1274,11 @@ def test_horner2d():
     rng.generate(xx)
     rng.generate(yy)
     result = galsim.utilities.horner2d(xx, yy, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
 
     # Check scalar x, y
     result = galsim.utilities.horner2d(3.9, 1.7, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d([3.9],[1.7],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d([3.9],[1.7],coef))
 
 
     # Check the triangle = True option
@@ -1292,13 +1292,13 @@ def test_horner2d():
     truth += coef[1,0]*x + coef[1,1]*x*y
     truth += coef[2,0]*x**2
     result = galsim.utilities.horner2d(x, y, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, coef, triangle=True)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check using a different dtype
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex, triangle=True)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
@@ -1342,45 +1342,45 @@ def test_horner_complex():
     # Check all combinations of which things are complex and which are real.
     # First, just 1 of the three complex:
     result = galsim.utilities.horner2d(rx, ry, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, ry, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, ry, coef))
 
     result = galsim.utilities.horner2d(rx, y, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, rcoef))
 
     result = galsim.utilities.horner2d(x, ry, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, rcoef))
 
     # Now two complex:
     result = galsim.utilities.horner2d(rx, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, coef))
 
     result = galsim.utilities.horner2d(x, ry, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, coef))
 
     result = galsim.utilities.horner2d(x, y, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, rcoef))
 
     # All three complex
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, coef))
 
     # Check scalar complex x, y
     result = galsim.utilities.horner2d(3.9+2.1j, 1.7-0.9j, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(
             [3.9+2.1j],[1.7-0.9j],coef))
 
     # Repeast for 1d
     result = galsim.utilities.horner(rx, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(rx, coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(rx, coef[0]))
 
     result = galsim.utilities.horner(x, rcoef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, rcoef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x, rcoef[0]))
 
     result = galsim.utilities.horner(x, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x, coef[0]))
 
     result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
 def test_merge_sorted():
     from galsim.utilities import merge_sorted
