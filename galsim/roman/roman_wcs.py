@@ -28,8 +28,7 @@ import os
 import coord
 import datetime
 
-from . import n_sca
-from . import n_pix
+from . import n_sca, n_pix, max_sun_angle
 from .. import meta_data
 from .. import GSFitsWCS, FitsHeader
 from .. import PositionD
@@ -606,9 +605,9 @@ def allowedPos(world_pos, date):
     angle_deg = abs(world_pos.distanceTo(sun)/coord.degrees)
 
     # Check if it's within tolerance.
-    min_ang = 90. - 36.
-    max_ang = 90. + 36.
-    return angle_deg >= min_ang and angle_deg <= max_ang
+    min_ang = 90. - max_sun_angle
+    max_ang = 90. + max_sun_angle
+    return min_ang <= angle_deg <= max_ang
 
 def bestPA(world_pos, date):
     """
