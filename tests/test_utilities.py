@@ -1183,7 +1183,7 @@ def test_horner():
 
     # Check length > 64
     xx = np.empty(2000)
-    rng.generate(xx)
+    xx = rng.generate(xx)
     result = galsim.utilities.horner(xx, coef)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
