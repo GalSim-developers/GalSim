@@ -756,7 +756,7 @@ def test_photon_array_correlated():
     check_dep(pa3.setCorrelated)
     assert check_dep(pa3.isCorrelated)
     assert check_dep(pa2.isCorrelated)
-    pa3.convolve(pa2)
+    pa3.convolve(pa2, rng=rng)
     with assert_raises(AssertionError):
         np.testing.assert_allclose(pa3.x, conv_x)
     with assert_raises(AssertionError):
