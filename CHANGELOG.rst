@@ -105,3 +105,9 @@ Changes from v2.5.0 to v2.5.1
   necessary anymore. (#1259)
 - Deprecated `PhotonArray.assignAt` in favor of the more flexible `PhotonArray.copyFrom`
   method. (#1259)
+
+Changes from v2.5.1 to v2.5.2
+=============================
+
+- Added galsim.roman.max_sun_angle as a module-level named variable. (#1261)
+
