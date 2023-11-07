@@ -89,6 +89,9 @@ n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
+# Maxinum allowed angle from the telecope solar panels to the sun in degrees.
+max_sun_angle = 36.
+
 from .roman_bandpass import getBandpasses
 from .roman_backgrounds import getSkyLevel
 from .roman_psfs import getPSF
