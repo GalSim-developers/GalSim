@@ -2371,7 +2371,7 @@ def test_gsfitswcs():
     # And it's required to get (relatively) complete test coverage.
     test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP', 'ZTF' ]
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
