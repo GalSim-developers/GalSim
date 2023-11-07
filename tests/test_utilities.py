@@ -1134,18 +1134,18 @@ def test_horner():
     # Check against the direct calculation
     truth = coef[0] + coef[1]*x + coef[2]*x**2 + coef[3]*x**3 + coef[4]*x**4
     result = galsim.utilities.horner(x, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Also check against the (slower) numpy code
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
 
     # Check that trailing zeros give the same answer
     result = galsim.utilities.horner(x, coef + [0]*3)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that leading zeros give the right answer
     result = galsim.utilities.horner(x, [0]*3 + coef)
-    np.testing.assert_almost_equal(result, truth*x**3)
+    np.testing.assert_array_almost_equal(result, truth*x**3)
 
     # Check using a different dtype
     result = galsim.utilities.horner(x, coef, dtype=complex)
@@ -1153,43 +1153,43 @@ def test_horner():
 
     # Check that a single element coef gives the right answer
     result = galsim.utilities.horner([1,2,3], [17])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner(x, [17])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner([1,2,3], [17,0,0,0])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner(x, [17,0,0,0])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner([1,2,3], [0,0,0,0])
-    np.testing.assert_almost_equal(result, 0)
+    np.testing.assert_array_almost_equal(result, 0)
     result = galsim.utilities.horner(x, [0,0,0,0])
-    np.testing.assert_almost_equal(result, 0)
+    np.testing.assert_array_almost_equal(result, 0)
 
     # Check that x may be non-contiguous
     result = galsim.utilities.horner(x[::3], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
 
     # Check that coef may be non-contiguous
     result = galsim.utilities.horner(x, coef[::-1])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
 
     # Check odd length
     result = galsim.utilities.horner(x[:15], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[:15],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[:15],coef))
 
     # Check unaligned array
     result = galsim.utilities.horner(x[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[1:],coef))
 
     # Check length > 64
     xx = np.empty(2000)
     rng.generate(xx)
     result = galsim.utilities.horner(xx, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
     # Check scalar x
     result = galsim.utilities.horner(3.9, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval([3.9],coef))
 
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
