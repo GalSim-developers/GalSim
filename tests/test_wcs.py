@@ -2470,7 +2470,7 @@ def test_inverseab_convergence():
         x, y = wcs.radecToxy(ra, dec, units="radians")
     except galsim.GalSimError as e:
         print('Error message is\n',e)
-        assert "[0,]" in str(e)
+        assert "[0,]" in str(e) or "[0]" in str(e)
 
     # Check as part of a longer list (longer than 256 is important)
     ra = np.random.uniform(2.185, 2.186, 1000)
@@ -2485,7 +2485,7 @@ def test_inverseab_convergence():
         x, y = wcs.radecToxy(ra, dec, units="radians")
     except galsim.GalSimError as e:
         print('Error message is\n',e)
-        assert "[1000,1001,]" in str(e)
+        assert "[1000,1001,]" in str(e) or "[1000,1001]" in str(e)
         # We don't currently do this for the user, but it's not too hard to get a python list
         # of the bad indices.  Included here as an example for users who may need this.
         bad = eval(str(e)[str(e).rfind('['):])
