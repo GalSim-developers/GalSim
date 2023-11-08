@@ -3163,7 +3163,7 @@ def test_int_args():
     # Along the way, check issue #1024 where Erin noticed that reading the WCS from the
     # header of a compressed file was spending lots of time decompressing the data, which
     # is unnecessary.
-    dir = 'des_data'
+    dir = os.path.join(os.path.dirname(__file__), 'des_data')
     file_name = 'DECam_00158414_01.fits.fz'
     with Profile():
         t0 = time.time()
