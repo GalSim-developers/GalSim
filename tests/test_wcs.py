@@ -2473,8 +2473,9 @@ def test_inverseab_convergence():
         assert "[0,]" in str(e) or "[0]" in str(e)
 
     # Check as part of a longer list (longer than 256 is important)
-    ra = np.random.uniform(2.185, 2.186, 1000)
-    dec = np.random.uniform(-0.501, -0.499, 1000)
+    rng = np.random.RandomState(1234)
+    ra = rng.uniform(2.185, 2.186, 1000)
+    dec = rng.uniform(-0.501, -0.499, 1000)
     ra = np.append(ra, [2.1, 2.9])
     dec = np.append(dec, [-0.45, 0.2])
     print('ra = ',ra)
