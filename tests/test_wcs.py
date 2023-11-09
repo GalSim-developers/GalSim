@@ -2473,6 +2473,7 @@ def test_inverseab_convergence():
             print('Error message is\n',e)
             assert "[0,]" in str(e) or "[0]" in str(e)
     else:
+        x, y = wcs.radecToxy(ra, dec, units="radians")
         assert np.all(np.isnan(x))
         assert np.all(np.isnan(y))
 
