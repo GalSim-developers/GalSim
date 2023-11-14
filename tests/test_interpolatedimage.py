@@ -1594,9 +1594,9 @@ def test_ii_shoot():
     else:
         flux = 1.e4
     for interp in interp_list:
+        print('interp = ',interp)
         obj = galsim.InterpolatedImage(image_in, x_interpolant=interp, scale=3.3, flux=flux)
         added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng.duplicate())
-        print('interp = ',interp)
         print('obj.flux = ',obj.flux)
         print('added_flux = ',added_flux)
         print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
