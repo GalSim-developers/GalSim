@@ -207,7 +207,7 @@ namespace galsim {
                                      " undefined Bounds");
 
         double addedFlux = 0.;
-        for (int i=0; i<int(size()); i++) {
+        for (size_t i=0; i<size(); i++) {
             int ix = int(floor(_x[i] + 0.5));
             int iy = int(floor(_y[i] + 0.5));
             if (b.includes(ix,iy)) {
