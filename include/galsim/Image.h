@@ -346,10 +346,10 @@ namespace galsim {
         int _ncol;                    // number of columns
         int _nrow;                    // number of rows
 
-        inline int addressPixel(int y) const
-        { return (y - this->getYMin()) * _stride; }
+        inline ptrdiff_t addressPixel(ptrdiff_t y) const
+        { return (y - ptrdiff_t(this->getYMin())) * _stride; }
 
-        inline int addressPixel(int x, int y) const
+        inline ptrdiff_t addressPixel(ptrdiff_t x, ptrdiff_t y) const
         { return (x - this->getXMin()) * _step + addressPixel(y); }
 
         /**
