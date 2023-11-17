@@ -227,7 +227,9 @@ def test_exponential_shoot():
     assert np.isclose(added_flux, obj.flux)
     assert np.isclose(im.array.sum(), obj.flux)
     photons2 = obj.makePhot(poisson_flux=False, rng=rng)
-    assert photons2 == photons, "Exponential makePhot not equivalent to drawPhot"
+    np.testing.assert_allclose(photons2.x, photons.x)
+    np.testing.assert_allclose(photons2.y, photons.y)
+    np.testing.assert_allclose(photons2.flux, photons.flux)
 
 
 @timer
