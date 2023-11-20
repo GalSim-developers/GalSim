@@ -337,7 +337,7 @@ def do_shoot(prof, img, name):
     # uncertainty = rtol * flux_max
     # => N_tot = flux_tot / flux_max / rtol**2
     # Then we multiply by 10 to get a 3 sigma buffer
-    rtol = 2.e-2 * 3
+    rtol = 2.e-2
 
     test_flux = 1.8
 
@@ -356,11 +356,13 @@ def do_shoot(prof, img, name):
     print('flux_max = ',flux_max)
     flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
-    atol = flux_max * rtol
+    atol = flux_max * rtol * 3
 
     nphot = flux_tot / flux_max / rtol**2
     print('nphot = ',nphot)
     img2 = img.copy()
+
+    rtol *= 3
 
     # Use a deterministic random number generator so we don't fail tests because of rare flukes
     # in the random numbers.
