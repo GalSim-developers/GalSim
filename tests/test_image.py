@@ -2495,7 +2495,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 60)
     assert imv(11,19) == 60
-    assert im(11,19) == 60
+    if hasattr(galsim, "_galsim"):
+        assert im(11,19) == 60
+    else:
+        # jax-galsim does not support views
+        assert im(11,19) != 60
     imv2 = im.view()
     imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
     assert imv.bounds == imv2.bounds
