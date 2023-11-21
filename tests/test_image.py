@@ -2844,7 +2844,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
             err_msg="ImageD * complex is not correct")
     image2 = image1 / (2+5j)
-    np.testing.assert_array_allclose(image2.array, ref_array / (2+5j),
+    np.testing.assert_allclose(image2.array, ref_array / (2+5j),
             err_msg="ImageD / complex is not correct")
 
     # Binary complex scalar op ImageD
