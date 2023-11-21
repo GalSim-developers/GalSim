@@ -82,7 +82,7 @@ else:
     # it helps speed things up.
     nimages = 3
 
-datadir = os.path.join(".", "Image_comparison_images")
+datadir = os.path.join(os.path.dirname(__file__), "Image_comparison_images")
 
 
 @timer
