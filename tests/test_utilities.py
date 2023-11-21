@@ -1186,7 +1186,10 @@ def test_horner():
 
     # Check length > 64
     xx = np.empty(2000)
-    xx = rng.generate(xx)
+    if hasattr(galsim, "_galsim"):
+        rng.generate(xx)
+    else:
+        xx = rng.generate(xx)
     result = galsim.utilities.horner(xx, coef)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
@@ -1210,8 +1213,12 @@ def test_horner2d():
     x = np.empty(20)
     y = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    x = rng.generate(x)
-    y = rng.generate(y)
+    if hasattr(galsim, "_galsim"):
+        rng.generate(x)
+        rng.generate(y)
+    else:
+        x = rng.generate(x)
+        y = rng.generate(y)
 
     # Check against the direct calculation
     truth = coef[0,0] + coef[0,1]*y + coef[0,2]*y**2 + coef[0,3]*y**3 + coef[0,4]*y**4
@@ -1274,8 +1281,12 @@ def test_horner2d():
     # Check length > 64
     xx = np.empty(2000)
     yy = np.empty(2000)
-    xx = rng.generate(xx)
-    yy = rng.generate(yy)
+    if hasattr(galsim, "_galsim"):
+        rng.generate(xx)
+        rng.generate(yy)
+    else:
+        xx = rng.generate(xx)
+        yy = rng.generate(yy)
     result = galsim.utilities.horner2d(xx, yy, coef)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
 
@@ -1330,15 +1341,22 @@ def test_horner_complex():
     rx = np.empty(20)
     ry = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(rx)
-    rng.generate(ry)
+    if hasattr(galsim, "_galsim"):
+        rng.generate(rx)
+        rng.generate(ry)
+    else:
+        rx = rng.generate(rx)
+        ry = rng.generate(ry)
 
     ix = np.empty(20)
     iy = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(ix)
-    rng.generate(iy)
-
+    if hasattr(galsim, "_galsim"):
+        rng.generate(ix)
+        rng.generate(iy)
+    else:
+        ix = rng.generate(ix)
+        iy = rng.generate(iy)
     x = rx + 1j*ix
     y = ry + 1j*iy
 
