@@ -1239,7 +1239,7 @@ def test_fft():
                              [4,6,8,4],
                              [2,4,6,6] ],
                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
-        if hasattr(galsim, "_galsim") or type not in [np.complex128, complex]:
+        if hasattr(galsim, "_galsim") or dt not in [np.complex128, complex]:
             kim = xim.calculate_fft()
             xim2 = kim.calculate_inverse_fft()
             np.testing.assert_array_almost_equal(xim.array, xim2.array)
