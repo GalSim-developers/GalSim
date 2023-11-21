@@ -2735,15 +2735,19 @@ def test_complex_image():
                 assert im1.real(x,y) == value2.real
                 assert im1.view().real(x,y) == value2.real
                 assert im1.view(make_const=True).real(x,y) == value2.real
-                assert im2.real(x,y) == value2.real
+                # jax galsim does not support views
+                assert im2.real(x,y) != value2.real
                 assert im2_view.real(x,y) == value2.real
-                assert im2_cview.real(x,y) == value2.real
+                # jax galsim does not support views
+                assert im2_cview.real(x,y) != value2.real
                 assert im1.imag(x,y) == value2.imag
                 assert im1.view().imag(x,y) == value2.imag
                 assert im1.view(make_const=True).imag(x,y) == value2.imag
-                assert im2.imag(x,y) == value2.imag
+                # jax galsim does not support views
+                assert im2.imag(x,y) != value2.imag
                 assert im2_view.imag(x,y) == value2.imag
-                assert im2_cview.imag(x,y) == value2.imag
+                # jax galsim does not support views
+                assert im2_cview.imag(x,y) != value2.imag
                 assert im1.conjugate(x,y) == np.conjugate(value2)
                 assert im2.conjugate(x,y) == np.conjugate(value2)
 
