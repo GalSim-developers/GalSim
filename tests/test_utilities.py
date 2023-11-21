@@ -1129,7 +1129,10 @@ def test_horner():
     # Make a random list of values to test
     x = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(x)
+    if hasattr(galsim, "_galsim"):
+        rng.generate(x)
+    else:
+        x = rng.generate(x)
 
     # Check against the direct calculation
     truth = coef[0] + coef[1]*x + coef[2]*x**2 + coef[3]*x**3 + coef[4]*x**4
