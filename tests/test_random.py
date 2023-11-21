@@ -398,13 +398,16 @@ def test_gaussian():
         assert g.has_reliable_discard
         assert g.generates_in_pairs
     else:
+        # jax doesn't have this issue
         assert g.has_reliable_discard
         assert not g.generates_in_pairs
 
     # If don't explicitly suppress the warning, then a warning is emitted when n is odd.
     g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
-    with assert_warns(galsim.GalSimWarning):
-        g2.discard(nvals+1)
+    if hasattr(galsim, "_galsim"):
+        # jax doesn't do this
+        with assert_warns(galsim.GalSimWarning):
+            g2.discard(nvals+1)
 
     # Check seed, reset
     g.seed(testseed)
