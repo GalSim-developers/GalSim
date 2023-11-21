@@ -772,9 +772,11 @@ def test_binomial():
     assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
     # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.BinomialDeviate, dict())
-    assert_raises(TypeError, galsim.BinomialDeviate, list())
-    assert_raises(TypeError, galsim.BinomialDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        # jax does not raise for this
+        assert_raises(TypeError, galsim.BinomialDeviate, dict())
+        assert_raises(TypeError, galsim.BinomialDeviate, list())
+        assert_raises(TypeError, galsim.BinomialDeviate, set())
 
 
 @timer
