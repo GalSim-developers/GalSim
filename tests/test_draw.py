@@ -1205,8 +1205,9 @@ def test_drawImage_area_exptime():
 
     # Shooting with flux=1 raises a warning.
     obj1 = obj.withFlux(1)
-    with assert_warns(galsim.GalSimWarning):
-        obj1.drawImage(method='phot')
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            obj1.drawImage(method='phot')
     # But not if we explicitly tell it to shoot 1 photon
     with assert_raises(AssertionError):
         assert_warns(galsim.GalSimWarning, obj1.drawImage, method='phot', n_photons=1)
