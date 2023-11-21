@@ -61,12 +61,14 @@ def test_photon_array():
     check_pickle(photon_array)
 
     # Check assignment via numpy [:]
-    photon_array.x[:] = 5
-    photon_array.y[:] = 17
-    photon_array.flux[:] = 23
-    np.testing.assert_array_equal(photon_array.x, 5.)
-    np.testing.assert_array_equal(photon_array.y, 17.)
-    np.testing.assert_array_equal(photon_array.flux, 23.)
+    # jax does not support direct assignment
+    if hasattr(galsim, "_galsim"):
+        photon_array.x[:] = 5
+        photon_array.y[:] = 17
+        photon_array.flux[:] = 23
+        np.testing.assert_array_equal(photon_array.x, 5.)
+        np.testing.assert_array_equal(photon_array.y, 17.)
+        np.testing.assert_array_equal(photon_array.flux, 23.)
 
     # Check assignment directly to the attributes
     photon_array.x = 25
