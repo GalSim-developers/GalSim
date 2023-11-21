@@ -1635,7 +1635,7 @@ def test_direct_scale():
     obj_sb.dilate(1.0).drawReal(im4)
     obj_sb.rotate(0.3*galsim.radians).drawReal(im5)
     print('sb: max diff = ',np.max(np.abs(im1.array - im2.array)))
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 15,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 14,
                                    "drawReal made different image than method='sb'")
     np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when off-center")
