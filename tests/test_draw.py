@@ -1136,7 +1136,7 @@ def test_shoot():
 
     # Test that shooting with 0.0 flux makes a zero-photons image.
     image4 = (obj*0).drawImage(method='phot')
-    np.testing.assert_equal(image4.array, 0)
+    np.testing.assert_array_equal(image4.array, 0)
 
     # Warns if flux is 1 and n_photons not given.
     psf = galsim.Gaussian(sigma=3)
