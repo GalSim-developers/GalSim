@@ -491,7 +491,7 @@ def test_nan_fits():
     if not hasattr(pyfits, 'verify'): return
 
     # The problematic file:
-    file_name = "des_data/DECam_00158414_01.fits.fz"
+    file_name = os.path.join(os.path.dirname(__file__), "des_data/DECam_00158414_01.fits.fz")
 
     # These are the values we should be reading in:
     ref_bounds = galsim.BoundsI(xmin=1, xmax=2048, ymin=1, ymax=4096)
