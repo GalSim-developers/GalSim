@@ -505,7 +505,7 @@ def test_sum():
         if hasattr(galsim, "_galsim"):
             coefDiff[:len(z1.coef)] -= c1*z1.coef
         else:
-            coefDiff = coefDiff.at[:len(z1.coef)].subtract(c1*z1.coef)
+            coefDiff = coefDiff.at[:len(z1.coef)].add(-c1*z1.coef)
         np.testing.assert_allclose(coefSum, (c1*z1 + c2*z2).coef)
         np.testing.assert_allclose(coefDiff, -(c1*z1 - c2*z2).coef)
 
