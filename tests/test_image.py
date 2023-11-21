@@ -2649,13 +2649,15 @@ def test_copy():
     assert im_slice(2,3) != 11.
 
     # Can also copy by giving the array and specify copy=True
-    im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
-    assert im10.wcs == im.wcs
-    assert im10.bounds == im.bounds
-    np.testing.assert_array_equal(im10.array, im.array)
-    im10[2,3] = 17
-    assert im10(2,3) == 17.
-    assert im(2,3) == 17.
+    if hasattr(galsim, "_galsim"):
+        # jax-galsim does not support references
+        im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
+        assert im10.wcs == im.wcs
+        assert im10.bounds == im.bounds
+        np.testing.assert_array_equal(im10.array, im.array)
+        im10[2,3] = 17
+        assert im10(2,3) == 17.
+        assert im(2,3) == 17.
 
     im10b = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=True)
     assert im10b.wcs == im.wcs
