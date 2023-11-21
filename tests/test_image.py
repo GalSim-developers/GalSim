@@ -2949,7 +2949,7 @@ def test_complex_image_arith():
             err_msg="ImageCD * complex is not correct")
     image4 = image2.copy()
     image4 /= (2+5j)
-    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array / (2+5j),
+    np.testing.assert_allclose(image4.array, (3+1j)*ref_array / (2+5j),
             err_msg="ImageCD / complex is not correct")
 
     # In place ImageCD op ImageD
@@ -2967,7 +2967,7 @@ def test_complex_image_arith():
             err_msg="ImageD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image1
-    np.testing.assert_almost_equal(image4.array, (3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # In place ImageCD op ImageCD
@@ -2985,7 +2985,7 @@ def test_complex_image_arith():
             err_msg="ImageCD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image3
-    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageCD / ImageCD is not correct")
 
 @timer
