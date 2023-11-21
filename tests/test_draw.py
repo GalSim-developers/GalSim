@@ -1620,13 +1620,13 @@ def test_direct_scale():
     obj.dilate(1.0).drawReal(im4)
     obj.rotate(0.3*galsim.radians).drawReal(im5)
     print('no_pixel: max diff = ',np.max(np.abs(im1.array - im2.array)))
-    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 15,
                                    "drawReal made different image than method='no_pixel'")
-    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when off-center")
-    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im4.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when jac is not None")
-    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im5.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='sb')
@@ -1635,13 +1635,13 @@ def test_direct_scale():
     obj_sb.dilate(1.0).drawReal(im4)
     obj_sb.rotate(0.3*galsim.radians).drawReal(im5)
     print('sb: max diff = ',np.max(np.abs(im1.array - im2.array)))
-    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 15,
                                    "drawReal made different image than method='sb'")
-    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when off-center")
-    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im4.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when jac is not None")
-    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+    np.testing.assert_array_almost_equal(im5.array, im2[im3.bounds].array, 14,
                                    "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='fft')
@@ -1650,13 +1650,13 @@ def test_direct_scale():
     obj_with_pixel.dilate(1.0).drawFFT(im4)
     obj_with_pixel.rotate(90 * galsim.degrees).drawFFT(im5)
     print('fft: max diff = ',np.max(np.abs(im1.array - im2.array)))
-    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 15,
                                    "drawFFT made different image than method='fft'")
-    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawFFT made different image when off-center")
-    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im4.array, im2[im3.bounds].array, 15,
                                    "drawFFT made different image when jac is not None")
-    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+    np.testing.assert_array_almost_equal(im5.array, im2[im3.bounds].array, 14,
                                    "drawFFT made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='real_space')
@@ -1667,13 +1667,13 @@ def test_direct_scale():
     print('real_space: max diff = ',np.max(np.abs(im1.array - im2.array)))
     # I'm not sure why this one comes out a bit less precisely equal.  But 12 digits is still
     # plenty accurate enough.
-    np.testing.assert_almost_equal(im1.array, im2.array, 12,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 12,
                                    "drawReal made different image than method='real_space'")
-    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 14,
+    np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 14,
                                    "drawReal made different image when off-center")
-    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 14,
+    np.testing.assert_array_almost_equal(im4.array, im2[im3.bounds].array, 14,
                                    "drawReal made different image when jac is not None")
-    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+    np.testing.assert_array_almost_equal(im5.array, im2[im3.bounds].array, 14,
                                    "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='phot', rng=rng.duplicate())
@@ -1683,18 +1683,18 @@ def test_direct_scale():
     phot3.scaleXY(1./scale)
     phot4 = im3.wcs.toImage(obj).makePhot(rng=rng.duplicate())
     print('phot: max diff = ',np.max(np.abs(im1.array - im2.array)))
-    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 15,
                                    "drawPhot made different image than method='phot'")
-    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+    np.testing.assert_array_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawPhot made different image when off-center")
     assert phot2 == phot1, "drawPhot made different photons than method='phot'"
     assert phot3 == phot1, "makePhot made different photons than method='phot'"
     # phot4 has a different order of operations for the math, so it doesn't come out exact.
-    np.testing.assert_almost_equal(phot4.x, phot3.x, 15,
+    np.testing.assert_array_almost_equal(phot4.x, phot3.x, 15,
                                    "two ways to have makePhot apply scale have different x")
-    np.testing.assert_almost_equal(phot4.y, phot3.y, 15,
+    np.testing.assert_array_almost_equal(phot4.y, phot3.y, 15,
                                    "two ways to have makePhot apply scale have different y")
-    np.testing.assert_almost_equal(phot4.flux, phot3.flux, 15,
+    np.testing.assert_array_almost_equal(phot4.flux, phot3.flux, 15,
                                    "two ways to have makePhot apply scale have different flux")
 
     # Check images with invalid wcs raise ValueError
