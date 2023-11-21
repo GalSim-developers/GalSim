@@ -535,23 +535,41 @@ def test_gaussian():
     v1 = np.empty(555)
     v2 = np.empty(555)
     with single_threaded():
-        g1.generate(v1)
+        if hasattr(galsim, "_galsim"):
+            g1.generate(v1)
+        else:
+            v1 = g1.generate(v1)
     with single_threaded(num_threads=10):
-        g2.generate(v2)
+        if hasattr(galsim, "_galsim"):
+            g2.generate(v2)
+        else:
+            v2 = g2.generate(v2)
     np.testing.assert_array_equal(v1, v2)
     with single_threaded():
-        g1.add_generate(v1)
+        if hasattr(galsim, "_galsim"):
+            g1.add_generate(v1)
+        else:
+            v1 = g1.add_generate(v1)
     with single_threaded(num_threads=10):
-        g2.add_generate(v2)
+        if hasattr(galsim, "_galsim"):
+            g2.add_generate(v2)
+        else:
+            v2 = g2.add_generate(v2)
     np.testing.assert_array_equal(v1, v2)
     ud = galsim.UniformDeviate(testseed + 3)
     ud.generate(v1)
     v1 += 6.7
     v2[:] = v1
     with single_threaded():
-        g1.generate_from_variance(v1)
+        if hasattr(galsim, "_galsim"):
+            g1.generate_from_variance(v1)
+        else:
+            v1 = g1.generate_from_variance(v1)
     with single_threaded(num_threads=10):
-        g2.generate_from_variance(v2)
+        if hasattr(galsim, "_galsim"):
+            g2.generate_from_variance(v2)
+        else:
+            v2 = g2.generate_from_variance(v2)
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
