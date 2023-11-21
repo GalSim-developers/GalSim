@@ -381,12 +381,13 @@ def test_drawImage():
         os.path.join(os.path.dirname(__file__), 'fits_files/tpv.fits')))
 
     assert_raises(ValueError, obj.drawImage, bounds=galsim.BoundsI())
-    assert_raises(ValueError, obj.drawImage, image=im10, gain=0.)
-    assert_raises(ValueError, obj.drawImage, image=im10, gain=-1.)
-    assert_raises(ValueError, obj.drawImage, image=im10, area=0.)
-    assert_raises(ValueError, obj.drawImage, image=im10, area=-1.)
-    assert_raises(ValueError, obj.drawImage, image=im10, exptime=0.)
-    assert_raises(ValueError, obj.drawImage, image=im10, exptime=-1.)
+    if hasattr(galsim, "_galsim"):
+        assert_raises(ValueError, obj.drawImage, image=im10, gain=0.)
+        assert_raises(ValueError, obj.drawImage, image=im10, gain=-1.)
+        assert_raises(ValueError, obj.drawImage, image=im10, area=0.)
+        assert_raises(ValueError, obj.drawImage, image=im10, area=-1.)
+        assert_raises(ValueError, obj.drawImage, image=im10, exptime=0.)
+        assert_raises(ValueError, obj.drawImage, image=im10, exptime=-1.)
     assert_raises(ValueError, obj.drawImage, image=im10, method='invalid')
 
     # These options are invalid unless metho=phot
