@@ -745,7 +745,11 @@ def test_OpticalPSF_pupil_plane_size():
     im = galsim.Image(512, 512)
     x = y = np.arange(512) - 256
     y, x = np.meshgrid(y, x)
-    im.array[x**2+y**2 < 230**2] = 1.0
+    if hasattr(galsim, "_galsim"):
+        im.array[x**2+y**2 < 230**2] = 1.0
+    else:
+        # no refs in jax-galsim
+        im._array = im.array.at[x**2+y**2 < 230**2].set(1.0)
     # The following still fails (uses deprecated optics framework):
     # galsim.optics.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
     # But using the new framework, should work.
