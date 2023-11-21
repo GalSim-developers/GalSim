@@ -286,7 +286,7 @@ def test_variable_gaussian_noise():
     gSigma2 = 28.55
     var_image = galsim.ImageD(galsim.BoundsI(0,9,0,9))
     coords = np.ogrid[0:10, 0:10]
-    # jax does not support titem assignment
+    # jax does not support item assignment
     if hasattr(galsim, "_galsim"):
         var_image.array[ (coords[0] + coords[1]) % 2 == 1 ] = gSigma1**2
         var_image.array[ (coords[0] + coords[1]) % 2 == 0 ] = gSigma2**2
@@ -330,8 +330,13 @@ def test_variable_gaussian_noise():
     big_coords = np.ogrid[0:2048, 0:2048]
     mask1 = (big_coords[0] + big_coords[1]) % 2 == 0
     mask2 = (big_coords[0] + big_coords[1]) % 2 == 1
-    big_var_image.array[mask1] = gSigma1**2
-    big_var_image.array[mask2] = gSigma2**2
+    # jax does not support item assignment
+    if hasattr(galsim, "_galsim"):
+        big_var_image.array[mask1] = gSigma1**2
+        big_var_image.array[mask2] = gSigma2**2
+    else:
+        big_var_image._array = big_var_image.array.at[mask1].set(gSigma1**2)
+        big_var_image._array = big_var_image.array.at[mask2].set(gSigma2**2)
     big_vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), big_var_image)
 
     big_im = galsim.Image(2048,2048,dtype=float)
