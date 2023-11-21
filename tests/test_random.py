@@ -735,14 +735,26 @@ def test_binomial():
     v1 = np.empty(555)
     v2 = np.empty(555)
     with single_threaded():
-        b1.generate(v1)
+        if hasattr(galsim, "_galsim"):
+            b1.generate(v1)
+        else:
+            v1 = b1.generate(v1)
     with single_threaded(num_threads=10):
-        b2.generate(v2)
+        if hasattr(galsim, "_galsim"):
+            b2.generate(v2)
+        else:
+            v2 = b2.generate(v2)
     np.testing.assert_array_equal(v1, v2)
     with single_threaded():
-        b1.add_generate(v1)
+        if hasattr(galsim, "_galsim"):
+            b1.add_generate(v1)
+        else:
+            v1 = b1.add_generate(v1)
     with single_threaded(num_threads=10):
-        b2.add_generate(v2)
+        if hasattr(galsim, "_galsim"):
+            b2.add_generate(v2)
+        else:
+            v2 = b2.add_generate(v2)
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
