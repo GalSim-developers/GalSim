@@ -2473,7 +2473,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 50)
     assert imv(11,19) == 50
-    assert im(11,19) == 50
+    if hasattr(galsim, "_galsim"):
+        assert im(11,19) == 50
+    else:
+        # jax-galsim does not support views
+        assert im(11,19) != 50
     imv2 = im.view()
     with assert_raises(galsim.GalSimError):
         imv2.scale = 0.17   # Invalid if wcs is not PixelScale
