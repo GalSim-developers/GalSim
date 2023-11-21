@@ -2156,8 +2156,12 @@ def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal BaseDeviates may be the same due to truncation.
     """
-    a = galsim.BaseDeviate(seed='1 2 3 4 5 6 7 8 9 10')
-    b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 8 9 10')
+    if hasattr(galsim, "_galsim"):
+        a = galsim.BaseDeviate(seed='1 2 3 4 5 6 7 8 9 10')
+        b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 8 9 10')
+    else:
+        a = galsim.BaseDeviate(seed="(0, 10)")
+        b = galsim.BaseDeviate(seed="(0, 11)")
     assert repr(a) == repr(b)
     assert a != b
 
