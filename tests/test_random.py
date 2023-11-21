@@ -519,6 +519,7 @@ def test_gaussian():
 
     # Test generate_from_variance.
     g2.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
     test_array.fill(gSigma**2)
     if hasattr(galsim, "_galsim"):
         g2.generate_from_variance(test_array)
