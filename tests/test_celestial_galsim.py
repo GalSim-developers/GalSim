@@ -158,7 +158,7 @@ def test_celestialcoord_basic():
 
     x, y, z = c1.get_xyz()
     print('c1 is at x,y,z = ',x,y,z)
-    np.testing.assert_equal((x,y,z), (1,0,0))
+    np.testing.assert_array_equal((x,y,z), (1,0,0))
     assert c1 == galsim.CelestialCoord.from_xyz(x,y,z)
 
     x, y, z = c2.get_xyz()
