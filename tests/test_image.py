@@ -2416,7 +2416,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 20)
     assert imv(11,19) == 20
-    assert im(11,19) == 20
+    if hasattr(galsim, "_galsim"):
+        assert im(11,19) == 20
+    else:
+        # jax-galsim does not support views
+        assert im(11,19) != 20
     check_pickle(im)
     check_pickle(imv)
 
