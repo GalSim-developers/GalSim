@@ -97,9 +97,9 @@ def test_photon_array():
     photon_array.x *= 5
     photon_array.y += 17
     photon_array.flux /= 23
-    np.testing.assert_almost_equal(photon_array.x, orig_x * 5.)
-    np.testing.assert_almost_equal(photon_array.y, orig_y + 17.)
-    np.testing.assert_almost_equal(photon_array.flux, orig_flux / 23.)
+    np.testing.assert_array_almost_equal(photon_array.x, orig_x * 5.)
+    np.testing.assert_array_almost_equal(photon_array.y, orig_y + 17.)
+    np.testing.assert_array_almost_equal(photon_array.flux, orig_flux / 23.)
 
     # Check picklability again with non-zero values
     check_pickle(photon_array)
@@ -108,12 +108,12 @@ def test_photon_array():
     photon_array.dxdz = 0.17
     assert photon_array.hasAllocatedAngles()
     assert not photon_array.hasAllocatedWavelengths()
-    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_equal(photon_array.dydz, 0.)
+    np.testing.assert_array_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_array_equal(photon_array.dydz, 0.)
 
     photon_array.dydz = 0.59
-    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_equal(photon_array.dydz, 0.59)
+    np.testing.assert_array_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_array_equal(photon_array.dydz, 0.59)
 
     # Check shooting negative flux
     obj = galsim.Exponential(flux=-1.7, scale_radius=2.3)
