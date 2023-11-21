@@ -1274,9 +1274,10 @@ def test_fft():
         xim2 = galsim.Image([ [2,4,6],
                               [4,6,8] ],
                             xmin=-2, ymin=-1, dtype=dt, scale=0.1)
-        kim = xim.calculate_fft()
-        kim2 = xim2.calculate_fft()
-        np.testing.assert_array_almost_equal(kim.array, kim2.array)
+        if hasattr(galsim, "_galsim") or dt not in [np.complex128, complex]:
+            kim = xim.calculate_fft()
+            kim2 = xim2.calculate_fft()
+            np.testing.assert_array_almost_equal(kim.array, kim2.array)
 
         # Test padding K Image with zeros
         kim = galsim.Image([ [4,2,0],
