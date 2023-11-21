@@ -321,7 +321,7 @@ def test_variable_gaussian_noise():
             err_msg="Wrong VariableGaussian noise generated for Fortran-ordered Image")
 
     # Check var_image property
-    np.testing.assert_almost_equal(
+    np.testing.assert_array_almost_equal(
             vgn.var_image.array, var_image.array, precision,
             err_msg="VariableGaussianNoise var_image returns wrong var_image")
 
