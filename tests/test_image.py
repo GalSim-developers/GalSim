@@ -3334,7 +3334,7 @@ def test_wrap():
     b = galsim.BoundsI(1,4,1,4)
     im_quad = im_orig[b]
     im_wrap = im.wrap(b)
-    np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
                                    "image.wrap() into first quadrant did not match expectation")
 
     # The same thing should work no matter where the lower left corner is:
@@ -3343,7 +3343,7 @@ def test_wrap():
         im_quad = im_orig[b]
         im = im_orig.copy()
         im_wrap = im.wrap(b)
-        np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+        np.testing.assert_array_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
                                        "image.wrap(%s) did not match expectation"%b)
         np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                       "image.wrap(%s) did not return the right subimage")
@@ -3365,7 +3365,7 @@ def test_wrap():
             jj = (j-b.ymin) % (b.ymax-b.ymin+1) + b.ymin
             im_test.addValue(ii,jj,val)
     im_wrap = im.wrap(b)
-    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, im_test.array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                   "image.wrap(%s) did not return the right subimage")
