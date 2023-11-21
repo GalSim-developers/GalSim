@@ -2709,16 +2709,25 @@ def test_complex_image():
                 assert im1.view()(x,y) == value
                 assert im1.view(make_const=True)(x,y) == value
                 # jax galsim does not support views
-                assert im2(x,y) != value
+                if hasattr(galsim, "_galsim"):
+                    assert im2(x,y) == value
+                else:
+                    assert im2(x,y) != value
                 assert im2_view(x,y) == value
                 # jax galsim does not support views
-                assert im2_cview(x,y) != value
+                if hasattr(galsim, "_galsim"):
+                    assert im2_cview(x,y) == value
+                else:
+                    assert im2_cview(x,y) != value
                 assert im1.conjugate(x,y) == np.conjugate(value)
 
                 # complex conjugate is not a view into the original.
                 assert im2_conj(x,y) == 23
                 # jax galsim does not support views
-                assert im2.conjugate(x,y) != np.conjugate(value)
+                if hasattr(galsim, "_galsim"):
+                    assert im2.conjugate(x,y) == np.conjugate(value)
+                else:
+                    assert im2.conjugate(x,y) != np.conjugate(value)
 
                 value2 = 10*x + y + 20j*x + 2j*y
                 im1.setValue(x,y, value2)
