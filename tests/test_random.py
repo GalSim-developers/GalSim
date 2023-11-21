@@ -511,7 +511,10 @@ def test_gaussian():
     # Test generate_from_variance.
     g2.seed(testseed)
     test_array.fill(gSigma**2)
-    g2.generate_from_variance(test_array)
+    if hasattr(galsim, "_galsim"):
+        g2.generate_from_variance(test_array)
+    else:
+        test_array = g2.generate_from_variance(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult)-gMean, precisionF,
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
