@@ -298,14 +298,26 @@ def test_uniform():
     v1 = np.empty(555)
     v2 = np.empty(555)
     with single_threaded():
-        u1.generate(v1)
+        if hasattr(galsim, "_galsim")
+            u1.generate(v1)
+        else:
+            v1 = u1.generate(v1)
     with single_threaded(num_threads=10):
-        u2.generate(v2)
+        if hasattr(galsim, "_galsim")
+            u2.generate(v2)
+        else:
+            v2 = u2.generate(v2)
     np.testing.assert_array_equal(v1, v2)
     with single_threaded():
-        u1.add_generate(v1)
+        if hasattr(galsim, "_galsim")
+            u1.add_generate(v1)
+        else:
+            v1 = u1.add_generate(v1)
     with single_threaded(num_threads=10):
-        u2.add_generate(v2)
+        if hasattr(galsim, "_galsim")
+            u2.add_generate(v2)
+        else:
+            v2 = u2.add_generate(v2)
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
