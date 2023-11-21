@@ -1278,7 +1278,10 @@ def test_weibull():
     # Test generate
     w.seed(testseed)
     test_array = np.empty(3)
-    w.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        w.generate(test_array)
+    else:
+        test_array = w.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(wResult), precision,
             err_msg='Wrong weibull random number sequence from generate.')
@@ -1286,7 +1289,10 @@ def test_weibull():
     # Test generate with a float32 array
     w.seed(testseed)
     test_array = np.empty(3, dtype=np.float32)
-    w.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        w.generate(test_array)
+    else:
+        test_array = w.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(wResult), precisionF,
             err_msg='Wrong weibull random number sequence from generate.')
@@ -1297,14 +1303,26 @@ def test_weibull():
     v1 = np.empty(555)
     v2 = np.empty(555)
     with single_threaded():
-        w1.generate(v1)
+        if hasattr(galsim, "_galsim"):
+            w1.generate(v1)
+        else:
+            v1 = w1.generate(v1)
     with single_threaded(num_threads=10):
-        w2.generate(v2)
+        if hasattr(galsim, "_galsim"):
+            w2.generate(v2)
+        else:
+            v2 = w2.generate(v2)
     np.testing.assert_array_equal(v1, v2)
     with single_threaded():
-        w1.add_generate(v1)
+        if hasattr(galsim, "_galsim"):
+            w1.add_generate(v1)
+        else:
+            v1 = w1.add_generate(v1)
     with single_threaded(num_threads=10):
-        w2.add_generate(v2)
+        if hasattr(galsim, "_galsim"):
+            w2.add_generate(v2)
+        else:
+            v2 = w2.add_generate(v2)
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
@@ -1322,9 +1340,10 @@ def test_weibull():
     assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
     # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.WeibullDeviate, dict())
-    assert_raises(TypeError, galsim.WeibullDeviate, list())
-    assert_raises(TypeError, galsim.WeibullDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, galsim.WeibullDeviate, dict())
+        assert_raises(TypeError, galsim.WeibullDeviate, list())
+        assert_raises(TypeError, galsim.WeibullDeviate, set())
 
 
 @timer
