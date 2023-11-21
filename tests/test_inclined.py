@@ -109,7 +109,10 @@ def test_regression():
         for (flux, _sersic_n, inc_angle, scale_radius, scale_height,
              _trunc_factor, pos_angle) in inclined_exponential_test_parameters:
 
-            image_filename = "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
+            image_filename = os.path.join(
+                os.path.dirname(__file__),
+                "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
+            )
             print("Comparing " + mode + " against " + image_filename + "...")
 
             # Get float values for the details
