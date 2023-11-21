@@ -916,7 +916,10 @@ def test_poisson():
     # Test generate
     p.seed(testseed)
     test_array = np.empty(3)
-    p.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        p.generate(test_array)
+    else:
+        test_array = p.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(pResult), precision,
             err_msg='Wrong poisson random number sequence from generate.')
@@ -924,7 +927,10 @@ def test_poisson():
     # Test generate with an int array
     p.seed(testseed)
     test_array = np.empty(3, dtype=int)
-    p.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        p.generate(test_array)
+    else:
+        test_array = p.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(pResult), precisionI,
             err_msg='Wrong poisson random number sequence from generate.')
@@ -932,7 +938,10 @@ def test_poisson():
     # Test generate_from_expectation
     p2 = galsim.PoissonDeviate(testseed, mean=77)
     test_array = np.array([pMean]*3, dtype=int)
-    p2.generate_from_expectation(test_array)
+    if hasattr(galsim, "_galsim"):
+        p2.generate_from_expectation(test_array)
+    else:
+        test_array = p2.generate_from_expectation(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(pResult), precisionI,
             err_msg='Wrong poisson random number sequence from generate_from_expectation.')
