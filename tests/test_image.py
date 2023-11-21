@@ -2902,7 +2902,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
             err_msg="ImageD * ImageCD is not correct")
     image3 = image1 / image2
-    np.testing.assert_almost_equal(image3.array, 1./(3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image3.array, 1./(3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # Binary ImageCD op ImageD
@@ -2916,7 +2916,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
             err_msg="ImageD * ImageCD is not correct")
     image3 = image2 / image1
-    np.testing.assert_almost_equal(image3.array, (3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image3.array, (3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # Binary ImageCD op ImageCD
@@ -2931,7 +2931,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
             err_msg="ImageCD * ImageCD is not correct")
     image4 = image2 / image3
-    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageCD / ImageCD is not correct")
 
     # In place ImageCD op complex scalar
