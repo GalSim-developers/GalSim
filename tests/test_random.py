@@ -2125,7 +2125,11 @@ def test_permute():
     ind_list = list(range(n_list))
 
     # Permute both at the same time.
-    galsim.random.permute(312, my_list, ind_list)
+    if hasattr(galsim, "_galsim"):
+        galsim.random.permute(312, my_list, ind_list)
+    else:
+        # jax requires arrays
+        galsim.random.permute(312, np.array(my_list), np.array(ind_list))
 
     # Make sure that everything is sensible
     for ind in range(n_list):
@@ -2133,7 +2137,10 @@ def test_permute():
 
     # Repeat with same seed, should do same permutation.
     my_list = copy.deepcopy(my_list_copy)
-    galsim.random.permute(312, my_list)
+    if hasattr(galsim, "_galsim"):
+        galsim.random.permute(312, my_list)
+    else:
+        galsim.random.permute(312, np.array(my_list))
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
