@@ -490,7 +490,10 @@ def test_gaussian():
     g3 = galsim.GaussianDeviate(testseed, mean=5, sigma=0.3)
     test_array = np.empty(3)
     test_array.fill(gSigma**2)
-    g2.generate_from_variance(test_array)
+    if hasattr(galsim, "_galsim"):
+        g2.generate_from_variance(test_array)
+    else:
+        test_array = g2.generate_from_variance(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult)-gMean, precision,
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
