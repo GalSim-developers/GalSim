@@ -2717,7 +2717,8 @@ def test_complex_image():
 
                 # complex conjugate is not a view into the original.
                 assert im2_conj(x,y) == 23
-                assert im2.conjugate(x,y) == np.conjugate(value)
+                # jax galsim does not support views
+                assert im2.conjugate(x,y) != np.conjugate(value)
 
                 value2 = 10*x + y + 20j*x + 2j*y
                 im1.setValue(x,y, value2)
