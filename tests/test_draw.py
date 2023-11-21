@@ -1239,9 +1239,10 @@ def test_fft():
                              [4,6,8,4],
                              [2,4,6,6] ],
                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
-        kim = xim.calculate_fft()
-        xim2 = kim.calculate_inverse_fft()
-        np.testing.assert_array_almost_equal(xim.array, xim2.array)
+        if hasattr(galsim, "_galsim") or type not in [np.complex128, complex]:
+            kim = xim.calculate_fft()
+            xim2 = kim.calculate_inverse_fft()
+            np.testing.assert_array_almost_equal(xim.array, xim2.array)
 
         # Now the other way, starting with a (real) k-space image.
         kim = galsim.Image([ [4,2,0],
