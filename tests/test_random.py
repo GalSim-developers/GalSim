@@ -559,7 +559,11 @@ def test_gaussian():
     ud = galsim.UniformDeviate(testseed + 3)
     ud.generate(v1)
     v1 += 6.7
-    v2[:] = v1
+    if hasattr(galsim, "_galsim"):
+        v2[:] = v1
+    else:
+        # jax galsim makes a copy
+        v2 = v1.copy()
     with single_threaded():
         if hasattr(galsim, "_galsim"):
             g1.generate_from_variance(v1)
