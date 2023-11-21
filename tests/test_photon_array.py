@@ -1434,9 +1434,15 @@ def test_fromArrays():
         flux[Nsplit:]
     )
 
-    assert pa_batch.x is x
-    assert pa_batch.y is y
-    assert pa_batch.flux is flux
+    if hasattr(galsim, "_galsim"):
+        assert pa_batch.x is x
+        assert pa_batch.y is y
+        assert pa_batch.flux is flux
+    else:
+        # jax-galsim never copies
+        assert pa_batch.x is not x
+        assert pa_batch.y is not y
+        assert pa_batch.flux is not flux
     np.testing.assert_array_equal(pa_batch.x, x)
     np.testing.assert_array_equal(pa_batch.y, y)
     np.testing.assert_array_equal(pa_batch.flux, flux)
