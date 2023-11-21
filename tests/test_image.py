@@ -2729,7 +2729,7 @@ def test_complex_image():
                 else:
                     assert im2.conjugate(x,y) != np.conjugate(value)
 
-                value2 = 10*x + y + 20j*x + 2j*y
+                value2 = 400000 + 10*x + y + 20j*x + 2j*y
                 im1.setValue(x,y, value2)
                 im2_view.setValue(x=x, y=y, value=value2)
                 assert im1(x,y) == value2
