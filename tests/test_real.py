@@ -29,7 +29,7 @@ sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
-image_dir = './real_comparison_images'
+image_dir = os.path.join(os.path.dirname(__file__), './real_comparison_images')
 catalog_file = 'test_catalog.fits'
 
 # some helper functions
@@ -962,7 +962,7 @@ def test_sys_share_dir():
         import galsim
         print(galsim.meta_data.share_dir)
         """)
-    script_file = os.path.join('scratch_space', 'sys_share_dir.py')
+    script_file = os.path.join(os.path.dirname(__file__), os.path.join('scratch_space', 'sys_share_dir.py'))
     with open(script_file, 'w') as f:
         f.write(script)
     env = os.environ.copy()
