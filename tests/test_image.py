@@ -3412,7 +3412,7 @@ def test_wrap():
 
     im_wrap = im.wrap(b)
     #print("im_wrap = ",im_wrap.array)
-    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, im_test.array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3423,7 +3423,7 @@ def test_wrap():
     #print('im_test = ',im_test[b2].array)
     #print('im2_wrap = ',im2_wrap.array)
     #print('diff = ',im2_wrap.array-im_test[b2].array)
-    np.testing.assert_almost_equal(im2_wrap.array, im_test[b2].array, 12,
+    np.testing.assert_array_almost_equal(im2_wrap.array, im_test[b2].array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im2_wrap.array, im2[b2].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3434,7 +3434,7 @@ def test_wrap():
     #print('im_test = ',im_test[b3].array)
     #print('im3_wrap = ',im3_wrap.array)
     #print('diff = ',im3_wrap.array-im_test[b3].array)
-    np.testing.assert_almost_equal(im3_wrap.array, im_test[b3].array, 12,
+    np.testing.assert_array_almost_equal(im3_wrap.array, im_test[b3].array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im3_wrap.array, im3[b3].array,
                                   "image.wrap(%s) did not return the right subimage")
