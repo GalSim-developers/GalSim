@@ -346,7 +346,10 @@ def test_projection():
 
     # First the trivial case
     p0 = center.project(center, projection='lambert')
-    assert p0 == (0.0 * galsim.arcsec, 0.0 * galsim.arcsec)
+    np.testing.assert_allclose(
+        (p0[0].rad, p0[1].rad),
+        (0.0, 0.0)
+    )
     c0 = center.deproject(*p0, projection='lambert')
     assert c0 == center
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='lambert').ravel(),
