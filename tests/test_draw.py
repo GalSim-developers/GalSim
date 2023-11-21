@@ -956,7 +956,7 @@ def test_offset():
 
         # Can also use center to explicitly say we want to use the true_center.
         im3 = obj.drawImage(im.copy(), method='sb', center=im.true_center)
-        np.testing.assert_almost_equal(im3.array, im.array)
+        np.testing.assert_array_almost_equal(im3.array, im.array)
 
         # Test that a few pixel values match xValue.
         # Note: we don't expect the FFT drawn image to match the xValues precisely, since the
@@ -1044,14 +1044,14 @@ def test_offset():
             # Test that the center parameter can be used to do the same thing.
             center = galsim.PositionD(cenx + offx, ceny + offy)
             im3 = obj.drawImage(im.copy(), method='sb', center=center)
-            np.testing.assert_almost_equal(im3.array, im.array)
+            np.testing.assert_array_almost_equal(im3.array, im.array)
             assert im3.bounds == im.bounds
             assert im3.wcs == im.wcs
 
             # Can also use both offset and center
             im3 = obj.drawImage(im.copy(), method='sb',
                                 center=(cenx-1, ceny+1), offset=(offx+1, offy-1))
-            np.testing.assert_almost_equal(im3.array, im.array)
+            np.testing.assert_array_almost_equal(im3.array, im.array)
             assert im3.bounds == im.bounds
             assert im3.wcs == im.wcs
 
