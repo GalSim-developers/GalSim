@@ -194,8 +194,8 @@ def test_photon_array():
     x = photon_array.x.copy()
     y = photon_array.y.copy()
     photon_array.scaleXY(1.9)
-    np.testing.assert_almost_equal(photon_array.x, 1.9*x)
-    np.testing.assert_almost_equal(photon_array.y, 1.9*y)
+    np.testing.assert_array_almost_equal(photon_array.x, 1.9*x)
+    np.testing.assert_array_almost_equal(photon_array.y, 1.9*y)
 
     # Check ways to assign to photons
     pa1 = galsim.PhotonArray(50)
