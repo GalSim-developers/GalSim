@@ -1101,19 +1101,31 @@ def test_shoot():
     # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
     obj = galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
     obj = obj.withFlux(100001)
-    image1 = galsim.ImageF(32,32, init_value=100)
+    if hasattr(galsim, "_galsim"):
+        image1 = galsim.ImageF(32,32, init_value=100)
+    else:
+        # jax galsim needs double images here
+        image1 = galsim.ImageD(32,32, init_value=100)
     rng = galsim.BaseDeviate(1234)
     obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng,
                   maxN=100000)
 
     # The test here is really just that it doesn't crash.
     # But let's do something to check correctness.
-    image2 = galsim.ImageF(32,32)
+    if hasattr(galsim, "_galsim"):
+        image2 = galsim.ImageF(32,32)
+    else:
+        # jax galsim needs double images here
+        image2 = galsim.ImageD(32,32)
     rng = galsim.BaseDeviate(1234)
     obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng,
                   maxN=100000)
     image2 += 100
-    np.testing.assert_almost_equal(image2.array, image1.array, decimal=12)
+    if hasattr(galsim, "_galsim"):
+        np.testing.assert_array_almost_equal(image2.array, image1.array, decimal=12)
+    else:
+        # jax galsim works not as well
+        np.testing.assert_array_almost_equal(image2.array, image1.array, decimal=10)
 
     # Also check that you get the same answer with a smaller maxN.
     image3 = galsim.ImageF(32,32, init_value=100)
