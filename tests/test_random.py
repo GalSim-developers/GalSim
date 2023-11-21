@@ -834,13 +834,18 @@ def test_poisson():
         assert v1 != v2
         assert not p.has_reliable_discard
     else:
+        # jax always discards reliably
         assert v1 == v2
         assert p.has_reliable_discard
     assert not p.generates_in_pairs
 
     # Discard normally emits a warning for Poisson
     p2 = galsim.PoissonDeviate(testseed, mean=pMean)
-    with assert_warns(galsim.GalSimWarning):
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            p2.discard(nvals)
+    else:
+        # jax always discards reliably
         p2.discard(nvals)
 
     # Check seed, reset
