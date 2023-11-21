@@ -1347,7 +1347,7 @@ def test_Image_CubeFITS_IO():
         assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
 
     # Check a file with no WCS information
-    nowcs_file = 'fits_files/blankimg.fits'
+    nowcs_file = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     ims = galsim.fits.readCube(nowcs_file)
     assert ims[0].wcs == galsim.PixelScale(1.0)
 
