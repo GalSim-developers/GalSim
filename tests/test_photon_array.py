@@ -262,7 +262,7 @@ def test_photon_array():
     photons = galsim.PhotonArray.makeFromImage(ones)
     print('photons = ',photons)
     assert len(photons) == 16
-    np.testing.assert_almost_equal(photons.flux, 1.)
+    np.testing.assert_array_almost_equal(photons.flux, 1.)
 
     tens = galsim.Image(4,4,init_value=8)
     photons = galsim.PhotonArray.makeFromImage(tens, max_flux=5.)
