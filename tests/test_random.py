@@ -2159,11 +2159,13 @@ def test_ne():
     if hasattr(galsim, "_galsim"):
         a = galsim.BaseDeviate(seed='1 2 3 4 5 6 7 8 9 10')
         b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 8 9 10')
+        assert repr(a) == repr(b)
+        assert a != b
     else:
         a = galsim.BaseDeviate(seed="(0, 10)")
         b = galsim.BaseDeviate(seed="(0, 11)")
-    assert repr(a) == repr(b)
-    assert a != b
+        assert repr(a) != repr(b)
+        assert a != b
 
     # Check DistDeviate separately, since it overrides __repr__ and __eq__
     d1 = galsim.DistDeviate(seed=a, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
