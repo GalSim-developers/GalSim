@@ -2726,9 +2726,11 @@ def test_complex_image():
                 assert im1(x,y) == value2
                 assert im1.view()(x,y) == value2
                 assert im1.view(make_const=True)(x,y) == value2
-                assert im2(x,y) == value2
+                # jax galsim does not support views
+                assert im2(x,y) != value2
                 assert im2_view(x,y) == value2
-                assert im2_cview(x,y) == value2
+                # jax galsim does not support views
+                assert im2_cview(x,y) != value2
 
                 assert im1.real(x,y) == value2.real
                 assert im1.view().real(x,y) == value2.real
