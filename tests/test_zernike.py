@@ -790,7 +790,7 @@ def test_dz_val():
         uv_outer = rng.uniform(1.3, 1.7)
         xy_inner = rng.uniform(0.4, 0.7)
         xy_outer = rng.uniform(1.3, 1.7)
-        dz = galsim.zernike.DoubleZernike((
+        dz = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner,
             uv_outer=uv_outer,
