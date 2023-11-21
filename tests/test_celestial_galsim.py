@@ -348,7 +348,9 @@ def test_projection():
     p0 = center.project(center, projection='lambert')
     np.testing.assert_allclose(
         (p0[0].rad, p0[1].rad),
-        (0.0, 0.0)
+        (0.0, 0.0),
+        rtol=0,
+        atol=1e-16,
     )
     c0 = center.deproject(*p0, projection='lambert')
     assert c0 == center
