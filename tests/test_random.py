@@ -47,42 +47,80 @@ nvals = 100000
 testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
 
-# the right answer for the first three uniform deviates produced from testseed
-uResult = (0.11860922840423882, 0.21456799632869661, 0.43088198406621814)
+if hasattr(galsim, "_galsim"):
+    # the right answer for the first three uniform deviates produced from testseed
+    uResult = (0.11860922840423882, 0.21456799632869661, 0.43088198406621814)
 
-# mean, sigma to use for Gaussian tests
-gMean = 4.7
-gSigma = 3.2
-# the right answer for the first three Gaussian deviates produced from testseed
-gResult = (6.3344979808161215, 6.2082355273987861, -0.069894693358302007)
+    # mean, sigma to use for Gaussian tests
+    gMean = 4.7
+    gSigma = 3.2
+    # the right answer for the first three Gaussian deviates produced from testseed
+    gResult = (6.3344979808161215, 6.2082355273987861, -0.069894693358302007)
 
-# N, p to use for binomial tests
-bN = 10
-bp = 0.7
-# the right answer for the first three binomial deviates produced from testseed
-bResult = (9, 8, 7)
+    # N, p to use for binomial tests
+    bN = 10
+    bp = 0.7
+    # the right answer for the first three binomial deviates produced from testseed
+    bResult = (9, 8, 7)
 
-# mean to use for Poisson tests
-pMean = 7
-# the right answer for the first three Poisson deviates produced from testseed
-pResult = (4, 5, 6)
+    # mean to use for Poisson tests
+    pMean = 7
+    # the right answer for the first three Poisson deviates produced from testseed
+    pResult = (4, 5, 6)
 
-# a & b to use for Weibull tests
-wA = 4.
-wB = 9.
-# Tabulated results for Weibull
-wResult = (5.3648053017485591, 6.3093033550873878, 7.7982696798921074)
+    # a & b to use for Weibull tests
+    wA = 4.
+    wB = 9.
+    # Tabulated results for Weibull
+    wResult = (5.3648053017485591, 6.3093033550873878, 7.7982696798921074)
 
-# k & theta to use for Gamma tests
-gammaK = 1.5
-gammaTheta = 4.5
-# Tabulated results for Gamma
-gammaResult = (4.7375613139927157, 15.272973580418618, 21.485016362839747)
+    # k & theta to use for Gamma tests
+    gammaK = 1.5
+    gammaTheta = 4.5
+    # Tabulated results for Gamma
+    gammaResult = (4.7375613139927157, 15.272973580418618, 21.485016362839747)
 
-# n to use for Chi2 tests
-chi2N = 30
-# Tabulated results for Chi2
-chi2Result = (32.209933900954049, 50.040002656028513, 24.301442486313896)
+    # n to use for Chi2 tests
+    chi2N = 30
+    # Tabulated results for Chi2
+    chi2Result = (32.209933900954049, 50.040002656028513, 24.301442486313896)
+else:
+    # the right answer for the first three uniform deviates produced from testseed
+    uResult = (0.0160653916, 0.228817832, 0.1609966951)
+
+    # mean, sigma to use for Gaussian tests
+    gMean = 4.7
+    gSigma = 3.2
+    # the right answer for the first three Gaussian deviates produced from testseed
+    gResult = (-2.1568953985, 2.3232138032, 1.5308165692)
+
+    # N, p to use for binomial tests
+    bN = 10
+    bp = 0.7
+    # the right answer for the first three binomial deviates produced from testseed
+    bResult = (5, 8, 7)
+
+    # mean to use for Poisson tests
+    pMean = 7
+    # the right answer for the first three Poisson deviates produced from testseed
+    pResult = (6, 11, 4)
+
+    # a & b to use for Weibull tests
+    wA = 4.0
+    wB = 9.0
+    # Tabulated results for Weibull
+    wResult = (3.2106530102, 6.4256210259, 5.8255498741)
+
+    # k & theta to use for Gamma tests
+    gammaK = 1.5
+    gammaTheta = 4.5
+    # Tabulated results for Gamma
+    gammaResult = (10.9318881415, 7.6074550007, 2.0526795529)
+
+    # n to use for Chi2 tests
+    chi2N = 30
+    # Tabulated results for Chi2
+    chi2Result = (36.7583415337, 32.7223187231, 23.1555198334)
 
 #function and min&max to use for DistDeviate function call tests
 dmin=0.0
