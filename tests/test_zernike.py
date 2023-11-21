@@ -497,9 +497,15 @@ def test_sum():
         c2 = u()
 
         coefSum = c2*np.array(z2.coef)
-        coefSum[:len(z1.coef)] += c1*z1.coef
+        if hasattr(galsim, "_galsim"):
+            coefSum[:len(z1.coef)] += c1*z1.coef
+        else:
+            coefSum = coefSum.at[:len(z1.coef)].add(c1*z1.coef)
         coefDiff = c2*np.array(z2.coef)
-        coefDiff[:len(z1.coef)] -= c1*z1.coef
+        if hasattr(galsim, "_galsim"):
+            coefDiff[:len(z1.coef)] -= c1*z1.coef
+        else:
+            coefDiff = coefDiff.at[:len(z1.coef)].subtract(c1*z1.coef)
         np.testing.assert_allclose(coefSum, (c1*z1 + c2*z2).coef)
         np.testing.assert_allclose(coefDiff, -(c1*z1 - c2*z2).coef)
 
