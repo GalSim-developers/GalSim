@@ -30,7 +30,7 @@ save_profiles = False
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
-image_dir = './inclined_exponential_images'
+image_dir = os.path.join(os.path.dirname(__file__), './inclined_exponential_images')
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
 
@@ -109,10 +109,7 @@ def test_regression():
         for (flux, _sersic_n, inc_angle, scale_radius, scale_height,
              _trunc_factor, pos_angle) in inclined_exponential_test_parameters:
 
-            image_filename = os.path.join(
-                os.path.dirname(__file__),
-                "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
-            )
+            image_filename = "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
             print("Comparing " + mode + " against " + image_filename + "...")
 
             # Get float values for the details
