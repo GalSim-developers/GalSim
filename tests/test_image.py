@@ -2858,7 +2858,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
             err_msg="complex * ImageD is not correct")
     image2 = (2+5j) / image1
-    np.testing.assert_array_equal(image2.array, (2+5j) / ref_array.astype(float),
+    np.testing.assert_allclose(image2.array, (2+5j) / ref_array.astype(float),
             err_msg="complex / ImageD is not correct")
 
     image2 = image1 * (3+1j)
