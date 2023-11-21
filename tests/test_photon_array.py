@@ -108,12 +108,12 @@ def test_photon_array():
     photon_array.dxdz = 0.17
     assert photon_array.hasAllocatedAngles()
     assert not photon_array.hasAllocatedWavelengths()
-    np.testing.assert_array_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_array_equal(photon_array.dydz, 0.)
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_equal(photon_array.dydz, 0.)
 
     photon_array.dydz = 0.59
-    np.testing.assert_array_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_array_equal(photon_array.dydz, 0.59)
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
     # Check shooting negative flux
     obj = galsim.Exponential(flux=-1.7, scale_radius=2.3)
