@@ -499,7 +499,10 @@ def test_gaussian():
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
     # After running generate_from_variance, it should be back to using the specified mean, sigma.
     # Note: need to round up to even number for discard, since gd generates 2 at a time.
-    g3.discard((len(test_array)+1)//2 * 2)
+    if hasattr(galsim, "_galsim"):
+        g3.discard((len(test_array)+1)//2 * 2)
+    else:
+        g3.discard(len(test_array))
     print('g2,g3 = ',g2(),g3())
     assert g2() == g3()
 
