@@ -3612,7 +3612,7 @@ def test_fpack():
     """Test the functionality that we advertise as being equivalent to fpack/funpack
     """
     from astropy.io import fits
-    file_name0 = os.path.join('des_data','DECam_00158414_01.fits.fz')
+    file_name0 = os.path.join(os.path.dirname(__file__), 'des_data','DECam_00158414_01.fits.fz')
     hdulist = fits.open(file_name0)
 
     # Remove a few invalid header keys in the DECam fits file
