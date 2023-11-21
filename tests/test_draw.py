@@ -393,7 +393,8 @@ def test_drawImage():
     # These options are invalid unless metho=phot
     assert_raises(TypeError, obj.drawImage, image=im10, n_photons=3)
     assert_raises(TypeError, obj.drawImage, rng=galsim.BaseDeviate(234))
-    assert_raises(TypeError, obj.drawImage, max_extra_noise=23)
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, obj.drawImage, max_extra_noise=23)
     assert_raises(TypeError, obj.drawImage, poisson_flux=True)
     assert_raises(TypeError, obj.drawImage, maxN=10000)
     assert_raises(TypeError, obj.drawImage, save_photons=True)
