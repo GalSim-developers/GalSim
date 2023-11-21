@@ -401,7 +401,11 @@ def test_poisson_noise():
     pMean = 17
     p = galsim.PoissonDeviate(testseed, mean=pMean)
     pResult = np.empty((10,10))
-    p.generate(pResult)
+    # jax does not support item assignment
+    if hasattr(galsim, "_galsim"):
+        p.generate(pResult)
+    else:
+        pResult = p.generate(pResult)
     noise = galsim.DeviateNoise(p)
 
     # Test filling an image
