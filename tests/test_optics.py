@@ -22,7 +22,7 @@ import os
 import galsim
 from galsim_test_helpers import *
 
-imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
+imgdir = os.path.join(os.path.dirname(__file__), "Optics_comparison_images") # Directory containing the reference images.
 
 
 testshape = (512, 512)  # shape of image arrays for all tests
