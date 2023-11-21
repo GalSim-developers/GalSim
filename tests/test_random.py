@@ -1130,11 +1130,20 @@ def test_poisson_zeromean():
 
     # Test generate
     test_array = np.empty(3, dtype=int)
-    p.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        p.generate(test_array)
+    else:
+        test_array = p.generate(test_array)
     np.testing.assert_array_equal(test_array, 0)
-    p2.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        p2.generate(test_array)
+    else:
+        test_array = p2.generate(test_array)
     np.testing.assert_array_equal(test_array, 0)
-    p3.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        p3.generate(test_array)
+    else:
+        test_array = p3.generate(test_array)
     np.testing.assert_array_equal(test_array, 0)
 
     # Test generate_from_expectation
@@ -1146,16 +1155,18 @@ def test_poisson_zeromean():
     assert test_array[2] != 0
 
     # Error raised if mean<0
-    with assert_raises(ValueError):
-        p = galsim.PoissonDeviate(testseed, mean=-0.1)
-    with assert_raises(ValueError):
-        p = galsim.PoissonDeviate(testseed, mean=-10)
-    test_array = np.array([-1,1,4])
-    with assert_raises(ValueError):
-        p.generate_from_expectation(test_array)
-    test_array = np.array([1,-1,-4])
-    with assert_raises(ValueError):
-        p.generate_from_expectation(test_array)
+    # jax doesn't raise here
+    if hasattr(galsim, "_galsim"):
+        with assert_raises(ValueError):
+            p = galsim.PoissonDeviate(testseed, mean=-0.1)
+        with assert_raises(ValueError):
+            p = galsim.PoissonDeviate(testseed, mean=-10)
+        test_array = np.array([-1,1,4])
+        with assert_raises(ValueError):
+            p.generate_from_expectation(test_array)
+        test_array = np.array([1,-1,-4])
+        with assert_raises(ValueError):
+            p.generate_from_expectation(test_array)
 
 @timer
 def test_weibull():
