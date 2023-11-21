@@ -200,8 +200,11 @@ def test_photon_array():
     # Check ways to assign to photons
     pa1 = galsim.PhotonArray(50)
     pa1.x = photon_array.x[:50]
-    for i in range(50):
-        pa1.y[i] = photon_array.y[i]
+    if hasattr(galsim, "_galsim"):
+        for i in range(50):
+            pa1.y[i] = photon_array.y[i]
+    else:
+        pa1.y = photon_array.y[:50]
     pa1.flux[0:50] = photon_array.flux[:50]
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
