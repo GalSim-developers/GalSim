@@ -2134,7 +2134,7 @@ def test_subImage_persistence():
     """Test that a subimage is properly accessible even if the original image has gone out
     of scope.
     """
-    file_name = os.path.join('fits_files','tpv.fits')
+    file_name = os.path.join(os.path.dirname(__file__), os.path.join('fits_files','tpv.fits'))
     bounds = galsim.BoundsI(123, 133, 45, 55)  # Something random
 
     # In this case, the original image has gone out of scope.  At least on some systems,
