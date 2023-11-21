@@ -1386,13 +1386,21 @@ def test_gamma():
     v1,v2 = g(),g2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Gamma uses at least 2 rngs per value, but can use arbitrarily more than this.
-    assert v1 != v2
-    assert not g.has_reliable_discard
+    if hasattr(galsim, "_galsim"):
+        assert v1 != v2
+        assert not g.has_reliable_discard
+    else:
+        assert v1 == v2
+        assert g.has_reliable_discard
     assert not g.generates_in_pairs
 
     # Discard normally emits a warning for Gamma
     g2 = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
-    with assert_warns(galsim.GalSimWarning):
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            g2.discard(nvals)
+    else:
+        # jax always discards reliably
         g2.discard(nvals)
 
     # Check seed, reset
@@ -1460,7 +1468,10 @@ def test_gamma():
     # Test generate
     g.seed(testseed)
     test_array = np.empty(3)
-    g.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        g.generate(test_array)
+    else:
+        test_array = g.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gammaResult), precision,
             err_msg='Wrong gamma random number sequence from generate.')
@@ -1468,7 +1479,10 @@ def test_gamma():
     # Test generate with a float32 array
     g.seed(testseed)
     test_array = np.empty(3, dtype=np.float32)
-    g.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        g.generate(test_array)
+    else:
+        test_array = g.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gammaResult), precisionF,
             err_msg='Wrong gamma random number sequence from generate.')
@@ -1488,9 +1502,10 @@ def test_gamma():
     assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
     # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.GammaDeviate, dict())
-    assert_raises(TypeError, galsim.GammaDeviate, list())
-    assert_raises(TypeError, galsim.GammaDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, galsim.GammaDeviate, dict())
+        assert_raises(TypeError, galsim.GammaDeviate, list())
+        assert_raises(TypeError, galsim.GammaDeviate, set())
 
 
 @timer
