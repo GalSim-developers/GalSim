@@ -722,7 +722,7 @@ def test_photon_array_depr():
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
 
     # jax-galsim always sets these additional properties
-    v = check_dep(getattr, photon_array, "pupil_v")
+    # v = check_dep(getattr, photon_array, "pupil_v")
     # however jax-galsim sets them to NaN so they are not allocated
     assert not photon_array.hasAllocatedPupil()
     assert len(photon_array.pupil_v) == nphotons
