@@ -540,7 +540,8 @@ def test_photon_array_depr():
 
     # Using the getter is allowed, but deprecated.
     photon_array = galsim.PhotonArray(nphotons)
-    dxdz = check_dep(getattr, photon_array, 'dxdz')
+    # jax-galsim always sets these additional properties
+    # dxdz = check_dep(getattr, photon_array, 'dxdz')
     assert photon_array.hasAllocatedAngles()
     assert photon_array.hasAllocatedAngles()
     assert len(photon_array.dxdz) == nphotons
