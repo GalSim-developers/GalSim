@@ -2776,7 +2776,11 @@ def test_complex_image():
                 else:
                     assert im2_cview.imag(x,y) != value2.imag
                 assert im1.conjugate(x,y) == np.conjugate(value2)
-                assert im2.conjugate(x,y) == np.conjugate(value2)
+                # jax galsim does not support views
+                if hasattr(galsim, "_galsim"):
+                    assert im2.conjugate(x,y) == np.conjugate(value2)
+                else:
+                    assert im2.conjugate(x,y) != np.conjugate(value2)
 
                 rvalue3 = 12*x + y
                 ivalue3 = x + 21*y
