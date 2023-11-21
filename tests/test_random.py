@@ -488,6 +488,7 @@ def test_gaussian():
     # Test generate_from_variance.
     g2 = galsim.GaussianDeviate(testseed, mean=5, sigma=0.3)
     g3 = galsim.GaussianDeviate(testseed, mean=5, sigma=0.3)
+    test_array = np.empty(3)
     test_array.fill(gSigma**2)
     g2.generate_from_variance(test_array)
     np.testing.assert_array_almost_equal(
