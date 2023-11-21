@@ -2789,9 +2789,15 @@ def test_complex_image():
                 im1.imag.setValue(x,y, ivalue3)
                 im2_view.real.setValue(x,y, rvalue3)
                 im2_view.imag.setValue(x,y, ivalue3)
-                assert im1(x,y) == value3
-                assert im1.view()(x,y) == value3
-                assert im1.view(make_const=True)(x,y) == value3
+                # jax galsim does not support views
+                if hasattr(galsim, "_galsim"):
+                    assert im1(x,y) == value3
+                    assert im1.view()(x,y) == value3
+                    assert im1.view(make_const=True)(x,y) == value3
+                else:
+                    assert im1(x,y) != value3
+                    assert im1.view()(x,y) != value3
+                    assert im1.view(make_const=True)(x,y) != value3
                 assert im2(x,y) == value3
                 assert im2_view(x,y) == value3
                 assert im2_cview(x,y) == value3
