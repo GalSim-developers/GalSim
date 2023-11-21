@@ -1140,12 +1140,13 @@ def test_shoot():
 
     # Warns if flux is 1 and n_photons not given.
     psf = galsim.Gaussian(sigma=3)
-    with assert_warns(galsim.GalSimWarning):
-        psf.drawImage(method='phot')
-    with assert_warns(galsim.GalSimWarning):
-        psf.drawPhot(image4)
-    with assert_warns(galsim.GalSimWarning):
-        psf.makePhot()
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            psf.drawImage(method='phot')
+        with assert_warns(galsim.GalSimWarning):
+            psf.drawPhot(image4)
+        with assert_warns(galsim.GalSimWarning):
+            psf.makePhot()
     # With n_photons=1, it's fine.
     psf.drawImage(method='phot', n_photons=1)
     psf.drawPhot(image4, n_photons=1)
