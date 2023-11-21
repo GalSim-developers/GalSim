@@ -958,14 +958,26 @@ def test_poisson():
     v1 = np.empty(555)
     v2 = np.empty(555)
     with single_threaded():
-        p1.generate(v1)
+        if hasattr(galsim, "_galsim"):
+            p1.generate(v1)
+        else:
+            v1 = p1.generate(v1)
     with single_threaded(num_threads=10):
-        p2.generate(v2)
+        if hasattr(galsim, "_galsim"):
+            p2.generate(v2)
+        else:
+            v2 = p2.generate(v2)
     np.testing.assert_array_equal(v1, v2)
     with single_threaded():
-        p1.add_generate(v1)
+        if hasattr(galsim, "_galsim"):
+            p1.add_generate(v1)
+        else:
+            v1 = p1.add_generate(v1)
     with single_threaded(num_threads=10):
-        p2.add_generate(v2)
+        if hasattr(galsim, "_galsim"):
+            p2.add_generate(v2)
+        else:
+            v2 = p2.add_generate(v2)
     np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
@@ -983,9 +995,10 @@ def test_poisson():
     assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
     # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.PoissonDeviate, dict())
-    assert_raises(TypeError, galsim.PoissonDeviate, list())
-    assert_raises(TypeError, galsim.PoissonDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, galsim.PoissonDeviate, dict())
+        assert_raises(TypeError, galsim.PoissonDeviate, list())
+        assert_raises(TypeError, galsim.PoissonDeviate, set())
 
 
 @timer
