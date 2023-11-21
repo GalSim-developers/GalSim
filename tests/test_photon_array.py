@@ -215,15 +215,15 @@ def test_photon_array():
     pa1.pupil_u = photon_array.pupil_u[:50]
     pa1.pupil_v = photon_array.pupil_v[:50]
     pa1.time = photon_array.time[:50]
-    np.testing.assert_almost_equal(pa1.x, photon_array.x[:50])
-    np.testing.assert_almost_equal(pa1.y, photon_array.y[:50])
-    np.testing.assert_almost_equal(pa1.flux, photon_array.flux[:50])
-    np.testing.assert_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
-    np.testing.assert_almost_equal(pa1.dydz, photon_array.dydz[:50])
-    np.testing.assert_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
-    np.testing.assert_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
-    np.testing.assert_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
-    np.testing.assert_almost_equal(pa1.time, photon_array.time[:50])
+    np.testing.assert_array_almost_equal(pa1.x, photon_array.x[:50])
+    np.testing.assert_array_almost_equal(pa1.y, photon_array.y[:50])
+    np.testing.assert_array_almost_equal(pa1.flux, photon_array.flux[:50])
+    np.testing.assert_array_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
+    np.testing.assert_array_almost_equal(pa1.dydz, photon_array.dydz[:50])
+    np.testing.assert_array_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
+    np.testing.assert_array_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
+    np.testing.assert_array_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
+    np.testing.assert_array_almost_equal(pa1.time, photon_array.time[:50])
 
     # Check assignAt
     pa2 = galsim.PhotonArray(100)
