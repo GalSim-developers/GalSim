@@ -338,12 +338,14 @@ def test_uniform():
     assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
     # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.UniformDeviate, dict())
-    assert_raises(TypeError, galsim.UniformDeviate, list())
-    assert_raises(TypeError, galsim.UniformDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        # jax galsim doesn't test this
+        assert_raises(TypeError, galsim.UniformDeviate, dict())
+        assert_raises(TypeError, galsim.UniformDeviate, list())
+        assert_raises(TypeError, galsim.UniformDeviate, set())
 
-    assert_raises(TypeError, u.seed, '123')
-    assert_raises(TypeError, u.seed, 12.3)
+        assert_raises(TypeError, u.seed, '123')
+        assert_raises(TypeError, u.seed, 12.3)
 
 
 @timer
