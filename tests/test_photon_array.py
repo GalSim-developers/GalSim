@@ -205,7 +205,10 @@ def test_photon_array():
             pa1.y[i] = photon_array.y[i]
     else:
         pa1.y = photon_array.y[:50]
-    pa1.flux[0:50] = photon_array.flux[:50]
+    if hasattr(galsim, "_galsim"):
+        pa1.flux[0:50] = photon_array.flux[:50]
+    else:
+        pa1.flux = photon_array.flux[:50]
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
     pa1.wavelength = photon_array.wavelength[:50]
