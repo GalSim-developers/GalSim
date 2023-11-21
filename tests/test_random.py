@@ -252,14 +252,20 @@ def test_uniform():
     # Test generate
     u.seed(testseed)
     test_array = np.empty(3)
-    u.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        u.generate(test_array)
+    else:
+        test_array = u.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence from generate.')
 
     # Test add_generate
     u.seed(testseed)
-    u.add_generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        u.add_generate(test_array)
+    else:
+        test_array = u.add_generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, 2.*np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence from generate.')
@@ -267,13 +273,20 @@ def test_uniform():
     # Test generate with a float32 array
     u.seed(testseed)
     test_array = np.empty(3, dtype=np.float32)
-    u.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        u.generate(test_array)
+    else:
+        test_array = u.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(uResult), precisionF,
             err_msg='Wrong uniform random number sequence from generate.')
 
     # Test add_generate
     u.seed(testseed)
+    if hasattr(galsim, "_galsim"):
+        u.add_generate(test_array)
+    else:
+        test_array = u.add_generate(test_array)
     u.add_generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, 2.*np.array(uResult), precisionF,
@@ -443,7 +456,10 @@ def test_gaussian():
     # Test generate
     g.seed(testseed)
     test_array = np.empty(3)
-    g.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        g.generate(test_array)
+    else:
+        test_array = g.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult), precision,
             err_msg='Wrong Gaussian random number sequence from generate.')
