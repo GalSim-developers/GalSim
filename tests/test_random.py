@@ -1548,13 +1548,21 @@ def test_chi2():
     v1,v2 = c(),c2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Chi2 uses at least 2 rngs per value, but can use arbitrarily more than this.
-    assert v1 != v2
-    assert not c.has_reliable_discard
+    if hasattr(galsim, "_galsim"):
+        assert v1 != v2
+        assert not c.has_reliable_discard
+    else:
+        assert v1 == v2
+        assert c.has_reliable_discard
     assert not c.generates_in_pairs
 
     # Discard normally emits a warning for Chi2
     c2 = galsim.Chi2Deviate(testseed, n=chi2N)
-    with assert_warns(galsim.GalSimWarning):
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            c2.discard(nvals)
+    else:
+        # jax always discards reliably
         c2.discard(nvals)
 
     # Check seed, reset
@@ -1622,7 +1630,10 @@ def test_chi2():
     # Test generate
     c.seed(testseed)
     test_array = np.empty(3)
-    c.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        c.generate(test_array)
+    else:
+        test_array = c.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(chi2Result), precision,
             err_msg='Wrong Chi^2 random number sequence from generate.')
@@ -1630,7 +1641,10 @@ def test_chi2():
     # Test generate with a float32 array
     c.seed(testseed)
     test_array = np.empty(3, dtype=np.float32)
-    c.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        c.generate(test_array)
+    else:
+        test_array = c.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(chi2Result), precisionF,
             err_msg='Wrong Chi^2 random number sequence from generate.')
@@ -1650,9 +1664,10 @@ def test_chi2():
     assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
     # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.Chi2Deviate, dict())
-    assert_raises(TypeError, galsim.Chi2Deviate, list())
-    assert_raises(TypeError, galsim.Chi2Deviate, set())
+    if hasattr(galsim, "_galsim"):
+        assert_raises(TypeError, galsim.Chi2Deviate, dict())
+        assert_raises(TypeError, galsim.Chi2Deviate, list())
+        assert_raises(TypeError, galsim.Chi2Deviate, set())
 
 
 @timer
