@@ -39,7 +39,11 @@ def test_deviate_noise():
     """
     u = galsim.UniformDeviate(testseed)
     uResult = np.empty((10,10))
-    u.generate(uResult)
+    # jax-galsim cannot fill arrays so it returns
+    if hasattr(galsim, "_galsim"):
+        u.generate(uResult)
+    else:
+        uResult = u.generate(uResult)
 
     noise = galsim.DeviateNoise(galsim.UniformDeviate(testseed))
 
