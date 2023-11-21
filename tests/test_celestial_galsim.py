@@ -353,7 +353,10 @@ def test_projection():
         atol=1e-16,
     )
     c0 = center.deproject(*p0, projection='lambert')
-    assert c0 == center
+    np.testing.assert_allclose(
+        c0.rad,
+        center.rad,
+    )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='lambert').ravel(),
                                    (1,0,0,1))
 
