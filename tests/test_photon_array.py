@@ -268,7 +268,7 @@ def test_photon_array():
     photons = galsim.PhotonArray.makeFromImage(tens, max_flux=5.)
     print('photons = ',photons)
     assert len(photons) == 32
-    np.testing.assert_almost_equal(photons.flux, 4.)
+    np.testing.assert_array_almost_equal(photons.flux, 4.)
 
     assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=0.)
     assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=-2)
