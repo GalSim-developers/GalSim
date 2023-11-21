@@ -388,14 +388,18 @@ def test_gaussian():
     v1,v2 = g(),g2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
-    # Note: For Gaussian, this only works if nvals is even.
-    g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
-    g2.discard(nvals+1, suppress_warnings=True)
-    v1,v2 = g(),g2()
-    print('after %d vals, next one is %s, %s'%(nvals+1,v1,v2))
-    assert v1 != v2
-    assert g.has_reliable_discard
-    assert g.generates_in_pairs
+    if hasattr(galsim, "_galsim"):
+        # Note: For Gaussian, this only works if nvals is even.
+        g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
+        g2.discard(nvals+1, suppress_warnings=True)
+        v1,v2 = g(),g2()
+        print('after %d vals, next one is %s, %s'%(nvals+1,v1,v2))
+        assert v1 != v2
+        assert g.has_reliable_discard
+        assert g.generates_in_pairs
+    else:
+        assert g.has_reliable_discard
+        assert not g.generates_in_pairs
 
     # If don't explicitly suppress the warning, then a warning is emitted when n is odd.
     g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
