@@ -869,7 +869,7 @@ def test_dz_val():
             dz([0.0, 1.0], [0.0, 1.0], x=[1.0], y=[1.0])
 
     # Try pickle/repr with default domain
-    dz = galsim.zernike.DoubleZernike((coef)
+    dz = galsim.zernike.DoubleZernike(coef)
     check_pickle(dz)
 
 
@@ -885,7 +885,7 @@ def test_dz_coef_uvxy():
         uv_outer = rng.uniform(1.3, 1.7)
         xy_inner = rng.uniform(0.4, 0.7)
         xy_outer = rng.uniform(1.3, 1.7)
-        dz = galsim.zernike.DoubleZernike((
+        dz = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner,
             uv_outer=uv_outer,
@@ -964,12 +964,12 @@ def test_dz_sum():
         coef2[0] = 0.0
         coef2[:, 0] = 0.0
 
-        dz1 = galsim.zernike.DoubleZernike((
+        dz1 = galsim.zernike.DoubleZernike(
             coef1,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
         )
-        dz2 = galsim.zernike.DoubleZernike((
+        dz2 = galsim.zernike.DoubleZernike(
             coef2,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
@@ -1024,25 +1024,25 @@ def test_dz_sum():
         with np.testing.assert_raises(TypeError):
             dz1 - 3
         with np.testing.assert_raises(ValueError):
-            dz1 + galsim.zernike.DoubleZernike((
+            dz1 + galsim.zernike.DoubleZernike(
                 coef1, uv_outer=2*uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
             )
         with np.testing.assert_raises(ValueError):
-            dz1 + galsim.zernike.DoubleZernike((
+            dz1 + galsim.zernike.DoubleZernike(
                 coef1, uv_outer=uv_outer, uv_inner=2*uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
             )
         with np.testing.assert_raises(ValueError):
-            dz1 + galsim.zernike.DoubleZernike((
+            dz1 + galsim.zernike.DoubleZernike(
                 coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=2*xy_outer, xy_inner=xy_inner
             )
         with np.testing.assert_raises(ValueError):
-            dz1 + galsim.zernike.DoubleZernike((
+            dz1 + galsim.zernike.DoubleZernike(
                 coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=2*xy_inner
             )
 
         # Commutative with integer coefficients
-        dz1 = galsim.zernike.DoubleZernike((np.eye(3, dtype=int))
-        dz2 = galsim.zernike.DoubleZernike((np.ones((4, 4), dtype=int))
+        dz1 = galsim.zernike.DoubleZernike(np.eye(3, dtype=int))
+        dz2 = galsim.zernike.DoubleZernike(np.ones((4, 4), dtype=int))
         assert dz1 + dz2 == dz2 + dz1
         assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
@@ -1080,12 +1080,12 @@ def test_dz_product():
         coef2[0] = 0.0
         coef2[:, 0] = 0.0
 
-        dz1 = galsim.zernike.DoubleZernike((
+        dz1 = galsim.zernike.DoubleZernike(
             coef1,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
         )
-        dz2 = galsim.zernike.DoubleZernike((
+        dz2 = galsim.zernike.DoubleZernike(
             coef2,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
@@ -1130,27 +1130,27 @@ def test_dz_product():
     with np.testing.assert_raises(TypeError):
         dz1 * galsim.Gaussian(sigma=1.0)
     with np.testing.assert_raises(ValueError):
-        dz1 * galsim.zernike.DoubleZernike((
+        dz1 * galsim.zernike.DoubleZernike(
             coef1, uv_outer=2*uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
         )
     with np.testing.assert_raises(ValueError):
-        dz1 * galsim.zernike.DoubleZernike((
+        dz1 * galsim.zernike.DoubleZernike(
             coef1, uv_outer=uv_outer, uv_inner=2*uv_inner, xy_outer=xy_outer, xy_inner=xy_inner
         )
     with np.testing.assert_raises(ValueError):
-        dz1 * galsim.zernike.DoubleZernike((
+        dz1 * galsim.zernike.DoubleZernike(
             coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=2*xy_outer, xy_inner=xy_inner
         )
     with np.testing.assert_raises(ValueError):
-        dz1 * galsim.zernike.DoubleZernike((
+        dz1 * galsim.zernike.DoubleZernike(
             coef1, uv_outer=uv_outer, uv_inner=uv_inner, xy_outer=xy_outer, xy_inner=2*xy_inner
         )
     with np.testing.assert_raises(TypeError):
         dz1 / dz2
 
     # Commutative with integer coefficients
-    dz1 = galsim.zernike.DoubleZernike((np.eye(3, dtype=int))
-    dz2 = galsim.zernike.DoubleZernike((np.ones((4, 4), dtype=int))
+    dz1 = galsim.zernike.DoubleZernike(np.eye(3, dtype=int))
+    dz2 = galsim.zernike.DoubleZernike(np.ones((4, 4), dtype=int))
     assert dz1 * dz2 == dz2 * dz1
     assert (dz2 * 3) == (3 * dz2)
 
@@ -1177,7 +1177,7 @@ def test_dz_grad():
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
-        dz = galsim.zernike.DoubleZernike((
+        dz = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
@@ -1195,7 +1195,7 @@ def test_dz_grad():
         # U and V are trickier, since we aren't including a way to turn a DZ evaluated
         # at (x, y) into a single Zernike of (u, v).  We can mock that though up by
         # transposing the DZ coefficients and swapping the domain parameters.
-        dz_xyuv = galsim.zernike.DoubleZernike((
+        dz_xyuv = galsim.zernike.DoubleZernike(
             np.transpose(coef, axes=(1, 0)),
             uv_inner=xy_inner, uv_outer=xy_outer,
             xy_inner=uv_inner, xy_outer=uv_outer
@@ -1257,7 +1257,7 @@ def test_dz_to_T():
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
-        W = galsim.zernike.DoubleZernike((
+        W = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner, uv_outer=uv_outer,  # field
             xy_inner=xy_inner, xy_outer=xy_outer   # pupil
@@ -1363,7 +1363,7 @@ def test_dz_rotate():
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
-        dz = galsim.zernike.DoubleZernike((
+        dz = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner, uv_outer=uv_outer,  # field
             xy_inner=xy_inner, xy_outer=xy_outer   # pupil
@@ -1420,7 +1420,7 @@ def test_dz_basis():
                 for k in range(1, k1):
                     coef = np.zeros((k1, j1))
                     coef[k, j] = 1.0
-                    DZ = galsim.zernike.DoubleZernike((
+                    DZ = galsim.zernike.DoubleZernike(
                         coef,
                         uv_inner=uv_inner, uv_outer=uv_outer,
                         xy_inner=xy_inner, xy_outer=xy_outer
@@ -1449,7 +1449,7 @@ def test_dz_mean():
         coef[0] = 0.0
         coef[:, 0] = 0.0
 
-        dz = galsim.zernike.DoubleZernike((
+        dz = galsim.zernike.DoubleZernike(
             coef,
             uv_inner=uv_inner, uv_outer=uv_outer,
             xy_inner=xy_inner, xy_outer=xy_outer
