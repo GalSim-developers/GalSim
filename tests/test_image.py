@@ -2242,7 +2242,10 @@ def test_ConstImage_array_constness():
     attributes, and that if this is attempted a GalSimImmutableError is raised.
     """
     for i in range(ntypes):
-        image = galsim.Image(ref_array.astype(types[i]), make_const=True)
+        if hasattr(galsim, "_galsim"):
+            image = galsim.Image(ref_array.astype(types[i]), make_const=True)
+        else:
+            image = galsim.Image(ref_array.astype(types[i]))
         # Apparently older numpy versions might raise a RuntimeError, a ValueError, or a TypeError
         # when trying to write to arrays that have writeable=False.
         # From the numpy 1.7.0 release notes:
