@@ -830,8 +830,12 @@ def test_poisson():
     p2.discard(nvals, suppress_warnings=True)
     v1,v2 = p(),p2()
     print('With mean = %d, after %d vals, next one is %s, %s'%(high_mean,nvals,v1,v2))
-    assert v1 != v2
-    assert not p.has_reliable_discard
+    if hasattr(galsim, "_galsim"):
+        assert v1 != v2
+        assert not p.has_reliable_discard
+    else:
+        assert v1 == v2
+        assert p.has_reliable_discard
     assert not p.generates_in_pairs
 
     # Discard normally emits a warning for Poisson
