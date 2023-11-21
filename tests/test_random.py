@@ -509,7 +509,10 @@ def test_gaussian():
     # Test generate with a float32 array.
     g.seed(testseed)
     test_array = np.empty(3, dtype=np.float32)
-    g.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        g.generate(test_array)
+    else:
+        test_array = g.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult), precisionF,
             err_msg='Wrong Gaussian random number sequence from generate.')
