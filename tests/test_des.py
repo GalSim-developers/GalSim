@@ -549,7 +549,7 @@ def test_nan_fits():
 def test_psf():
     """Test the two kinds of PSF files we have in DES.
     """
-    data_dir = 'des_data'
+    data_dir = os.path.join(os.path.dirname(__file__), 'des_data')
     psfex_file = "DECam_00154912_12_psfcat.psf"
     fitpsf_file = "DECam_00154912_12_fitpsf.fits"
     wcs_file = "DECam_00154912_12_header.fits"
