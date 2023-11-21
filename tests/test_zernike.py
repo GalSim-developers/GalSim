@@ -299,7 +299,7 @@ def test_fit():
                            [u()-0.5,       0,       0,       0,       0]]
         z = galsim.utilities.horner2d(x, y, cartesian_coefs)
         z2 = galsim.utilities.horner2d(x, y, cartesian_coefs, triangle=True)
-        np.testing.assert_equal(z,z2)
+        np.testing.assert_array_equal(z,z2)
 
         basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
         coefs, _, _, _ = np.linalg.lstsq(basis.T, z, rcond=-1.)
