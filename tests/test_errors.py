@@ -149,7 +149,10 @@ def test_galsim_undefined_bounds_error():
 def test_galsim_immutable_error():
     """Test basic usage of GalSimImmutableError
     """
-    im = galsim.ImageD(np.array([[0]]), make_const=True)
+    if hasattr(galsim, '_galsim'):
+        im = galsim.ImageD(np.array([[0]]), make_const=True)
+    else:
+        im = galsim.ImageD(np.array([[0]]))
     err = galsim.GalSimImmutableError("Test", im)
     print('str = ',str(err))
     print('repr = ',repr(err))
