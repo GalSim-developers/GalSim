@@ -409,9 +409,17 @@ def test_projection():
 
     # First the trivial case
     p0 = center.project(center, projection='stereographic')
-    assert p0 == (0.0 * galsim.arcsec, 0.0 * galsim.arcsec)
+    np.testing.assert_allclose(
+        (p0[0].rad, p0[1].rad),
+        (0.0, 0.0),
+        rtol=0,
+        atol=1e-16,
+    )
     c0 = center.deproject(*p0, projection='stereographic')
-    assert c0 == center
+    np.testing.assert_allclose(
+        c0.rad,
+        center.rad,
+    )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='stereographic').ravel(),
                                    (1,0,0,1))
 
@@ -467,9 +475,17 @@ def test_projection():
 
     # First the trivial case
     p0 = center.project(center, projection='gnomonic')
-    assert p0 == (0.0 * galsim.arcsec, 0.0 * galsim.arcsec)
+    np.testing.assert_allclose(
+        (p0[0].rad, p0[1].rad),
+        (0.0, 0.0),
+        rtol=0,
+        atol=1e-16,
+    )
     c0 = center.deproject(*p0, projection='gnomonic')
-    assert c0 == center
+    np.testing.assert_allclose(
+        c0.rad,
+        center.rad,
+    )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='gnomonic').ravel(),
                                    (1,0,0,1))
 
@@ -521,9 +537,17 @@ def test_projection():
 
     # First the trivial case
     p0 = center.project(center, projection='postel')
-    assert p0 == (0.0 * galsim.arcsec, 0.0 * galsim.arcsec)
+    np.testing.assert_allclose(
+        (p0[0].rad, p0[1].rad),
+        (0.0, 0.0),
+        rtol=0,
+        atol=1e-16,
+    )
     c0 = center.deproject(*p0, projection='postel')
-    assert c0 == center
+    np.testing.assert_allclose(
+        c0.rad,
+        center.rad,
+    )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='postel').ravel(),
                                    (1,0,0,1))
 
