@@ -297,7 +297,11 @@ def test_variable_gaussian_noise():
 
     g = galsim.GaussianDeviate(testseed, sigma=1.)
     vgResult = np.empty((10,10))
-    g.generate(vgResult)
+    # jax-galsim cannot fill arrays so it returns
+    if hasattr(galsim, "_galsim"):
+        g.generate(vgResult)
+    else:
+        vgResult = g.generate(vgResult)
     vgResult *= np.sqrt(var_image.array)
 
     # Test filling an image
