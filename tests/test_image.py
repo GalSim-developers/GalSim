@@ -2590,13 +2590,15 @@ def test_copy():
     assert im(3,8) != 11.
 
     # If copy=False is specified, then it shares the same array
-    im3b = galsim.Image(im, copy=False)
-    assert im3b.wcs == im.wcs
-    assert im3b.bounds == im.bounds
-    np.testing.assert_array_equal(im3b.array, im.array)
-    im3b.setValue(2,3,2.)
-    assert im3b(2,3) == 2.
-    assert im(2,3) == 2.
+    if hasattr(galsim, "_galsim"):
+        # jax-galsim does not support references
+        im3b = galsim.Image(im, copy=False)
+        assert im3b.wcs == im.wcs
+        assert im3b.bounds == im.bounds
+        np.testing.assert_array_equal(im3b.array, im.array)
+        im3b.setValue(2,3,2.)
+        assert im3b(2,3) == 2.
+        assert im(2,3) == 2.
 
     # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
