@@ -1573,13 +1573,13 @@ def test_types():
                                     "wrong scale when drawing onto dt=%s"%dt)
             np.testing.assert_equal(im.bounds, ref_im.bounds,
                                     "wrong bounds when drawing onto dt=%s"%dt)
-            np.testing.assert_almost_equal(im.array, round_cast(ref_im.array, dt), 6,
+            np.testing.assert_array_almost_equal(im.array, round_cast(ref_im.array, dt), 6,
                                            "wrong array when drawing onto dt=%s"%dt)
 
             if method == 'phot':
                 rng.reset(1234)
             obj.drawImage(im, method=method, add_to_image=True, rng=rng)
-            np.testing.assert_almost_equal(im.array, round_cast(ref_im.array, dt) * 2, 6,
+            np.testing.assert_array_almost_equal(im.array, round_cast(ref_im.array, dt) * 2, 6,
                                            "wrong array when adding to image with dt=%s"%dt)
 
 @timer
