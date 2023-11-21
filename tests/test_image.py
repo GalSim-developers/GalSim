@@ -691,7 +691,7 @@ def test_Image_FITS_IO():
         assert_raises(OSError, galsim.fits.read, test_file, compression='none')
 
     # Check a file with no WCS information
-    nowcs_file = 'fits_files/blankimg.fits'
+    nowcs_file = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     im = galsim.fits.read(nowcs_file)
     assert im.wcs == galsim.PixelScale(1.0)
 
