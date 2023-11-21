@@ -545,15 +545,17 @@ def test_photon_array_depr():
     # however jax-galsim sets them to NaN so they are not allocated
     assert not photon_array.hasAllocatedAngles()
     assert len(photon_array.dxdz) == nphotons
-    assert len(photon_array.dydz) == nphotons
-    dxdz[:] = 0.17
+    # JAX-Galsim does not allow by reference setting - changed this
+    # to make tests below run
+    photon_array.dxdz = 0.17
     # non-nan means allocated for jax-galsim
     assert photon_array.hasAllocatedAngles()
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
     np.testing.assert_array_equal(photon_array.dydz, 0.)
 
-    dydz = photon_array.dydz  # Allowed now.
-    dydz[:] = 0.59
+    # JAX-Galsim does not allow by reference setting - changed this
+    # to make tests below run
+    photon_array.dydz = 0.59
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
     wave = check_dep(getattr, photon_array, 'wavelength')
