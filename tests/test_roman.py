@@ -148,7 +148,7 @@ def test_roman_wcs():
     # we compare that with the GalSim routines for finding SCAs.
     import datetime
     date = datetime.datetime(2025, 1, 12)
-    test_data_file = os.path.join('roman_files','chris_comparison.txt')
+    test_data_file = os.path.join(os.path.dirname(__file__), os.path.join('roman_files','chris_comparison.txt'))
     test_data = np.loadtxt(test_data_file).transpose()
 
     ra_cen = test_data[0,:]
