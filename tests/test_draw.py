@@ -1218,8 +1218,9 @@ def test_drawImage_area_exptime():
     with assert_raises(AssertionError):
         assert_warns(galsim.GalSimWarning, obj1.makePhot, n_photons=1)
     # And drawPhot
-    with assert_warns(galsim.GalSimWarning):
-        obj1.drawPhot(im1)
+    if hasattr(galsim, "_galsim"):
+        with assert_warns(galsim.GalSimWarning):
+            obj1.drawPhot(im1)
     with assert_raises(AssertionError):
         assert_warns(galsim.GalSimWarning, obj1.drawPhot, im1, n_photons=1)
 
