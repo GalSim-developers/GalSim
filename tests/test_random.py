@@ -591,11 +591,13 @@ def test_gaussian():
     assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
     # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    assert_raises(TypeError, galsim.GaussianDeviate, dict())
-    assert_raises(TypeError, galsim.GaussianDeviate, list())
-    assert_raises(TypeError, galsim.GaussianDeviate, set())
+    if hasattr(galsim, "_galsim"):
+        # jax-galsim doesn't test for these things
+        assert_raises(TypeError, galsim.GaussianDeviate, dict())
+        assert_raises(TypeError, galsim.GaussianDeviate, list())
+        assert_raises(TypeError, galsim.GaussianDeviate, set())
 
-    assert_raises(ValueError, galsim.GaussianDeviate, testseed, mean=1, sigma=-1)
+        assert_raises(ValueError, galsim.GaussianDeviate, testseed, mean=1, sigma=-1)
 
 
 @timer
