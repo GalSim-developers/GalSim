@@ -574,11 +574,24 @@ def test_ccdnoise():
     sky = 50
 
     # Tabulated results for the above settings and testseed value.
-    cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)
-    cResultI = np.array([[44, 47], [50, 49]], dtype=np.int32)
-    cResultF = np.array([[44.45332718, 47.79725266], [50.67744064, 49.58272934]], dtype=np.float32)
-    cResultD = np.array([[44.453328440057618, 47.797254142519577],
-                        [50.677442088335162, 49.582730949808081]],dtype=np.float64)
+    if hasattr(galsim, "_galsim"):
+        cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)
+        cResultI = np.array([[44, 47], [50, 49]], dtype=np.int32)
+        cResultF = np.array([[44.45332718, 47.79725266], [50.67744064, 49.58272934]], dtype=np.float32)
+        cResultD = np.array([[44.453328440057618, 47.797254142519577],
+                            [50.677442088335162, 49.582730949808081]],dtype=np.float64)
+    else:
+        # jax-galsim has a different RNG
+        cResultS = np.array([[42, 52], [49, 45]], dtype=np.int16)  # noqa: F841
+        cResultI = np.array([[42, 52], [49, 45]], dtype=np.int32)  # noqa: F841
+        cResultF = np.array([  # noqa: F841
+            [42.4286994934082, 52.42875671386719],
+            [49.016048431396484, 45.61003875732422]
+        ], dtype=np.float32)
+        cResultD = np.array([  # noqa: F841
+            [42.42870031326479, 52.42875718917211],
+            [49.016050296441094, 45.61003745208172]
+        ], dtype=np.float64)
 
     for i in range(4):
         prec = eval("precision"+typestrings[i])
