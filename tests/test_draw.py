@@ -1546,7 +1546,8 @@ def test_np_fft():
 def round_cast(array, dt):
     # array.astype(dt) doesn't round to the nearest for integer types.
     # This rounds first if dt is integer and then casts.
-    if dt(0.5) != 0.5:
+    # NOTE JAX doesn't round to the nearest int when drawing
+    if hasattr(galsim, "_galsim") and dt(0.5) != 0.5:
         array = np.around(array)
     return array.astype(dt)
 
