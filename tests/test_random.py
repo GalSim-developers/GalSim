@@ -710,7 +710,10 @@ def test_binomial():
     # Test generate
     b.seed(testseed)
     test_array = np.empty(3)
-    b.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        b.generate(test_array)
+    else:
+        test_array = b.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(bResult), precision,
             err_msg='Wrong binomial random number sequence from generate.')
@@ -718,7 +721,10 @@ def test_binomial():
     # Test generate with an int array
     b.seed(testseed)
     test_array = np.empty(3, dtype=int)
-    b.generate(test_array)
+    if hasattr(galsim, "_galsim"):
+        b.generate(test_array)
+    else:
+        test_array = b.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(bResult), precisionI,
             err_msg='Wrong binomial random number sequence from generate.')
