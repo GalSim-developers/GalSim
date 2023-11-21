@@ -377,7 +377,8 @@ def test_drawImage():
     assert_raises(TypeError, obj.drawImage, bounds=bounds, scale=scale, wcs=galsim.PixelScale(3))
     assert_raises(TypeError, obj.drawImage, bounds=bounds, wcs=scale)
     assert_raises(TypeError, obj.drawImage, image=im10.array)
-    assert_raises(TypeError, obj.drawImage, wcs=galsim.FitsWCS('fits_files/tpv.fits'))
+    assert_raises(TypeError, obj.drawImage, wcs=galsim.FitsWCS(
+        os.path.join(os.path.dirname(__file__), 'fits_files/tpv.fits')))
 
     assert_raises(ValueError, obj.drawImage, bounds=galsim.BoundsI())
     assert_raises(ValueError, obj.drawImage, image=im10, gain=0.)
