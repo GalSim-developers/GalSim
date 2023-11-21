@@ -678,7 +678,7 @@ def test_photon_array_depr():
     assert len(photon_array.pupil_v) == nphotons
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
-    photon_array.u = 6.0
+    photon_array.pupil_u = 6.0
     np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
     np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
     # JAX-Galsim does not allow by reference setting - changed this
