@@ -2145,8 +2145,10 @@ def test_permute():
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
     # permute with no lists should raise TypeError
-    with assert_raises(TypeError):
-        galsim.random.permute(312)
+    # jax galsim does not raise
+    if hasattr(galsim, "_galsim"):
+        with assert_raises(TypeError):
+            galsim.random.permute(312)
 
 
 @timer
