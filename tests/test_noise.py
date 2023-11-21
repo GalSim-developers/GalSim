@@ -344,8 +344,9 @@ def test_variable_gaussian_noise():
     var = np.var(big_im.array)
     print('variance = ',var)
     print('getVar = ',big_vgn.var_image.array.mean())
+    # jax galsim has a different RNG
     np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1,
+            var, big_vgn.var_image.array.mean(), 1 if hasattr(galsim, "_galsim") else 0,
             err_msg='Realized variance for VariableGaussianNoise did not match var_image')
 
     # Check realized variance in each mask
