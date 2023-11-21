@@ -2794,15 +2794,20 @@ def test_complex_image():
                     assert im1(x,y) == value3
                     assert im1.view()(x,y) == value3
                     assert im1.view(make_const=True)(x,y) == value3
+                    assert im2(x,y) == value3
+                    assert im2_view(x,y) == value3
+                    assert im2_cview(x,y) == value3
+                    assert im1.conjugate(x,y) == np.conjugate(value3)
+                    assert im2.conjugate(x,y) == np.conjugate(value3)
                 else:
                     assert im1(x,y) != value3
                     assert im1.view()(x,y) != value3
                     assert im1.view(make_const=True)(x,y) != value3
-                assert im2(x,y) == value3
-                assert im2_view(x,y) == value3
-                assert im2_cview(x,y) == value3
-                assert im1.conjugate(x,y) == np.conjugate(value3)
-                assert im2.conjugate(x,y) == np.conjugate(value3)
+                    assert im2(x,y) != value3
+                    assert im2_view(x,y) != value3
+                    assert im2_cview(x,y) != value3
+                    assert im1.conjugate(x,y) != np.conjugate(value3)
+                    assert im2.conjugate(x,y) != np.conjugate(value3)
 
         # Check view of given data
         im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
