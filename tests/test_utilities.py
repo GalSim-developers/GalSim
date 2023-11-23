@@ -272,7 +272,9 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
-    assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
+    if hasattr(galsim, '_galsim'):
+        # jax doesn't raise for this
+        assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
         bd1 += (11,23)
