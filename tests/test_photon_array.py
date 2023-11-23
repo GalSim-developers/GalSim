@@ -274,8 +274,10 @@ def test_photon_array():
     assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=-2)
 
     # Check some other errors
-    undef = galsim.Image()
-    assert_raises(galsim.GalSimUndefinedBoundsError, pa2.addTo, undef)
+    if hasattr(galsim, "_galsim"):
+        # jax doesn't raise for this
+        undef = galsim.Image()
+        assert_raises(galsim.GalSimUndefinedBoundsError, pa2.addTo, undef)
 
     # Check picklability again with non-zero values for everything
     check_pickle(photon_array)
