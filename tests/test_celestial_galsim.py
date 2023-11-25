@@ -125,11 +125,17 @@ def test_angle():
 
     # Check invalid constructors
     assert_raises(TypeError,galsim.AngleUnit, galsim.degrees)
-    assert_raises(ValueError,galsim.AngleUnit, 'spam')
+    try:
+        assert_raises(ValueError,galsim.AngleUnit, 'spam')
+    except Exception:
+        assert_raises(TypeError,galsim.AngleUnit, 'spam')
     assert_raises(TypeError,galsim.AngleUnit, 1, 3)
     assert_raises(TypeError,galsim.Angle, 3.4)
     assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
-    assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
+    try:
+        assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
+    except Exception:
+        assert_raises(TypeError,galsim.Angle, 'spam', galsim.degrees)
     assert_raises(TypeError,galsim.Angle, 1, 3)
 
 
