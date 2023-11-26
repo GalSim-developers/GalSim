@@ -200,7 +200,7 @@ def test_basic_dict():
 def test_single_row():
     """Test that we can read catalogs with just one row (#394)
     """
-    filename = "output/test394.txt"
+    filename = os.path.join(os.path.dirname(__file__), "output/test394.txt")
     with open(filename, 'w') as f:
         f.write("3 4 5\n")
     cat = galsim.Catalog(filename, file_type='ascii')
