@@ -104,8 +104,10 @@ def test_Image_basic():
         np.testing.assert_array_equal(im1.array, 0.)
         assert im1.array.shape == (nrow,ncol)
         assert im1.array.dtype.type == np_array_type
-        assert im1.array.flags.writeable == True
-        assert im1.array.flags.c_contiguous == True
+        if hasattr(galsim, "_galsim"):
+            # jax arrays do not have flags
+            assert im1.array.flags.writeable == True
+            assert im1.array.flags.c_contiguous == True
         assert im1.dtype == np_array_type
         assert im1.ncol == ncol
         assert im1.nrow == nrow
