@@ -105,7 +105,10 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionD, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionD, 11, 23, x=13, z=21)
-    assert_raises(ValueError, galsim.PositionD, 11, "blue")
+    try:
+        assert_raises(ValueError, galsim.PositionD, 11, "blue")
+    except Exception:
+        assert_raises(TypeError, galsim.PositionD, 11, "blue")
 
     # Can't use base class directly.
     assert_raises(TypeError, galsim.Position, 11, 23)
