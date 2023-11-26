@@ -344,6 +344,7 @@ class LookupTable:
         Returns:
             an estimate of the integral
         """
+        from .utilities import merge_sorted
         if self.x_log:
             raise GalSimNotImplementedError("log x spacing not implemented yet.")
         if self.f_log:
@@ -372,7 +373,7 @@ class LookupTable:
         else:
             gx = self.x / x_factor
             gx = gx[(gx >= x_min) & (gx <= x_max)]
-            gx = np.union1d(gx, [x_min, x_max])
+            gx = merge_sorted([gx, [x_min, x_max]])
             # Let this raise an appropriate error if g is not a valid function over this domain.
             gf = g(gx)
             # If g is a constant function (like lambda wave: 1), then this doesn't return
@@ -390,11 +391,13 @@ class LookupTable:
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6
         if np.min(x,initial=self.x_min) < self.x_min - slop:
+            xx = np.array(x)
             raise GalSimRangeError("x value(s) below the range of the LookupTable.",
-                                   x, self.x_min, self.x_max)
+                                   xx[xx<self.x_min], self.x_min, self.x_max) from None
         if np.max(x,initial=self.x_max) > self.x_max + slop:  # pragma: no branch
+            xx = np.array(x)
             raise GalSimRangeError("x value(s) above the range of the LookupTable.",
-                                   x, self.x_min, self.x_max)
+                                   xx[xx>self.x_max], self.x_min, self.x_max) from None
 
     def getArgs(self):
         return self.x
@@ -552,21 +555,23 @@ def _LookupTable(x, f, interpolant='spline', x_log=False, f_log=False):
     return ret
 
 
-def trapz(f, x):
+def trapz(f, x, interpolant='linear'):
     """Integrate f(x) using the trapezoidal rule.
 
     Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,
     which is usually faster.
 
     Parameters:
-        f:      The ordinates of the function to integrate.
-        x:      The abscissae of the function to integrate.
+        f:              The ordinates of the function to integrate.
+        x:              The abscissae of the function to integrate.
+        interpolant:    The interpolant to use between the tabulated points.  [default: 'linear',
+                        which matches the behavior of np.trapz]
 
     Returns:
         Estimate of the integral.
     """
     if len(x) >= 2:
-        return _LookupTable(x,f,'linear').integrate()
+        return _LookupTable(x, f, interpolant=interpolant).integrate()
     else:
         return 0.
 

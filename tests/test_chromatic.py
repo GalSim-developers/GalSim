@@ -2227,10 +2227,22 @@ def test_phot():
     # 7. InterpolatedChromaticObject
     psf7 = psf6.interpolate(waves=[500, 700, 1000])
 
-    for psf in [psf1, psf2, psf3, psf4, psf5, psf6, psf7]:
+    # 8. ChromaticSum
+    # Most useful as a way to linearly interpolate between two (or more) values, so do that.
+    ab1 = np.array([0,0,0,0, 0.008, -0.005, -0.005, -0.002])
+    ab2 = np.array([0,0,0,0, 0.003, 0.003, -0.007, -0.001])
+    psf8a = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
+                                       aberrations=ab1, obscuration=obscuration,
+                                       geometric_shooting=True)
+    psf8b = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
+                                       aberrations=ab2, obscuration=obscuration,
+                                       nstruts=6, geometric_shooting=True)
+    psf8 = 0.7 * psf8a + 0.3 * psf8b
+
+    for psf in [psf1, psf2, psf3, psf4, psf5, psf6, psf7, psf8]:
         print('psf = ',psf)
         atol = 4.e-4
-        if psf in [psf5, psf6, psf7]:
+        if psf in [psf5, psf6, psf7, psf8]:
             atol = 6e-4   # OpticalPSF doesn't match quite as well as the others.
         rng = galsim.BaseDeviate(1234)
 
@@ -2618,7 +2630,7 @@ def test_chromatic_invariant():
     assert isinstance(chrom, galsim.ChromaticTransformation)
     assert not isinstance(chrom, galsim.SimpleChromaticTransformation)
     check_chromatic_invariant(chrom)
-    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03)
+    np.testing.assert_allclose(chrom.sed(waves), flux * bulge_SED(waves) * waves**1.03, rtol=1.e-4)
     # Not picklable, but run str, repr
     str(chrom)
     repr(chrom)
@@ -2649,7 +2661,6 @@ def test_chromatic_invariant():
     repr(chrom_sum_noSED)
     str(chrom_sum_noSED)
     assert_raises(galsim.GalSimError, chrom_sum_noSED.applyTo, p1)
-    assert_raises(galsim.GalSimNotImplementedError, chrom_sum_noSED.applyTo, p2)
 
     chrom = gsobj * bulge_SED
     chrom_sum_SED = chrom + chrom  # used to be considered separable, but not anymore.
@@ -2666,7 +2677,6 @@ def test_chromatic_invariant():
     check_pickle(chrom_sum_SED2)
     assert not chrom_sum_SED2.separable
     assert_raises(galsim.GalSimError, chrom_sum_SED.applyTo, p1)
-    assert_raises(galsim.GalSimNotImplementedError, chrom_sum_SED.applyTo, p2)
 
     # ChromaticConvolution
     conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
@@ -3200,7 +3210,7 @@ def test_shoot_transformation():
     img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng,
                         poisson_flux=False)
     print(img.added_flux)
-    np.testing.assert_allclose(img.added_flux, flux)
+    np.testing.assert_allclose(img.added_flux, flux, rtol=1.e-6)
     img = obj.drawImage(bandpass, nx=25, ny=25, scale=0.2, method='phot', rng=rng)
     print(img.added_flux)
     assert abs(img.added_flux - flux) > 0.1

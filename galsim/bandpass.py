@@ -105,9 +105,10 @@ class Bandpass:
         zeropoint:      Set the zero-point for this Bandpass.  Here, this can only be a float
                         value.  See the method `withZeropoint` for other options for how to
                         set this using a particular spectrum (AB, Vega, etc.) [default: None]
+        interpolant:    If reading from a file, what interpolant to use. [default: 'linear']
     """
     def __init__(self, throughput, wave_type, blue_limit=None, red_limit=None,
-                 zeropoint=None, _wave_list=None, _tp=None):
+                 zeropoint=None, interpolant='linear', _wave_list=None, _tp=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
@@ -122,6 +123,7 @@ class Bandpass:
         self.blue_limit = blue_limit # These may change as we go through this.
         self.red_limit = red_limit
         self.zeropoint = zeropoint
+        self.interpolant = interpolant
 
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
@@ -222,7 +224,7 @@ class Bandpass:
         elif isinstance(self._orig_tp, basestring):
             isfile, filename = utilities.check_share_file(self._orig_tp, 'bandpasses')
             if isfile:
-                self._tp = LookupTable.from_file(filename, interpolant='linear')
+                self._tp = LookupTable.from_file(filename, interpolant=self.interpolant)
             else:
                 if self.blue_limit is None or self.red_limit is None:
                     raise GalSimIncompatibleValuesError(
@@ -433,8 +435,9 @@ class Bandpass:
             raise TypeError(
                    "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
 
-        return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit, zeropoint,
-                        self.wave_list, self._tp)
+        return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit,
+                        zeropoint=zeropoint, interpolant=self.interpolant,
+                        _wave_list=self.wave_list, _tp=self._tp)
 
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None,
                  preserve_zp='auto'):
@@ -528,9 +531,11 @@ class Bandpass:
 
         if preserve_zp:
             return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
-                            _wave_list=wave_list, _tp=self._tp, zeropoint=self.zeropoint)
+                            zeropoint=self.zeropoint, interpolant=self.interpolant,
+                            _wave_list=wave_list, _tp=self._tp)
         else:
             return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
+                            interpolant=self.interpolant,
                             _wave_list=wave_list, _tp=self._tp)
 
     def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True,
@@ -586,11 +591,14 @@ class Bandpass:
         if len(self.wave_list) > 0:
             x = self.wave_list
             f = self(x)
+            interpolant = (self.interpolant if not isinstance(self._tp, LookupTable)
+                           else self._tp.interpolant)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          trim_zeros=trim_zeros,
                                                          preserve_range=preserve_range,
-                                                         fast_search=fast_search)
-            tp = _LookupTable(newx, newf, 'linear')
+                                                         fast_search=fast_search,
+                                                         interpolant=interpolant)
+            tp = _LookupTable(newx, newf, interpolant)
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
@@ -622,9 +630,9 @@ class Bandpass:
 
     def __repr__(self):
         return ('galsim.Bandpass(%r, wave_type=%r, blue_limit=%r, red_limit=%r, zeropoint=%r, '
-                                 '_wave_list=array(%r))')%(
-                self._orig_tp, self.wave_type, self.blue_limit, self.red_limit, self.zeropoint,
-                self.wave_list.tolist())
+                'interpolant=%r, _wave_list=array(%r))')%(
+                    self._orig_tp, self.wave_type, self.blue_limit, self.red_limit,
+                    self.zeropoint, self.interpolant, self.wave_list.tolist())
 
     def __str__(self):
         orig_tp = repr(self._orig_tp)

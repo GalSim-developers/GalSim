@@ -109,14 +109,15 @@ class SED:
     in this case.
 
     Parameters:
-        spec:        Function defining the z=0 spectrum at each wavelength.  See above for
-                     valid options for this parameter.
-        wave_type:   String or astropy.unit specifying units for wavelength input to ``spec``.
-        flux_type:   String or astropy.unit specifying what type of spectral density or
-                     dimensionless normalization ``spec`` represents.  See above for valid options
-                     for this parameter.
-        redshift:    Optionally shift the spectrum to the given redshift. [default: 0]
-        fast:        Convert units on initialization instead of on __call__. [default: True]
+        spec:           Function defining the z=0 spectrum at each wavelength.  See above for
+                        valid options for this parameter.
+        wave_type:      String or astropy.unit specifying units for wavelength input to ``spec``.
+        flux_type:      String or astropy.unit specifying what type of spectral density or
+                        dimensionless normalization ``spec`` represents.  See above for valid
+                        options for this parameter.
+        redshift:       Optionally shift the spectrum to the given redshift. [default: 0]
+        fast:           Convert units on initialization instead of on __call__. [default: True]
+        interpolant:    If reading from a file, what interpolant to use. [default: 'linear']
     """
     # We'll use these multiple times below, and they are ridiculously slow to construct,
     # so just make them once at the class level.
@@ -129,31 +130,15 @@ class SED:
     _c = constants.c.to('nm/s').value
     _h = constants.h.to('erg s').value
     _dimensionless = units.dimensionless_unscaled
+    _bolo_max_wave = 1.e30  # What we use as "infinity" for bolometric flux calculations.
 
-    def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
+    def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True, interpolant='linear',
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None):
         self._flux_type = flux_type  # Need to save the original for repr
+        self.interpolant = interpolant
+
         # Parse the various options for wave_type
-        if isinstance(wave_type, str):
-            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
-                self.wave_type = 'nm'
-                self.wave_factor = 1.
-            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
-                self.wave_type = 'Angstrom'
-                self.wave_factor = 10.
-            else:
-                raise GalSimValueError("Unknown wave_type", wave_type, ('nm', 'Angstrom'))
-        else:
-            self.wave_type = wave_type
-            try:
-                self.wave_factor = (1*units.nm).to(self.wave_type).value
-                if self.wave_factor == 1.:
-                    self.wave_type = 'nm'
-                elif abs(self.wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
-                    self.wave_type = 'Angstrom'
-                    self.wave_factor = 10.
-            except units.UnitConversionError:
-                self.wave_factor = None
+        self.wave_type, self.wave_factor = self._parse_wave_type(wave_type)
 
         # Parse the various options for flux_type
         self.flux_factor = None
@@ -234,6 +219,29 @@ class SED:
 
         # Define the appropriate functions to call
         self._setup_funcs()
+
+    @staticmethod
+    def _parse_wave_type(wave_type):
+        # Parse the various options for wave_type.
+        # Returns wave_type, wave_factor
+        if isinstance(wave_type, str):
+            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
+                return 'nm', 1.
+            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
+                return 'Angstrom', 10.
+            else:
+                raise GalSimValueError("Unknown wave_type", wave_type, ('nm', 'Angstrom'))
+        else:
+            try:
+                wave_factor = (1*units.nm).to(wave_type).value
+                if wave_factor == 1.:
+                    return 'nm', 1.
+                elif abs(wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
+                    return 'Angstrom', 10.
+                else:
+                    return units.Unit(wave_type), wave_factor
+            except units.UnitConversionError:
+                return units.Unit(wave_type), None
 
     def _setup_funcs(self):
         # Set up the various functions we use to do the right calculation based on which
@@ -316,7 +324,7 @@ class SED:
         elif isinstance(self._orig_spec, basestring):
             isfile, filename = utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
-                self._spec = LookupTable.from_file(filename, interpolant='linear')
+                self._spec = LookupTable.from_file(filename, interpolant=self.interpolant)
             else:
                 # If a constant function is input as a string (e.g. '1'), then we want to
                 # make sure it is flagged as a const SED.
@@ -413,7 +421,8 @@ class SED:
                     f = self._rest_nm_to_photons(x)
                 else:
                     f = self._rest_nm_to_dimensionless(x)
-                return _LookupTable(x, f, interpolant='linear')
+                interp = self._spec.interpolant if isinstance(self._spec, LookupTable) else 'linear'
+                return _LookupTable(x, f, interpolant=interp)
 
     def _call_fast(self, wave):
         """Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.
@@ -492,9 +501,27 @@ class SED:
 
         wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
         if fast:
-            zfactor1 = (1.+redshift) / (1.+self.redshift)
-            zfactor2 = (1.+redshift) / (1.+other.redshift)
-            spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
+            if (isinstance(self._fast_spec, LookupTable)
+                    and not self._fast_spec.x_log
+                    and not self._fast_spec.f_log):
+                x = wave_list / (1.0 + self.redshift)
+                # Add in 500 uniformly spaced values to help improve accuracy.
+                x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
+                zfactor2 = (1.+redshift) / (1.+other.redshift)
+                f = self._fast_spec(x) * other._fast_spec(x*zfactor2)
+                spec = _LookupTable(x, f, self._fast_spec.interpolant)
+            elif (isinstance(other._fast_spec, LookupTable)
+                    and not other._fast_spec.x_log
+                    and not other._fast_spec.f_log):
+                x = wave_list / (1.0 + other.redshift)
+                x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
+                zfactor1 = (1.+redshift) / (1.+other.redshift)
+                f = self._fast_spec(x*zfactor1) * other._fast_spec(x)
+                spec = _LookupTable(x, f, other._fast_spec.interpolant)
+            else:
+                zfactor1 = (1.+redshift) / (1.+self.redshift)
+                zfactor2 = (1.+redshift) / (1.+other.redshift)
+                spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
         else:
             spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
         spectral = self.spectral or other.spectral
@@ -508,12 +535,13 @@ class SED:
         zfactor = (1.0+self.redshift) / other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, LookupTable)
-                and not self._fast_spec.x_log
-                and not self._fast_spec.f_log
-                and self._fast_spec.interpolant == 'linear'):
+                    and not self._fast_spec.x_log
+                    and not self._fast_spec.f_log):
                 x = wave_list / (1.0 + self.redshift)
+                # Add in 500 uniformly spaced values to help improve accuracy.
+                x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
                 f = self._fast_spec(x) * other._tp(x*zfactor)
-                spec = _LookupTable(x, f, 'linear')
+                spec = _LookupTable(x, f, self._fast_spec.interpolant)
             else:
                 spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
         else:
@@ -527,7 +555,7 @@ class SED:
         # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
         if isinstance(self._spec, LookupTable):
             wave_type = self.wave_type
-            flux_type = self.flux_type
+            flux_type = self._flux_type
             x = self._spec.getArgs()
             f = np.array(self._spec.getVals()) * other
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
@@ -675,6 +703,8 @@ class SED:
                 and other._fast_spec.interpolant == 'linear'):
             x = wave_list / (1.0 + self.redshift)
             f = self._fast_spec(x) + other._fast_spec(x)
+            # Note: adding splines doesn't quite work at full precision, so only do this for
+            # linear interpolants.
             spec = _LookupTable(x, f, interpolant='linear')
         else:
             spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
@@ -790,7 +820,7 @@ class SED:
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless SED.", self)
         if bandpass is None: # compute bolometric flux
-            bandpass = Bandpass(lambda w: 1., 'nm', blue_limit=0., red_limit=1e100)
+            bandpass = Bandpass(lambda w: 1., 'nm', blue_limit=0., red_limit=SED._bolo_max_wave)
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             slop = 1e-6 # nm
             if (self.blue_limit > bandpass.blue_limit + slop
@@ -813,8 +843,10 @@ class SED:
                     # When not fast, the SED definition is not linear between the wave_list
                     # points, so this can be slightly inaccurate if the waves are too far apart.
                     # Add in 100 uniformly spaced points to achieve relative accurace ~few e-6.
-                    w = np.union1d(w, np.linspace(w[0], w[-1], 100))
-                return _LookupTable(w,bandpass(w),'linear').integrate_product(self)
+                    w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
+                interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                                else 'linear')
+                return _LookupTable(w, bandpass(w), interpolant).integrate_product(self)
         else:
             return integ.int1d(lambda w: bandpass(w)*self(w),
                                bandpass.blue_limit, bandpass.red_limit)
@@ -877,11 +909,14 @@ class SED:
             spec_native = self._spec(rest_wave_native)
 
             # Note that this is thinning in native units, not nm and photons/nm.
+            interpolant = (self.interpolant if not isinstance(self._spec, LookupTable)
+                           else self._spec.interpolant)
             newx, newf = utilities.thin_tabulated_values(
                     rest_wave_native, spec_native, rel_err=rel_err,
-                    trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
+                    trim_zeros=trim_zeros, preserve_range=preserve_range,
+                    fast_search=fast_search, interpolant=interpolant)
 
-            newspec = _LookupTable(newx, newf, interpolant='linear')
+            newspec = _LookupTable(newx, newf, interpolant=interpolant)
             return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
                        fast=self.fast)
         else:
@@ -932,7 +967,9 @@ class SED:
         flux = self.calculateFlux(bandpass)
         if len(self.wave_list) > 0 or len(bandpass.wave_list) > 0:
             w, _, _ = utilities.combine_wave_list(self, bandpass)
-            bp = _LookupTable(w,bandpass(w),'linear')
+            interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                            else 'linear')
+            bp = _LookupTable(w, bandpass(w), interpolant)
             R = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
             Rbar = bp.integrate_product(lambda w: self(w) * R(w)) / flux
             V = bp.integrate_product(lambda w: self(w) * (R(w)-Rbar)**2) / flux
@@ -979,8 +1016,10 @@ class SED:
             # bandpass points. The error goes like dx**3, so 100 points should give relative
             # errors of order ~few e-6.
             w, _, _ = utilities.combine_wave_list([self, bandpass])
-            w = np.union1d(w, np.linspace(w[0], w[-1], 100))
-            bp = _LookupTable(w,bandpass(w),'linear')
+            w = utilities.merge_sorted([w, np.linspace(w[0], w[-1], 100)])
+            interpolant = (bandpass._tp.interpolant if hasattr(bandpass._tp, 'interpolant')
+                            else 'linear')
+            bp = _LookupTable(w, bandpass(w), interpolant)
             return bp.integrate_product(lambda w: self(w) * (w/base_wavelength)**(2*alpha)) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
@@ -1017,13 +1056,10 @@ class SED:
             else:
                 sed = self._mul_bandpass(bandpass)
 
-            if isinstance(sed._fast_spec, LookupTable):
-                dev = DistDeviate(function=sed._fast_spec, npoints=npoints)
-            else:
-                xmin = sed.blue_limit / (1.+self.redshift)
-                xmax = sed.red_limit / (1.+self.redshift)
-                dev = DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
-                                  npoints=npoints)
+            xmin = sed.blue_limit / (1.+self.redshift)
+            xmax = sed.red_limit / (1.+self.redshift)
+            dev = DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
+                              npoints=npoints, clip_neg=True)
             self._cache_deviate[key] = dev
 
         # Reset the deviate explicitly
@@ -1067,10 +1103,10 @@ class SED:
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,'
-                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r, '
+                  'interpolant=%r, _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
                       self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
-                      self.wave_list, self.blue_limit,
+                      self.interpolant, self.wave_list, self.blue_limit,
                       "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
 
@@ -1112,9 +1148,11 @@ class EmissionLine(SED):
                        constructor for options.  [default: 'nm']
         flux_type:     The units of flux used for this SED.  See SED constructor
                        for options.  [default: 'fphotons']
+        max_wave       The maximum wavelength to use in the LookupTable for the SED.
+                       [default: {}; must be > wavelength+fwhm]
         **kwargs:      Any additional keyword arguments to pass to the `SED`
                        constructor.
-    """
+    """.format(SED._bolo_max_wave)
     def __init__(
         self,
         wavelength,
@@ -1122,14 +1160,24 @@ class EmissionLine(SED):
         flux=1.0,
         wave_type='nm',
         flux_type='fphotons',
+        max_wave=SED._bolo_max_wave,
         **kwargs
     ):
         self.wavelength = wavelength
         self.fwhm = fwhm
         self.flux = flux
+        _, wave_factor = SED._parse_wave_type(wave_type)
+        if wave_factor is None:
+            raise GalSimValueError("wave_type must be a distance unit", wave_type)
+        assert max_wave > wavelength + fwhm
+
+        w = wavelength
+        # Some operations can turn a 0 into 1.e-15, which can lead to large errors
+        # when integrating from w+fwhm to max_wave.  So add a second set of 0's at
+        # w +- 2*fwhm to make sure it's exactly 0 for most of the range.
         spec = LookupTable(
-            [0.0, wavelength-fwhm, wavelength, wavelength+fwhm, np.inf],
-            [0, 0, flux/fwhm, 0, 0],
+            [0.0, w-2*fwhm, w-fwhm, w, w+fwhm, w+2*fwhm, max_wave*wave_factor],
+            [0, 0, 0, flux/fwhm, 0, 0, 0],
             interpolant='linear'
         )
         super().__init__(
@@ -1152,10 +1200,9 @@ class EmissionLine(SED):
             return self
         if redshift <= -1:
             raise GalSimRangeError("Invalid redshift", redshift, -1.)
-        zfactor = (1.0 + redshift) / (1.0 + self.redshift)
         return EmissionLine(
-            self.wavelength * zfactor,
-            self.fwhm * zfactor,
+            self.wavelength,
+            self.fwhm,
             flux=self.flux,
             wave_type=self.wave_type,
             flux_type=self.flux_type,

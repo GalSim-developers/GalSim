@@ -615,12 +615,7 @@ class ChromaticObject:
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
-        p1._wave = photon_array._wave
-        if photon_array.hasAllocatedPupil():
-            p1._pupil_u = photon_array._pupil_u
-            p1._pupil_v = photon_array._pupil_v
-        if photon_array.hasAllocatedTimes():
-            p1._time = photon_array._time
+        p1._copyFrom(photon_array, slice(None), slice(None), do_xy=False, do_flux=False)
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         rng = BaseDeviate(rng)
         obj._shoot(p1, rng)
@@ -1388,12 +1383,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         for kk, obj in enumerate(self.objs):
             use = (use_k == kk)  # True for each photon where this is the object to shoot from
             temp = PhotonArray(np.sum(use))
+            temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
             obj._shoot(temp, rng)
-            photons.x[use] = temp.x
-            photons.y[use] = temp.y
             # It will have tried to shoot the right total flux.  But that's not correct.
             # Rescale it down by the fraction of the total flux we actually want in this set.
-            photons.flux[use] = temp.flux * (len(temp)/len(photons))
+            temp.scaleFlux(len(temp)/len(photons))
+            photons._copyFrom(temp, use, slice(None))
 
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
@@ -1895,6 +1890,14 @@ class ChromaticTransformation(ChromaticObject):
             s += '.atRedshift(%s)'%(self._redshift)
         return s
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def _getTransformations(self, wave):
         if hasattr(self._jac, '__call__'):
             jac = self._jac(wave)
@@ -2084,6 +2087,14 @@ class SimpleChromaticTransformation(ChromaticTransformation):
     def __str__(self):
         return str(self.original) + ' * ' + str(self.sed)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def _getTransformations(self, wave):
         flux_ratio = self._flux_ratio(wave)
         return self._jac, self._offset, flux_ratio
@@ -2269,6 +2280,14 @@ class ChromaticSum(ChromaticObject):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.ChromaticSum([%s])'%', '.join(str_list)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
 
@@ -2282,7 +2301,32 @@ class ChromaticSum(ChromaticObject):
                    gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
-        raise GalSimNotImplementedError("ChromaticSum cannot be used as a PhotonOp")
+        w = photons.wavelength
+
+        # We probabilistically choose a component for each photon based on the
+        # relative flux density of that component for the given wavelength.
+        comp_flux = np.array([obj.sed(w) for obj in self._obj_list])
+        total_flux = np.sum(comp_flux, axis=0)
+
+        prob = comp_flux / total_flux
+        cdf = np.cumsum(prob, axis=0)
+
+        u = np.empty(len(photons))
+        UniformDeviate(rng).generate(u)
+        use_k = np.sum((u >= cdf), axis=0)
+        n = len(self._obj_list)
+        use_k[use_k==n] = n-1  # This shouldn't be possible, but maybe with numerical rounding...
+
+        # Draw photons from the components.
+        for kk, obj in enumerate(self._obj_list):
+            use = (use_k == kk)  # True for each photon where this is the object to shoot from
+            this_n = np.sum(use)
+            if this_n == 0:
+                continue
+            temp = PhotonArray(this_n)
+            temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
+            obj._shoot(temp, rng)
+            photons._copyFrom(temp, use, slice(None))
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Slightly optimized draw method for `ChromaticSum` instances.
@@ -2579,6 +2623,14 @@ class ChromaticConvolution(ChromaticObject):
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
 
     def _approxWavelength(self, wave):
         # If any of the components prefer a different wavelength, use that for all.
@@ -2985,6 +3037,14 @@ class ChromaticAutoConvolution(ChromaticObject):
     def __str__(self):
         return 'galsim.ChromaticAutoConvolution(%s)'%self._obj
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
 
@@ -3081,6 +3141,14 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def __str__(self):
         return 'galsim.ChromaticAutoCorrelation(%s)'%self._obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('sed',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
@@ -3492,18 +3560,21 @@ class ChromaticOpticalPSF(ChromaticObject):
             temp1 = PhotonArray(np.sum(use_p1))
             temp2 = PhotonArray(np.sum(use_p2))
             temp3 = PhotonArray(np.sum(use_p3))
+            temp1._copyFrom(photons, slice(None), use_p1, do_xy=False, do_flux=False)
+            temp2._copyFrom(photons, slice(None), use_p2, do_xy=False, do_flux=False)
+            temp3._copyFrom(photons, slice(None), use_p3, do_xy=False, do_flux=False)
             prof1._shoot(temp1, rng)
             prof2._shoot(temp2, rng)
             prof3._shoot(temp3, rng)
-            photons.x[use_p1] = temp1.x * (w[use_p1] / wave1)
-            photons.y[use_p1] = temp1.y * (w[use_p1] / wave1)
-            photons.flux[use_p1] = temp1.flux * (len(temp1)/len(photons))
-            photons.x[use_p2] = temp2.x * (w[use_p2] / wave2)
-            photons.y[use_p2] = temp2.y * (w[use_p2] / wave2)
-            photons.flux[use_p2] = temp2.flux * (len(temp2)/len(photons))
-            photons.x[use_p3] = temp3.x * (w[use_p3] / wave3)
-            photons.y[use_p3] = temp3.y * (w[use_p3] / wave3)
-            photons.flux[use_p3] = temp3.flux * (len(temp3)/len(photons))
+            temp1.scaleXY(w[use_p1]/wave1)
+            temp1.scaleFlux(len(temp1)/len(photons))
+            temp2.scaleXY(w[use_p2]/wave2)
+            temp2.scaleFlux(len(temp2)/len(photons))
+            temp3.scaleXY(w[use_p3]/wave3)
+            temp3.scaleFlux(len(temp3)/len(photons))
+            photons._copyFrom(temp1, use_p1, slice(None))
+            photons._copyFrom(temp2, use_p2, slice(None))
+            photons._copyFrom(temp3, use_p3, slice(None))
 
 
 class ChromaticAiry(ChromaticObject):

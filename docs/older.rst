@@ -5,6 +5,76 @@ listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
+v2.5
+----
+
+*API Changes*
+
+- Deprecated the use of filter W149 in roman module.  New name is W146. (#1017)
+- Deprecated automatic allocation of `PhotonArray` arrays via "get" access. (#1191)
+- Changed the ``.SED`` attribute name of `ChromaticObject` to lowercase ``.sed``. (#1245)
+- Deprecated `PhotonArray.setCorrelated` and `PhotonArray.isCorrelated`. (#1259)
+- Deprecated `PhotonArray.assignAt` in favor of `PhotonArray.copyFrom`. (#1259)
+
+
+*Config Updates*
+
+- Fixed a bug in Scattered type, when world_pos is specified in the stamp field. (#1190)
+- Added a new ``initial_image`` input type. (#1237)
+- Added skip_failures option in stamp fields.  (#1238)
+- Let input items depend on other input items. (#1239)
+- Allow profiling output to reach the logger when running with -v0. (#1245)
+- Added Eval type for GSObjects. (#1250)
+
+
+*New Features*
+
+- Updated Roman telescope data to Phase C (aka Cycle 9) specifications (#1017)
+- Added `ShapeData.applyWCS` method to convert HSM shapes to sky coordinates. (#1221)
+- Added `DoubleZernike` class and related functionality. (#1221)
+- Added some test-related utility functions to galsim.utilities. (#1240)
+- Added `utilities.merge_sorted` function. (#1243)
+- Added `EmissionLine` class to represent emission line SEDs. (#1247, #1249)
+- Updated data in `roman` module to Phase C (Cycle 9) information. (#1017, #1251)
+- Added interpolant option to `SED` and `Bandpass` classes. (#1257)
+- Added interpolant option to `galsim.trapz`. (#1257)
+- Added clip_neg option to `DistDeviate` class. (#1257)
+- Implemented algorithm for `ChromaticSum` to let it be used as a photon_op. (#1259)
+- Added `PhotonArray.copyFrom` method. (#1259)
+
+
+*Performance Improvements*
+
+- Added some support for GPU offloading. (#1212, #1217, #1218, #1222, #1224, #1230)
+- Don't add a WavelengthSampler to photon_ops if it is already there. (#1229, #1236)
+- Work around an OMP bug that disables multiprocessing on some systems. (#1241)
+- Sped up the `combine_wave_list` function, using the new `merge_sorted` function.  (#1243)
+- No longer keep a separate ``wave_list`` array in `ChromaticObject`. (#1245)
+- Delayed the calculation of the ``sed`` attributes of `ChromaticObject` until needed. (#1245)
+- Reduce long-term memory usage of Silicon class. (#1246)
+- Improved the behavior of SEDs when using spline interpolant. (#1187, #1257)
+- No longer pickle the SED of chromatic objects when the SED is a derived value. (#1257)
+
+
+*Bug Fixes*
+
+- Fixed a bug that could lead to overflow in extremely large images. (#1017)
+- Fixed a slight error in the Moffat maxk calculation. (#1208, #1210)
+- Fixed a bug that prevented Eval types from generating lists in config files in some contexts.
+  (#1220, #1223)
+- Fixed the absorption depth calculation in the Silicon class to allow wavelengths that are
+  outside the given range of the absorption lookup table. (#1227)
+- Changed the SED class to correctly broadcast over waves when the SED is constant. (#1228, #1235)
+- Fixed some errors when drawing ChromaticTransformation objects with photon shooting. (#1229)
+- Fixed the flux drawn by ChromaticConvolution with photon shooting when poisson_flux=True. (#1229)
+- Fixed a slight inaccuracy in the FFT phase shifts for single-precision images. (#1231, #1234)
+- Fixed a bug that prevented a convolution of two PhaseScreenPSF objects from being drawn with
+  photon shooting. (#1242)
+- Fixed a bug in the SED class normalization when using astropy.units for flux_type. (#1254, #1256)
+- Fixed a bug in `SiliconSensor` if the image is outside the range where tree rings are defined.
+  (#1258)
+
+
 v2.4
 ----
 
@@ -40,6 +110,10 @@ v2.4
 - Allow input objects with has_nobj=True to return an approximate number of objects. (#1202)
 - Add options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
 - Only use proxies for input objects if not yet in a multiprocessing context. (#1206)
+- Made it possible to delete items in a config list. (#1183)
+- Allowed input objects to return an approximate number of objects for the initial pass. (#1202)
+- Added options to InputLoader to make inputs with AtmosphericScreens work properly. (#1206)
+- Only use proxies for input objects if not yet in a multiprocessing context. (#1206)
 
 
 *New Features*
@@ -57,6 +131,7 @@ v2.4
 - Added `TimeSampler` photon operator. (#1178)
 - Added `BaseDeviate.as_numpy_generator`. (#1067, $1179)
 - Added ``timeout`` option to control multiprocessing timeout limit and increased the default. (#1180)
+- Added --log_format option to galsim executable. (#1201)
 
 
 *Performance Improvements*
@@ -65,6 +140,7 @@ v2.4
 - Use single precision for Silicon pixel boundaries. (#1140)
 - Moved some of the logic related to the Silicon sensor to the python layer. (#1141)
 - Let `BaseDeviate.generate` use multiple threads in C++ layer. (#1177)
+- Fixed a slow-down in multiprocessing especially when running very many (>10) processes. (#1213)
 
 
 *Bug Fixes*
@@ -75,7 +151,18 @@ v2.4
 - Fixed some rounding errors that could happen with integer-typed images. (#1160)
 - Fixed an assert error that would trigger if hsm was run on images with negative stride. (#1185)
 - Fix the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
-
+- Fixed the pip installation to include the galsim/share directory, which was missing.
+- Fixed error in default nobj calculation for extra_object output when not doing the
+  normal BuildFile processing.
+- Fixed error in how input fields check when they are current. (#1184)
+- Fixed an assert error that would trigger if hsm was run on images with negative stride. (#1185)
+- Fixed drawImage to work correctly for method=fft when using photon_ops. (#1193)
+- Fixed the proxies used by config Input items to allow access to attributes. (#1195)
+- Fixed the flux scaling of drawReal for objects with non-diagonal jacobian. (#1197, #1198)
+- Fixed a potential segmentation fault when using photon_ops with FFT drawing.  (#1216)
+- Fixed the Silicon class to handle invalid wavelengths gracefully. (#1227)
+- Fixed the config template processing to handle recursive templates. (#1233)
+- Fixed the modules field in config files to allow sub-modules without the parent module. (#1233)
 
 v2.3
 ----
@@ -165,6 +252,11 @@ v2.3
 - Fixed minor bug in repr of `OpticalPSF` class. (#1061)
 - Fixed bug in `RandomKnots` when multiplied by an SED. (#1064)
 - Fixed bug in `galsim.fits.writeMulti` not writing headers. (#1091)
+- Fixed some problems with the shared library build. (#1128)
+- Fixed a rare problem with SED.sampleWavelength sometimes generating invalid values. (#1131)
+- Fixed a bug where InterpolatedImage.drawReal could possibly cause seg faults
+- Fixed an error in our handling of the Roman Cycle 7 aberrations file. (#1142)
+- Fixed an error when drawing an InterpolatedImage completely off the target image. (#1164)
 
 
 v2.2
@@ -210,6 +302,9 @@ v2.2
 - Added Zernike polynomial +, -, and * operators. (#1047)
 - Added Zernike polynomial properties .laplacian and .hessian. (#1047)
 - Added ``center`` option to the `GSObject.drawImage` method. (#1053)
+- Added a new context, `galsim.utilities.pickle_shared`, which can be used to include shared
+  data in the pickle file. (#1057)
+- Added ability to shear a position. (Backported from 2.3 series.) (#1090)
 
 *Bug Fixes*
 
@@ -220,6 +315,10 @@ v2.2
 - Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting. (#1036)
 - Fixed error in `Sersic` class when n is very, very close to 0.5. (#1041)
+- Fixed a compiler error for clang on linux systems.
+- Fixed integration in VonKarman for some problematic r0 values. (#1058)
+- Fixed a bug in RandomKnots when multiplied by an SED. (#1064)
+- Fixed a bug in photon shooting which could cause seg faults. (#1079)
 
 v2.1
 ----

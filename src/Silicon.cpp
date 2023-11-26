@@ -542,7 +542,6 @@ namespace galsim {
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
                                               Polygon& poly) const
     {
-        double shift = 0.0;
         for (int n=0; n<_nv; n++) {
             xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
                 poly[n].x <<"  "<< poly[n].y<<std::endl;
@@ -550,9 +549,9 @@ namespace galsim {
             double ty = (double)j + poly[n].y - _treeRingCenter.y + (double)orig_center.y;
             xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
             double r = sqrt(tx * tx + ty * ty);
-            shift = _tr_radial_table.lookup(r);
-            xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-            if (r > 0) {
+            if (r > 0 && r < _tr_radial_table.argMax()) {
+                double shift = _tr_radial_table.lookup(r);
+                xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
                 // Shifts are along the radial vector in direction of the doping gradient
                 double dx = shift * tx / r;
                 double dy = shift * ty / r;
@@ -568,32 +567,34 @@ namespace galsim {
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
                                               int nx, int ny, int i1, int j1)
     {
-        iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Position<float>& pt, bool rhs, bool top) {
-                             Position<double> p = pt;
+        iteratePixelBoundary(
+            i-i1, j-j1, nx, ny, [&](int n, Position<float>& pt, bool rhs, bool top) {
+                Position<double> p = pt;
 
-                             // only do bottom and left points unless we're on top/right edge
-                             if ((rhs) && ((i - i1) < (nx - 1))) return;
-                             if ((top) && ((j - j1) < (ny - 1))) return;
+                // only do bottom and left points unless we're on top/right edge
+                if ((rhs) && ((i - i1) < (nx - 1))) return;
+                if ((top) && ((j - j1) < (ny - 1))) return;
 
-                             if (rhs) p.x += 1.0;
-                             if (top) p.y += 1.0;
-                             //xdbg<<"x,y = "<<p.x<<','<<p.y<<std::endl;
+                if (rhs) p.x += 1.0;
+                if (top) p.y += 1.0;
+                //xdbg<<"x,y = "<<p.x<<','<<p.y<<std::endl;
 
-                             double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
-                             double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
-                             //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
-                             double r = sqrt(tx * tx + ty * ty);
-                             if (r > 0) {
-                                double shift = _tr_radial_table.lookup(r);
-                                //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-                                // Shifts are along the radial vector in direction of the doping gradient
-                                double dx = shift * tx / r;
-                                double dy = shift * ty / r;
-                                //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-                                pt.x += dx;
-                                pt.y += dy;
-                             }
-        });
+                double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
+                double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
+                //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+                double r = sqrt(tx * tx + ty * ty);
+                if (r > 0 && r < _tr_radial_table.argMax()) {
+                    double shift = _tr_radial_table.lookup(r);
+                    //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+                    // Shifts are along the radial vector in direction of the doping gradient
+                    double dx = shift * tx / r;
+                    double dy = shift * ty / r;
+                    //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+                    pt.x += dx;
+                    pt.y += dy;
+                }
+            }
+        );
     }
 
     template <typename T>
@@ -645,13 +646,16 @@ namespace galsim {
     {
         result = emptypoly;
 
-        iteratePixelBoundary(i, j, nx, ny, [&](int n, const Position<float>& pt, bool rhs, bool top) {
-                             Position<double> p = pt;
-                             if (rhs) p.x += 1.0;
-                             if (top) p.y += 1.0;
-                             result[n].x += (p.x - emptypoly[n].x) * factor;
-                             result[n].y += (p.y - emptypoly[n].y) * factor;
-                             });
+        iteratePixelBoundary(
+            i, j, nx, ny,
+            [&](int n, const Position<float>& pt, bool rhs, bool top) {
+                Position<double> p = pt;
+                if (rhs) p.x += 1.0;
+                if (top) p.y += 1.0;
+                result[n].x += (p.x - emptypoly[n].x) * factor;
+                result[n].y += (p.y - emptypoly[n].y) * factor;
+            }
+        );
 
         result.updateBounds();
     }

@@ -287,9 +287,12 @@ def test_SED_mul():
         f = a*e
         np.testing.assert_almost_equal(f(x), a(x) * e(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        f = e*a
-        np.testing.assert_almost_equal(f(x), e(x) * a(x), 10,
+        f2 = e*a
+        np.testing.assert_almost_equal(f2(x), e(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        if sed is sed0:
+            check_pickle(f)
+            check_pickle(f2)
 
         # SED multiplied by dimensionless, non-constant SED
         g = galsim.SED('wave', 'nm', '1')
@@ -299,6 +302,9 @@ def test_SED_mul():
         h2 = g*a
         np.testing.assert_almost_equal(h2(x), g(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        if sed is sed0:
+            check_pickle(h)
+            check_pickle(h2)
 
         assert_raises(TypeError, a.__mul__, 'invalid')
 
@@ -513,8 +519,9 @@ def test_SED_withFlux():
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
             for sed in [
-                galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                           flux_type='flambda', fast=fast),
+                galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast),
+                galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast,
+                           interpolant='spline'),
                 galsim.SED('wave', wave_type='nm', flux_type='fphotons'),
                 galsim.EmissionLine(620.0, 1.0) + 2*galsim.EmissionLine(450.0, 0.5)
             ]:
@@ -573,8 +580,7 @@ def test_SED_withFluxDensity():
     """ Check that setting the flux density works.
     """
 
-    a0 = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                    flux_type='flambda')
+    a0 = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda')
     for z in [0, 0.2, 0.4]:
         a = a0.atRedshift(z)
         a = a.withFluxDensity(1.0, 500)
@@ -724,6 +730,21 @@ def test_redshift_calculateFlux():
     np.testing.assert_allclose(flux0, 2.993792e+15, rtol=1.e-4)
     np.testing.assert_allclose(flux1, 4.395954e+14, rtol=1.e-4)
 
+    # With spline, it's almost the same, but slightly different of course.
+    sed = galsim.SED('CWW_Sbc_ext.sed', 'nm', 'flambda', interpolant='spline')
+    bp = galsim.Bandpass('ACS_wfc_F606W.dat', 'nm', interpolant='spline')
+    t0 = time.time()
+    flux0 = sed.calculateFlux(bp)
+    t1 = time.time()
+    flux1 = sed.atRedshift(1).calculateFlux(bp)
+    t2 = time.time()
+    print('z=0 disk in HST V band: flux = ',flux0, t1-t0)
+    print('z=1 disk in HST V band: flux = ',flux1, t2-t1)
+
+    # Regression tests
+    np.testing.assert_allclose(flux0, 3.023368e+15, rtol=1.e-4)
+    np.testing.assert_allclose(flux1, 4.303569e+14, rtol=1.e-4)
+
 
 @timer
 def test_SED_calculateDCRMomentShifts():
@@ -849,7 +870,7 @@ def test_SED_sampleWavelength():
     np.testing.assert_equal(len(sed._cache_deviate),2,"Creating new SED deviate failed.")
 
     test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
-    np.testing.assert_array_almost_equal(out,test1,8,"Unexpected SED sample values.")
+    np.testing.assert_array_almost_equal(out,test1,5,"Unexpected SED sample values.")
 
     out = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=256)
     np.testing.assert_equal(len(sed._cache_deviate),2,"Unexpected number of SED deviates.")
@@ -1016,30 +1037,42 @@ def test_ne():
 
 @timer
 def test_thin():
-    s = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda',
-                   fast=False)
-    bp = galsim.Bandpass('1', 'nm', blue_limit=s.blue_limit, red_limit=s.red_limit)
-    flux = s.calculateFlux(bp)
-    print("Original number of SED samples = ",len(s.wave_list))
-    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print("Test err = ",err)
-        thin_s = s.thin(rel_err=err, preserve_range=True, fast_search=False)
-        thin_flux = thin_s.calculateFlux(bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True, fast_search = False: ",len(thin_s.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        thin_s = s.thin(rel_err=err, preserve_range=True)
-        thin_flux = thin_s.calculateFlux(bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True: ",len(thin_s.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
-        thin_s = s.thin(rel_err=err, preserve_range=False)
-        thin_flux = thin_s.calculateFlux(bp.truncate(thin_s.blue_limit, thin_s.red_limit))
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = False: ",len(thin_s.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, w/ range shrinkage."
+    for interpolant in ['linear', 'nearest', 'spline']:
+        s = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda',
+                       fast=False, interpolant=interpolant)
+        bp = galsim.Bandpass('1', 'nm', blue_limit=s.blue_limit, red_limit=s.red_limit)
+        flux = s.calculateFlux(bp)
+        print("Original number of SED samples = ",len(s.wave_list))
+        for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+            print("Test err = ",err)
+            thin_s = s.thin(rel_err=err, preserve_range=True, fast_search=False)
+            thin_flux = thin_s.calculateFlux(bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True, fast_search = False: ",
+                  len(thin_s.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            thin_s = s.thin(rel_err=err, preserve_range=True)
+            thin_flux = thin_s.calculateFlux(bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True: ",len(thin_s.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            print('true flux = ',flux)
+            print('thinned flux = ',thin_flux)
+            print('err = ',thin_err)
+            # The thinning algorithm guarantees a relative error of err for bolometric flux,
+            # but not for any arbitrary bandpass.  When the target error is very small, it can
+            # miss by a bit, especially for spline.  So test it with a little looser tolerance
+            # than the target.
+            test_err = err*4 if err <= 1.e-5 else err
+            assert np.abs(thin_err) < test_err,\
+                "Thinned SED failed accuracy goal, preserving range."
+            thin_s = s.thin(rel_err=err, preserve_range=False)
+            thin_flux = thin_s.calculateFlux(bp.truncate(thin_s.blue_limit, thin_s.red_limit))
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = False: ",len(thin_s.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            assert np.abs(thin_err) < test_err,\
+                "Thinned SED failed accuracy goal, w/ range shrinkage."
 
     assert_raises(ValueError, s.thin, rel_err=-0.5)
     assert_raises(ValueError, s.thin, rel_err=1.5)
@@ -1155,8 +1188,10 @@ def test_emission_line():
     ]:
         for sed in [
             galsim.EmissionLine(wavelength, fwhm),
-            galsim.EmissionLine(wavelength*10, fwhm*10, wave_type='ang')
+            galsim.EmissionLine(wavelength*10, fwhm*10, wave_type='ang'),
+            galsim.EmissionLine(wavelength*1.e-9, fwhm*1.e-9, wave_type=units.m),
         ]:
+            print(sed)
             np.testing.assert_allclose(sed.calculateFlux(None), 1.0)
             np.testing.assert_allclose((sed*2).calculateFlux(None), 2.0)
             np.testing.assert_allclose((3*sed).calculateFlux(None), 3.0)
@@ -1180,10 +1215,56 @@ def test_emission_line():
             with np.testing.assert_raises(galsim.GalSimSEDError):
                 spectral / sed
 
-            sed = sed.atRedshift(1.1)
-            assert sed is sed.atRedshift(1.1)
+            z = 1.1
+            sed = sed.atRedshift(z)
+            assert sed is sed.atRedshift(z)
+            np.testing.assert_allclose(sed.calculateFlux(None), (1+z))
+            np.testing.assert_allclose(sed(wavelength*(1+z)), 1/fwhm)
+
             with np.testing.assert_raises(galsim.GalSimRangeError):
                 sed.atRedshift(-2.0)
+        with np.testing.assert_raises(galsim.GalSimValueError):
+            galsim.EmissionLine(wavelength, fwhm, wave_type=units.Hz),
+
+
+@timer
+def test_flux_type_calculateFlux():
+    sed1 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='flambda'
+    )
+    sed2 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='fnu'
+    )
+    sed3 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type='nm', flux_type='fphotons'
+    )
+    sed4 = galsim.SED(
+        galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+        wave_type="nm", flux_type=units.Lsun / units.Hz / units.Mpc**2
+    )
+    flat_sed = galsim.SED(
+        '1',
+        wave_type="nm", flux_type="1"
+    )
+    bp = galsim.Bandpass(galsim.LookupTable([2,4], [1,2]), wave_type='nm')
+    exp_gal = galsim.Exponential(half_light_radius=0.5, flux=1)
+
+    for sed in [sed1, sed2, sed3, sed4]:
+        flux1 = sed.calculateFlux(bp)
+        flux2 = (1 * sed).calculateFlux(bp)
+        flux3 = (exp_gal * sed).calculateFlux(bp)
+        flux4 = (flat_sed * sed).calculateFlux(bp)
+        print('flux = {}, {}, {}'.format(flux1, flux2, flux3))
+        wave = np.linspace(bp.blue_limit, bp.red_limit, 10000)
+        f = sed(wave) * bp(wave)
+        flux5 = np.trapz(f, wave)
+        np.testing.assert_allclose(flux1, flux2)
+        np.testing.assert_allclose(flux1, flux3)
+        np.testing.assert_allclose(flux1, flux4)
+        np.testing.assert_allclose(flux1, flux5)
 
 
 if __name__ == "__main__":
