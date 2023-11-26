@@ -887,6 +887,31 @@ def test_treerings():
     # Mostly checking that there aren't any nan's here from division by 0.
     assert np.min(areas8.array) > 0
 
+    # Also check that things behave sensibly if the stamp is outside the arg range of
+    # the treering function
+    # tr6 has a max radius of 2000.
+    im.setCenter(2000,2000)
+    obj.drawImage(im, method='phot', sensor=sensor6, rng=rng6)
+    print('im.sum = ',im.array.sum(), im.added_flux)
+    np.testing.assert_allclose(im.array.sum(), im.added_flux)
+    np.testing.assert_allclose(im.array.sum(), init_flux, rtol=1.e-2)
+
+    areas6a = sensor6.calculate_pixel_areas(im, use_flux=True)
+    assert np.min(areas6a.array) > 0
+    print('areas6a = ',areas6a.array)
+    areas6b = sensor6.calculate_pixel_areas(im, use_flux=False)
+    assert np.min(areas6b.array) > 0
+    # When the stamp is outside the range of the treering function, the areas will be
+    # identical for the use_flux=False case.
+    print('areas6b = ',areas6b.array)
+    print('min, max = ',areas6b.array.min(), areas6b.array.max())
+    assert np.all(areas6b.array == areas6b.array[0,0])
+    # But not when use_flux=True
+    assert not np.all(areas6a.array == areas6a.array[0,0])
+    print('mean, std when use_flux=True: ', np.mean(areas6a.array), np.std(areas6a.array))
+    np.testing.assert_allclose(np.mean(areas6a.array), np.mean(areas6b.array),
+                               rtol=np.std(areas6a.array)/np.sqrt(np.prod(areas6b.array.shape))*3)
+
 
 @timer
 def test_resume():

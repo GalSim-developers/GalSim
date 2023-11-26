@@ -22,7 +22,6 @@ __all__ = [ 'AstropyWCS', 'PyAstWCS', 'WcsToolsWCS', 'GSFitsWCS',
 import warnings
 import os
 import numpy as np
-from scipy.optimize import least_squares
 import astropy.wcs
 import subprocess
 import copy
@@ -1784,6 +1783,8 @@ def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
                    the tangent plane is centered.  [default: None, which means
                    use the average position of the list of reference stars]
     """
+    from scipy.optimize import least_squares
+
     if order < 1:
         raise GalSimValueError("Illegal SIP order", order)
 

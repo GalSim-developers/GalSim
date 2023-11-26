@@ -20,6 +20,7 @@ import numpy as np
 import os
 import sys
 import math
+import warnings
 
 import galsim
 from galsim_test_helpers import *
@@ -1980,6 +1981,32 @@ def test_distLookupTable():
     np.testing.assert_array_almost_equal(
             test_array, np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test clip_neg
+    # Same values as d, but with some negative values, where it had zeros.
+    x = [0.0, 1.0, 1.000000001, 1.5, 2, 2.5, 2.999999999, 3.0, 4.0]
+    f = [0.1, 0.1, 0.0, -0.2, -0.3, -0.2, 0.0    , 0.1, 0.1]
+    tab2 = galsim.LookupTable(x=x, f=f, interpolant='linear')
+    d2 = galsim.DistDeviate(testseed, function=tab2, clip_neg=True)
+    test_array2 = np.empty(3)
+    d2.generate(test_array2)
+    np.testing.assert_array_almost_equal(test_array2, test_array)
+
+    # Without clip_neg, it raises an error
+    with assert_raises(galsim.GalSimValueError):
+        galsim.DistDeviate(testseed, function=tab2)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.DistDeviate(testseed, function=tab2, clip_neg=False)
+
+    # Also works to cleanup NaN values
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+        f = [0.1, 0.1, 0.0, -0.2, np.sqrt(-0.3), -0.2, 0.0    , 0.1, 0.1]
+    tab3 = galsim.LookupTable(x=x, f=f, interpolant='linear')
+    d3 = galsim.DistDeviate(testseed, function=tab3, clip_neg=True)
+    test_array3 = np.empty(3)
+    d3.generate(test_array3)
+    np.testing.assert_array_almost_equal(test_array3, test_array)
 
     # Test filling an image
     d.seed(testseed)

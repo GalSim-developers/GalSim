@@ -269,6 +269,12 @@ def test_Bandpass_wave_type():
                                    err_msg="Bandpass.effective_wavelength doesn't respect"
                                            +" wave_type")
 
+    # Spline interpolation changes the effective wavelength slightly, but not much.
+    a2 = galsim.Bandpass('LSST_r.dat', wave_type='nm', interpolant='spline')
+    np.testing.assert_equal(a2.red_limit, a0.red_limit)
+    np.testing.assert_equal(a2.blue_limit, a0.blue_limit)
+    np.testing.assert_allclose(a2.effective_wavelength, a0.effective_wavelength, rtol=1.e-3)
+
     b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), wave_type='nm')
     b1 = galsim.Bandpass(galsim.LookupTable([10,20,30,40,50], [1,2,3,4,5]), wave_type='ang')
     np.testing.assert_approx_equal(b0.red_limit, b1.red_limit,
@@ -313,28 +319,32 @@ def test_ne():
 def test_thin():
     """Test that bandpass thinning works with the requested accuracy."""
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
-    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
-    flux = s.calculateFlux(bp)
-    print("Original number of bandpass samples = ",len(bp.wave_list))
-    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print("Test err = ",err)
-        thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        thin_bp = bp.thin(rel_err=err, preserve_range=True)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
-        thin_bp = bp.thin(rel_err=err, preserve_range=False)
-        thin_flux = s.calculateFlux(thin_bp)
-        thin_err = (flux-thin_flux)/flux
-        print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
-        print("realized error = ",(flux-thin_flux)/flux)
-        assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
+    bp1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    bp2 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm', interpolant='spline')
+
+    for bp in [bp1, bp2]:
+        flux = s.calculateFlux(bp)
+        print("Original number of bandpass samples = ",len(bp.wave_list))
+        for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+            print("Test err = ",err)
+            thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True, fast_search = False: ",
+                  len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            thin_bp = bp.thin(rel_err=err, preserve_range=True)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
+            thin_bp = bp.thin(rel_err=err, preserve_range=False)
+            thin_flux = s.calculateFlux(thin_bp)
+            thin_err = (flux-thin_flux)/flux
+            print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
+            print("realized error = ",(flux-thin_flux)/flux)
+            assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
 
 @timer

@@ -26,7 +26,7 @@ from .gsobject import GSObject
 from .utilities import lazy_property
 from . import _galsim
 from .photon_array import PhotonArray
-from .random import BinomialDeviate
+from .random import UniformDeviate
 from . import chromatic as chrom
 
 
@@ -310,39 +310,33 @@ class Sum(GSObject):
                 image += im1
 
     def _shoot(self, photons, rng):
-        remainingAbsoluteFlux = self.positive_flux + self.negative_flux
-        fluxPerPhoton = remainingAbsoluteFlux / len(photons)
+        # We probabilistically choose a component for each photon based on the
+        # relative flux density of that component for the given wavelength.
+        comp_flux = np.array([obj.positive_flux + obj.negative_flux for obj in self._obj_list])
+        total_flux = np.sum(comp_flux)
 
-        remainingN = len(photons)
-        istart = 0  # The location in the photons array where we assign the component arrays.
+        prob = comp_flux / total_flux
+        cdf = np.cumsum(prob)
 
-        # Get photons from each summand, using BinomialDeviate to randomize
-        # the distribution of photons among summands
-        for i, obj in enumerate(self.obj_list):
-            thisAbsoluteFlux = obj.positive_flux + obj.negative_flux
+        u = np.empty(len(photons))
+        UniformDeviate(rng).generate(u)
+        use_k = np.sum((u >= cdf[:,None]), axis=0)
+        n = len(self._obj_list)
+        use_k[use_k==n] = n-1  # This shouldn't be possible, but maybe with numerical rounding...
 
-            # How many photons to shoot from this summand?
-            thisN = remainingN  # All of what's left, if this is the last summand...
-            if i < len(self.obj_list)-1:
-                # otherwise, allocate a randomized fraction of the remaining photons to summand.
-                bd = BinomialDeviate(rng, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
-                thisN = int(bd())
-            if thisN > 0:
-                thisPA = obj.shoot(thisN, rng)
-                # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
-                # whereas the shoot() routine would have made them each nominally
-                # thisAbsoluteFlux/thisN
-                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
-                photons.assignAt(istart, thisPA)
-                istart += thisN
-            remainingN -= thisN
-            remainingAbsoluteFlux -= thisAbsoluteFlux
-        #assert remainingN == 0
-        #assert np.isclose(remainingAbsoluteFlux, 0.0)
+        fluxPerPhoton = total_flux / len(photons)
 
-        # This process produces correlated photons, so mark the resulting array as such.
-        if len(self.obj_list) > 1:
-            photons.setCorrelated()
+        # Shoot the corresponding photons from each component.
+        for kk, obj in enumerate(self.obj_list):
+            use = (use_k == kk)  # True for each photon where this is the object to shoot from
+            this_n = np.sum(use)
+            if this_n == 0:
+                continue
+            temp = PhotonArray(this_n)
+            temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
+            obj._shoot(temp, rng)
+            temp.flux = fluxPerPhoton
+            photons._copyFrom(temp, use, slice(None))
 
     def _drawKImage(self, image, jac=None):
         self.obj_list[0]._drawKImage(image, jac)
