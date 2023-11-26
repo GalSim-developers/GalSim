@@ -742,9 +742,10 @@ def test_photon_array_depr():
     if hasattr(galsim, "_galsim"):
         for i in range(50):
             pa1.y[i] = photon_array.y[i]
+        pa1.flux[0:50] = photon_array.flux[:50]
     else:
         pa1.y = photon_array.y[:50]
-    pa1.flux[0:50] = photon_array.flux[:50]
+        pa1.flux.at[0:50].set(photon_array.flux[:50])
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
     pa1.pupil_u = photon_array.pupil_u[:50]
