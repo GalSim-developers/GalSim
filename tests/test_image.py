@@ -268,7 +268,7 @@ def test_Image_basic():
                 assert im2_view.imag(x,y) == 0
                 assert im2_cview.imag(x,y) == 0
 
-                value3 = 10*x + y
+                value3 = 10*x + y + 111111111
                 im1.addValue(x,y, value3-value2)
                 im2_view[x,y] += value3-value2
                 assert im1[galsim.PositionI(x,y)] == value3
