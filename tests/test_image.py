@@ -395,7 +395,7 @@ def test_Image_basic():
         assert im2.bounds == bounds
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                value3 = 10*x+y
+                value3 = 10*x+y + 111111111
                 assert im1(x+dx,y+dy) == value3
                 assert im1_view(x,y) == value3
                 assert im2(x,y) == value3
