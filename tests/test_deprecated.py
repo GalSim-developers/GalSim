@@ -548,7 +548,7 @@ def test_trapz_basic():
     )
 
     result = check_dep(galsim.integ.trapz, func, 0, 1, np.linspace(0, 1, 100000))
-    expected_val = 1.0**3.0 / 3.0
+    expected_val = 1.**3./3.
     np.testing.assert_almost_equal(
         result / expected_val,
         1.0,
@@ -564,12 +564,10 @@ def test_trapz_basic():
     with assert_raises(TypeError):
         check_dep(galsim.integ.trapz, func, 0.1, 1, points=2.3)
 
-
 @timer
 def test_hsm_depr():
     hsmp = check_dep(galsim.hsm.HSMParams, max_moment_nsig2=25.0)
-    assert hsmp.max_moment_nsig2 == 0.0
-
+    assert hsmp.max_moment_nsig2 == 0.
 
 @timer
 def test_photon_array_depr():
@@ -591,7 +589,7 @@ def test_photon_array_depr():
     assert len(photon_array.dxdz) == nphotons
     assert len(photon_array.dydz) == nphotons
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_equal(photon_array.dydz, 0.0)
+    np.testing.assert_array_equal(photon_array.dydz, 0.)
 
     photon_array.dydz = 0.59
     assert photon_array.hasAllocatedAngles()
@@ -600,7 +598,7 @@ def test_photon_array_depr():
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
-    photon_array.wavelength = 500.0
+    photon_array.wavelength = 500.
     assert photon_array.hasAllocatedWavelengths()
     assert len(photon_array.wavelength) == nphotons
     np.testing.assert_array_equal(photon_array.wavelength, 500)
@@ -630,7 +628,7 @@ def test_photon_array_depr():
     # non-nan means allocated for jax-galsim
     assert photon_array.hasAllocatedAngles()
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
-    np.testing.assert_array_equal(photon_array.dydz, 0.0)
+    np.testing.assert_array_equal(photon_array.dydz, 0.)
 
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
@@ -752,17 +750,16 @@ def test_photon_array_depr():
 def test_chromatic_flux():
     # This is based on a snippet of test_chromatic_flux in test_chromatic.py.
 
-    bulge_SED = galsim.SED("CWW_E_ext.sed", wave_type="ang", flux_type="flambda")
+    bulge_SED = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda')
     star = galsim.Gaussian(fwhm=1e-8) * bulge_SED
     mono_PSF = galsim.Gaussian(half_light_radius=0.8)
     zenith_angle = 20 * galsim.degrees
-    bandpass = galsim.Bandpass("LSST_i.dat", "nm").thin()
-    PSF = galsim.ChromaticAtmosphere(
-        mono_PSF, base_wavelength=500, zenith_angle=zenith_angle
-    )
+    bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500, 
+                                     zenith_angle=zenith_angle)
     PSF = PSF * 1.0
     PSF1 = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
-                           use_exact_sed=False)
+                          use_exact_sed=False)
 
     # Check deprecated use_exact_SED kwarg
     PSF2 = check_dep(PSF.interpolate,
