@@ -288,7 +288,6 @@ def test_uniform():
         u.add_generate(test_array)
     else:
         test_array = u.add_generate(test_array)
-    u.add_generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, 2.*np.array(uResult), precisionF,
             err_msg='Wrong uniform random number sequence from generate.')
