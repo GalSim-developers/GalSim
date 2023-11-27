@@ -101,7 +101,7 @@ def test_noise():
     cf_2 = check_dep(galsim.correlatednoise._BaseCorrelatedNoise,
                      galsim.BaseDeviate(test_seed), ii, im_2.wcs)
     cf_2 = cf_2.withVariance(var_2)
-    assert cf_1==cf_2, 'Inconsistent noise properties from getNoise and getNoiseProperties'
+    assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
 @timer
 def test_randwalk_defaults():
@@ -123,19 +123,14 @@ def test_randwalk_defaults():
     nobj=len(rw.points)
     assert nobj == npoints,"expected %d objects, got %d" % (npoints, nobj)
 
-    pts = rw.points
-    assert pts.shape == (npoints, 2), "expected (%d,2) shape for points, got %s" % (
-        npoints,
-        pts.shape,
-    )
+    pts=rw.points
+    assert pts.shape == (npoints, 2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
     np.testing.assert_almost_equal(rw.centroid.x, np.mean(pts[:, 0]))
     np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:, 1]))
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     rng2 = galsim.BaseDeviate(1234)
-    rw2 = check_dep(
-        galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp
-    )
+    rw2 = check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp)
     assert rw2 != rw
     assert rw2 == rw.withGSParams(gsp)
 
@@ -176,9 +171,8 @@ def test_randwalk_repr():
 
     npoints=100
     hlr = 8.0
-    flux = 1
-    rw1 = check_dep(
-        galsim.RandomWalk,
+    flux=1
+    rw1=check_dep(galsim.RandomWalk,
         npoints,
         half_light_radius=hlr,
         flux=flux,
@@ -189,8 +183,8 @@ def test_randwalk_repr():
     )
 
     for rw in (rw1, rw2):
-        
-        
+
+
         # just make sure str() works, don't require eval to give
         # a consistent object back
         st=str(rw)
@@ -225,14 +219,14 @@ def test_randwalk_config():
     hlr=2.0
     flux=np.pi
     gal_config1 = {
-        'type': 'RandomWalk',
-        'npoints': 100,
-        'half_light_radius': hlr,
-        'flux': flux,
+        'type':'RandomWalk',
+        'npoints':100,
+        'half_light_radius':hlr,
+        'flux':flux,
     }
     gal_config2 = {
-        'type': 'RandomWalk',
-        'npoints': 150,
+        'type':'RandomWalk',
+        'npoints':150,
         'profile': {
             'type': 'Exponential',
             'half_light_radius': hlr,
@@ -242,8 +236,8 @@ def test_randwalk_config():
 
     for gal_config in (gal_config1, gal_config2):
         config={
-            'gal': gal_config,
-            'rng': galsim.BaseDeviate(31415),
+            'gal':gal_config,
+            'rng':galsim.BaseDeviate(31415),
         }
 
         rwc = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
@@ -303,15 +297,15 @@ def test_withOrigin():
     color = 0.3
     for wcs in wcs_list:
         # Original version of the shiftOrigin tests in do_nonlocal_wcs using deprecated name.
-        new_origin = galsim.PositionI(123, 321)
+        new_origin = galsim.PositionI(123,321)
         wcs3 = check_dep(wcs.withOrigin, new_origin)
-        assert wcs != wcs3, name + " is not != wcs.withOrigin(pos)"
+        assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
         wcs4 = wcs.local(wcs.origin, color=color)
-        assert wcs != wcs4, name + " is not != wcs.local()"
-        assert wcs4 != wcs, name + " is not != wcs.local() (reverse)"
+        assert wcs != wcs4, name+' is not != wcs.local()'
+        assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
         world_origin = wcs.toWorld(wcs.origin, color=color)
         if wcs.isUniform():
-            if wcs.world_origin == galsim.PositionD(0, 0):
+            if wcs.world_origin == galsim.PositionD(0,0):
                 wcs2 = wcs.local(wcs.origin, color=color).withOrigin(wcs.origin)
                 assert wcs == wcs2, (
                     name + " is not equal after wcs.local().withOrigin(origin)"
@@ -354,8 +348,8 @@ def test_withOrigin():
         )
 
     # Now some CelestialWCS types
-    cubic_u = Cubic(2.9e-5, 2000.0, 'u')
-    cubic_v = Cubic(-3.7e-5, 2000.0, 'v')
+    cubic_u = Cubic(2.9e-5, 2000., 'u')
+    cubic_v = Cubic(-3.7e-5, 2000., 'v')
     center = galsim.CelestialCoord(23 * galsim.degrees, -13 * galsim.degrees)
     radec = lambda x, y: center.deproject_rad(
         cubic_u(x, y) * 0.2, cubic_v(x, y) * 0.2, projection="lambert"
@@ -388,7 +382,8 @@ def test_withOrigin():
 
 @timer
 def test_wfirst():
-    """Test that the deprecated wfirst module works like the new roman module."""
+    """Test that the deprecated wfirst module works like the new roman module.
+    """
     import galsim.roman
 
     check_dep(__import__, "galsim.wfirst")
