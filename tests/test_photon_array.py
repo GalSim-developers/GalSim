@@ -262,8 +262,16 @@ def test_photon_array():
     assert pa2.time[37] == pa1.time[8]
 
     # ... or the other arrays
-    pa2.dxdz[47] = pa2.dydz[47] = pa2.wavelength[47] = -1
-    pa2.pupil_u[47] = pa2.pupil_v[47] = pa2.time[47] = -1
+    if hasattr(galsim, "_galsim"):
+        pa2.dxdz[47] = pa2.dydz[47] = pa2.wavelength[47] = -1
+        pa2.pupil_u[47] = pa2.pupil_v[47] = pa2.time[47] = -1
+    else:
+        pa2._dxdz = pa2._dxdz.at[47].set(-1)
+        pa2._dydz = pa2._dydz.at[47].set(-1)
+        pa2._wave = pa2._wave.at[47].set(-1)
+        pa2._pupil_u = pa2._pupil_u.at[47].set(-1)
+        pa2._pupil_v = pa2._pupil_v.at[47].set(-1)
+        pa2._time = pa2._time.at[47].set(-1)
     pa2.copyFrom(pa1, 47, 18, do_other=False)
     assert pa2.flux[47] == pa1.flux[18]
     assert pa2.x[47] == pa1.x[18]
