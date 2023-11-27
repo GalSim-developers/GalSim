@@ -124,9 +124,9 @@ def test_randwalk_defaults():
     assert nobj == npoints,"expected %d objects, got %d" % (npoints, nobj)
 
     pts=rw.points
-    assert pts.shape == (npoints, 2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
-    np.testing.assert_almost_equal(rw.centroid.x, np.mean(pts[:, 0]))
-    np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:, 1]))
+    assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
+    np.testing.assert_almost_equal(rw.centroid.x, np.mean(pts[:,0]))
+    np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:,1]))
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     rng2 = galsim.BaseDeviate(1234)
@@ -193,10 +193,8 @@ def test_randwalk_repr():
 
         new_rw = eval(repr(rw))
 
-        assert new_rw.npoints == rw.npoints, "expected npoints=%d got %d" % (
-            rw.npoints,
-            new_rw.npoints,
-        )
+        assert new_rw.npoints==rw.npoints,\
+            "expected npoints=%d got %d" % (rw.npoints,new_rw.npoints)
 
         mess = "expected input_half_light_radius=%.16g got %.16g"
         assert new_rw.input_half_light_radius == rw.input_half_light_radius, mess % (
