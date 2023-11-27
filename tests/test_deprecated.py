@@ -784,11 +784,9 @@ def test_chromatic_flux():
                            use_exact_sed=False)
 
     # Check deprecated use_exact_SED kwarg
-    PSF2 = check_dep(
-        PSF.interpolate,
-        waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
-        use_exact_SED=False,
-    )
+    PSF2 = check_dep(PSF.interpolate,
+                     waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                     use_exact_SED=False)
     assert PSF2 == PSF1
 
     # Also do this manually with the InterpolatedChromaticObject class
@@ -811,7 +809,7 @@ def test_W149():
 
     config = {
         'modules' : ['galsim.roman'],
-        'psf' : { 'type' : 'RomanPSF', 'SCA': 4, 'bandpass': 'W149' },
+        'psf' : { 'type' : 'RomanPSF', 'SCA': 4, 'bandpass': 'W149' }
     }
 
     galsim.config.ImportModules(config)
