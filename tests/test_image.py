@@ -221,7 +221,11 @@ def test_Image_basic():
                     assert im2_conj(x,y) == 23
                     assert im2.conjugate(x,y) == value
                 else:
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
                     assert im2_conj(x,y) == value
+                else:
+                    assert im2_conj(x,y) != value
 
                 value2 = 53 + 12*x - 19*y
                 if tchar[i] in ['US', 'UI']:
