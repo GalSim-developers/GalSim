@@ -25,7 +25,8 @@ from galsim_test_helpers import *
 
 
 def check_dep(f, *args, **kwargs):
-    """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error."""
+    """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
+"""
     # Check that f() raises a warning, but not an error.
     with assert_warns(galsim.GalSimDeprecationWarning):
         res = f(*args, **kwargs)
@@ -36,18 +37,15 @@ def check_dep(f, *args, **kwargs):
 def test_gsparams():
     check_dep(galsim.GSParams, allowed_flux_variation=0.90)
     check_dep(galsim.GSParams, range_division_for_extrema=50)
-    check_dep(galsim.GSParams, small_fraction_of_flux=1.0e-6)
+    check_dep(galsim.GSParams, small_fraction_of_flux=1.e-6)
 
 
 @timer
 def test_phase_psf():
-    atm = galsim.Atmosphere(
-        screen_size=10.0, altitude=0, r0_500=0.15, suppress_warning=True
-    )
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15, suppress_warning=True)
     psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
     check_dep(galsim.PhaseScreenPSF.__getattribute__, psf, "img")
     check_dep(galsim.PhaseScreenPSF.__getattribute__, psf, "finalized")
-
 
 @timer
 def test_interpolant():
@@ -85,21 +83,18 @@ def test_interpolant():
 
 @timer
 def test_noise():
-    real_gal_dir = os.path.join("..", "examples", "data")
-    real_gal_cat = "real_galaxy_catalog_23.5_example.fits"
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
     real_cat = galsim.RealGalaxyCatalog(
-        dir=real_gal_dir, file_name=real_gal_cat, preload=True
-    )
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
-    test_seed = 987654
+    test_seed=987654
     test_index = 17
     cf_1 = real_cat.getNoise(test_index, rng=galsim.BaseDeviate(test_seed))
     im_2, pix_scale_2, var_2 = real_cat.getNoiseProperties(test_index)
     # Check the variance:
     var_1 = cf_1.getVariance()
-    assert (
-        var_1 == var_2
-    ), "Inconsistent noise variance from getNoise and getNoiseProperties"
+    assert var_1==var_2,'Inconsistent noise variance from getNoise and getNoiseProperties'
     # Check the image:
     ii = galsim.InterpolatedImage(
         im_2,
@@ -128,10 +123,10 @@ def test_randwalk_defaults():
     """
 
     # try constructing with mostly defaults
-    npoints = 100
+    npoints=100
     hlr = 8.0
     rng = galsim.BaseDeviate(1234)
-    rw = check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng)
+    rw=check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng)
 
     assert rw.npoints == npoints, "expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius == hlr, "expected hlr==%g, got %g" % (
@@ -139,8 +134,8 @@ def test_randwalk_defaults():
         rw.input_half_light_radius,
     )
 
-    nobj = len(rw.points)
-    assert nobj == npoints, "expected %d objects, got %d" % (npoints, nobj)
+    nobj=len(rw.points)
+    assert nobj == npoints,"expected %d objects, got %d" % (npoints, nobj)
 
     pts = rw.points
     assert pts.shape == (npoints, 2), "expected (%d,2) shape for points, got %s" % (
@@ -150,7 +145,7 @@ def test_randwalk_defaults():
     np.testing.assert_almost_equal(rw.centroid.x, np.mean(pts[:, 0]))
     np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:, 1]))
 
-    gsp = galsim.GSParams(xvalue_accuracy=1.0e-8, kvalue_accuracy=1.0e-8)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     rng2 = galsim.BaseDeviate(1234)
     rw2 = check_dep(
         galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp
@@ -168,7 +163,7 @@ def test_randwalk_defaults():
 
     # Check that image is not sensitive to use of rng by other objects.
     rng3 = galsim.BaseDeviate(1234)
-    rw3 = check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng3)
+    rw3=check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng3)
     rng3.discard(523)
     conv1 = galsim.Convolve(rw, psf)
     conv3 = galsim.Convolve(rw3, psf)
@@ -178,7 +173,7 @@ def test_randwalk_defaults():
 
     # Run some basic tests of correctness
     check_basic(conv1, "RandomWalk")
-    im = galsim.ImageD(64, 64, scale=0.5)
+    im = galsim.ImageD(64,64, scale=0.5)
     do_shoot(conv1, im, "RandomWalk")
     do_kvalue(conv1, im, "RandomWalk")
     check_pickle(rw)
@@ -193,7 +188,7 @@ def test_randwalk_repr():
     using eval
     """
 
-    npoints = 100
+    npoints=100
     hlr = 8.0
     flux = 1
     rw1 = check_dep(
@@ -202,16 +197,17 @@ def test_randwalk_repr():
         half_light_radius=hlr,
         flux=flux,
     )
-    rw2 = check_dep(
-        galsim.RandomWalk,
+    rw2=check_dep(galsim.RandomWalk,
         npoints,
         profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
     )
 
     for rw in (rw1, rw2):
+        
+        
         # just make sure str() works, don't require eval to give
         # a consistent object back
-        st = str(rw)
+        st=str(rw)
 
         # require eval(repr(rw)) to give a consistent object back
 
@@ -240,36 +236,35 @@ def test_randwalk_config():
     explicit constructor
     """
 
-    hlr = 2.0
-    flux = np.pi
+    hlr=2.0
+    flux=np.pi
     gal_config1 = {
-        "type": "RandomWalk",
-        "npoints": 100,
-        "half_light_radius": hlr,
-        "flux": flux,
+        'type': 'RandomWalk',
+        'npoints': 100,
+        'half_light_radius': hlr,
+        'flux': flux,
     }
     gal_config2 = {
-        "type": "RandomWalk",
-        "npoints": 150,
-        "profile": {
-            "type": "Exponential",
-            "half_light_radius": hlr,
-            "flux": flux,
-        },
+        'type': 'RandomWalk',
+        'npoints': 150,
+        'profile': {
+            'type': 'Exponential',
+            'half_light_radius': hlr,
+            'flux': flux,
+        }
     }
 
     for gal_config in (gal_config1, gal_config2):
-        config = {
-            "gal": gal_config,
-            "rng": galsim.BaseDeviate(31415),
+        config={
+            'gal': gal_config,
+            'rng': galsim.BaseDeviate(31415),
         }
 
-        rwc = check_dep(galsim.config.BuildGSObject, config, "gal")[0]
+        rwc = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
         print(repr(rwc._profile))
 
-        rw = check_dep(
-            galsim.RandomWalk,
-            gal_config["npoints"],
+        rw = check_dep(galsim.RandomWalk,
+            gal_config['npoints'],
             half_light_radius=hlr,
             flux=flux,
         )
