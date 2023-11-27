@@ -219,7 +219,11 @@ def test_Image_basic():
                 if tchar[i][0] == 'C':
                     # complex conjugate is not a view into the original.
                     assert im2_conj(x,y) == 23
-                    assert im2.conjugate(x,y) == value
+                    if hasattr(galsim, "_galsim"):
+                        # no real views in jax
+                        assert im2.conjugate(x,y) == value
+                    else:
+                        assert im2.conjugate(x,y) != value
                 else:
                     if hasattr(galsim, "_galsim"):
                         # no real views in jax
