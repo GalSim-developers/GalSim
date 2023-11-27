@@ -235,9 +235,17 @@ def test_Image_basic():
                 assert im1.getValue(x,y) == value2
                 assert im1.view().getValue(x=x, y=y) == value2
                 assert im1.view(make_const=True).getValue(x,y) == value2
-                assert im2.getValue(x=x, y=y) == value2
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
+                    assert im2.getValue(x=x, y=y) == value2
+                else:
+                    assert im2.getValue(x=x, y=y) != value2
                 assert im2_view.getValue(x,y) == value2
-                assert im2_cview._getValue(x,y) == value2
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
+                    assert im2_cview._getValue(x,y) == value2
+                else:
+                    assert im2_cview._getValue(x,y) != value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
