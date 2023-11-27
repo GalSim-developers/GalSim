@@ -243,7 +243,7 @@ def test_randwalk_config():
         )
 
         assert rw.npoints==rwc.npoints,\
-            "expected npoints==%d, got %d" % (rw.npoints,rwc.npoints)
+            "expected npoints==%d, got %d" % (rw.npoints, rwc.npoints)
 
         assert (
             rw.input_half_light_radius == rwc.input_half_light_radius
@@ -353,11 +353,11 @@ def test_withOrigin():
         # Original version of the shiftOrigin tests in do_celestial_wcs using deprecated name.
         new_origin = galsim.PositionI(123,321)
         wcs3 = wcs.shiftOrigin(new_origin)
-        assert wcs != wcs3, name + " is not != wcs.shiftOrigin(pos)"
+        assert wcs != wcs3, name+' is not != wcs.shiftOrigin(pos)'
         wcs4 = wcs.local(wcs.origin)
-        assert wcs != wcs4, name + " is not != wcs.local()"
-        assert wcs4 != wcs, name + " is not != wcs.local() (reverse)"
-        world_pos1 = wcs.toWorld(galsim.PositionD(0, 0))
+        assert wcs != wcs4, name+' is not != wcs.local()'
+        assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
+        world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
         wcs3 = wcs.shiftOrigin(new_origin)
         world_pos2 = wcs3.toWorld(new_origin)
         np.testing.assert_almost_equal(
@@ -373,8 +373,7 @@ def test_wfirst():
     """Test that the deprecated wfirst module works like the new roman module.
     """
     import galsim.roman
-
-    check_dep(__import__, "galsim.wfirst")
+    check_dep(__import__, 'galsim.wfirst')
 
     assert galsim.wfirst.gain == galsim.roman.gain
     assert galsim.wfirst.pixel_scale == galsim.roman.pixel_scale
@@ -394,13 +393,10 @@ def test_wfirst():
     assert galsim.wfirst.pupil_plane_scale == galsim.roman.pupil_plane_scale
     assert galsim.wfirst.stray_light_fraction == galsim.roman.stray_light_fraction
     np.testing.assert_array_equal(galsim.wfirst.ipc_kernel, galsim.roman.ipc_kernel)
-    np.testing.assert_array_equal(
-        galsim.wfirst.persistence_coefficients, galsim.roman.persistence_coefficients
-    )
-    np.testing.assert_array_equal(
-        galsim.wfirst.persistence_fermi_parameters,
-        galsim.roman.persistence_fermi_parameters,
-    )
+    np.testing.assert_array_equal(galsim.wfirst.persistence_coefficients, 
+                                  galsim.roman.persistence_coefficients)
+    np.testing.assert_array_equal(galsim.wfirst.persistence_fermi_parameters,
+                                  galsim.roman.persistence_fermi_parameters)
     assert galsim.wfirst.n_sca == galsim.roman.n_sca
     assert galsim.wfirst.n_pix_tot == galsim.roman.n_pix_tot
     assert galsim.wfirst.n_pix == galsim.roman.n_pix
@@ -422,10 +418,10 @@ def test_wfirst():
     assert galsim.wfirst.allDetectorEffects is galsim.roman.allDetectorEffects
     assert galsim.wfirst.NLfunc is galsim.roman.NLfunc
 
-
 @timer
 def test_roman_psfs():
-    """Test the deprecated high_accuracy and approximate_struts options."""
+    """Test the deprecated high_accuracy and approximate_struts options.
+    """
     import galsim.roman
 
     test_kwargs = [
@@ -446,8 +442,8 @@ def test_roman_psfs():
 
     use_sca = 5
     for kwargs1, kwargs2 in test_kwargs:
-        psf1 = check_dep(galsim.roman.getPSF, use_sca, "Y106", **kwargs1)
-        psf2 = galsim.roman.getPSF(use_sca, "Y106", **kwargs2)
+        psf1 = check_dep(galsim.roman.getPSF, use_sca, 'Y106', **kwargs1)
+        psf2 = galsim.roman.getPSF(use_sca, 'Y106', **kwargs2)
         assert psf1 == psf2
 
     # Cheat to get coverage of False,True option without spending a long time doing the
@@ -465,6 +461,7 @@ def test_roman_psfs():
 
 @timer
 def test_surface_ops():
+
     # Based on test_sensor.py:test_wavelengths_and_angles, but massively simplified.
 
     rng = galsim.BaseDeviate(1234)
@@ -473,20 +470,14 @@ def test_surface_ops():
     obscuration = 0.2
     assigner = check_dep(galsim.FRatioAngles, fratio, obscuration, rng=rng)
 
-    sed = galsim.SED("CWW_E_ext.sed", "nm", "flambda").thin()
-    bandpass = galsim.Bandpass("LSST_i.dat", "nm").thin()
+    sed = galsim.SED('CWW_E_ext.sed', 'nm', 'flambda').thin()
+    bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
     sampler = check_dep(galsim.WavelengthSampler, sed, bandpass, rng=rng)
 
     obj = galsim.Gaussian(flux=353, sigma=0.3)
-    im = galsim.Image(63, 63, scale=1)
-    check_dep(
-        obj.drawImage,
-        im,
-        method="phot",
-        surface_ops=[sampler, assigner],
-        rng=rng,
-        save_photons=True,
-    )
+    im = galsim.Image(63,63, scale=1)
+    check_dep(obj.drawImage, im, method="phot", surface_ops=[sampler, assigner], rng=rng,
+              save_photons=True)
 
     rng.reset(1234)
     assigner.rng.reset(rng)
