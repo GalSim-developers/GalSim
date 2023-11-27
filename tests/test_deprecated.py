@@ -97,7 +97,7 @@ def test_noise():
     assert var_1==var_2,'Inconsistent noise variance from getNoise and getNoiseProperties'
     # Check the image:
     ii = galsim.InterpolatedImage(im_2, normalization='sb', calculate_stepk=False,
-        calculate_maxk=False, x_interpolant='linear')
+                                  calculate_maxk=False, x_interpolant='linear')
     cf_2 = check_dep(galsim.correlatednoise._BaseCorrelatedNoise,
                      galsim.BaseDeviate(test_seed), ii, im_2.wcs)
     cf_2 = cf_2.withVariance(var_2)
