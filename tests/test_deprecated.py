@@ -780,10 +780,8 @@ def test_chromatic_flux():
         mono_PSF, base_wavelength=500, zenith_angle=zenith_angle
     )
     PSF = PSF * 1.0
-    PSF1 = PSF.interpolate(
-        waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
-        use_exact_sed=False,
-    )
+    PSF1 = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                           use_exact_sed=False)
 
     # Check deprecated use_exact_SED kwarg
     PSF2 = check_dep(
@@ -794,12 +792,9 @@ def test_chromatic_flux():
     assert PSF2 == PSF1
 
     # Also do this manually with the InterpolatedChromaticObject class
-    PSF3 = check_dep(
-        galsim.InterpolatedChromaticObject,
-        PSF,
-        waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
-        use_exact_SED=False,
-    )
+    PSF3 = check_dep(galsim.InterpolatedChromaticObject, PSF,
+                     waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
+                     use_exact_SED=False)
     assert PSF3 == PSF1
 
     # And check deprecated SED attribute.
@@ -815,29 +810,29 @@ def test_W149():
     # Based on test_config_psf, using old W149 name.
 
     config = {
-        'modules': ['galsim.roman'],
-        'psf': {'type': 'RomanPSF', 'SCA': 4, 'bandpass': 'W149'},
+        'modules' : ['galsim.roman'],
+        'psf' : { 'type' : 'RomanPSF', 'SCA': 4, 'bandpass': 'W149' },
     }
 
     galsim.config.ImportModules(config)
     psf1 = check_dep(galsim.config.BuildGSObject, config, 'psf')[0]
     psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass='W149')
-    print('psf1 = ', str(psf1))
-    print('psf2 = ', str(psf2))
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
     assert psf1 == psf2
 
     config = galsim.config.CleanConfig(config)
-    config["image"] = {"bandpass": {"type": "RomanBandpass", "name": "W149"}}
-    config["psf"]["wavelength"] = 985
-    config["psf"]["pupil_bin"] = 8
-    bp = check_dep(galsim.config.BuildBandpass, config["image"], "bandpass", config)[0]
-    config["bandpass"] = bp
-    psf1 = check_dep(galsim.config.BuildGSObject, config, "psf")[0]
-    psf2 = check_dep(
-        galsim.roman.getPSF, SCA=4, bandpass="W149", pupil_bin=8, wavelength=985.0
-    )
-    print("psf1 = ", str(psf1))
-    print("psf2 = ", str(psf2))
+    config['image'] = {
+        'bandpass' : { 'type' : 'RomanBandpass', 'name' : 'W149' }
+    }
+    config['psf']['wavelength'] = 985
+    config['psf']['pupil_bin'] = 8
+    bp = check_dep(galsim.config.BuildBandpass, config['image'], 'bandpass', config)[0]
+    config['bandpass'] = bp
+    psf1 = check_dep(galsim.config.BuildGSObject, config, 'psf')[0]
+    psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass='W149', pupil_bin=8, wavelength=985.)
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
     assert psf1 == psf2
 
 @timer
