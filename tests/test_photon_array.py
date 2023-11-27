@@ -245,7 +245,10 @@ def test_photon_array():
     assert pa2.time[17] == pa1.time[20]
 
     # Can choose not to copy flux
-    pa2.flux[27] = -1
+    if hasattr(galsim, "_galsim"):
+        pa2.flux[27] = -1
+    else:
+        pa2._flux = pa2._flux.at[27].set(-1)
     pa2.copyFrom(pa1, 27, 10, do_flux=False)
     assert pa2.flux[27] != pa1.flux[10]
     assert pa2.x[27] == pa1.x[10]
