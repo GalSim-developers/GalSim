@@ -204,7 +204,9 @@ def test_Image_basic():
                 assert im1.view()(x,y) == value
                 assert im1.view()(galsim.PositionI(x,y)) == value
                 assert im1.view(make_const=True)(x,y) == value
-                assert im2(x,y) == value
+                if hasattr(galsim, "_galsim"):
+                    # now real views in jax
+                    assert im2(x,y) == value
                 assert im2_view(x,y) == value
                 assert im2_cview(x,y) == value
                 assert im1.conjugate(x,y) == value
