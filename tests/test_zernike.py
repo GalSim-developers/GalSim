@@ -814,9 +814,9 @@ def test_dz_val():
         check_pickle(dz, lambda dz_: tuple(dz_(*uv_vector, *xy_vector)))
 
         # If you don't specify xy, then get (list of) Zernike out.
-        assert isinstance(dz(*uv_scalar), Zernike)
+        assert isinstance(dz(*uv_scalar), galsim.zernike.Zernike)
         assert isinstance(dz(*uv_vector), list)
-        assert all(isinstance(z, Zernike) for z in dz(*uv_vector))
+        assert all(isinstance(z, galsim.zernike.Zernike) for z in dz(*uv_vector))
 
         # If uv scalar and xy scalar, then get scalar out.
         assert np.ndim(dz(*uv_scalar, *xy_scalar)) == 0
