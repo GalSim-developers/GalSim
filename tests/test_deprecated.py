@@ -193,19 +193,14 @@ def test_randwalk_repr():
 
         new_rw = eval(repr(rw))
 
-        assert new_rw.npoints==rw.npoints,\
+        assert new_rw.npoints == rw.npoints,\
             "expected npoints=%d got %d" % (rw.npoints,new_rw.npoints)
 
-        mess = "expected input_half_light_radius=%.16g got %.16g"
-        assert new_rw.input_half_light_radius == rw.input_half_light_radius, mess % (
-            rw.input_half_light_radius,
-            new_rw.input_half_light_radius,
-        )
-        assert new_rw.flux == rw.flux, "expected flux=%.16g got %.16g" % (
-            rw.flux,
-            new_rw.flux,
-        )
-
+        mess="expected input_half_light_radius=%.16g got %.16g"
+        assert new_rw.input_half_light_radius == rw.input_half_light_radius,\
+            mess % (rw.input_half_light_radius,new_rw.input_half_light_radius)
+        assert new_rw.flux == rw.flux,\
+            "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
 
 @timer
 def test_randwalk_config():
