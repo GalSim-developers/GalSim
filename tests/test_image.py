@@ -268,7 +268,7 @@ def test_Image_basic():
                 assert im2_view.imag(x,y) == 0
                 assert im2_cview.imag(x,y) == 0
 
-                value3 = 10*x + y + 111111111
+                value3 = 10*x + y + 111
                 im1.addValue(x,y, value3-value2)
                 im2_view[x,y] += value3-value2
                 assert im1[galsim.PositionI(x,y)] == value3
@@ -395,7 +395,7 @@ def test_Image_basic():
         assert im2.bounds == bounds
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                value3 = 10*x+y + 111111111
+                value3 = 10*x+y + 111
                 assert im1(x+dx,y+dy) == value3
                 assert im1_view(x,y) == value3
                 if hasattr(galsim, "_galsim"):
