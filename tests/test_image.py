@@ -403,6 +403,7 @@ def test_Image_basic():
                 else:
                     assert im2(x,y) != value3
                 assert im2_view(x+dx,y+dy) == value3
+                value3 = 10*x+y
                 assert im3_view(x+dx,y+dy) == value3
 
         assert_raises(TypeError, im1.shift, dx)
