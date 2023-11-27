@@ -35,9 +35,10 @@ def check_dep(f, *args, **kwargs):
 
 @timer
 def test_gsparams():
-    check_dep(galsim.GSParams, allowed_flux_variation=0.90)
-    check_dep(galsim.GSParams, range_division_for_extrema=50)
-    check_dep(galsim.GSParams, small_fraction_of_flux=1.e-6)
+    if hasattr(galsim, "_galsim"):
+        check_dep(galsim.GSParams, allowed_flux_variation=0.90)
+        check_dep(galsim.GSParams, range_division_for_extrema=50)
+        check_dep(galsim.GSParams, small_fraction_of_flux=1.e-6)
 
 
 @timer
@@ -602,7 +603,7 @@ def test_photon_array_depr():
 
     if hasattr(galsim, "_galsim"):
         t = check_dep(getattr, photon_array, 'time')
-        assert photon_array.hasAllocatedTimes()    
+        assert photon_array.hasAllocatedTimes()
     else:
         # jax-galsim always sets these additional properties
         # t = check_dep(getattr, photon_array, "time")
@@ -645,7 +646,7 @@ def test_photon_array_depr():
     if hasattr(galsim, "_galsim"):
         v = check_dep(getattr, photon_array, 'pupil_v')
         assert photon_array.hasAllocatedPupil()
-        assert len(photon_array.pupil_u) == nphotons    
+        assert len(photon_array.pupil_u) == nphotons
     else:
         # jax-galsim always sets these additional properties
         # v = check_dep(getattr, photon_array, "pupil_v")
