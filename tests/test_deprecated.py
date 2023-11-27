@@ -540,10 +540,14 @@ def test_photon_array_depr():
 
     # Using the getter is allowed, but deprecated.
     photon_array = galsim.PhotonArray(nphotons)
-    # jax-galsim always sets these additional properties
-    # dxdz = check_dep(getattr, photon_array, 'dxdz')
-    # however jax-galsim sets them to NaN so they are not allocated
-    assert not photon_array.hasAllocatedAngles()
+    if hasattr(galsim, "_galsim"):
+        dxdz = check_dep(getattr, photon_array, 'dxdz')
+        assert photon_array.hasAllocatedAngles()
+    else:
+        # jax-galsim always sets these additional properties
+        # dxdz = check_dep(getattr, photon_array, 'dxdz')
+        # however jax-galsim sets them to NaN so they are not allocated
+        assert not photon_array.hasAllocatedAngles()
     assert len(photon_array.dxdz) == nphotons
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
@@ -553,15 +557,20 @@ def test_photon_array_depr():
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
     np.testing.assert_array_equal(photon_array.dydz, 0.)
 
+    assert hasattr(photon_array, "dydz")
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
     photon_array.dydz = 0.59
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
-    # jax-galsim always sets these additional properties
-    # wave = check_dep(getattr, photon_array, 'wavelength')
-    # however jax-galsim sets them to NaN so they are not allocated
-    assert not photon_array.hasAllocatedWavelengths()
+    if hasattr(galsim, "_galsim"):
+        wave = check_dep(getattr, photon_array, 'wavelength')
+        assert photon_array.hasAllocatedWavelengths()
+    else:
+        # jax-galsim always sets these additional properties
+        # wave = check_dep(getattr, photon_array, 'wavelength')
+        # however jax-galsim sets them to NaN so they are not allocated
+        assert not photon_array.hasAllocatedWavelengths()
     assert len(photon_array.wavelength) == nphotons
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
