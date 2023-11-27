@@ -256,7 +256,11 @@ def test_Image_basic():
                 else:
                     assert im2.real(x,y) != value2.real
                 assert im2_view.real(x,y) == value2.real
-                assert im2_cview.real(x,y) == value2.real
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
+                    assert im2_cview.real(x,y) == value2.real
+                else:
+                    assert im2_cview.real(x,y) != value2.real
                 assert im1.imag(x,y) == 0
                 assert im1.view().imag(x,y) == 0
                 assert im1.view(make_const=True).imag(x,y) == 0
