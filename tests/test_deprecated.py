@@ -368,8 +368,8 @@ def test_withOrigin():
         )
 
     # Now some CelestialWCS types
-    cubic_u = Cubic(2.9e-5, 2000.0, "u")
-    cubic_v = Cubic(-3.7e-5, 2000.0, "v")
+    cubic_u = Cubic(2.9e-5, 2000.0, 'u')
+    cubic_v = Cubic(-3.7e-5, 2000.0, 'v')
     center = galsim.CelestialCoord(23 * galsim.degrees, -13 * galsim.degrees)
     radec = lambda x, y: center.deproject_rad(
         cubic_u(x, y) * 0.2, cubic_v(x, y) * 0.2, projection="lambert"
@@ -383,7 +383,7 @@ def test_withOrigin():
 
     for wcs in wcs_list:
         # Original version of the shiftOrigin tests in do_celestial_wcs using deprecated name.
-        new_origin = galsim.PositionI(123, 321)
+        new_origin = galsim.PositionI(123,321)
         wcs3 = wcs.shiftOrigin(new_origin)
         assert wcs != wcs3, name + " is not != wcs.shiftOrigin(pos)"
         wcs4 = wcs.local(wcs.origin)
@@ -803,28 +803,27 @@ def test_chromatic_flux():
     assert PSF3 == PSF1
 
     # And check deprecated SED attribute.
-    sed = check_dep(getattr, PSF, "SED")
+    sed = check_dep(getattr, PSF, 'SED')
     assert sed == PSF.sed
-    sed1 = check_dep(getattr, PSF1, "SED")
+    sed1 = check_dep(getattr, PSF1, 'SED')
     assert sed1 == PSF1.sed
-    sed2 = check_dep(getattr, mono_PSF, "SED")
-    assert sed1 == mono_PSF.sed == galsim.SED(1, "nm", "1")
-
+    sed2 = check_dep(getattr, mono_PSF, 'SED')
+    assert sed1 == mono_PSF.sed == galsim.SED(1, 'nm', '1')
 
 @timer
 def test_W149():
     # Based on test_config_psf, using old W149 name.
 
     config = {
-        "modules": ["galsim.roman"],
-        "psf": {"type": "RomanPSF", "SCA": 4, "bandpass": "W149"},
+        'modules': ['galsim.roman'],
+        'psf': {'type': 'RomanPSF', 'SCA': 4, 'bandpass': 'W149'},
     }
 
     galsim.config.ImportModules(config)
-    psf1 = check_dep(galsim.config.BuildGSObject, config, "psf")[0]
-    psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass="W149")
-    print("psf1 = ", str(psf1))
-    print("psf2 = ", str(psf2))
+    psf1 = check_dep(galsim.config.BuildGSObject, config, 'psf')[0]
+    psf2 = check_dep(galsim.roman.getPSF, SCA=4, bandpass='W149')
+    print('psf1 = ', str(psf1))
+    print('psf2 = ', str(psf2))
     assert psf1 == psf2
 
     config = galsim.config.CleanConfig(config)
@@ -930,6 +929,6 @@ def test_photon_array_correlated():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == "test_" and callable(v)]
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
