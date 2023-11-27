@@ -48,7 +48,7 @@ nvals = 100000
 testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
 
-if hasattr(galsim, "_galsim"):
+if os.environ.get("JAX_GALSIM_TESTING", "0") != "1":
     # the right answer for the first three uniform deviates produced from testseed
     uResult = (0.11860922840423882, 0.21456799632869661, 0.43088198406621814)
 
