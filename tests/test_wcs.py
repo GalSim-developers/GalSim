@@ -499,7 +499,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     wcs2 = wcs.local()
     assert wcs == wcs2, name+' local() is not == the original'
     new_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.withOrigin(new_origin)
+    wcs3 = wcs.shiftOrigin(new_origin)
     assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
     assert wcs3 != wcs, name+' is not != wcs.withOrigin(pos) (reverse)'
     wcs2 = wcs3.local()
@@ -513,7 +513,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
             world_pos2.y, world_pos1.y, digits,
             'withOrigin(new_origin) returned wrong world position')
     new_world_origin = galsim.PositionD(5352.7, 9234.3)
-    wcs4 = wcs.withOrigin(new_origin, new_world_origin)
+    wcs4 = wcs.shiftOrigin(new_origin, new_world_origin)
     world_pos3 = wcs4.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos3.x, new_world_origin.x, digits,
