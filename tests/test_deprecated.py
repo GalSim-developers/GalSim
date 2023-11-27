@@ -361,12 +361,8 @@ def test_withOrigin():
         wcs3 = wcs.shiftOrigin(new_origin)
         world_pos2 = wcs3.toWorld(new_origin)
         np.testing.assert_almost_equal(
-            world_pos2.distanceTo(world_pos1) / galsim.arcsec,
-            0,
-            7,
-            "shiftOrigin(new_origin) returned wrong world position",
-        )
-
+                world_pos2.distanceTo(world_pos1) / galsim.arcsec, 0, 7,
+                'shiftOrigin(new_origin) returned wrong world position')
 
 @timer
 def test_wfirst():
@@ -393,7 +389,7 @@ def test_wfirst():
     assert galsim.wfirst.pupil_plane_scale == galsim.roman.pupil_plane_scale
     assert galsim.wfirst.stray_light_fraction == galsim.roman.stray_light_fraction
     np.testing.assert_array_equal(galsim.wfirst.ipc_kernel, galsim.roman.ipc_kernel)
-    np.testing.assert_array_equal(galsim.wfirst.persistence_coefficients, 
+    np.testing.assert_array_equal(galsim.wfirst.persistence_coefficients,
                                   galsim.roman.persistence_coefficients)
     np.testing.assert_array_equal(galsim.wfirst.persistence_fermi_parameters,
                                   galsim.roman.persistence_fermi_parameters)
@@ -449,15 +445,9 @@ def test_roman_psfs():
     # Cheat to get coverage of False,True option without spending a long time doing the
     # pupil plane FFT for that one.
     with assert_raises(TypeError):
-        check_dep(
-            galsim.roman.getPSF,
-            SCA=use_sca,
-            bandpass="Z087",
-            approximate_struts=False,
-            high_accuracy=True,
-            wavelength="Z087",
-        )
-
+        check_dep(galsim.roman.getPSF, SCA=use_sca, bandpass='Z087',
+                            approximate_struts=False, high_accuracy=True,
+                            wavelength='Z087')
 
 @timer
 def test_surface_ops():
@@ -476,7 +466,7 @@ def test_surface_ops():
 
     obj = galsim.Gaussian(flux=353, sigma=0.3)
     im = galsim.Image(63,63, scale=1)
-    check_dep(obj.drawImage, im, method="phot", surface_ops=[sampler, assigner], rng=rng,
+    check_dep(obj.drawImage, im, method='phot', surface_ops=[sampler, assigner], rng=rng,
               save_photons=True)
 
     rng.reset(1234)
@@ -488,9 +478,7 @@ def test_surface_ops():
     rng.reset(1234)
     assigner.rng.reset(rng)
     sampler.rng.reset(rng)
-    _, photons2 = check_dep(
-        obj.drawPhot, image=im.copy(), surface_ops=[sampler, assigner], rng=rng
-    )
+    _, photons2 = check_dep(obj.drawPhot, image=im.copy(), surface_ops=[sampler, assigner], rng=rng)
     assert photons2 == im.photons
 
 
@@ -517,22 +505,14 @@ def test_trapz_basic():
     result = check_dep(galsim.integ.trapz, func, 0, 1)
     expected_val = 1.**3./3.
     np.testing.assert_almost_equal(
-        result / expected_val,
-        1.0,
-        decimal=6,
-        verbose=True,
-        err_msg="Simple test of trapz() method failed for f(x)=x^2 from 0 to 1",
-    )
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Simple test of trapz() method failed for f(x)=x^2 from 0 to 1')
 
     result = check_dep(galsim.integ.trapz, func, 0, 1, np.linspace(0, 1, 100000))
     expected_val = 1.**3./3.
     np.testing.assert_almost_equal(
-        result / expected_val,
-        1.0,
-        decimal=6,
-        verbose=True,
-        err_msg="Test of trapz() with points failed for f(x)=x^2 from 0 to 1",
-    )
+        result / expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
 
     with assert_raises(ValueError):
         check_dep(galsim.integ.trapz, func, 0, 1, points=np.linspace(0, 1.1, 100))
@@ -732,7 +712,7 @@ def test_chromatic_flux():
     mono_PSF = galsim.Gaussian(half_light_radius=0.8)
     zenith_angle = 20 * galsim.degrees
     bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
-    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500, 
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
                                      zenith_angle=zenith_angle)
     PSF = PSF * 1.0
     PSF1 = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30),
