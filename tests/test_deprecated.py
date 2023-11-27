@@ -496,28 +496,26 @@ def test_surface_ops():
 
 @timer
 def test_midpoint_basic():
-    """Test the basic functionality of the midpt() method."""
+    """Test the basic functionality of the midpt() method.
+    """
     # This shouldn't be super accurate, but just make sure it's not really broken.
-    x = 0.01 * np.arange(1000)
+    x = 0.01*np.arange(1000)
     f = x**2
     result = check_dep(galsim.integ.midpt, f, x)
-    expected_val = 10**3.0 / 3.0
+    expected_val = 10**3./3.
     np.testing.assert_almost_equal(
-        result / expected_val,
-        1.0,
-        decimal=2,
-        verbose=True,
-        err_msg="Simple test of midpt() method failed for f(x)=x^2 from 0 to 10",
-    )
+        result/expected_val, 1.0, decimal=2, verbose=True,
+        err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
 
 
 @timer
 def test_trapz_basic():
-    """Test the basic functionality of the trapz() method."""
+    """Test the basic functionality of the trapz() method.
+    """
     # This shouldn't be super accurate, but just make sure it's not really broken.
     func = lambda x: x**2
     result = check_dep(galsim.integ.trapz, func, 0, 1)
-    expected_val = 1.0**3.0 / 3.0
+    expected_val = 1.**3./3.
     np.testing.assert_almost_equal(
         result / expected_val,
         1.0,
