@@ -26,7 +26,7 @@ from galsim_test_helpers import *
 
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
-"""
+    """
     # Check that f() raises a warning, but not an error.
     with assert_warns(galsim.GalSimDeprecationWarning):
         res = f(*args, **kwargs)
@@ -96,24 +96,12 @@ def test_noise():
     var_1 = cf_1.getVariance()
     assert var_1==var_2,'Inconsistent noise variance from getNoise and getNoiseProperties'
     # Check the image:
-    ii = galsim.InterpolatedImage(
-        im_2,
-        normalization="sb",
-        calculate_stepk=False,
-        calculate_maxk=False,
-        x_interpolant="linear",
-    )
-    cf_2 = check_dep(
-        galsim.correlatednoise._BaseCorrelatedNoise,
-        galsim.BaseDeviate(test_seed),
-        ii,
-        im_2.wcs,
-    )
+    ii = galsim.InterpolatedImage(im_2, normalization='sb', calculate_stepk=False,
+        calculate_maxk=False, x_interpolant='linear')
+    cf_2 = check_dep(galsim.correlatednoise._BaseCorrelatedNoise,
+                     galsim.BaseDeviate(test_seed), ii, im_2.wcs)
     cf_2 = cf_2.withVariance(var_2)
-    assert (
-        cf_1 == cf_2
-    ), "Inconsistent noise properties from getNoise and getNoiseProperties"
-
+    assert cf_1==cf_2, 'Inconsistent noise properties from getNoise and getNoiseProperties'
 
 @timer
 def test_randwalk_defaults():
@@ -128,11 +116,9 @@ def test_randwalk_defaults():
     rng = galsim.BaseDeviate(1234)
     rw=check_dep(galsim.RandomWalk, npoints, half_light_radius=hlr, rng=rng)
 
-    assert rw.npoints == npoints, "expected npoints==%d, got %d" % (npoints, rw.npoints)
-    assert rw.input_half_light_radius == hlr, "expected hlr==%g, got %g" % (
-        hlr,
-        rw.input_half_light_radius,
-    )
+    assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
+    assert rw.input_half_light_radius==hlr,\
+        "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
 
     nobj=len(rw.points)
     assert nobj == npoints,"expected %d objects, got %d" % (npoints, nobj)
