@@ -256,7 +256,7 @@ def test_randwalk_config():
 
         nobj=len(rw.points)
         nobjc=len(rwc.points)
-        assert nobj == nobjc,"expected %d objects, got %d" % (nobj, nobjc)
+        assert nobj==nobjc,"expected %d objects, got %d" % (nobj, nobjc)
 
         pts = rw.points
         ptsc = rwc.points
