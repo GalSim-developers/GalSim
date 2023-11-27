@@ -310,15 +310,13 @@ def test_withOrigin():
     cubic_u = Cubic(2.9e-5, 2000., 'u')
     cubic_v = Cubic(-3.7e-5, 2000., 'v')
     center = galsim.CelestialCoord(23 * galsim.degrees, -13 * galsim.degrees)
-    radec = lambda x, y: center.deproject_rad(
-        cubic_u(x, y) * 0.2, cubic_v(x, y) * 0.2, projection="lambert"
-    )
-    wcs_list = [
-        galsim.RaDecFunction(radec),
-        galsim.AstropyWCS("1904-66_TAN.fits", dir="fits_files"),
-        galsim.GSFitsWCS("tpv.fits", dir="fits_files"),
-        galsim.FitsWCS("sipsample.fits", dir="fits_files"),
-    ]
+    radec = lambda x,y: center.deproject_rad(cubic_u(x,y)*0.2, cubic_v(x,y)*0.2,
+                                             projection='lambert')
+    wcs_list = [ galsim.RaDecFunction(radec),
+                 galsim.AstropyWCS('1904-66_TAN.fits', dir='fits_files'),
+                 galsim.GSFitsWCS('tpv.fits', dir='fits_files'),
+                 galsim.FitsWCS('sipsample.fits', dir='fits_files'),
+               ]
 
     for wcs in wcs_list:
         # Original version of the shiftOrigin tests in do_celestial_wcs using deprecated name.
@@ -392,19 +390,17 @@ def test_roman_psfs():
     import galsim.roman
 
     test_kwargs = [
-        ({"approximate_struts": True, "high_accuracy": False}, {"pupil_bin": 8}),
-        (
-            {"approximate_struts": True, "high_accuracy": True},
-            {"pupil_bin": 4, "gsparams": galsim.GSParams(folding_threshold=2.0e-3)},
-        ),
-        ({"approximate_struts": False, "high_accuracy": False}, {"pupil_bin": 4}),
+        ({ 'approximate_struts':True, 'high_accuracy':False },
+         { 'pupil_bin':8 }),
+        ({ 'approximate_struts':True, 'high_accuracy':True },
+         { 'pupil_bin':4, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) }),
+        ({ 'approximate_struts':False, 'high_accuracy':False },
+         { 'pupil_bin':4 }),
     ]
     if __name__ == "__main__":
         test_kwargs.append(
-            (
-                {"approximate_struts": False, "high_accuracy": True},
-                {"pupil_bin": 1, "gsparams": galsim.GSParams(folding_threshold=2.0e-3)},
-            ),
+            ({ 'approximate_struts':False, 'high_accuracy':True },
+            { 'pupil_bin':1, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) }),
         )
 
     use_sca = 5
