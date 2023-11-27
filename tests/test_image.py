@@ -274,9 +274,17 @@ def test_Image_basic():
                 assert im1[galsim.PositionI(x,y)] == value3
                 assert im1.view()[x,y] == value3
                 assert im1.view(make_const=True)[galsim.PositionI(x,y)] == value3
-                assert im2[x,y] == value3
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
+                    assert im2[x,y] == value3
+                else:
+                    assert im2[x,y] != value3
                 assert im2_view[galsim.PositionI(x,y)] == value3
-                assert im2_cview[x,y] == value3
+                if hasattr(galsim, "_galsim"):
+                    # no real views in jax
+                    assert im2_cview[x,y] == value3
+                else:
+                    assert im2_cview[x,y] != value3
 
         # Setting or getting the value outside the bounds should throw an exception.
         assert_raises(galsim.GalSimBoundsError,im1.setValue,0,0,1)
