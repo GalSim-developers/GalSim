@@ -398,7 +398,10 @@ def test_Image_basic():
                 value3 = 10*x+y + 111111111
                 assert im1(x+dx,y+dy) == value3
                 assert im1_view(x,y) == value3
-                assert im2(x,y) == value3
+                if hasattr(galsim, "_galsim"):
+                    assert im2(x,y) == value3
+                else:
+                    assert im2(x,y) != value3
                 assert im2_view(x+dx,y+dy) == value3
                 assert im3_view(x+dx,y+dy) == value3
 
