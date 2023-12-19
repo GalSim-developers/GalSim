@@ -16,8 +16,17 @@
 #    and/or other materials provided with the distribution.
 #
 
-__all__ = [ 'Interpolant', 'Nearest', 'Linear', 'Cubic', 'Quintic',
-            'Lanczos', 'SincInterpolant', 'Delta', ]
+__all__ = [
+    "Interpolant",
+    "Nearest",
+    "Linear",
+    "Cubic",
+    "Quintic",
+    "QuinticBis",
+    "Lanczos",
+    "SincInterpolant",
+    "Delta",
+]
 
 import math
 import numpy as np
@@ -30,16 +39,19 @@ from .errors import GalSimValueError
 from .integ import int1d
 from .bessel import si
 
+
 class Interpolant:
     """A base class that defines how interpolation should be done.
 
     An Interpolant is needed for an `InterpolatedImage` to define how interpolation should be done
     an locations in between the integer pixel centers.
     """
+
     def __init__(self):
         raise NotImplementedError(
             "The Interpolant base class should not be instantiated directly. "
-            "Use one of the subclasses instead, or use the `from_name` factory function.")
+            "Use one of the subclasses instead, or use the `from_name` factory function."
+        )
 
     @staticmethod
     def from_name(name, tol=None, gsparams=None):
@@ -56,6 +68,7 @@ class Interpolant:
             - 'linear' = `Linear`
             - 'cubic' = `Cubic`
             - 'quintic' = `Quintic`
+            - 'quinticBis' = 'QuinticBis'
             - 'lanczosN' = `Lanczos`  (where N is an integer, given the ``n`` parameter)
 
         In addition, if you want to specify the ``conserve_dc`` option for `Lanczos`, you can
@@ -69,79 +82,99 @@ class Interpolant:
         """
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         gsparams = GSParams.check(gsparams)
 
         # Do these in rough order of likelihood (most to least)
-        if name.lower() == 'quintic':
-            return Quintic(gsparams=gsparams)
-        if name.lower().startswith('lanczos'):
+        if name.lower().startswith("quintic"):
+            if name.lower() == "quintic":
+                return Quintic(gsparams=gsparams)
+            elif name.lower() == "quinticBis":
+                return QuinticBis(gsparams=gsparams)
+        if name.lower().startswith("lanczos"):
             conserve_dc = True
-            if name[-1].upper() in ('T', 'F'):
-                conserve_dc = (name[-1].upper() == 'T')
+            if name[-1].upper() in ("T", "F"):
+                conserve_dc = name[-1].upper() == "T"
                 name = name[:-1]
             try:
                 n = int(name[7:])
             except Exception:
-                raise GalSimValueError("Invalid Lanczos specification. Should look like "
-                                       "lanczosN, where N is an integer", name) from None
+                raise GalSimValueError(
+                    "Invalid Lanczos specification. Should look like "
+                    "lanczosN, where N is an integer",
+                    name,
+                ) from None
             return Lanczos(n, conserve_dc, gsparams=gsparams)
-        elif name.lower() == 'linear':
+        elif name.lower() == "linear":
             return Linear(gsparams=gsparams)
-        elif name.lower() == 'cubic' :
+        elif name.lower() == "cubic":
             return Cubic(gsparams=gsparams)
-        elif name.lower() == 'nearest':
+        elif name.lower() == "nearest":
             return Nearest(gsparams=gsparams)
-        elif name.lower() == 'delta':
+        elif name.lower() == "delta":
             return Delta(gsparams=gsparams)
-        elif name.lower() == 'sinc':
+        elif name.lower() == "sinc":
             return SincInterpolant(gsparams=gsparams)
         else:
-            raise GalSimValueError("Invalid Interpolant name %s.",name,
-                                   ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
-                                    'sinc'))
+            raise GalSimValueError(
+                "Invalid Interpolant name %s.",
+                name,
+                (
+                    "linear",
+                    "cubic",
+                    "quintic",
+                    "quinticBis",
+                    "lanczosN",
+                    "nearest",
+                    "delta",
+                    "sinc",
+                ),
+            )
 
     @property
     def gsparams(self):
-        """The `GSParams` of the `Interpolant`
-        """
+        """The `GSParams` of the `Interpolant`"""
         return self._gsparams
 
     @property
     def positive_flux(self):
         """The positive-flux fraction of the interpolation kernel."""
-        return self._i.getPositiveFlux();
+        return self._i.getPositiveFlux()
 
     @property
     def negative_flux(self):
         """The negative-flux fraction of the interpolation kernel."""
-        return self._i.getNegativeFlux();
+        return self._i.getNegativeFlux()
 
     @property
     def tol(self):
         from .deprecated import depr
-        depr('interpolant.tol', 2.2, 'interpolant.gsparams.kvalue_accuracy')
+
+        depr("interpolant.tol", 2.2, "interpolant.gsparams.kvalue_accuracy")
         return self._gsparams.kvalue_accuracy
 
     def withGSParams(self, gsparams=None, **kwargs):
-        """Create a version of the current interpolant with the given gsparams
-        """
-        if gsparams == self.gsparams: return self
+        """Create a version of the current interpolant with the given gsparams"""
+        if gsparams == self.gsparams:
+            return self
         ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('_i', None)
+        d.pop("_i", None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
 
     def __eq__(self, other):
-        return (self is other or (isinstance(other, self.__class__) and repr(self) == repr(other)))
+        return self is other or (
+            isinstance(other, self.__class__) and repr(self) == repr(other)
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -167,7 +200,7 @@ class Interpolant:
             dimen = len(x.shape)
             if dimen > 1:
                 raise GalSimValueError("Input x must be 1-dimensional", x)
-            _xx = xx.__array_interface__['data'][0]
+            _xx = xx.__array_interface__["data"][0]
             self._i.xvalMany(_xx, len(xx))
             return xx
 
@@ -183,14 +216,14 @@ class Interpolant:
                     an array.
         """
         # Note: the C++ layer uses u = k/2pi rather than k.
-        u = np.array(k, dtype=float, copy=True) / (2.*np.pi)
+        u = np.array(k, dtype=float, copy=True) / (2.0 * np.pi)
         if u.shape == ():
             return self._i.uval(float(u))
         else:
             dimen = len(k.shape)
             if dimen > 1:
                 raise GalSimValueError("Input k must be 1-dimensional", k)
-            _u = u.__array_interface__['data'][0]
+            _u = u.__array_interface__["data"][0]
             self._i.uvalMany(_u, len(u))
             return u
 
@@ -206,14 +239,14 @@ class Interpolant:
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        n = self.ixrange//2 + 1
+        n = self.ixrange // 2 + 1
         n = n if max_len is None else min(n, max_len)
-        if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
+        if not hasattr(self, "_unit_integrals") or n > len(self._unit_integrals):
             # Note: This is pretty fast, but subclasses may choose to override this if there
             # is an analytic integral to avoid the int1d call.
             self._unit_integrals = np.zeros(n)
             for i in range(n):
-                self._unit_integrals[i] = int1d(self.xval, i-0.5, i+0.5)
+                self._unit_integrals[i] = int1d(self.xval, i - 0.5, i + 0.5)
         return self._unit_integrals[:n]
 
     # Sub-classes should define _i property, repr, and str
@@ -231,10 +264,12 @@ class Delta(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -243,28 +278,25 @@ class Delta(Interpolant):
         return _galsim.Delta(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Delta(gsparams=%r)"%(self._gsparams)
+        return "galsim.Delta(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.Delta()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
-        return 0.
+        """The maximum extent of the interpolant from the origin (in pixels)."""
+        return 0.0
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
         return 0
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
-        return 2. * math.pi / self._gsparams.kvalue_accuracy
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        return 2.0 * math.pi / self._gsparams.kvalue_accuracy
 
     _unit_integrals = np.array([1], dtype=float)
 
@@ -295,10 +327,12 @@ class Nearest(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -307,28 +341,25 @@ class Nearest(Interpolant):
         return _galsim.Nearest(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Nearest(gsparams=%r)"%(self._gsparams)
+        return "galsim.Nearest(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.Nearest()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
+        """The maximum extent of the interpolant from the origin (in pixels)."""
         return 0.5
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
         return 1
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
-        return 2. / self._gsparams.kvalue_accuracy
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        return 2.0 / self._gsparams.kvalue_accuracy
 
     _unit_integrals = np.array([1], dtype=float)
 
@@ -360,10 +391,12 @@ class SincInterpolant(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -372,28 +405,25 @@ class SincInterpolant(Interpolant):
         return _galsim.SincInterpolant(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.SincInterpolant(gsparams=%r)"%(self._gsparams)
+        return "galsim.SincInterpolant(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.SincInterpolant()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
+        """The maximum extent of the interpolant from the origin (in pixels)."""
         # Technically infinity, but truncated by the tolerance.
-        return 1./(math.pi * self._gsparams.kvalue_accuracy)
+        return 1.0 / (math.pi * self._gsparams.kvalue_accuracy)
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
-        return 2*int(np.ceil(self.xrange))
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
+        return 2 * int(np.ceil(self.xrange))
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
         return math.pi
 
     def unit_integrals(self, max_len=None):
@@ -407,12 +437,14 @@ class SincInterpolant(Interpolant):
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        n = self.ixrange//2 + 1
+        n = self.ixrange // 2 + 1
         n = n if max_len is None else min(n, max_len)
-        if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
+        if not hasattr(self, "_unit_integrals") or n > len(self._unit_integrals):
             self._unit_integrals = np.zeros(n)
             for i in range(n):
-                self._unit_integrals[i] = (si(np.pi * (i+0.5)) - si(np.pi * (i-0.5))) / np.pi
+                self._unit_integrals[i] = (
+                    si(np.pi * (i + 0.5)) - si(np.pi * (i - 0.5))
+                ) / np.pi
         return self._unit_integrals[:n]
 
 
@@ -428,10 +460,12 @@ class Linear(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -440,29 +474,26 @@ class Linear(Interpolant):
         return _galsim.Linear(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Linear(gsparams=%r)"%(self._gsparams)
+        return "galsim.Linear(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.Linear()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
+        """The maximum extent of the interpolant from the origin (in pixels)."""
         # Reduce range slightly so not including points with zero weight.
-        return 1.
+        return 1.0
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
         return 2
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
-        return 2. / self._gsparams.kvalue_accuracy**0.5
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        return 2.0 / self._gsparams.kvalue_accuracy**0.5
 
     _unit_integrals = np.array([0.75, 0.125], dtype=float)
 
@@ -495,10 +526,12 @@ class Cubic(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -507,31 +540,28 @@ class Cubic(Interpolant):
         return _galsim.Cubic(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Cubic(gsparams=%r)"%(self._gsparams)
+        return "galsim.Cubic(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.Cubic()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
-        return 2.
+        """The maximum extent of the interpolant from the origin (in pixels)."""
+        return 2.0
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
         return 4
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
-        return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
+        return 1.7320508075688774 / self._gsparams.kvalue_accuracy ** (1.0 / 3.0)
 
-    _unit_integrals = np.array([161./192, 3./32, -5./384], dtype=float)
+    _unit_integrals = np.array([161.0 / 192, 3.0 / 32, -5.0 / 384], dtype=float)
 
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
@@ -564,10 +594,12 @@ class Quintic(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -576,29 +608,111 @@ class Quintic(Interpolant):
         return _galsim.Quintic(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Quintic(gsparams=%r)"%(self._gsparams)
+        return "galsim.Quintic(gsparams=%r)" % (self._gsparams)
 
     def __str__(self):
         return "galsim.Quintic()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
-        return 3.
+        """The maximum extent of the interpolant from the origin (in pixels)."""
+        return 3.0
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
         return 6
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
         # kmax = 2 * (25sqrt(5)/108 tol)^1/3
-        return 1.6058208066649935 / self._gsparams.kvalue_accuracy**(1./3.)
+        return 1.6058208066649935 / self._gsparams.kvalue_accuracy ** (1.0 / 3.0)
+
+
+class QuinticBis(Interpolant):
+    """Fifth order interpolation
+
+    The quintic interpolant is an improved version over the
+     'Quintic' interpolant by Bernstein & Gruen, found by Campagne Jean-Eric
+
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional `GSParams` argument. [default: None]
+    """
+
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from .deprecated import depr
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
+            gsparams = GSParams(kvalue_accuracy=tol)
+        self._gsparams = GSParams.check(gsparams)
+
+    @lazy_property
+    def _i(self):
+        return _galsim.QuinticBis(self._gsparams._gsp)
+
+    def __repr__(self):
+        return "galsim.QuinticBis(gsparams=%r)" % (self._gsparams)
+
+    def __str__(self):
+        return "galsim.QuinticBis()"
+
+    @property
+    def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels)."""
+        return 3.0
+
+    @property
+    def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
+        return 6
+
+    @property
+    def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        # from C++ code:
+        # umax = 1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/tol, 1./3.);
+        # kmax = 2 Pi kmax
+        return (
+            2.0
+            * np.pi
+            * (
+                1.0
+                + 0.33925584826755739773 / self._gsparams.kvalue_accuracy ** (1.0 / 3.0)
+            )
+        )
+
+    # numerical values for unit_integrals
+    _unit_integrals = np.array(
+        [
+            0.82900606447524252394,
+            0.10593642386579032927,
+            -0.023937069546316131708,
+            0.0034976134429045404698,
+        ],
+        dtype=float,
+    )
+
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        integrals[i] = int(xval(x), i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        # Using Mathematica:
+        # i0 = int(h(x), x=-0.5..0.5) = 2*int(h(x), x=0..0.5) = (-146715 + 9901 \[Pi]^2)/(11520 (-15 + \[Pi]^2))
+        # i1 = int(h(x), x=-0.5..1.5) = (-62835 + 3829 \[Pi]^2)/(46080 (-15 + \[Pi]^2))
+        # i2 = int(h(x), x=1.5..2.5) = (6195 - 341 \[Pi]^2)/(23040 (-15 + \[Pi]^2))
+        # i3 = int(h(x), x=2.5..3.0) = (-1725 + 91 \[Pi]^2)/(46080 (-15 + \[Pi]^2))
+
+        return self._unit_integrals
 
 
 class Lanczos(Interpolant):
@@ -620,10 +734,12 @@ class Lanczos(Interpolant):
         tol:            [deprecated]
         gsparams:       An optional `GSParams` argument. [default: None]
     """
+
     def __init__(self, n, conserve_dc=True, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+
+            depr("tol", 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
             gsparams = GSParams(kvalue_accuracy=tol)
         self._n = int(n)
         self._conserve_dc = bool(conserve_dc)
@@ -634,40 +750,40 @@ class Lanczos(Interpolant):
         return _galsim.Lanczos(self._n, self._conserve_dc, self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Lanczos(%r, %r, gsparams=%r)"%(self._n, self._conserve_dc, self._gsparams)
+        return "galsim.Lanczos(%r, %r, gsparams=%r)" % (
+            self._n,
+            self._conserve_dc,
+            self._gsparams,
+        )
 
     def __str__(self):
-        return "galsim.Lanczos(%s)"%(self._n)
+        return "galsim.Lanczos(%s)" % (self._n)
 
     @property
     def n(self):
-        """The order of the Lanczos function.
-        """
+        """The order of the Lanczos function."""
         return self._n
 
     @property
     def conserve_dc(self):
-        """Whether this interpolant is modified to improve flux conservation.
-        """
+        """Whether this interpolant is modified to improve flux conservation."""
         return self._conserve_dc
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels).
-        """
+        """The maximum extent of the interpolant from the origin (in pixels)."""
         return self._n
 
     @property
     def ixrange(self):
-        """The total integral range of the interpolant.  Typically 2 * xrange.
-        """
-        return 2*self._n
+        """The total integral range of the interpolant.  Typically 2 * xrange."""
+        return 2 * self._n
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
-        """
-        return 2. * math.pi * self._i.urange()
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        return 2.0 * math.pi * self._i.urange()
+
 
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an `Interpolant` if it is given as a string.

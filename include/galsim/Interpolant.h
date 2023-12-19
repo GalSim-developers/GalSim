@@ -456,6 +456,53 @@ namespace galsim {
         static std::map<double,double> _cache_umax;
     };
 
+
+
+    /**
+     * @brief Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation
+     *
+     * It is a variation on the  Bernstein & Gruen quintic kernel with attetion on the
+     * Taylor expension near u=1
+     */
+
+    class PUBLIC_API QuinticBis : public Interpolant
+    {
+    public:
+        /**
+         * @brief Constructor
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
+         */
+        QuinticBis(const GSParams& gsparams);
+        ~QuinticBis() {}
+
+        double xrange() const { return _range; }
+        int ixrange() const { return 6; }
+        double urange() const { return _uMax; }
+
+        double xval(double x) const;
+        double uval(double u) const;
+
+        // Override numerical calculation with known analytic integral
+        // Contrary to Bernstein & Gruen kernel, here the roots are located at integer values on real axis
+        double getPositiveFlux() const { return 271./240.; }
+        double getNegativeFlux() const { return 31./240.; }
+
+        std::string makeStr() const;
+
+    private:
+        double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
+        shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
+        double _uMax;  // Truncation point for Fourier transform
+
+        // Calculate the FT from a direct integration.
+        double uCalc(double u, double tolerance) const;
+
+        // Store the tables in a map, so repeat constructions are quick.
+        static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
+        static std::map<double,double> _cache_umax;
+    };
+
     /**
      * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +/-n.
      *
