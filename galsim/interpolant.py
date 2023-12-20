@@ -707,7 +707,8 @@ class QuinticBis(Interpolant):
             integrals:  An array of unit integrals of length max_len or smaller.
         """
         # Using Mathematica:
-        # i0 = int(h(x), x=-0.5..0.5) = 2*int(h(x), x=0..0.5) = (-146715 + 9901 \[Pi]^2)/(11520 (-15 + \[Pi]^2))
+        # i0 = int(h(x), x=-0.5..0.5) = 2*int(h(x), x=0..0.5) 
+        #    = (-146715 + 9901 \[Pi]^2)/(11520 (-15 + \[Pi]^2))
         # i1 = int(h(x), x=-0.5..1.5) = (-62835 + 3829 \[Pi]^2)/(46080 (-15 + \[Pi]^2))
         # i2 = int(h(x), x=1.5..2.5) = (6195 - 341 \[Pi]^2)/(23040 (-15 + \[Pi]^2))
         # i3 = int(h(x), x=2.5..3.0) = (-1725 + 91 \[Pi]^2)/(46080 (-15 + \[Pi]^2))

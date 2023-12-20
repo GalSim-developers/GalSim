@@ -344,7 +344,7 @@ def test_interpolant():
     m = ax < 1.
     pi2 = np.pi * np.pi
     true_xval[m] = (15. *(-12. + ax[m]**2 *(27. + ax[m]*(-13. + (-3. + ax[m])*ax[m])))
-                + pi2 * (12. - ax[m]**2 *(15. + ax[m]*(35. + ax[m]*(-63. + 25.*ax[m])))))/(12.*(-15. +pi2))
+        + pi2 * (12. - ax[m]**2 *(15. + ax[m]*(35. + ax[m]*(-63. + 25.*ax[m])))))/(12.*(-15. +pi2))
     m = (1 <= ax) & (ax < 2)
     true_xval[m] = ((-2. + ax[m]) * (-1 + ax[m])*(-15.*(24. + ax[m]*(-3. + (-6. + ax[m])*ax[m]))
                 + pi2 * (-48. + ax[m] * (153. + ax[m]*(-114. + 25.*ax[m])))))/(24.*(-15. + pi2))
@@ -367,7 +367,7 @@ def test_interpolant():
 
     # Conserves dc flux:
     print('QuinticBis sum = ',np.sum(qb.xval(x)))
-    assert np.isclose(np.sum(qb.xval(x)), 7.0) #nb. 7 = (len(x)-1)/(x[-1]-x[0]) as Int qb(x) dx =1
+    assert np.isclose(np.sum(qb.xval(x)), 7.0)
 
     # Lanczos
     l3 = galsim.Lanczos(3)

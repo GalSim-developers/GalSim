@@ -668,8 +668,10 @@ namespace galsim {
         }
 #else
         // uMax is the value where |ft| <= tolerance
-        // ft = (Sinc[u]^5 (24 pi^2 (1 - u^2) Cos[pi u] + (15 + pi^2 (-25 + (39 + 7 pi^2) u^2)) Sinc[pi u]))/(15 - pi^2)
-        // Mathematica: It turns out that the function  g(u) = 24 pi^2 /((15 - pi^2) pi^5) (25 Sqrt[5])/216 Abs[1/ (u - 1)^3]
+        // ft = (Sinc[u]^5 (24 pi^2 (1 - u^2) Cos[pi u] 
+        //               + (15 + pi^2 (-25 + (39 + 7 pi^2) u^2)) Sinc[pi u]))/(15 - pi^2)
+        // Mathematica: It turns out that the function  
+        // g(u) = 24 pi^2 /((15 - pi^2) pi^5) (25 Sqrt[5])/216 Abs[1/ (u - 1)^3]
         // gives a good approximation of max(|ft|) on each [i,i+1] intervalle, i integer
         // nb. Max[Sinc[u]^5 Cos[pi u]] = (25 Sqrt[5])/216
         _uMax = 1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/gsparams.kvalue_accuracy, 1./3.);
