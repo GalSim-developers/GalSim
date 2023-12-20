@@ -66,6 +66,9 @@ namespace galsim {
 
         py::class_<Quintic, Interpolant>(_galsim, "Quintic")
             .def(py::init<GSParams>());
+
+        py::class_<QuinticBis, Interpolant>(_galsim, "QuinticBis")
+            .def(py::init<GSParams>());
     }
 
 } // namespace galsim

@@ -289,6 +289,7 @@ def test_interpolant():
     print('Cubic sum = ',np.sum(c.xval(x)))
     assert np.isclose(np.sum(c.xval(x)), 7.0)
 
+
     # Quintic
     q = galsim.Quintic()
     assert q.gsparams == galsim.GSParams()
@@ -322,6 +323,51 @@ def test_interpolant():
     # Conserves dc flux:
     print('Quintic sum = ',np.sum(q.xval(x)))
     assert np.isclose(np.sum(q.xval(x)), 7.0)
+
+    # QuinticBis
+    qb = galsim.QuinticBis()
+    assert qb.gsparams == galsim.GSParams()
+    assert qb.xrange == 3.
+    assert qb.ixrange == 6
+    assert np.isclose(qb.krange, 2.0 * np.pi * (1.0
+                + 0.33925584826755739773 / qb.gsparams.kvalue_accuracy ** (1.0 / 3.0)
+            ))
+    assert np.isclose(qb.krange, 2.*np.pi * qb._i.urange())
+    assert np.isclose(qb.positive_flux, 271./240.)
+    assert np.isclose(qb.negative_flux, qb.positive_flux-1.)
+    check_pickle(qb, test_func)
+    check_pickle(galsim.QuinticBis())
+    check_pickle(galsim.Interpolant.from_name('quinticBis'))
+
+    true_xval = np.zeros_like(x)
+    ax = np.abs(x)
+    m = ax < 1.
+    pi2 = np.pi * np.pi
+    true_xval[m] = (15. *(-12. + ax[m]**2 *(27. + ax[m]*(-13. + (-3. + ax[m])*ax[m])))
+                + pi2 * (12. - ax[m]**2 *(15. + ax[m]*(35. + ax[m]*(-63. + 25.*ax[m])))))/(12.*(-15. +pi2))
+    m = (1 <= ax) & (ax < 2)
+    true_xval[m] = ((-2. + ax[m]) * (-1 + ax[m])*(-15.*(24. + ax[m]*(-3. + (-6. + ax[m])*ax[m]))
+                + pi2 * (-48. + ax[m] * (153. + ax[m]*(-114. + 25.*ax[m])))))/(24.*(-15. + pi2))
+    m = (2 <= ax) & (ax < 3)
+    true_xval[m] = -(((-3. + ax[m])*(-3.+ax[m])*(-2. + ax[m])*(-3.* (-7. + ax[m])* ax[m]
+                + pi2*(-3. + ax[m])*(-8. + 5.*ax[m])))/(24.*(-15. + pi2)))
+    np.testing.assert_allclose(q.xval(x), true_xval)
+
+    u = x/(2*np.pi)
+    piu = x/2 # =pi * u
+    scu = np.sinc(u)
+    cu = np.cos(piu)
+    su = np.sin(piu)
+    pi2 = np.pi * np.pi
+    true_kval = (scu**5 * (np.pi*(24.*np.pi* (-1. + u*u)*cu - (39. + 7.*pi2)* u*su)
+                           + 5.*(-3. + 5.*pi2)*scu))/(-15. + pi2)
+    np.testing.assert_allclose(qb.kval(x), true_kval)
+    assert np.isclose(qb.xval(x[12]), true_xval[12])
+    assert np.isclose(qb.kval(x[12]), true_kval[12])
+
+    # Conserves dc flux:
+    print('QuinticBis sum = ',np.sum(qb.xval(x)))
+    assert np.isclose(np.sum(qb.xval(x)), 7.0) #nb. 7 = (len(x)-1)/(x[-1]-x[0]) as Int qb(x) dx =1
 
     # Lanczos
     l3 = galsim.Lanczos(3)

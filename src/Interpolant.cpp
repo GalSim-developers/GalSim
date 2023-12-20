@@ -588,13 +588,12 @@ namespace galsim {
 #else
         double pi2 = M_PI * M_PI;
         double piu = M_PI * u;
-        double piu2 = piu * piu
-        double s = math::sinc(u);
-        double c = cos(piu);
-        double ss = sin(piu);
-        double ssq = s*s
-        return (s*ssq*ssq * (M_PI*(24.*M_PI* (-1. + u*u)*c - (39. + 7.*pi2)* u*ss)
-                + 5.*(-3. + 5.*pi2)*s))/(-15. + pi2);
+        double scu = math::sinc(u);
+        double cu = cos(piu);
+        double su = sin(piu);
+        double ssq = scu * scu
+        return (scu*ssq*ssq * (M_PI*(24.*M_PI* (-1. + u*u)*cu - (39. + 7.*pi2)* u*su)
+                + 5.*(-3. + 5.*pi2)*scu))/(-15. + pi2);
 #endif
     }
     
@@ -647,14 +646,14 @@ namespace galsim {
                 double ft = uCalc(u);
                 _tab->addEntry(u, ft);
 #ifdef DEBUGLOGGING
+                double pi2 = M_PI * M_PI;
                 double piu = M_PI * u;
-                double piu2 = piu * piu
-                double s = math::sinc(u);
-                double c = cos(piu);
-                double ss = sin(piu);
-                double ssq = s*s
-                double ft2 =(s*ssq*ssq * (M_PI*(24.*M_PI* (-1. + u*u)*c - (39. + 7.*pi2)* u*ss)
-                                + 5.*(-3. + 5.*pi2)*s))/(-15. + pi2);
+                double scu = math::sinc(u);
+                double cu = cos(piu);
+                double su = sin(piu);
+                double ssq = scu * scu
+                double ft2 =(scu**5 *(M_PI *(24.* M_PI *(-1. + u*u)*cu - (39. + 7.*pi2) *u *su)
+                           + 5. *(-3. + 5.*pi2) *scu))/(-15. + pi2);
                 dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
 #endif
                 if (std::abs(ft) > tol) _uMax = u;
