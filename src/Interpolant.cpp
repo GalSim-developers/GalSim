@@ -591,7 +591,7 @@ namespace galsim {
         double scu = math::sinc(u);
         double cu = cos(piu);
         double su = sin(piu);
-        double ssq = scu * scu
+        double ssq = scu * scu;
         return (scu*ssq*ssq * (M_PI*(24.*M_PI* (-1. + u*u)*cu - (39. + 7.*pi2)* u*su)
                 + 5.*(-3. + 5.*pi2)*scu))/(-15. + pi2);
 #endif
@@ -600,7 +600,7 @@ namespace galsim {
     class QuinticBisIntegrand
     {
     public:
-        QuinticBisIntegrand(double u, const Quintic& q): _u(u), _q(q) {}
+        QuinticBisIntegrand(double u, const QuinticBis& q): _u(u), _q(q) {}
         double operator()(double x) const { return _q.xval(x)*std::cos(2*M_PI*_u*x); }
     private:
         double _u;
