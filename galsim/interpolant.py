@@ -68,7 +68,7 @@ class Interpolant:
             - 'linear' = `Linear`
             - 'cubic' = `Cubic`
             - 'quintic' = `Quintic`
-            - 'quinticBis' = 'QuinticBis'
+            - 'quinticbis' = 'QuinticBis'
             - 'lanczosN' = `Lanczos`  (where N is an integer, given the ``n`` parameter)
 
         In addition, if you want to specify the ``conserve_dc`` option for `Lanczos`, you can
@@ -88,11 +88,8 @@ class Interpolant:
         gsparams = GSParams.check(gsparams)
 
         # Do these in rough order of likelihood (most to least)
-        if name.lower().startswith("quintic"):
-            if name.lower() == "quintic":
-                return Quintic(gsparams=gsparams)
-            elif name.lower() == "quinticBis":
-                return QuinticBis(gsparams=gsparams)
+        if name.lower() == "quintic":
+            return Quintic(gsparams=gsparams)
         if name.lower().startswith("lanczos"):
             conserve_dc = True
             if name[-1].upper() in ("T", "F"):
@@ -111,6 +108,8 @@ class Interpolant:
             return Linear(gsparams=gsparams)
         elif name.lower() == "cubic":
             return Cubic(gsparams=gsparams)
+        elif name.lower() == "quinticbis":
+                return QuinticBis(gsparams=gsparams)
         elif name.lower() == "nearest":
             return Nearest(gsparams=gsparams)
         elif name.lower() == "delta":
@@ -125,7 +124,7 @@ class Interpolant:
                     "linear",
                     "cubic",
                     "quintic",
-                    "quinticBis",
+                    "quinticbis",
                     "lanczosN",
                     "nearest",
                     "delta",
