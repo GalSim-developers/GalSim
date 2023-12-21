@@ -89,7 +89,7 @@ class Interpolant:
         if name.lower().startswith('lanczos'):
             conserve_dc = True
             if name[-1].upper() in ('T', 'F'):
-                conserve_dc = name[-1].upper() == 'T'
+                conserve_dc = (name[-1].upper() == 'T')
                 name = name[:-1]
             try:
                 n = int(name[7:])
@@ -99,7 +99,7 @@ class Interpolant:
             return Lanczos(n, conserve_dc, gsparams=gsparams)
         elif name.lower() == 'linear':
             return Linear(gsparams=gsparams)
-        elif name.lower() == 'cubic':
+        elif name.lower() == 'cubic' :
             return Cubic(gsparams=gsparams)
         elif name.lower() == 'quinticbis':
                 return QuinticBis(gsparams=gsparams)
@@ -254,7 +254,6 @@ class Delta(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
-
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
@@ -267,14 +266,15 @@ class Delta(Interpolant):
         return _galsim.Delta(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.Delta(gsparams=%r)'%(self._gsparams)
+        return "galsim.Delta(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.Delta()"
 
     @property
     def xrange(self):
-        """The maximum extent of the interpolant from the origin (in pixels)."""
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return 0.
 
     @property
@@ -330,7 +330,7 @@ class Nearest(Interpolant):
         return _galsim.Nearest(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.Nearest(gsparams=%r)'%(self._gsparams)
+        return "galsim.Nearest(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.Nearest()"
@@ -549,7 +549,8 @@ class Cubic(Interpolant):
 
     @property
     def krange(self):
-        """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
         return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
 
