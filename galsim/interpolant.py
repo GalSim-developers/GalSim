@@ -84,33 +84,30 @@ class Interpolant:
         gsparams = GSParams.check(gsparams)
 
         # Do these in rough order of likelihood (most to least)
-        if name.lower() == "quintic":
+        if name.lower() == 'quintic':
             return Quintic(gsparams=gsparams)
-        if name.lower().startswith("lanczos"):
+        if name.lower().startswith('lanczos'):
             conserve_dc = True
-            if name[-1].upper() in ("T", "F"):
-                conserve_dc = name[-1].upper() == "T"
+            if name[-1].upper() in ('T', 'F'):
+                conserve_dc = name[-1].upper() == 'T'
                 name = name[:-1]
             try:
                 n = int(name[7:])
             except Exception:
-                raise GalSimValueError(
-                    "Invalid Lanczos specification. Should look like "
-                    "lanczosN, where N is an integer",
-                    name,
-                ) from None
+                raise GalSimValueError("Invalid Lanczos specification. Should look like "
+                                       "lanczosN, where N is an integer", name) from None
             return Lanczos(n, conserve_dc, gsparams=gsparams)
-        elif name.lower() == "linear":
+        elif name.lower() == 'linear':
             return Linear(gsparams=gsparams)
-        elif name.lower() == "cubic":
+        elif name.lower() == 'cubic':
             return Cubic(gsparams=gsparams)
-        elif name.lower() == "quinticbis":
+        elif name.lower() == 'quinticbis':
                 return QuinticBis(gsparams=gsparams)
-        elif name.lower() == "nearest":
+        elif name.lower() == 'nearest':
             return Nearest(gsparams=gsparams)
-        elif name.lower() == "delta":
+        elif name.lower() == 'delta':
             return Delta(gsparams=gsparams)
-        elif name.lower() == "sinc":
+        elif name.lower() == 'sinc':
             return SincInterpolant(gsparams=gsparams)
         else:
             raise GalSimValueError(
@@ -147,14 +144,13 @@ class Interpolant:
     @property
     def tol(self):
         from .deprecated import depr
-        depr("interpolant.tol", 2.2, "interpolant.gsparams.kvalue_accuracy")
+        depr('interpolant.tol', 2.2, 'interpolant.gsparams.kvalue_accuracy')
         return self._gsparams.kvalue_accuracy
 
     def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current interpolant with the given gsparams
         """
-        if gsparams == self.gsparams:
-            return self
+        if gsparams == self.gsparams: return self
         ret = copy.copy(self)
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
@@ -210,7 +206,7 @@ class Interpolant:
                     an array.
         """
         # Note: the C++ layer uses u = k/2pi rather than k.
-        u = np.array(k, dtype=float, copy=True) / (2.0*np.pi)
+        u = np.array(k, dtype=float, copy=True) / (2.*np.pi)
         if u.shape == ():
             return self._i.uval(float(u))
         else:
@@ -262,7 +258,7 @@ class Delta(Interpolant):
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
-            depr('tol', 2.2, "gsparams=GSParams(kvalue_accuracy=tol)")
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
             gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
@@ -271,7 +267,7 @@ class Delta(Interpolant):
         return _galsim.Delta(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Delta(gsparams=%r)"%(self._gsparams)
+        return 'galsim.Delta(gsparams=%r)'%(self._gsparams)
 
     def __str__(self):
         return "galsim.Delta()"
@@ -279,7 +275,7 @@ class Delta(Interpolant):
     @property
     def xrange(self):
         """The maximum extent of the interpolant from the origin (in pixels)."""
-        return 0.0
+        return 0.
 
     @property
     def ixrange(self):
@@ -291,7 +287,7 @@ class Delta(Interpolant):
     def krange(self):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels).
         """
-        return 2.0 * math.pi / self._gsparams.kvalue_accuracy
+        return 2. * math.pi / self._gsparams.kvalue_accuracy
 
     _unit_integrals = np.array([1], dtype=float)
 
@@ -322,7 +318,6 @@ class Nearest(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
-
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
@@ -388,7 +383,6 @@ class SincInterpolant(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
-
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
             from .deprecated import depr
@@ -401,7 +395,7 @@ class SincInterpolant(Interpolant):
         return _galsim.SincInterpolant(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.SincInterpolant(gsparams=%r)'%(self._gsparams)
+        return "galsim.SincInterpolant(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.SincInterpolant()"
@@ -469,7 +463,7 @@ class Linear(Interpolant):
         return _galsim.Linear(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.Linear(gsparams=%r)'%(self._gsparams)
+        return "galsim.Linear(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.Linear()"
@@ -479,7 +473,7 @@ class Linear(Interpolant):
         """The maximum extent of the interpolant from the origin (in pixels).
         """
         # Reduce range slightly so not including points with zero weight.
-        return 1.0
+        return 1.
 
     @property
     def ixrange(self):
@@ -536,7 +530,7 @@ class Cubic(Interpolant):
         return _galsim.Cubic(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.Cubic(gsparams=%r)'%(self._gsparams)
+        return "galsim.Cubic(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.Cubic()"
@@ -557,7 +551,7 @@ class Cubic(Interpolant):
     def krange(self):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels)."""
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
-        return 1.7320508075688774 / self._gsparams.kvalue_accuracy ** (1./3.)
+        return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
 
     _unit_integrals = np.array([161./192, 3./32, -5./384], dtype=float)
 
@@ -604,7 +598,7 @@ class Quintic(Interpolant):
         return _galsim.Quintic(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.Quintic(gsparams=%r)'%(self._gsparams)
+        return "galsim.Quintic(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.Quintic()"
@@ -626,7 +620,7 @@ class Quintic(Interpolant):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels).
         """
         # kmax = 2 * (25sqrt(5)/108 tol)^1/3
-        return 1.6058208066649935 / self._gsparams.kvalue_accuracy ** (1./3.)
+        return 1.6058208066649935 / self._gsparams.kvalue_accuracy**(1./3.)
 
 
 class QuinticBis(Interpolant):
@@ -651,7 +645,7 @@ class QuinticBis(Interpolant):
         return _galsim.QuinticBis(self._gsparams._gsp)
 
     def __repr__(self):
-        return 'galsim.QuinticBis(gsparams=%r)'%(self._gsparams)
+        return "galsim.QuinticBis(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
         return "galsim.QuinticBis()"
@@ -741,7 +735,7 @@ class Lanczos(Interpolant):
 
     @property
     def n(self):
-        """The order of the Lanczos function
+        """The order of the Lanczos function.
         """
         return self._n
 
@@ -768,7 +762,6 @@ class Lanczos(Interpolant):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels).
         """
         return 2. * math.pi * self._i.urange()
-
 
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an `Interpolant` if it is given as a string.
