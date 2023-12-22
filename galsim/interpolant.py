@@ -16,17 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
-__all__ = [
-    "Interpolant",
-    "Nearest",
-    "Linear",
-    "Cubic",
-    "Quintic",
-    "QuinticBis",
-    "Lanczos",
-    "SincInterpolant",
-    "Delta",
-]
+__all__ = [ 'Interpolant', 'Nearest', 'Linear', 'Cubic', 'Quintic', 'QuinticBis'
+            'Lanczos', 'SincInterpolant', 'Delta', ]
 
 import math
 import numpy as np
@@ -102,7 +93,7 @@ class Interpolant:
         elif name.lower() == 'cubic' :
             return Cubic(gsparams=gsparams)
         elif name.lower() == 'quinticbis':
-                return QuinticBis(gsparams=gsparams)
+            return QuinticBis(gsparams=gsparams)
         elif name.lower() == 'nearest':
             return Nearest(gsparams=gsparams)
         elif name.lower() == 'delta':
@@ -110,20 +101,9 @@ class Interpolant:
         elif name.lower() == 'sinc':
             return SincInterpolant(gsparams=gsparams)
         else:
-            raise GalSimValueError(
-                "Invalid Interpolant name %s.",
-                name,
-                (
-                    "linear",
-                    "cubic",
-                    "quintic",
-                    "quinticbis",
-                    "lanczosN",
-                    "nearest",
-                    "delta",
-                    "sinc",
-                ),
-            )
+            raise GalSimValueError("Invalid Interpolant name %s.",name,
+                                   ('linear', 'cubic', 'quintic', 'quinticbis', 'lanczosN', 'nearest', 'delta',
+                                    'sinc'))
 
     @property
     def gsparams(self):
@@ -634,11 +614,7 @@ class QuinticBis(Interpolant):
         tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
-    def __init__(self, tol=None, gsparams=None):
-        if tol is not None:
-            from .deprecated import depr
-            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
-            gsparams = GSParams(kvalue_accuracy=tol)
+    def __init__(self, gsparams=None):
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
@@ -669,7 +645,7 @@ class QuinticBis(Interpolant):
         """
         # from C++ code:
         # umax = 1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/tol, 1./3.);
-        # kmax = 2 Pi kmax
+        # kmax = 2 Pi umax
         return 2.0*np.pi*(1.0 + 0.33925584826755739773 / self._gsparams.kvalue_accuracy ** (1./3.))
 
     # numerical values for unit_integrals

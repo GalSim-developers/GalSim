@@ -619,54 +619,9 @@ namespace galsim {
     {
         dbg<<"Start QuinticBis\n";
         _range = 3.;
- 
         double pi2 = M_PI * M_PI;
         double pi3 = M_PI * pi2;
         double pi5 = pi2 * pi3;
-
-#ifdef USE_TABLES
-        double tol = gsparams.kvalue_accuracy;
-        // Strangely, not all compilers correctly setup an empty map when it is a
-        // static variable, so you can get seg faults using it.
-        // Doing an explicit clear fixes the problem.
-        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
-
-        if (_cache_umax.count(tol)) {
-            // Then uMax and tab are already cached.
-            _tab = _cache_tab[tol];
-            _uMax = _cache_umax[tol];
-        } else {
-            // Then need to do the calculation and then cache it.
-            const double uStep =
-                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
-            _uMax = 0.;
-            _tab.reset(new TableBuilder(Table::spline));
-            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
-                dbg<<"u = "<<u<<std::endl;
-                double ft = uCalc(u);
-                _tab->addEntry(u, ft);
-#ifdef DEBUGLOGGING
-                double pi2 = M_PI * M_PI;
-                double piu = M_PI * u;
-                double scu = math::sinc(u);
-                double cu = cos(piu);
-                double su = sin(piu);
-                double ssq = scu * scu
-                double ft2 =(scu**5 *(M_PI *(24.* M_PI *(-1. + u*u)*cu - (39. + 7.*pi2) *u *su)
-                           + 5. *(-3. + 5.*pi2) *scu))/(-15. + pi2);
-                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
-#endif
-                if (std::abs(ft) > tol) _uMax = u;
-            }
-            _tab->finalize();
-            // Save these values in the cache.
-            _cache_tab[tol] = _tab;
-            _cache_umax[tol] = _uMax;
-            
-            dbg<<"umax = "<<_uMax<<", alt umax = "<<
-               1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/tol, 1./3.) <<std::endl;
-        }
-#else
         // uMax is the value where |ft| <= tolerance
         // ft = (Sinc[u]^5 (24 pi^2 (1 - u^2) Cos[pi u] 
         //               + (15 + pi^2 (-25 + (39 + 7 pi^2) u^2)) Sinc[pi u]))/(15 - pi^2)
@@ -675,14 +630,14 @@ namespace galsim {
         // gives a good approximation of max(|ft|) on each [i,i+1] intervalle, i integer
         // nb. Max[Sinc[u]^5 Cos[pi u]] = (25 Sqrt[5])/216
         _uMax = 1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/gsparams.kvalue_accuracy, 1./3.);
-#endif
     }
+
     std::map<double,shared_ptr<TableBuilder> > QuinticBis::_cache_tab;
     std::map<double,double> QuinticBis::_cache_umax;
     
     // nb. Contrary to Quintic from Bernstein & Gruen, 
     // for QuinticBis the change of sign occurs on x=i with i non-zero integer
-    //So the default sampler is ok.
+    // So the default sampler is ok.
 
     std::string QuinticBis::makeStr() const
     {
