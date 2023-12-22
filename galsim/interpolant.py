@@ -607,11 +607,37 @@ class Quintic(Interpolant):
 class QuinticBis(Interpolant):
     """Fifth order interpolation
 
-    The quintic interpolant is an improved version over the
-     'Quintic' interpolant by Bernstein & Gruen, found by Campagne Jean-Eric
-
+    This quintic interpolant is a variation over the 'Quintic' interpolant by Bernstein & Gruen, 
+    found by Campagne Jean-Eric. 
+    
+    To summarise the differences between the two quintic kernels, one can say that
+    1. Both kernels share the "quintic" property of iexact interpolation of 
+         fourth-order polynomial functions, and satisfies the partition of unity 
+         both in real ans Fourier spaces.
+    2. :math:`K^{BG}(x)` is more flat than :math:`K^{JE}(x)` around :math `x=0`:
+        .. math::
+            K^{BG}(x) \approx 1. - 7.91667 |x|^3
+        while
+        .. math::
+            K^{JE}(x) \approx 1. - 4.17375 x^2
+    3.  :math:`\widehat{K}^G(u)` is a little more flat than :math:`\widehat{K}^{JE}(u)` around :math:`u=0`:
+        .. math::
+            \widehat{K}^{BG}(u) \approx 1. - 127.168 u^6 
+        while
+        .. math::
+            \widehat{K}^{JE}(u) \approx 1. - 188.312 u^6
+    4. :math:`\widehat{K}^{JE}(u)` is more flat than :math:`\widehat{K}^G(u)` around :math:`$u=1``
+         (ie. :math:`j=1` 1st ghost)
+        .. math::
+            \widehat{K}^{BG}(u) \approx -34.2608 (u-1.)^5
+        while
+        .. math::
+            \widehat{K}^{JE}(u) \approx 70.4229 (u-1.)^6
+    5. :math:`\widehat{K}^{JE}(u)` has higher :math:`j>1` ghosts (ie. coefficient of :math`(u-j)^5`) than 
+    :math:`\widehat{K}^{G}(u)` has a matter of compensation of the 1st ghost intensity. 
+    The ghost intensity of both kernels decrease well as $j$ increase.  
+            
     Parameters:
-        tol:        [deprecated]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, gsparams=None):
