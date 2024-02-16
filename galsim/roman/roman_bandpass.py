@@ -135,7 +135,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     # Loop over the bands.
     for index, bp_name in enumerate(data.dtype.names[1:]):
         # Need to skip the prism and grism (not used for weak lensing imaging).
-        if bp_name=='SNPrism' or bp_name=='Grism_1stOrder' or bp_name=='Grism_0thOrder':
+        if bp_name=='Grism_1stOrder' or bp_name=='Grism_0thOrder':
             continue
 
         # Initialize the bandpass object.
@@ -154,9 +154,10 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             bp = bp.withZeropoint('AB')
 
         # Store the sky level information as an attribute.
-        bp._ecliptic_lat = ecliptic_lat
-        bp._ecliptic_lon = ecliptic_lon
-        bp._sky_level = sky_data[2+index, :]
+        if bp_name!='SNPrism':
+            bp._ecliptic_lat = ecliptic_lat
+            bp._ecliptic_lon = ecliptic_lon
+            bp._sky_level = sky_data[2+index, :]
 
         # Add it to the dictionary.
         bp.name = bp_name if bp_name != 'W149' else 'W146'
