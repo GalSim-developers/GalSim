@@ -1304,7 +1304,7 @@ class CelestialWCS(BaseWCS):
     def radecToxy(self, ra, dec, units, color=None):
         """Convert ra,dec from world coordinates to image coordinates.
 
-        This is equivalent to ``wcs.toWorld(ra,dec, units=units)``.
+        This is equivalent to ``wcs.toImage(ra,dec, units=units)``.
 
         It is also equivalent to ``wcs.posToImage(galsim.CelestialCoord(ra * units, dec * units))``
         when ra and dec are scalars; however, this routine allows ra and dec to be numpy arrays,
