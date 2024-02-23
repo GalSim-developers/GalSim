@@ -443,6 +443,11 @@ class Image:
         """The underlying numpy array.
         """
         return self._array
+    @array.setter
+    def array(self, other):
+        """Set the numpy array in-place.
+        """
+        self._array[:] = other
     @property
     def nrow(self):
         """The number of rows in the image
