@@ -447,7 +447,13 @@ class Image:
     def array(self, other):
         """Set the numpy array in-place.
         """
-        self._array[:] = other
+        self_array = self.array
+        other_array = np.asarray(other)
+        if other_array.shape != self_array.shape:
+            raise GalSimError("Other array shape is not equal to current array shape")
+        if other_array.dtype != self_array.dtype:
+            raise GalSimError("Other array dtype is not equal to current array dtype")
+        self._array = other_array
     @property
     def nrow(self):
         """The number of rows in the image

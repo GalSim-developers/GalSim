@@ -1719,7 +1719,11 @@ def test_Image_inplace_setter():
         # operations on the Image array
         internal_array = np.zeros_like(ref_array_view)
         image3 = galsim.Image(internal_array)
+        image3_array_id = id(image3.array)
         image3.array += ref_array_view
+
+        # Check that the id of the Image array attribute is unchanged
+        assert id(image3.array) == image3_array_id
 
         # NumPy arrays will return views with new IDs, so we must check if the
         # underlying data buffers are equal rather than just the IDs
@@ -1729,16 +1733,17 @@ def test_Image_inplace_setter():
 
         # Test that attempting to set an Image's array to an array of different
         # shape raises a ValueError
-        with assert_raises(ValueError):
+        with assert_raises(galsim.GalSimError):
             image4 = galsim.Image(zeros_array)
             image4.array = large_array
 
-        # Test that attempting to set an Image array from that of a real dtype
-        # to that of a complex dtype raises a TypeError
-        if np.isreal(types[i]):
-            with assert_raises(TypeError):
-                image4 = galsim.Image(zeros_array)
-                image4.array =  1j * ref_array_view
+        # Test that setting an Image array to a different dtype raises an error
+        for j in range(ntypes):
+            type_index = (i + j) % ntypes
+            if type_index != i:
+                with assert_raises(galsim.GalSimError):
+                    image5 = galsim.Image(zeros_array)
+                    image5.array = ref_array.astype(types[type_index])
 
 
 @timer
