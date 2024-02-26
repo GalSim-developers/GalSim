@@ -1711,6 +1711,12 @@ def test_Image_inplace_add():
         image3 += (image2 / 17) * 17
         np.testing.assert_allclose(image3.array, image1.array)
 
+        # Check inplace operations on the underlying array
+        image1 = galsim.Image(ref_array.astype(types[i]))
+        image1.array += 1
+        image2 = galsim.Image(ref_array.astype(types[i]) + 1)
+        np.testing.assert_allclose(image1.array, image2.array)
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.copy().astype(types[i])[::3,::2]
