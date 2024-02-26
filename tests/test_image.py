@@ -1693,6 +1693,55 @@ def test_Image_binary_scalar_pow():
 
 
 @timer
+def test_Image_inplace_setter():
+    """Test that all six types of supported Images set correctly
+    """
+    for i in range(ntypes):
+        # First, check that
+        ref_array_view = ref_array.astype(types[i])
+        zeros_array = np.zeros_like(ref_array_view)
+
+        # Check that we can set an array appropriately;
+
+        # First, using the view of the underlying array
+        image1 = galsim.Image(zeros_array)
+        image1.array[:] = ref_array_view
+
+        np.testing.assert_array_equal(image1.array, ref_array_view)
+
+        # Second, using the setter
+        image2 = galsim.Image(zeros_array)
+        image2.array = ref_array_view
+
+        np.testing.assert_array_equal(image2.array, ref_array_view)
+
+        # Check that we do not allocate new memory when performing inplace
+        # operations on the Image array
+        internal_array = np.zeros_like(ref_array_view)
+        image3 = galsim.Image(internal_array)
+        image3.array += ref_array_view
+
+        # NumPy arrays will return views with new IDs, so we must check if the
+        # underlying data buffers are equal rather than just the IDs
+        assert image3.array.__array_interface__ == internal_array.__array_interface__
+
+        # Now we attempt verboten operations;
+
+        # Test that attempting to set an Image's array to an array of different
+        # shape raises a ValueError
+        with assert_raises(ValueError):
+            image4 = galsim.Image(zeros_array)
+            image4.array = large_array
+
+        # Test that attempting to set an Image array from that of a real dtype
+        # to that of a complex dtype raises a TypeError
+        if np.isreal(types[i]):
+            with assert_raises(TypeError):
+                image4 = galsim.Image(zeros_array)
+                image4.array =  1j * ref_array_view
+
+
+@timer
 def test_Image_inplace_add():
     """Test that all six types of supported Images inplace add correctly.
     """
@@ -1713,9 +1762,9 @@ def test_Image_inplace_add():
 
         # Check inplace operations on the underlying array
         image1 = galsim.Image(ref_array.astype(types[i]))
-        image1.array += 1
-        image2 = galsim.Image(ref_array.astype(types[i]) + 1)
-        np.testing.assert_allclose(image1.array, image2.array)
+        image1.array += (2 * ref_array).astype(types[i])
+        image2 = galsim.Image((3 * ref_array).astype(types[i]))
+        np.testing.assert_array_equal(image1.array, image2.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1759,6 +1808,12 @@ def test_Image_inplace_subtract():
         image3 -= (image2 / 17) * 17
         np.testing.assert_allclose(image3.array, image1.array)
 
+        # Check inplace operations on the underlying array
+        image1 = galsim.Image((2 * ref_array).astype(types[i]))
+        image1.array -= ref_array.astype(types[i])
+        image2 = galsim.Image(ref_array.astype(types[i]))
+        np.testing.assert_array_equal(image1.array, image2.array)
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = (2*large_array).astype(types[i])[::3,::2]
@@ -1800,6 +1855,12 @@ def test_Image_inplace_multiply():
         image3 = galsim.Image(ref_array.astype(types[i]))
         image3 *= (image2 / 17) * 17
         np.testing.assert_allclose(image3.array, image1.array)
+
+        # Check inplace operations on the underlying array
+        image1 = galsim.Image(ref_array.astype(types[i]))
+        image1.array *= (2 * ref_array).astype(types[i])
+        image2 = galsim.Image((2 * ref_array**2).astype(types[i]))
+        np.testing.assert_array_equal(image1.array, image2.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1844,6 +1905,16 @@ def test_Image_inplace_divide():
         image3 = galsim.Image((2 * (ref_array + 1)**2).astype(types[i]))
         image3 /= (image2 / 17) * 17
         np.testing.assert_allclose(image3.array, image1.array)
+
+        # Check inplace operations on the underlying array
+        # We expect some rounding errors given integer division and casting
+        image1 = galsim.Image((2 * (ref_array + 1)**2).astype(types[i]))
+        if issubclass(types[i], np.integer):
+            image1.array //= (ref_array + 1).astype(types[i])
+        else:
+            image1.array /= (ref_array + 1).astype(types[i])
+        image2 = galsim.Image((2 * (ref_array + 1)).astype(types[i]))
+        np.testing.assert_allclose(image1.array, image2.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1898,8 +1969,12 @@ def test_Image_inplace_scalar_add():
                 +"call) does not match reference for dtype = "+str(types[i]))
 
         image3 = galsim.Image(ref_array.astype(types[i]))
-        image3 += 1.
+        image3 += 1
         np.testing.assert_allclose(image3.array, image1.array)
+
+        image4 = galsim.Image(ref_array.astype(types[i]))
+        image4.array += 1
+        np.testing.assert_array_equal(image4.array, image1.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1924,8 +1999,12 @@ def test_Image_inplace_scalar_subtract():
                 +"call) does not match reference for dtype = "+str(types[i]))
 
         image3 = galsim.Image(ref_array.astype(types[i]))
-        image3 -= 1.
+        image3 -= 1
         np.testing.assert_allclose(image3.array, image1.array)
+
+        image4 = galsim.Image(ref_array.astype(types[i]))
+        image4.array -= 1
+        np.testing.assert_array_equal(image4.array, image1.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1951,8 +2030,12 @@ def test_Image_inplace_scalar_multiply():
                 +"call) does not match reference for dtype = "+str(types[i]))
 
         image3 = galsim.Image(ref_array.astype(types[i]))
-        image3 *= 2.
+        image3 *= 2
         np.testing.assert_allclose(image3.array, image1.array)
+
+        image4 = galsim.Image(ref_array.astype(types[i]))
+        image4.array *= 2
+        np.testing.assert_array_equal(image4.array, image1.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -1979,8 +2062,15 @@ def test_Image_inplace_scalar_divide():
                 +"call) does not match reference for dtype = "+str(types[i]))
 
         image3 = galsim.Image((2 * ref_array).astype(types[i]))
-        image3 /= 2.
+        image3 /= 2
         np.testing.assert_allclose(image3.array, image2.array)
+
+        image4 = galsim.Image((2 * ref_array).astype(types[i]))
+        if issubclass(types[i], np.integer):
+            image4.array //= 2
+        else:
+            image4.array /= 2
+        np.testing.assert_array_equal(image4.array, image1.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
@@ -2006,8 +2096,12 @@ def test_Image_inplace_scalar_pow():
             +"call) does not match reference for dtype = "+str(types[i]))
 
         image3 = galsim.Image(ref_array.astype(types[i]))
-        image3 **= 2.
+        image3 **= 2
         np.testing.assert_allclose(image3.array, image1.array)
+
+        image4 = galsim.Image(ref_array.astype(types[i]))
+        image4.array **= 2
+        np.testing.assert_array_equal(image4.array, image1.array)
 
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
