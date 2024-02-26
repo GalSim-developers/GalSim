@@ -1742,7 +1742,7 @@ def test_Image_inplace_setter():
             type_index = (i + j) % ntypes
             if type_index != i:
                 with assert_raises(galsim.GalSimError):
-                    image5 = galsim.Image(zeros_array)
+                    image5 = galsim.Image(ref_array.astype(types[i]))
                     image5.array = ref_array.astype(types[type_index])
 
 
