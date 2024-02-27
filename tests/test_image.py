@@ -1696,6 +1696,13 @@ def test_Image_binary_scalar_pow():
 def test_Image_inplace_setter():
     """Test that all six types of supported Images set correctly
     """
+    # Test that setting an Image initialized with an int array to a float array
+    # doesn't downcast and truncate values
+    farray = np.array([[1.2, 3.8], [5.6, 6.7]])
+    image = galsim.Image(np.zeros((2, 2), dtype=int))
+    image.array = farray
+    np.testing.assert_array_equal(image.array, farray)
+
     for i in range(ntypes):
         # First, check that
         ref_array_view = ref_array.astype(types[i])
@@ -1733,17 +1740,62 @@ def test_Image_inplace_setter():
 
         # Test that attempting to set an Image's array to an array of different
         # shape raises an error
-        with assert_raises(galsim.GalSimIncompatibleValuesError):
+        with assert_raises(ValueError):
             image4 = galsim.Image(zeros_array)
             image4.array = large_array
 
-        # Test that setting an Image array to a different dtype raises an error
-        for j in range(ntypes):
-            type_index = (i + j) % ntypes
-            if type_index != i:
-                with assert_raises(galsim.GalSimIncompatibleValuesError):
-                    image5 = galsim.Image(ref_array.astype(types[i]))
-                    image5.array = ref_array.astype(types[type_index])
+        # Test that setting the array to a single values raises an error;
+        # note that this behavior can still be attained via, e.g.,
+        # ```
+        # image.array[:] = 1
+        # ```
+        with assert_raises(galsim.GalSimIncompatibleValuesError):
+            image5 = galsim.Image(zeros_array)
+            image5.array = 1
+
+
+@timer
+def test_Image_setter_alignment():
+    # Make an array that is _not_ memory aligned
+    # c.f. https://stackoverflow.com/a/9895986
+    m = n = 1000
+    dtype = np.dtype(np.float64)
+    nbytes = m * n * dtype.itemsize
+    buf = np.empty(nbytes + 16, dtype=np.uint8)
+    start_index = -buf.ctypes.data % 13  # define an awkward index to unalign the array in memory
+    unaligned_array = buf[start_index:start_index + nbytes].view(dtype).reshape(m, n)
+    unaligned_array[:] = 1
+    assert unaligned_array.ctypes.data % 16 != 0
+
+    # Make arrays that are memory-aligned by default
+    zeros_array = np.zeros((m, n))
+    ones_array = np.ones((m, n))
+    assert zeros_array.ctypes.data % 16 == 0
+    assert ones_array.ctypes.data % 16 == 0
+
+    # Check that the values of the unaligned and aligned 1s arrays are equal
+    np.testing.assert_array_equal(unaligned_array, ones_array)
+
+    # Test that an inplace operation on an aligned array with an unaligned
+    # array yields an aligned array
+    image1 = galsim.Image(zeros_array)
+    image1.array += unaligned_array
+
+    assert image1.array.ctypes.data % 16 == 0
+
+    # Check that the operation still took place
+    np.testing.assert_array_equal(image1.array, ones_array)
+
+    # Test that directly setting an unaligned array to an Image raises a warning
+    # while yielding an unaligned array
+    with assert_warns(galsim.GalSimWarning):
+        image2 = galsim.Image(zeros_array)
+        image2.array = unaligned_array
+
+    assert image2.array.ctypes.data % 16 != 0
+
+    # Check that the operation still took place
+    np.testing.assert_array_equal(image2.array, ones_array)
 
 
 @timer
