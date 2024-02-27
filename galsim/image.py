@@ -26,8 +26,9 @@ from . import _galsim
 from .position import PositionI, _PositionD, parse_pos_args
 from .bounds import BoundsI, BoundsD, _BoundsI
 from ._utilities import lazy_property
-from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError, galsim_warn
-from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
+from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError
+from .errors import convert_cpp_errors, galsim_warn
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
