@@ -450,9 +450,17 @@ class Image:
         self_array = self.array
         other_array = np.asarray(other)
         if other_array.shape != self_array.shape:
-            raise GalSimError("Other array shape is not equal to current array shape")
+            raise GalSimIncompatibleValuesError(
+                "Image array shapes are inconsistent",
+                arr1=self_array,
+                arr2=other_array
+            )
         if other_array.dtype != self_array.dtype:
-            raise GalSimError("Other array dtype is not equal to current array dtype")
+            raise GalSimIncompatibleValuesError(
+                "Image array dtypes are inconsistent",
+                arr1=self_array,
+                arr2=other_array
+            )
         self._array = other_array
     @property
     def nrow(self):

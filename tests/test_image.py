@@ -1732,8 +1732,8 @@ def test_Image_inplace_setter():
         # Now we attempt verboten operations;
 
         # Test that attempting to set an Image's array to an array of different
-        # shape raises a ValueError
-        with assert_raises(galsim.GalSimError):
+        # shape raises an error
+        with assert_raises(galsim.GalSimIncompatibleValuesError):
             image4 = galsim.Image(zeros_array)
             image4.array = large_array
 
@@ -1741,7 +1741,7 @@ def test_Image_inplace_setter():
         for j in range(ntypes):
             type_index = (i + j) % ntypes
             if type_index != i:
-                with assert_raises(galsim.GalSimError):
+                with assert_raises(galsim.GalSimIncompatibleValuesError):
                     image5 = galsim.Image(ref_array.astype(types[i]))
                     image5.array = ref_array.astype(types[type_index])
 
