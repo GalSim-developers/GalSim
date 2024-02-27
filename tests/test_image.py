@@ -1758,11 +1758,11 @@ def test_Image_inplace_setter():
 def test_Image_setter_alignment():
     # Make an array that is _not_ memory aligned
     # c.f. https://stackoverflow.com/a/9895986
-    m = n = 1000
+    m = n = 2
     dtype = np.dtype(np.float64)
     nbytes = m * n * dtype.itemsize
     buf = np.empty(nbytes + 16, dtype=np.uint8)
-    start_index = -buf.ctypes.data % 13  # define an awkward index to unalign the array in memory
+    start_index = -buf.ctypes.data % 16 + 1  # offset by 1 to unalign
     unaligned_array = buf[start_index:start_index + nbytes].view(dtype).reshape(m, n)
     unaligned_array[:] = 1
     assert unaligned_array.ctypes.data % 16 != 0
