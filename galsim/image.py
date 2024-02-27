@@ -26,7 +26,7 @@ from . import _galsim
 from .position import PositionI, _PositionD, parse_pos_args
 from .bounds import BoundsI, BoundsD, _BoundsI
 from ._utilities import lazy_property
-from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
+from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError, galsim_warn
 from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
@@ -452,15 +452,11 @@ class Image:
         if other_array.shape != self_array.shape:
             raise GalSimIncompatibleValuesError(
                 "Image array shapes are inconsistent",
-                arr1=self_array,
-                arr2=other_array
+                shape1=self_array.shape,
+                shape2=other_array.shape
             )
-        if other_array.dtype != self_array.dtype:
-            raise GalSimIncompatibleValuesError(
-                "Image array dtypes are inconsistent",
-                arr1=self_array,
-                arr2=other_array
-            )
+        if other_array.ctypes.data % 16 != 0:
+            galsim_warn("Array may not be memory aligned")
         self._array = other_array
     @property
     def nrow(self):
