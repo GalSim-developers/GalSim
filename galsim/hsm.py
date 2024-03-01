@@ -496,7 +496,7 @@ def _convertMask(image, weight=None, badpix=None):
                 weight=weight, image=image)
 
         # also make sure there are no negative values
-        if np.any(weight.array < 0) == True:
+        if np.any(weight.array < 0):
             raise GalSimValueError("Weight image cannot contain negative values.", weight)
 
         # if weight is an ImageI, then we can use it as the mask image:
