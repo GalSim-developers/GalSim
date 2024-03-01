@@ -39,6 +39,9 @@ class ShapeData:
     - ``observed_shape``: a `Shear` object representing the observed shape based on adaptive
       moments.
 
+    - ``observed_e1``, ``observed_e2``: floats representing the e1 and e2 components respectively of the
+      ``observed_shape``.
+
     - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;
       -1 if not measured.  (If `FindAdaptiveMom` is called with ``use_sky_coords=True``, then
       the units will be arcsec.)
@@ -128,8 +131,16 @@ class ShapeData:
     def moments_status(self): return self._data.moments_status
 
     @property
+    def observed_e1(self):
+        return self._data.observed_e1
+
+    @property
+    def observed_e2(self):
+        return self._data.observed_e2
+
+    @property
     def observed_shape(self):
-        return Shear(e1=self._data.observed_e1, e2=self._data.observed_e2)
+        return Shear(e1=self.observed_e1, e2=self.observed_e2)
 
     @property
     def moments_sigma(self): return self._data.moments_sigma
