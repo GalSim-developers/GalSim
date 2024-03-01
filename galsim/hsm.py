@@ -522,7 +522,7 @@ def _convertMask(image, weight=None, badpix=None):
         mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception
-    if mask.array.sum() == 0:
+    if not np.any(mask.array):
         raise GalSimHSMError("No pixels are being used!")
 
     # finally, return the Image for the weight map
