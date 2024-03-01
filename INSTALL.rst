@@ -49,7 +49,7 @@ about how to do this.
 
 For complete details, see:
 
-http://galsim-developers.github.io/GalSim/docs/_build/html/install_pip.html
+http://galsim-developers.github.io/GalSim/_build/html/install_pip.html
 
 Conda Installation
 ------------------
@@ -61,4 +61,4 @@ Another option If you use Anaconda Python is to use ``conda``::
 The conda installation method will install all of the dependencies for you.
 But if you want more information, see:
 
-http://galsim-developers.github.io/GalSim/docs/_build/html/install_conda.html
+http://galsim-developers.github.io/GalSim/_build/html/install_conda.html
