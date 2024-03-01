@@ -557,7 +557,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     This method works from `Image` inputs rather than `GSObject` inputs, which provides
     additional flexibility (e.g., it is possible to work from an `Image` that was read from file and
     corresponds to no particular `GSObject`), but this also means that users who wish to apply it to
-    compount `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing
+    compound `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing
     their `GSObject` into `Image` instances.
 
     This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
