@@ -563,7 +563,7 @@ def _convertImage(image):
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                   shear_est="REGAUSS", recompute_flux="FIT", guess_sig_gal=5.0,
                   guess_sig_PSF=3.0, precision=1.0e-6, guess_centroid=None,
-                  strict=True, hsmparams=None):
+                  strict=True, check=True, hsmparams=None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -667,6 +667,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                         ``False``, then information about failures will be silently stored in
                         the output ShapeData object. [default: True]
 
+        check:          Check if the object_image, weight are in the correct format and valid.
+                        [default: True]
+
         hsmparams:      The hsmparams keyword can be used to change the settings used by
                         `EstimateShear` when estimating shears; see `HSMParams` documentation
                         for more information. [default: None]
@@ -677,10 +680,10 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
-    _checkWeightAndBadpix(gal_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    if check:
+        _checkWeightAndBadpix(gal_image, weight=weight, badpix=badpix)
     weight = _convertMask(gal_image, weight=weight, badpix=badpix)
-
 
     if guess_centroid is None:
         guess_centroid = gal_image.true_center
@@ -699,7 +702,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
             return ShapeData(error_message = str(err))
 
 def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
-                    guess_centroid=None, strict=True, round_moments=False, hsmparams=None,
+                    guess_centroid=None, strict=True, check=True, round_moments=False, hsmparams=None,
                     use_sky_coords=False):
     """Measure adaptive moments of an object.
 
@@ -797,6 +800,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             ``GalSimHSMError`` exception if shear estimation fails.  If set to
                             ``False``, then information about failures will be silently stored in
                             the output ShapeData object. [default: True]
+        check:              Check if the object_image, weight are in the correct format and valid.
+                            [default: True]
         round_moments:      Use a circular weight function instead of elliptical.
                             [default: False]
         hsmparams:          The hsmparams keyword can be used to change the settings used by
@@ -812,9 +817,10 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     """
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
-
-    _checkWeightAndBadpix(object_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    if check:
+        _checkWeightAndBadpix(object_image, weight=weight, badpix=badpix)
+
     weight = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
