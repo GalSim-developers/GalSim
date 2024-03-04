@@ -23,7 +23,7 @@ from .position import PositionD
 from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
-from .errors import GalSimError, GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
+from .errors import GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
 
 class ShapeData:
     """A class to contain the outputs of the HSM shape and moments measurement routines.
