@@ -489,6 +489,27 @@ class HSMParams:
 HSMParams.default = HSMParams()
 
 
+# A helper function that checks if the weight and the badpix bounds are
+# consistent with that of the image, and that the weight is non-negative.
+def _checkWeightAndBadpix(image, weight=None, badpix=None):
+    # Check that the weight and badpix, if given, are sensible and compatible
+    # with the image.
+    if weight is not None:
+        if weight.bounds != image.bounds:
+            raise GalSimIncompatibleValuesError(
+                "Weight image does not have same bounds as the input Image.",
+                weight=weight, image=image)
+                # also make sure there are no negative values
+
+        if np.any(weight.array < 0):
+            raise GalSimValueError("Weight image cannot contain negative values.", weight)
+
+    if badpix and badpix.bounds != image.bounds:
+        raise GalSimIncompatibleValuesError(
+            "Badpix image does not have the same bounds as the input Image.",
+            badpix=badpix, image=image)
+
+
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the
 # format that the C++ functions want
 def _convertMask(image, weight=None, badpix=None):
@@ -498,18 +519,7 @@ def _convertMask(image, weight=None, badpix=None):
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight is None:
         mask = ImageI(bounds=image.bounds, init_value=1)
-
     else:
-        # if weight image was supplied, check if it has the right bounds and is non-negative
-        if weight.bounds != image.bounds:
-            raise GalSimIncompatibleValuesError(
-                "Weight image does not have same bounds as the input Image.",
-                weight=weight, image=image)
-
-        # also make sure there are no negative values
-        if np.any(weight.array < 0):
-            raise GalSimValueError("Weight image cannot contain negative values.", weight)
-
         # if weight is an ImageI, then we can use it as the mask image:
         if weight.dtype == np.int32:
             if not badpix:
@@ -526,10 +536,6 @@ def _convertMask(image, weight=None, badpix=None):
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
     if badpix is not None:
-        if badpix.bounds != image.bounds:
-            raise GalSimIncompatibleValuesError(
-                "Badpix image does not have the same bounds as the input Image.",
-                badpix=badpix, image=image)
         mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception
@@ -671,8 +677,10 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
-    weight = _convertMask(gal_image, weight=weight, badpix=badpix)
+    _checkWeightAndBadpix(gal_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    weight = _convertMask(gal_image, weight=weight, badpix=badpix)
+
 
     if guess_centroid is None:
         guess_centroid = gal_image.true_center
@@ -804,8 +812,10 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     """
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
-    weight = _convertMask(object_image, weight=weight, badpix=badpix)
+
+    _checkWeightAndBadpix(object_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    weight = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
         guess_centroid = object_image.true_center
