@@ -259,14 +259,6 @@ class Spiral(GSObject):
         """
         return self._half_light_radius
 
-    def _get_particles(self):
-        if not hasattr(self, '_part'):
-            raise RuntimeError(
-                'Cannot get particles, Spiral was constructed from '
-                'points'
-            )
-        return self._part
-
     @property
     def narms(self):
         """
@@ -655,16 +647,24 @@ class SpiralParticles(object):
         rel_height=0.1,
         inclination=None,
         rotation=None,
-        shift=None,
     ):
 
         self.rng = rng
         self.narms = int(narms)
-        if self.narms <= 0:
-            raise ValueError(f'number of arms should be > 0, got {self.narms}')
+
+        if self.narms <= 1:
+            raise GalSimValueError(
+                f'number of arms should be > 0, got {self.narms}',
+                self.narms,
+            )
+
         self.hlr = float(hlr)
+
         if self.hlr <= 0:
-            raise ValueError(f'hlr must be > 0, got {self.hlr}')
+            raise GalSimValueError(
+                f'hlr must be > 0, got {self.hlr}',
+                self.hlr,
+            )
 
         self.r0 = self.hlr / 1.67835
 
@@ -684,12 +684,10 @@ class SpiralParticles(object):
         self.pitch = pitch
         self.inclination = inclination
         self.rotation = rotation
-        self.shift = shift
 
         _check_angle(self.pitch, 'pitch')
         _check_angle(self.inclination, 'inclination')
         _check_angle(self.rotation, 'rotation')
-        _check_sequence(self.shift, 'shift', 2)
 
     def sample(self, n):
         """
@@ -702,33 +700,30 @@ class SpiralParticles(object):
 
         theta = np.log(r / self.r0) / self.pitch.tan()
 
-        if self.angle_fuzz is not None:
-            theta += theta * self.rng.normal(
-                scale=self.angle_fuzz,
-                size=theta.size,
-            )
+        theta += theta * self.rng.normal(
+            scale=self.angle_fuzz,
+            size=theta.size,
+        )
 
         # split points into arms
-        if self.narms > 1:
-            angle = 2 * np.pi / self.narms
-            frac = int(r.size / self.narms)
-            start = frac
-            for i in range(self.narms-1):
-                start = (i+1) * frac
-                end = (i+2) * frac
-                theta[start:end] += (i+1) * angle
+        angle = 2 * np.pi / self.narms
+        frac = int(r.size / self.narms)
+        start = frac
+        for i in range(self.narms-1):
+            start = (i+1) * frac
+            end = (i+2) * frac
+            theta[start:end] += (i+1) * angle
 
         xyz = np.zeros((n, 3))
         xyz[:, 0] = r * np.cos(theta)
         xyz[:, 1] = r * np.sin(theta)
 
-        if self.xy_fuzz is not None:
-            xyz[:, 0] += self.rng.normal(
-                scale=self.xy_fuzz * self.hlr, size=r.size,
-            )
-            xyz[:, 1] += self.rng.normal(
-                scale=self.xy_fuzz * self.hlr, size=r.size,
-            )
+        xyz[:, 0] += self.rng.normal(
+            scale=self.xy_fuzz * self.hlr, size=r.size,
+        )
+        xyz[:, 1] += self.rng.normal(
+            scale=self.xy_fuzz * self.hlr, size=r.size,
+        )
 
         xyz[:, 2] = self._get_z(r.size)
 
@@ -743,10 +738,6 @@ class SpiralParticles(object):
         xyz[:, 0], xyz[:, 1] = _rotate_coords(
             xyz[:, 0], xyz[:, 1], self.rotation,
         )
-
-        if self.shift is not None:
-            xyz[:, 0] += self.shift[0]
-            xyz[:, 1] += self.shift[1]
 
         return xyz
 
@@ -791,22 +782,4 @@ def _check_angle(angle, name):
         tangle = str(type(angle))
         raise GalSimValueError(
             f'{name} should be a galsim.Angle, got {tangle}', angle
-        )
-
-
-def _check_sequence(data, name, nel):
-    if data is None:
-        return
-
-    try:
-        ndata = len(data)
-        if ndata != nel:
-            raise GalSimValueError(
-                f'expected {nel} element sequence for {name}, got {ndata}',
-                data
-            )
-    except TypeError:
-        raise GalSimValueError(
-            f'expected sequence for {name}, got {type(data)}',
-            data
         )

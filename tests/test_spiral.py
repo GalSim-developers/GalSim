@@ -136,6 +136,18 @@ def test_spiral_valid_input(use_config):
         kw['rng'] = rng
         sp = galsim.Spiral(**kw)
 
+        kw2 = kw.copy()
+        pitch = 20 * galsim.degrees
+        kw2['pitch'] = pitch
+        tmp_sp = galsim.Spiral(**kw2)
+        assert tmp_sp.pitch == pitch
+
+        del kw2['inclination']
+        galsim.Spiral(**kw2)
+
+        del kw2['rotation']
+        galsim.Spiral(**kw2)
+
     pts = sp.points
     nobj = pts.shape[0]
     assert nobj == kw['npoints'], (
@@ -228,6 +240,53 @@ def test_spiral_invalid_inputs():
         with pytest.raises(GalSimRangeError):
             galsim.Spiral(**this_kw)
 
+    with pytest.raises(RuntimeError):
+        # need npoints= or points=
+        galsim.Spiral(half_light_radius=2)
+
+    with pytest.raises(GalSimValueError):
+        galsim.Spiral(points=np.zeros((10, 4)))
+
+    with pytest.raises(GalSimValueError):
+        galsim.Spiral(points='blah')
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1, rng='blah')
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1).shear(
+            galsim.Shear(g1=0.5),
+            g2='blah',
+        )
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1).shear(0.1)
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1).shear(0.1, 0.2, 0.3)
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1).shear()
+
+    with pytest.raises(TypeError):
+        galsim.Spiral(npoints=100, half_light_radius=1).rotate(0)
+
+    nprng = np.random.default_rng(88)
+    with pytest.raises(GalSimValueError):
+        galsim.spiral.SpiralParticles(hlr=1, narms=-3, rng=nprng)
+
+    with pytest.raises(GalSimValueError):
+        galsim.spiral.SpiralParticles(hlr=-1, rng=nprng)
+
+    with pytest.raises(GalSimValueError):
+        galsim.spiral.SpiralParticles(hlr=1, rng=nprng, pitch=0)
+
+    with pytest.raises(GalSimValueError):
+        galsim.spiral.SpiralParticles(hlr=1, inclination=0, rng=nprng)
+
+    with pytest.raises(GalSimValueError):
+        galsim.spiral.SpiralParticles(hlr=1, rotation=0, rng=nprng)
+
 
 def test_transforms():
 
@@ -237,6 +296,7 @@ def test_transforms():
     kw['rng'] = rng
 
     sp = galsim.Spiral(**kw)
+    spp = galsim.Spiral(points=sp.points)
     x, y = sp.points[:, 0], sp.points[:, 1]
 
     # flux
@@ -254,10 +314,16 @@ def test_transforms():
     tsp = sp.dilate(dilate)
     assert tsp.input_half_light_radius == kw['half_light_radius'] * dilate
 
+    tsp = spp.dilate(dilate)
+    assert tsp.input_half_light_radius is None
+
     # expand and magnify
     tsp = sp.expand(dilate)
     assert tsp.input_half_light_radius == kw['half_light_radius'] * dilate
     assert tsp.flux == kw['flux'] / dilate**2
+
+    tsp = spp.expand(dilate)
+    assert tsp.input_half_light_radius is None
 
     tsp = sp.magnify(dilate)
     assert tsp.input_half_light_radius == kw['half_light_radius'] * dilate
@@ -283,6 +349,9 @@ def test_transforms():
         (tsp.points[:, 1] == yp)
     )
 
+    tsp = spp.transform(dudx, dudy, dvdx, dvdy)
+    assert tsp.input_half_light_radius is None
+
     # rotate
     rot = 20 * galsim.degrees
     tsp = sp.rotate(rot)
@@ -302,6 +371,7 @@ def test_transforms():
     # shear
     sh = galsim.Shear(g1=0.1, g2=-0.05)
     tsp = sp.shear(sh)
+    tspkw = sp.shear(g1=sh.g1, g2=sh.g2)
 
     # we already tested transform above, use it again
     mat = sh.getMatrix()
@@ -311,11 +381,13 @@ def test_transforms():
         dvdx=mat[1, 0],
         dvdy=mat[1, 1],
     )
-    assert np.all(
-        (tsp.points[:, 0] == tsp2.points[:, 0])
-        &
-        (tsp.points[:, 1] == tsp2.points[:, 1])
-    )
+
+    for _tsp in (tsp, tspkw):
+        assert np.all(
+            (_tsp.points[:, 0] == tsp2.points[:, 0])
+            &
+            (_tsp.points[:, 1] == tsp2.points[:, 1])
+        )
 
 
 def test_spiral_hlr():
@@ -432,4 +504,9 @@ def test_spiral_sed():
 
 
 if __name__ == '__main__':
-    test_spiral_valid_input(True)
+    testfns = [
+        v for k, v in vars().items()
+        if k[:5] == 'test_' and callable(v)
+    ]
+    for testfn in testfns:
+        testfn()
