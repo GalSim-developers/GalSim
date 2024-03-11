@@ -667,7 +667,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                         ``False``, then information about failures will be silently stored in
                         the output ShapeData object. [default: True]
 
-        check:          Check if the object_image, weight are in the correct format and valid.
+        check:          Check if the object_image, weight and badpix are in the correct format and valid.
                         [default: True]
 
         hsmparams:      The hsmparams keyword can be used to change the settings used by
@@ -800,7 +800,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             ``GalSimHSMError`` exception if shear estimation fails.  If set to
                             ``False``, then information about failures will be silently stored in
                             the output ShapeData object. [default: True]
-        check:              Check if the object_image, weight are in the correct format and valid.
+        check:              Check if the object_image, weight and badpix are in the correct format and valid.
                             [default: True]
         round_moments:      Use a circular weight function instead of elliptical.
                             [default: False]
