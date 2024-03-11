@@ -1,6 +1,6 @@
-.. image:: https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg
+.. image:: https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg?branch=main
         :target: https://github.com/GalSim-developers/GalSim
-.. image:: https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg?branch=main
         :target: https://codecov.io/gh/GalSim-developers/GalSim
 .. image:: https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg
         :target: https://arxiv.org/abs/1407.7676
