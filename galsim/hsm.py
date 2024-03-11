@@ -504,7 +504,7 @@ def _checkWeightAndBadpix(image, weight=None, badpix=None):
         if np.any(weight.array < 0):
             raise GalSimValueError("Weight image cannot contain negative values.", weight)
 
-    if badpix and badpix.bounds != image.bounds:
+    if badpix is not None and badpix.bounds != image.bounds:
         raise GalSimIncompatibleValuesError(
             "Badpix image does not have the same bounds as the input Image.",
             badpix=badpix, image=image)
