@@ -472,7 +472,7 @@ class LookupTable:
                 warnings.simplefilter("ignore")
                 import pandas
                 from pandas.errors import ParserError
-            data = pandas.read_csv(file_name, comment='#', sep='\s+', header=None)
+            data = pandas.read_csv(file_name, comment='#', sep=r'\s+', header=None)
             data = data.values.transpose()
         except (ImportError, AttributeError, ParserError):
             data = np.loadtxt(file_name).transpose()
