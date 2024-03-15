@@ -27,7 +27,8 @@ from .position import PositionI, _PositionD, parse_pos_args
 from .bounds import BoundsI, BoundsD, _BoundsI
 from ._utilities import lazy_property
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
-from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError
+from .errors import convert_cpp_errors, galsim_warn
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -443,6 +444,21 @@ class Image:
         """The underlying numpy array.
         """
         return self._array
+    @array.setter
+    def array(self, other):
+        """Set the numpy array in-place.
+        """
+        self_array = self.array
+        other_array = np.asarray(other)
+        if other_array.shape != self_array.shape:
+            raise GalSimIncompatibleValuesError(
+                "Image array shapes are inconsistent",
+                shape1=self_array.shape,
+                shape2=other_array.shape
+            )
+        if other_array.ctypes.data % 16 != 0:
+            galsim_warn("Array may not be memory aligned")
+        self._array = other_array
     @property
     def nrow(self):
         """The number of rows in the image
