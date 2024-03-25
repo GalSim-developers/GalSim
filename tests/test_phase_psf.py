@@ -19,6 +19,7 @@
 import os
 import numpy as np
 import pickle
+import multiprocessing
 
 import galsim
 from galsim_test_helpers import *
@@ -1552,7 +1553,98 @@ def test_convolve_phasepsf():
     # The main thing is that it works.  But check that flux makes sense.
     assert im.array.sum() == 10
 
+@timer
+def test_high_speed():
+    # This config was reported to produce NaNs and other outlier values in issue #1280
+    rng = galsim.BaseDeviate('1778941255 1431167650 1282975060 ... 4184287197 2656677445 2301135708')
+
+    kwargs = {
+        'L0': [17.174188473465833,
+               17.174188473465833,
+               17.174188473465833,
+               17.174188473465833,
+               17.174188473465833,
+               17.174188473465833],
+        'altitude': [1.4302596307983027,
+                     5.348763607590827,
+                     11.208179050816556,
+                     18.24311343973453,
+                     24.467319796805825,
+                     30.175959028659584],
+        'direction': [coord.Angle(5.023031335581778, coord.radians),
+                      coord.Angle(5.4138391122102645, coord.radians),
+                      coord.Angle(5.213667959962739, coord.radians),
+                      coord.Angle(5.043782770080258, coord.radians),
+                      coord.Angle(5.363918865113014, coord.radians),
+                      coord.Angle(5.075185823976301, coord.radians)],
+        'r0_500': 0.08161434310901314,
+        'r0_weights': [5.531557367962777e-13,
+                       4.3652382380659045e-14,
+                       1.326839454952542e-13,
+                       4.126186570683441e-14,
+                       2.344518516479255e-14,
+                       2.5838659853736628e-15],
+        'rng': rng,
+        'screen_scale': 0.1,
+        'screen_size': 800.0,
+        'speed': np.array([10.94986395, 17.84175431, 37.29034581, 42.9768206 , 19.97968586,
+                           10.84201688])
+    }
+    ctx = multiprocessing.get_context('fork')
+    atm = galsim.Atmosphere(mp_context=ctx, **kwargs)
+
+    bandpass = galsim.Bandpass('LSST_r.dat', wave_type='nm')
+    wlen_eff = 622.2
+    kcrit = 0.2
+    aper = galsim.Aperture(diam=8.36, obscuration=0.61,
+                           lam=wlen_eff, screen_list=atm)
+
+    r0_500 = atm.r0_500_effective
+    r0 = r0_500 * (wlen_eff/500.0)**(6./5)
+    kmax = kcrit / r0
+
+    atm.instantiate(kmax=kmax, check='phot')
+
+    second_kick = galsim.SecondKick(
+            wlen_eff,
+            r0,
+            aper.diam,
+            aper.obscuration,
+            kcrit=kcrit)
+
+    theta = (0*galsim.arcsec, 0*galsim.arcsec)
+
+    psf = galsim.Convolve(
+        galsim.ChromaticAtmosphere(
+                atm.makePSF(
+                    wlen_eff,
+                    aper=aper,
+                    theta=theta,
+                    t0=0,
+                    exptime=30,
+                    second_kick=False
+                ),
+                alpha=-0.3,
+                base_wavelength=wlen_eff,
+                zenith_angle=0*galsim.degrees  # Turns off DCR
+            ),
+        second_kick.withGSParams())
+
+    sed = galsim.SED('vega.txt', wave_type='nm', flux_type='fphotons')
+    obj = galsim.DeltaFunction() * sed
+    obj = galsim.Convolve(obj, psf)
+
+    im = obj.drawImage(bandpass, method='phot', n_photons=10000, rng=rng, save_photons=True)
+
+    print('mean x = ',np.mean(im.photons.x))
+    print('mean y = ',np.mean(im.photons.y))
+    assert np.all(np.isfinite(im.photons.x))
+    assert np.all(np.isfinite(im.photons.y))
+
+
 if __name__ == "__main__":
+    test_high_speed()
+    quit()
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
