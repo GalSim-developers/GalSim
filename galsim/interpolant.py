@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-__all__ = [ 'Interpolant', 'Nearest', 'Linear', 'Cubic', 'Quintic',
+__all__ = [ 'Interpolant', 'Nearest', 'Linear', 'Cubic', 'Quintic', 'QuinticBis'
             'Lanczos', 'SincInterpolant', 'Delta', ]
 
 import math
@@ -56,6 +56,7 @@ class Interpolant:
             - 'linear' = `Linear`
             - 'cubic' = `Cubic`
             - 'quintic' = `Quintic`
+            - 'quinticbis' = 'QuinticBis'
             - 'lanczosN' = `Lanczos`  (where N is an integer, given the ``n`` parameter)
 
         In addition, if you want to specify the ``conserve_dc`` option for `Lanczos`, you can
@@ -91,6 +92,8 @@ class Interpolant:
             return Linear(gsparams=gsparams)
         elif name.lower() == 'cubic' :
             return Cubic(gsparams=gsparams)
+        elif name.lower() == 'quinticbis':
+            return QuinticBis(gsparams=gsparams)
         elif name.lower() == 'nearest':
             return Nearest(gsparams=gsparams)
         elif name.lower() == 'delta':
@@ -99,7 +102,7 @@ class Interpolant:
             return SincInterpolant(gsparams=gsparams)
         else:
             raise GalSimValueError("Invalid Interpolant name %s.",name,
-                                   ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
+                                   ('linear', 'cubic', 'quintic', 'quinticbis', 'lanczosN', 'nearest', 'delta',
                                     'sinc'))
 
     @property
@@ -111,12 +114,12 @@ class Interpolant:
     @property
     def positive_flux(self):
         """The positive-flux fraction of the interpolation kernel."""
-        return self._i.getPositiveFlux();
+        return self._i.getPositiveFlux()
 
     @property
     def negative_flux(self):
         """The negative-flux fraction of the interpolation kernel."""
-        return self._i.getNegativeFlux();
+        return self._i.getNegativeFlux()
 
     @property
     def tol(self):
@@ -599,6 +602,100 @@ class Quintic(Interpolant):
         """
         # kmax = 2 * (25sqrt(5)/108 tol)^1/3
         return 1.6058208066649935 / self._gsparams.kvalue_accuracy**(1./3.)
+
+
+class QuinticBis(Interpolant):
+    """Fifth order interpolation
+
+    This quintic interpolant is a variation over the 'Quintic' interpolant by Bernstein & Gruen, 
+    found by Campagne Jean-Eric. 
+    
+    To summarise the differences between the two quintic kernels, one can say that
+    1. Both kernels share the "quintic" property of iexact interpolation of 
+         fourth-order polynomial functions, and satisfies the partition of unity 
+         both in real ans Fourier spaces.
+    2. :math:`K^{BG}(x)` is more flat than :math:`K^{JE}(x)` around :math `x=0`:
+        .. math::
+            K^{BG}(x) \approx 1. - 7.91667 |x|^3
+        while
+        .. math::
+            K^{JE}(x) \approx 1. - 4.17375 x^2
+    3.  :math:`\widehat{K}^G(u)` is a little more flat than :math:`\widehat{K}^{JE}(u)` around :math:`u=0`:
+        .. math::
+            \widehat{K}^{BG}(u) \approx 1. - 127.168 u^6 
+        while
+        .. math::
+            \widehat{K}^{JE}(u) \approx 1. - 188.312 u^6
+    4. :math:`\widehat{K}^{JE}(u)` is more flat than :math:`\widehat{K}^G(u)` around :math:`$u=1``
+         (ie. :math:`j=1` 1st ghost)
+        .. math::
+            \widehat{K}^{BG}(u) \approx -34.2608 (u-1.)^5
+        while
+        .. math::
+            \widehat{K}^{JE}(u) \approx 70.4229 (u-1.)^6
+    5. :math:`\widehat{K}^{JE}(u)` has higher :math:`j>1` ghosts (ie. coefficient of :math`(u-j)^5`) than 
+    :math:`\widehat{K}^{G}(u)` has a matter of compensation of the 1st ghost intensity. 
+    The ghost intensity of both kernels decrease well as $j$ increase.  
+            
+    Parameters:
+        gsparams:   An optional `GSParams` argument. [default: None]
+    """
+    def __init__(self, gsparams=None):
+        self._gsparams = GSParams.check(gsparams)
+
+    @lazy_property
+    def _i(self):
+        return _galsim.QuinticBis(self._gsparams._gsp)
+
+    def __repr__(self):
+        return "galsim.QuinticBis(gsparams=%r)"%(self._gsparams)
+
+    def __str__(self):
+        return "galsim.QuinticBis()"
+
+    @property
+    def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
+        return 3.
+
+    @property
+    def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
+        return 6
+
+    @property
+    def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
+        # from C++ code:
+        # umax = 1. + std::pow((25.*sqrt(5.)/(135.*pi3-9.*pi5))/tol, 1./3.);
+        # kmax = 2 Pi umax
+        return 2.0*np.pi*(1.0 + 0.33925584826755739773 / self._gsparams.kvalue_accuracy ** (1./3.))
+
+    # numerical values for unit_integrals
+    _unit_integrals = np.array([0.82900606447524252394, 0.10593642386579032927,
+                                -0.023937069546316131708,0.0034976134429045404698,],dtype=float)
+
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        integrals[i] = int(xval(x), i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        # Using Mathematica:
+        # i0 = int(h(x), x=-0.5..0.5) = 2*int(h(x), x=0..0.5) 
+        #    = (-146715 + 9901 \[Pi]^2)/(11520 (-15 + \[Pi]^2))
+        # i1 = int(h(x), x=-0.5..1.5) = (-62835 + 3829 \[Pi]^2)/(46080 (-15 + \[Pi]^2))
+        # i2 = int(h(x), x=1.5..2.5) = (6195 - 341 \[Pi]^2)/(23040 (-15 + \[Pi]^2))
+        # i3 = int(h(x), x=2.5..3.0) = (-1725 + 91 \[Pi]^2)/(46080 (-15 + \[Pi]^2))
+        return self._unit_integrals
 
 
 class Lanczos(Interpolant):

@@ -289,6 +289,7 @@ def test_interpolant():
     print('Cubic sum = ',np.sum(c.xval(x)))
     assert np.isclose(np.sum(c.xval(x)), 7.0)
 
+
     # Quintic
     q = galsim.Quintic()
     assert q.gsparams == galsim.GSParams()
@@ -322,6 +323,51 @@ def test_interpolant():
     # Conserves dc flux:
     print('Quintic sum = ',np.sum(q.xval(x)))
     assert np.isclose(np.sum(q.xval(x)), 7.0)
+
+    # QuinticBis
+    qb = galsim.QuinticBis()
+    assert qb.gsparams == galsim.GSParams()
+    assert qb.xrange == 3.
+    assert qb.ixrange == 6
+    assert np.isclose(qb.krange, 2.0 * np.pi * (1.0
+                + 0.33925584826755739773 / qb.gsparams.kvalue_accuracy ** (1.0 / 3.0)
+            ))
+    assert np.isclose(qb.krange, 2.*np.pi * qb._i.urange())
+    assert np.isclose(qb.positive_flux, 271./240.)
+    assert np.isclose(qb.negative_flux, qb.positive_flux-1.)
+    check_pickle(qb, test_func)
+    check_pickle(galsim.QuinticBis())
+    check_pickle(galsim.Interpolant.from_name('quinticBis'))
+
+    true_xval = np.zeros_like(x)
+    ax = np.abs(x)
+    m = ax < 1.
+    pi2 = np.pi * np.pi
+    true_xval[m] = (15. *(-12. + ax[m]**2 *(27. + ax[m]*(-13. + (-3. + ax[m])*ax[m])))
+        + pi2 * (12. - ax[m]**2 *(15. + ax[m]*(35. + ax[m]*(-63. + 25.*ax[m])))))/(12.*(-15. +pi2))
+    m = (1 <= ax) & (ax < 2)
+    true_xval[m] = ((-2. + ax[m]) * (-1 + ax[m])*(-15.*(24. + ax[m]*(-3. + (-6. + ax[m])*ax[m]))
+                + pi2 * (-48. + ax[m] * (153. + ax[m]*(-114. + 25.*ax[m])))))/(24.*(-15. + pi2))
+    m = (2 <= ax) & (ax < 3)
+    true_xval[m] = -(((-3. + ax[m])*(-3.+ax[m])*(-2. + ax[m])*(-3.* (-7. + ax[m])* ax[m]
+                + pi2*(-3. + ax[m])*(-8. + 5.*ax[m])))/(24.*(-15. + pi2)))
+    np.testing.assert_allclose(qb.xval(x), true_xval)
+
+    u = x/(2*np.pi)
+    piu = x/2 # =pi * u
+    scu = np.sinc(u)
+    cu = np.cos(piu)
+    su = np.sin(piu)
+    pi2 = np.pi * np.pi
+    true_kval = (scu**5 * (np.pi*(24.*np.pi* (-1. + u*u)*cu - (39. + 7.*pi2)* u*su)
+                           + 5.*(-3. + 5.*pi2)*scu))/(-15. + pi2)
+    np.testing.assert_allclose(qb.kval(x), true_kval)
+    assert np.isclose(qb.xval(x[12]), true_xval[12])
+    assert np.isclose(qb.kval(x[12]), true_kval[12])
+
+    # Conserves dc flux:
+    print('QuinticBis sum = ',np.sum(qb.xval(x)))
+    assert np.isclose(np.sum(qb.xval(x)), 7.0)
 
     # Lanczos
     l3 = galsim.Lanczos(3)
@@ -394,6 +440,7 @@ def test_unit_integrals():
                galsim.Linear(),
                galsim.Cubic(),
                galsim.Quintic(),
+               galsim.QuinticBis(),
                galsim.Lanczos(3),
                galsim.Lanczos(3, conserve_dc=False),
                galsim.Lanczos(17),
@@ -1104,9 +1151,9 @@ def test_realspace_conv():
     psf_im = psf1.drawImage(scale=raw_scale, nx=raw_size, ny=raw_size, method='no_pixel')
 
     if __name__ == "__main__":
-        interp_list = ['linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']
+        interp_list = ['linear', 'cubic', 'quintic', 'quinticbis', 'lanczos3', 'lanczos5', 'lanczos7']
     else:
-        interp_list = ['linear', 'cubic', 'quintic']
+        interp_list = ['linear', 'cubic', 'quintic', 'quinticbis']
     for interp in interp_list:
         # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long
         # time to run, even with the small images we are working with.  So skip them for regular
@@ -1202,6 +1249,29 @@ def test_Quintic_ref():
     check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
     check_pickle(testobj)
 
+@timer
+def test_QuinticBis_ref():
+    """Test use of QuinticBis interpolant against some reference values
+    """
+    interp = galsim.QuinticBis()
+    scale = 0.4
+    testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in range(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuinticBis_test.txt"))
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference values for QuinticBis interpolant.")
+
+    check_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
+    check_pickle(testobj)
 
 @timer
 def test_Lanczos5_ref():
@@ -1273,7 +1343,7 @@ def test_conserve_dc():
     # constant field.
     im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
-    for interp in ['linear', 'cubic', 'quintic']:
+    for interp in ['linear', 'cubic', 'quintic', 'quinticbis']:
         print('Testing interpolant ',interp)
         obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
         obj.drawImage(im2, method='sb')
@@ -1581,7 +1651,7 @@ def test_ii_shoot():
         [0.09, 0.41, 0.44, 0.09],
         [0.04, 0.11, 0.10, 0.01] ])
     image_in = galsim.Image(ref_array)
-    interp_list = ['nearest', 'delta', 'linear', 'cubic', 'quintic',
+    interp_list = ['nearest', 'delta', 'linear', 'cubic', 'quintic', 'quinticbis',
                    'lanczos3', 'lanczos5', 'lanczos7']
     im = galsim.Image(100,100, scale=1)
     im.setCenter(0,0)
@@ -1698,7 +1768,7 @@ def test_quintic_glagn():
     """
 
     fname = os.path.join('fits_files','GLAGN_host_427_0_disk.fits')
-    for interpolant in 'linear cubic quintic'.split():
+    for interpolant in 'linear cubic quintic quinticbis'.split():
         print(interpolant)
         fits_image = galsim.InterpolatedImage(fname, scale=0.04, x_interpolant=interpolant)
         fits_image.withFlux(529.2666077544975)
@@ -1825,6 +1895,7 @@ def test_depixelize():
                galsim.Linear(),
                galsim.Cubic(),
                galsim.Quintic(),
+               galsim.QuinticBis(),
                galsim.Lanczos(3),
                galsim.Lanczos(5, conserve_dc=False),
                galsim.Lanczos(17),
