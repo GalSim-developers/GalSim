@@ -202,7 +202,7 @@ def ProcessAllTemplates(config, logger=None, base=None):
     """
     if base is None: base = config
     ProcessTemplate(config, base, logger)
-    for (key, field) in config.items():
+    for (key, field) in list(config.items()):
         if isinstance(field, dict):
             ProcessAllTemplates(field, logger, base)
         elif isinstance(field, list):
