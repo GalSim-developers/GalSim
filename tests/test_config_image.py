@@ -2547,6 +2547,21 @@ def test_template():
     config8['psf']['items'][2] = config4['image']['noise']
     assert config9 == config8
 
+    # Make sure evals work correltly for template string when not at top level.
+    # (This used to give an error about the config dict changing size during iteration.)
+    config10 = {
+        "eval_variables" : {
+            "iabc": 123,
+            "ddict": {
+                "template": "$os.path.join('config_input','dict.yaml')"
+            }
+        }
+    }
+    galsim.config.ProcessAllTemplates(config10)
+    assert config10['eval_variables']['ddict']['b'] == False
+    assert config10['eval_variables']['ddict']['s'] == "Brian"
+    assert config10['eval_variables']['ddict']['noise']['models'][0]['variance'] == 0.12
+
 
 @timer
 def test_variable_cat_size():
