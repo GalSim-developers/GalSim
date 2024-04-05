@@ -99,7 +99,7 @@ Changes from v2.5.0 to v2.5.1
 - Added clip_neg option to `DistDeviate` class. (#1257)
 - Fixed a bug in `SiliconSensor` if the image is outside the range where tree rings are defined.
   (#1258)
-- Implemented algorith for `ChromaticSum` to be used as a photon_op. (#1259)
+- Implemented algorithm for `ChromaticSum` to be used as a photon_op. (#1259)
 - Added `PhotonArray.copyFrom` method. (#1259)
 - Deprecated `PhotonArray.setCorrelated` and `PhotonArray.isCorrelated`, since they are not
   necessary anymore. (#1259)
@@ -110,4 +110,14 @@ Changes from v2.5.1 to v2.5.2
 =============================
 
 - Added galsim.roman.max_sun_angle as a module-level named variable. (#1261)
+
+Changes from v2.5.2 to v2.5.3
+=============================
+
+- Fixed an error in the CelestialWCS.radecToxy doc string. (#1275)
+- Fixed a pandas deprecation. (#1278)
+- Fixed some broken links in the installation docs. (#1279)
+- Added observed_e1, observed_e2 properties to the hsm.ShapeData structure. (#1279)
+- Added check=False option to hsm routines FindAdaptiveMom and EstimateShdear. (#1279)
+- Fixed a bug in the use of evaluated template strings in the config dict. (#1281)
 
