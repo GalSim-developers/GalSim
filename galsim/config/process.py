@@ -265,7 +265,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
                  json.dumps(config, default=lambda o: repr(o), indent=4))
 
     # Warn about any unexpected fields.
-    unexpected = [ k for k in config if k not in top_level_fields ]
+    unexpected = [ k for k in config if k not in top_level_fields and k[0] != '_' ]
     if len(unexpected) > 0 and logger:
         logger.warning("Warning: config dict contains the following unexpected fields: %s.",
                        unexpected)
