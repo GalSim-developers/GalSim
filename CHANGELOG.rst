@@ -110,10 +110,6 @@ Changes from v2.5.1 to v2.5.2
 =============================
 
 - Added galsim.roman.max_sun_angle as a module-level named variable. (#1261)
-
-Changes from v2.5.2 to v2.5.3
-=============================
-
 - Fixed an error in the CelestialWCS.radecToxy doc string. (#1275)
 - Fixed a pandas deprecation. (#1278)
 - Fixed some broken links in the installation docs. (#1279)
