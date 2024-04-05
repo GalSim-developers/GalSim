@@ -116,4 +116,4 @@ Changes from v2.5.1 to v2.5.2
 - Added observed_e1, observed_e2 properties to the hsm.ShapeData structure. (#1279)
 - Added check=False option to hsm routines FindAdaptiveMom and EstimateShdear. (#1279)
 - Fixed a bug in the use of evaluated template strings in the config dict. (#1281)
-
+- Fixed a bug in CelestialWCS computation of the local jacobian near ra=0. (#1282)
