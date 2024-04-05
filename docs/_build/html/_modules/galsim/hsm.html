@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.hsm &mdash; GalSim 2.5.1 documentation</title>
+  <title>galsim.hsm &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -115,7 +115,7 @@
 <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
 <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
 <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageD</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="ShapeData"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a><span class="k">class</span> <span class="nc">ShapeData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to contain the outputs of the HSM shape and moments measurement routines.</span>
@@ -130,6 +130,9 @@
 
 <span class="sd">    - ``observed_shape``: a `Shear` object representing the observed shape based on adaptive</span>
 <span class="sd">      moments.</span>
+
+<span class="sd">    - ``observed_e1``, ``observed_e2``: floats representing the e1 and e2 components respectively of the</span>
+<span class="sd">      ``observed_shape``.</span>
 
 <span class="sd">    - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;</span>
 <span class="sd">      -1 if not measured.  (If `FindAdaptiveMom` is called with ``use_sky_coords=True``, then</span>
@@ -220,8 +223,16 @@
     <span class="k">def</span> <span class="nf">moments_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_status</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observed_e1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observed_e2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e2</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">observed_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="n">e1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e1</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">observed_e2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="n">e1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_e1</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_e2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">moments_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">moments_sigma</span>
@@ -570,6 +581,27 @@
 <span class="n">HSMParams</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="p">()</span>
 
 
+<span class="c1"># A helper function that checks if the weight and the badpix bounds are</span>
+<span class="c1"># consistent with that of the image, and that the weight is non-negative.</span>
+<span class="k">def</span> <span class="nf">_checkWeightAndBadpix</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Check that the weight and badpix, if given, are sensible and compatible</span>
+    <span class="c1"># with the image.</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">weight</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Weight image does not have same bounds as the input Image.&quot;</span><span class="p">,</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+                <span class="c1"># also make sure there are no negative values</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">array</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Weight image cannot contain negative values.&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">badpix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">badpix</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+            <span class="s2">&quot;Badpix image does not have the same bounds as the input Image.&quot;</span><span class="p">,</span>
+            <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+
+
 <span class="c1"># A helper function for taking input weight and badpix Images, and returning a weight Image in the</span>
 <span class="c1"># format that the C++ functions want</span>
 <span class="k">def</span> <span class="nf">_convertMask</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -579,18 +611,7 @@
     <span class="c1"># if no weight image was supplied, make an int array (same size as gal image) filled with 1&#39;s</span>
     <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">ImageI</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># if weight image was supplied, check if it has the right bounds and is non-negative</span>
-        <span class="k">if</span> <span class="n">weight</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                <span class="s2">&quot;Weight image does not have same bounds as the input Image.&quot;</span><span class="p">,</span>
-                <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
-
-        <span class="c1"># also make sure there are no negative values</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">array</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Weight image cannot contain negative values.&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
-
         <span class="c1"># if weight is an ImageI, then we can use it as the mask image:</span>
         <span class="k">if</span> <span class="n">weight</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">badpix</span><span class="p">:</span>
@@ -607,14 +628,10 @@
     <span class="c1"># if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight</span>
     <span class="c1"># image; also check bounds</span>
     <span class="k">if</span> <span class="n">badpix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">badpix</span><span class="o">.</span><span class="n">bounds</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                <span class="s2">&quot;Badpix image does not have the same bounds as the input Image.&quot;</span><span class="p">,</span>
-                <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
         <span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">badpix</span><span class="o">.</span><span class="n">array</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="c1"># if no pixels are used, raise an exception</span>
-    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">GalSimHSMError</span><span class="p">(</span><span class="s2">&quot;No pixels are being used!&quot;</span><span class="p">)</span>
 
     <span class="c1"># finally, return the Image for the weight map</span>
@@ -629,8 +646,7 @@
     <span class="c1"># if weight is not of type float/double, convert to float/double</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">):</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">):</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">image</span>
@@ -639,7 +655,7 @@
 <div class="viewcode-block" id="EstimateShear"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.EstimateShear">[docs]</a><span class="k">def</span> <span class="nf">EstimateShear</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">PSF_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_var</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                   <span class="n">shear_est</span><span class="o">=</span><span class="s2">&quot;REGAUSS&quot;</span><span class="p">,</span> <span class="n">recompute_flux</span><span class="o">=</span><span class="s2">&quot;FIT&quot;</span><span class="p">,</span> <span class="n">guess_sig_gal</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
                   <span class="n">guess_sig_PSF</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                  <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Carry out moments-based PSF correction routines.</span>
 
 <span class="sd">    Carry out PSF correction using one of the methods of the HSM package (see references in</span>
@@ -649,7 +665,7 @@
 <span class="sd">    This method works from `Image` inputs rather than `GSObject` inputs, which provides</span>
 <span class="sd">    additional flexibility (e.g., it is possible to work from an `Image` that was read from file and</span>
 <span class="sd">    corresponds to no particular `GSObject`), but this also means that users who wish to apply it to</span>
-<span class="sd">    compount `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing</span>
+<span class="sd">    compound `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing</span>
 <span class="sd">    their `GSObject` into `Image` instances.</span>
 
 <span class="sd">    This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with</span>
@@ -743,6 +759,9 @@
 <span class="sd">                        ``False``, then information about failures will be silently stored in</span>
 <span class="sd">                        the output ShapeData object. [default: True]</span>
 
+<span class="sd">        check:          Check if the object_image, weight and badpix are in the correct format and valid.</span>
+<span class="sd">                        [default: True]</span>
+
 <span class="sd">        hsmparams:      The hsmparams keyword can be used to change the settings used by</span>
 <span class="sd">                        `EstimateShear` when estimating shears; see `HSMParams` documentation</span>
 <span class="sd">                        for more information. [default: None]</span>
@@ -753,8 +772,10 @@
     <span class="c1"># prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map</span>
     <span class="n">gal_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">gal_image</span><span class="p">)</span>
     <span class="n">PSF_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">PSF_image</span><span class="p">)</span>
-    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
     <span class="n">hsmparams</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+        <span class="n">_checkWeightAndBadpix</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">guess_centroid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">guess_centroid</span> <span class="o">=</span> <span class="n">gal_image</span><span class="o">.</span><span class="n">true_center</span>
@@ -773,7 +794,7 @@
             <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="FindAdaptiveMom"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.FindAdaptiveMom">[docs]</a><span class="k">def</span> <span class="nf">FindAdaptiveMom</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_sig</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
-                    <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">round_moments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">round_moments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">use_sky_coords</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure adaptive moments of an object.</span>
 
@@ -871,6 +892,8 @@
 <span class="sd">                            ``GalSimHSMError`` exception if shear estimation fails.  If set to</span>
 <span class="sd">                            ``False``, then information about failures will be silently stored in</span>
 <span class="sd">                            the output ShapeData object. [default: True]</span>
+<span class="sd">        check:              Check if the object_image, weight and badpix are in the correct format and valid.</span>
+<span class="sd">                            [default: True]</span>
 <span class="sd">        round_moments:      Use a circular weight function instead of elliptical.</span>
 <span class="sd">                            [default: False]</span>
 <span class="sd">        hsmparams:          The hsmparams keyword can be used to change the settings used by</span>
@@ -886,8 +909,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map</span>
     <span class="n">object_image</span> <span class="o">=</span> <span class="n">_convertImage</span><span class="p">(</span><span class="n">object_image</span><span class="p">)</span>
-    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
     <span class="n">hsmparams</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+        <span class="n">_checkWeightAndBadpix</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
+
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">_convertMask</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="n">badpix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">guess_centroid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">guess_centroid</span> <span class="o">=</span> <span class="n">object_image</span><span class="o">.</span><span class="n">true_center</span>

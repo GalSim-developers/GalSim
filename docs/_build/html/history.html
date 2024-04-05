@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.5.1 documentation</title>
+  <title>Revision History &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -75,6 +75,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-0-to-v2-5-1">Changes from v2.5.0 to v2.5.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-1-to-v2-5-2">Changes from v2.5.1 to v2.5.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-2-to-v2-5-3">Changes from v2.5.2 to v2.5.3</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="older.html">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
@@ -225,12 +227,29 @@ to Sid Mau for finding and fixing this bug. (#1254, #1256)</p></li>
 <li><p>Added clip_neg option to <a class="reference internal" href="deviate.html#galsim.DistDeviate" title="galsim.DistDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistDeviate</span></code></a> class. (#1257)</p></li>
 <li><p>Fixed a bug in <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> if the image is outside the range where tree rings are defined.
 (#1258)</p></li>
-<li><p>Implemented algorith for <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> to be used as a photon_op. (#1259)</p></li>
+<li><p>Implemented algorithm for <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> to be used as a photon_op. (#1259)</p></li>
 <li><p>Added <a class="reference internal" href="photon_array.html#galsim.PhotonArray.copyFrom" title="galsim.PhotonArray.copyFrom"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.copyFrom</span></code></a> method. (#1259)</p></li>
 <li><p>Deprecated <a class="reference internal" href="photon_array.html#galsim.PhotonArray.setCorrelated" title="galsim.PhotonArray.setCorrelated"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.setCorrelated</span></code></a> and <a class="reference internal" href="photon_array.html#galsim.PhotonArray.isCorrelated" title="galsim.PhotonArray.isCorrelated"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.isCorrelated</span></code></a>, since they are not
 necessary anymore. (#1259)</p></li>
 <li><p>Deprecated <a class="reference internal" href="photon_array.html#galsim.PhotonArray.assignAt" title="galsim.PhotonArray.assignAt"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.assignAt</span></code></a> in favor of the more flexible <a class="reference internal" href="photon_array.html#galsim.PhotonArray.copyFrom" title="galsim.PhotonArray.copyFrom"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.copyFrom</span></code></a>
 method. (#1259)</p></li>
+</ul>
+</section>
+<section id="changes-from-v2-5-1-to-v2-5-2">
+<h2>Changes from v2.5.1 to v2.5.2<a class="headerlink" href="#changes-from-v2-5-1-to-v2-5-2" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Added galsim.roman.max_sun_angle as a module-level named variable. (#1261)</p></li>
+</ul>
+</section>
+<section id="changes-from-v2-5-2-to-v2-5-3">
+<h2>Changes from v2.5.2 to v2.5.3<a class="headerlink" href="#changes-from-v2-5-2-to-v2-5-3" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fixed an error in the CelestialWCS.radecToxy doc string. (#1275)</p></li>
+<li><p>Fixed a pandas deprecation. (#1278)</p></li>
+<li><p>Fixed some broken links in the installation docs. (#1279)</p></li>
+<li><p>Added observed_e1, observed_e2 properties to the hsm.ShapeData structure. (#1279)</p></li>
+<li><p>Added check=False option to hsm routines FindAdaptiveMom and EstimateShdear. (#1279)</p></li>
+<li><p>Fixed a bug in the use of evaluated template strings in the config dict. (#1281)</p></li>
 </ul>
 </section>
 <section id="older-versions">

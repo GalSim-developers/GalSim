@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>World Coordinate Systems &mdash; GalSim 2.5.1 documentation</title>
+  <title>World Coordinate Systems &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -989,7 +989,7 @@ We use the <a class="reference internal" href="#galsim.CelestialCoord" title="ga
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS.radecToxy">
 <span class="sig-name descname"><span class="pre">radecToxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.radecToxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.radecToxy" title="Permalink to this definition"></a></dt>
 <dd><p>Convert ra,dec from world coordinates to image coordinates.</p>
-<p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(ra,dec,</span> <span class="pre">units=units)</span></code>.</p>
+<p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toImage(ra,dec,</span> <span class="pre">units=units)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToImage(galsim.CelestialCoord(ra</span> <span class="pre">*</span> <span class="pre">units,</span> <span class="pre">dec</span> <span class="pre">*</span> <span class="pre">units))</span></code>
 when ra and dec are scalars; however, this routine allows ra and dec to be numpy arrays,
 in which case, the calculation will be vectorized, which is often much faster than using

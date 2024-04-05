@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.roman.roman_wcs &mdash; GalSim 2.5.1 documentation</title>
+  <title>galsim.roman.roman_wcs &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -120,8 +120,7 @@
 <span class="kn">import</span> <span class="nn">coord</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_sca</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_sca</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">max_sun_angle</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GSFitsWCS</span><span class="p">,</span> <span class="n">FitsHeader</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">PositionD</span>
@@ -698,9 +697,9 @@
     <span class="n">angle_deg</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">world_pos</span><span class="o">.</span><span class="n">distanceTo</span><span class="p">(</span><span class="n">sun</span><span class="p">)</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
 
     <span class="c1"># Check if it&#39;s within tolerance.</span>
-    <span class="n">min_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">-</span> <span class="mf">36.</span>
-    <span class="n">max_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">+</span> <span class="mf">36.</span>
-    <span class="k">return</span> <span class="n">angle_deg</span> <span class="o">&gt;=</span> <span class="n">min_ang</span> <span class="ow">and</span> <span class="n">angle_deg</span> <span class="o">&lt;=</span> <span class="n">max_ang</span></div>
+    <span class="n">min_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">-</span> <span class="n">max_sun_angle</span>
+    <span class="n">max_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">+</span> <span class="n">max_sun_angle</span>
+    <span class="k">return</span> <span class="n">min_ang</span> <span class="o">&lt;=</span> <span class="n">angle_deg</span> <span class="o">&lt;=</span> <span class="n">max_ang</span></div>
 
 <div class="viewcode-block" id="bestPA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.bestPA">[docs]</a><span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
