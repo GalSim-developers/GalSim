@@ -1344,7 +1344,7 @@ class CelestialWCS(BaseWCS):
 
     # If the class doesn't define something else, then we can approximate the local Jacobian
     # from finite differences for the derivatives of ra and dec.  Very similar to the
-    # version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given
+    # version for EuclideanWCS, but convert from dra, ddec to du, dv locally at at the given
     # position.
     def _local(self, image_pos, color):
 
@@ -1360,6 +1360,9 @@ class CelestialWCS(BaseWCS):
         xlist = np.array([ x0, x0+dx, x0-dx, x0,    x0    ], dtype=float)
         ylist = np.array([ y0, y0,    y0,    y0+dy, y0-dy ], dtype=float)
         ra, dec = self._radec(xlist,ylist,color)
+        # Wrap ra to be near ra[0]
+        ra[ra < ra[0]-np.pi] += 2*np.pi
+        ra[ra > ra[0]+np.pi] -= 2*np.pi
 
         # Note: our convention is that ra increases to the left!
         # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
