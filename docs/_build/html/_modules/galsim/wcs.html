@@ -1436,7 +1436,7 @@
 
     <span class="c1"># If the class doesn&#39;t define something else, then we can approximate the local Jacobian</span>
     <span class="c1"># from finite differences for the derivatives of ra and dec.  Very similar to the</span>
-    <span class="c1"># version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given</span>
+    <span class="c1"># version for EuclideanWCS, but convert from dra, ddec to du, dv locally at at the given</span>
     <span class="c1"># position.</span>
     <span class="k">def</span> <span class="nf">_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
 
@@ -1452,6 +1452,9 @@
         <span class="n">xlist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="n">x0</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>    <span class="n">x0</span>    <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">ylist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span>    <span class="n">y0</span><span class="p">,</span>    <span class="n">y0</span><span class="o">+</span><span class="n">dy</span><span class="p">,</span> <span class="n">y0</span><span class="o">-</span><span class="n">dy</span> <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec</span><span class="p">(</span><span class="n">xlist</span><span class="p">,</span><span class="n">ylist</span><span class="p">,</span><span class="n">color</span><span class="p">)</span>
+        <span class="c1"># Wrap ra to be near ra[0]</span>
+        <span class="n">ra</span><span class="p">[</span><span class="n">ra</span> <span class="o">&lt;</span> <span class="n">ra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ra</span><span class="p">[</span><span class="n">ra</span> <span class="o">&gt;</span> <span class="n">ra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 
         <span class="c1"># Note: our convention is that ra increases to the left!</span>
         <span class="c1"># i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing</span>
