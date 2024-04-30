@@ -1834,7 +1834,21 @@ class GSObject:
 
         image.added_flux = added_photons / flux_scale
         if save_photons:
-            image.photons = photons
+            # We need to check if image already contains photons from a previous call to drawImage,
+            # for example if doing a ChromaticSum.
+            if not hasattr(image, 'photons'):
+                # If not, then simply put the photons into the image.
+                image.photons = photons
+            else:
+                # If photons have already been saved, need to create a new larger array and copy
+                # in from both the original and new photon arrays.
+                n_orig_photons = image.photons.size()
+                n_new_photons = photons.size()
+                n_total_photons = n_orig_photons + n_new_photons
+                total_photons = pa.PhotonArray(n_total_photons)
+                total_photons.copyFrom(image.photons, slice(0, n_orig_photons))
+                total_photons.copyFrom(photons, slice(n_orig_photons, n_total_photons))
+                image.photons = total_photons
 
         return image
 
