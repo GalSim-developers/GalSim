@@ -58,6 +58,12 @@ def test_single():
     assert logger_wrapper.isEnabledFor(logging.CRITICAL)
     assert not logger_wrapper.isEnabledFor(logging.DEBUG)
 
+    # smoke test for critical calls
+    # these are not normally used by galsim so a test here is needed
+    logger_wrapper.critical("blah blah")
+    none_logger_wrapper = galsim.config.LoggerWrapper(None)
+    none_logger_wrapper.critical("blah blah")
+
     im1_list = []
     nimages = 6
     first_seed = galsim.BaseDeviate(1234).raw()
