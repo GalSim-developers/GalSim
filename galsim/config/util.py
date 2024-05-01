@@ -322,6 +322,10 @@ class LoggerWrapper:
         if self.logger and self.isEnabledFor(logging.ERROR):
             self.logger.error(*args, **kwargs)
 
+    def critical(self, *args, **kwargs):
+        if self.logger and self.isEnabledFor(logging.CRITICAL):
+            self.logger.critical(*args, **kwargs)
+
     def log(self, level, *args, **kwargs):
         if self.logger and self.isEnabledFor(level):
             self.logger.log(level, *args, **kwargs)
