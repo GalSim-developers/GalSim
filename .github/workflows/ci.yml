@@ -22,6 +22,7 @@ jobs:
                 py: [ 3.7, 3.8, 3.9, "3.10", 3.11, 3.12 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
+                FFTW_DIR: [ "/usr/local/lib" ]
 
                 # Add some other particular combinations to test
                 include:
@@ -33,12 +34,14 @@ jobs:
                       py: "3.10"
                       CC: cc
                       CXX: c++
+                      FFTW_DIR: "/opt/homebrew/lib/"
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
                       py: "3.10"
                       CC: clang
                       CXX: clang++
+                      FFTW_DIR: "/usr/local/lib/"
 
                     # And a pypy system.
                     # As of 12/1/2022, this is broken for astropy.
@@ -48,6 +51,8 @@ jobs:
                       #py: pypy-3.7
                       #CC: gcc
                       #CXX: g++
+        env:
+            FFTW_DIR: ${{ matrix.FFTW_DIR }}
 
         steps:
             - uses: actions/checkout@v3
@@ -95,6 +100,7 @@ jobs:
                 echo ${{ matrix.os }}
                 sudo -H apt update -y
                 sudo -H apt install -y libfftw3-dev
+                ls $FFTW_DIR
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
                 # it gets downloaded and installed properly if it isn't installed.
@@ -127,6 +133,7 @@ jobs:
                 brew cask install gfortran || true
                 brew install libav || true
                 brew link --overwrite libav || true
+                ls $FFTW_DIR
 
             - name: Download des_data
               run: |
@@ -165,7 +172,10 @@ jobs:
               run: pip list
 
             - name: Build GalSim
-              run: pip install -vvv .
+              run: |
+                # The prefix is required for recen MacOS, because of System Integrity Protection.
+                # It's not necessary on Linux, but is harmless enough.
+                FFTW_DIR=$FFTW_DIR pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
               if: matrix.py == 3.7 && github.base_ref != ''
