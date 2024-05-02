@@ -61,6 +61,8 @@ def test_single():
     # smoke test for critical calls
     # these are not normally used by galsim so a test here is needed
     logger_wrapper.critical("blah blah")
+    none_logger_wrapper = galsim.config.LoggerWrapper(None)
+    none_logger_wrapper.critical("blah blah")
 
     im1_list = []
     nimages = 6
