@@ -214,6 +214,40 @@ class PhotonArray:
             ret._is_corr = is_corr
         return ret
 
+    @classmethod
+    def concatenate(cls, photon_arrays):
+        """Create a single PhotonArray from a list of multiple PhotonArrays.
+
+        The size of the created PhotonArray will be the sum of the sizes of the given arrays,
+        and the values will be concatenations of the values in each.
+
+        .. note::
+            The optional value arrays (e.g. dxdz, wavelength, etc.) must be given in
+            all the given photon_arrays or in none of them.  This is not checked.
+
+        Parameters:
+            photon_arrays:  A list of PhotonArray objects to be concatenated.
+        """
+        p1 = photon_arrays[0]
+        kwargs = {
+            'x': np.concatenate([p.x for p in photon_arrays]),
+            'y': np.concatenate([p.y for p in photon_arrays]),
+            'flux': np.concatenate([p.flux for p in photon_arrays]),
+        }
+
+        if p1.hasAllocatedAngles():
+            kwargs['dxdz'] = np.concatenate([p.dxdz for p in photon_arrays])
+            kwargs['dydz'] = np.concatenate([p.dydz for p in photon_arrays])
+        if p1.hasAllocatedWavelengths():
+            kwargs['wavelength'] = np.concatenate([p.wavelength for p in photon_arrays])
+        if p1.hasAllocatedPupil():
+            kwargs['pupil_u'] = np.concatenate([p.pupil_u for p in photon_arrays])
+            kwargs['pupil_v'] = np.concatenate([p.pupil_v for p in photon_arrays])
+        if p1.hasAllocatedTimes():
+            kwargs['time'] = np.concatenate([p.time for p in photon_arrays])
+
+        return cls._fromArrays(**kwargs)
+
     def size(self):
         """Return the size of the photon array.  Equivalent to ``len(self)``.
         """
