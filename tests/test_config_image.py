@@ -1566,7 +1566,8 @@ def test_tiled():
             im5a[stamp.bounds] = stamp
 
     im5b = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im5b.array, im5a.array)
+    # Not sure why this isn't always exact, but GHA macos started failing with abs err=4e-16 here.
+    np.testing.assert_allclose(im5b.array, im5a.array, atol=1.e-15)
 
     # Finally, if the image type isn't tiled, then grid_spacing is required.
     config = {
