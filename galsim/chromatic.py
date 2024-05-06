@@ -486,6 +486,14 @@ class ChromaticObject:
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
+        # Note to developers, if we get to this point, then the implementaion is to integrate
+        # drawn images as a function of wavelength.  This is quite slow.
+        # Moreover, for method=phot, it cannot implement some features like save_photons=True.
+        # The guards to avoid this happening for method=phot are mostly in the drawImage methods
+        # of subclasses.  So if you find this happening, the solution is most likely to
+        # specialize something in the subclass's drawImage method.
+        assert kwargs.get('method', None) != 'phot'
+
         integrator = self._get_integrator(integrator, wave_list)
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
