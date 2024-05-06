@@ -1413,8 +1413,10 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         if _flux_ratio is None:
             _flux_ratio = lambda w: np.ones_like(w)
-        # Constant flux_ratio is already an SED at this point, so can treat as function.
-        #assert hasattr(_flux_ratio, '__call__')
+        # _flux_ratio might be a constant float.  For simplicity below, turn it into a function.
+        if not hasattr(_flux_ratio, '__call__'):
+            val = _flux_ratio
+            _flux_ratio = lambda w: np.full_like(w, val)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
