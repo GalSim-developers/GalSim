@@ -45,6 +45,7 @@ from .shear import Shear, _Shear
 from .interpolatedimage import InterpolatedImage
 from .angle import Angle, _Angle, AngleUnit, arcsec, radians
 from .airy import Airy
+from .deltafunction import DeltaFunction
 from . import utilities
 from . import integ
 from . import dcr
@@ -2009,12 +2010,21 @@ class ChromaticTransformation(ChromaticObject):
             int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
                                          propagate_gsparams=self._propagate_gsparams)
             image = int_im.drawImage(image=image, **kwargs)
-            self._last_wcs = image.wcs
-            return image
+        elif kwargs.get('method',None) == 'phot' and self.original.dimensionless:
+            # Then this is a PSF * SED.  Things work better to convert it into a
+            # Convolution(delta * SED, PSF) instead.
+            psf = ChromaticTransformation(self.original, jac=self._jac, offset=self._offset,
+                                          gsparams=self._gsparams, propagate_gsparams=False)
+            sed = self._flux_ratio
+            assert sed.spectral  # This must be true here.
+            if self._redshift is not None:
+                sed = sed.atRedshift(self._redshift)
+            kwargs['photon_ops'] = [psf] + kwargs.get('photon_ops', [])
+            image = (DeltaFunction() * sed).drawImage(bandpass, image=image, **kwargs)
         else:
             image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
-            self._last_wcs = image.wcs
-            return image
+        self._last_wcs = image.wcs
+        return image
 
     @lazy_property
     def noise(self):

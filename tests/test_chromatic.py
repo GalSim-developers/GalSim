@@ -2319,12 +2319,18 @@ def test_phot():
 
         # Now let the ChromaticConvolution reorganize this for us.
         t0 = time.time()
-        im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+        calc_flux = obj.calculateFlux(bandpass)
+        im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng,
+                            n_photons=flux, save_photons=True)
         t1 = time.time()
         print('regular phot time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
         print('im5.max,sum = ', im5.array.max(), im5.array.sum())
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
+
+        assert hasattr(im5, 'photons')
+        assert len(im5.photons) == flux
+        assert np.allclose(np.sum(im5.photons.flux), calc_flux, rtol=1.e-3)
 
         # Check that n_photons=1 doesn't do something bad, like produce NaNs.
         (obj/flux).drawImage(bandpass, image=im5, method='phot', rng=rng, n_photons=1,
@@ -3214,6 +3220,42 @@ def test_shoot_transformation():
     print(img.added_flux)
     assert abs(img.added_flux - flux) > 0.1
 
+@timer
+def test_save_photons():
+    # Test save_photons=True option for various Chromatic types
+    # Note: there are additional tests of save_photons in test_phot, but that doesn't cover all
+    # possible types and all possible paths through the various drawImage and shoot functions.
+    # This test tries to be more comprehensive on that front.
+
+    star_sed = galsim.SED('vega.txt', wave_type="nm", flux_type="fphotons")
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+
+    airy = galsim.ChromaticAiry(lam=500, diam=8)
+    optical = galsim.ChromaticOpticalPSF(lam=500, diam=8, defocus=0.2, obscuration=0.3)
+    disk = galsim.Exponential(half_light_radius=0.5).shear(g1=0.4, g2=0.2)
+    bulge = galsim.Sersic(n=3, half_light_radius=0.3)
+    atm = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.9), base_wavelength=500.0,
+                                     zenith_angle=20 * galsim.degrees)
+
+    objs = [
+        airy * star_sed,
+        optical * star_sed,
+    ]
+
+    flux = 1000
+    for obj in objs:
+        print('obj = ',obj)
+        obj = obj.withFlux(flux, bandpass)
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              n_photons=flux, save_photons=True,
+                              scale=0.05, nx=32, ny=32)
+        assert hasattr(image, 'photons')
+        assert len(image.photons) == flux
+        print(np.sum(image.photons.flux))
+        # Note: tolerance is quite loose, since profiles that use InterpolatedImage can have
+        # negative flux photons, which then don't necessarily sum to the right value.
+        # Only the expectation value is right, and we're not shooting many photons here.
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
