@@ -2380,16 +2380,24 @@ class ChromaticSum(ChromaticObject):
         add_to_image = kwargs.pop('add_to_image', False)
 
         n_photons = kwargs.pop('n_photons', None)
+        save_photons = kwargs.get('save_photons', False)
+        all_photons = []
         if n_photons is None or kwargs.get('method', None) != 'phot':
             # Use given add_to_image for the first one, then add_to_image=True for the rest.
             image = self.obj_list[0].drawImage(
                     bandpass, image=image, add_to_image=add_to_image, **kwargs)
             _remove_setup_kwargs(kwargs)
             added_flux = image.added_flux
+            if save_photons:
+                all_photons.append(image.photons)
             for obj in self.obj_list[1:]:
                 image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
                 added_flux += image.added_flux
+                if save_photons:
+                    all_photons.append(image.photons)
             image.added_flux = added_flux
+            if save_photons:
+                image.photons = PhotonArray.concatenate(all_photons)
         else:
             # If n_photons is specified, need some special handling here.
             rng = BaseDeviate(kwargs.get('rng', None))
@@ -2418,6 +2426,8 @@ class ChromaticSum(ChromaticObject):
                     image = obj.drawImage(bandpass, image=image, add_to_image=add_to_image,
                                           n_photons=this_nphot, poisson_flux=False, **kwargs)
                     added_flux += image.added_flux
+                    if save_photons:
+                        all_photons.append(image.photons)
                     if first:
                         # Note: This might not be i==0.
                         # Do this after the first call we make to drawImage.
@@ -2427,6 +2437,8 @@ class ChromaticSum(ChromaticObject):
                 if not remaining_flux > 0:
                     break
             image.added_flux = added_flux
+            if save_photons:
+                image.photons = PhotonArray.concatenate(all_photons)
         self._last_wcs = image.wcs
         return image
 
