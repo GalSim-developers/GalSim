@@ -130,9 +130,7 @@ jobs:
                 brew link --overwrite fftw gcc wget || true
                 brew install eigen || true
                 brew link --overwrite eigen || true
-                brew cask install gfortran || true
-                brew install libav || true
-                brew link --overwrite libav || true
+                brew install --cask gfortran || true
                 ls $FFTW_DIR
 
             - name: Download des_data
