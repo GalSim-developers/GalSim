@@ -55,7 +55,7 @@ jobs:
             FFTW_DIR: ${{ matrix.FFTW_DIR }}
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                 # Need this for git commands to work right.
                 # Also for codecov upload apparently.
@@ -72,7 +72,7 @@ jobs:
                   echo 'event.after: ${{ github.event.after }}'
 
             - name: Set up Python ${{ matrix.py }}
-              uses: actions/setup-python@v3
+              uses: actions/setup-python@v4
               with:
                 python-version: ${{ matrix.py }}
 
@@ -82,7 +82,7 @@ jobs:
                 key: ${{ matrix.os }}-${{ matrix.py }}-${{ matrix.CXX }}
 
             - name: Cache pip
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                 path: |
                   ~/.cache/pip
