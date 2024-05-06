@@ -3240,6 +3240,8 @@ def test_save_photons():
     objs = [
         airy * star_sed,
         optical * star_sed,
+        (bulge * bulge_SED + disk * disk_SED),
+        galsim.Convolve(disk * disk_SED, optical, atm),
     ]
 
     flux = 1000
@@ -3256,6 +3258,15 @@ def test_save_photons():
         # negative flux photons, which then don't necessarily sum to the right value.
         # Only the expectation value is right, and we're not shooting many photons here.
         assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+
+        # Sometimes there is a different path when n_photons is not given, so check that too.
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              poisson_flux=False, save_photons=True,
+                              scale=0.05, nx=32, ny=32)
+        assert hasattr(image, 'photons')
+        print(np.sum(image.photons.flux))
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
