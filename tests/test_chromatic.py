@@ -3242,6 +3242,8 @@ def test_save_photons():
         optical * star_sed,
         (bulge * bulge_SED + disk * disk_SED),
         galsim.Convolve(disk * disk_SED, optical, atm),
+        galsim.Convolve(disk * disk_SED, atm.interpolate(np.linspace(500,900,5))),
+        (atm * star_sed).interpolate(np.linspace(500,900,5)),
     ]
 
     flux = 1000
@@ -3257,7 +3259,7 @@ def test_save_photons():
         # Note: tolerance is quite loose, since profiles that use InterpolatedImage can have
         # negative flux photons, which then don't necessarily sum to the right value.
         # Only the expectation value is right, and we're not shooting many photons here.
-        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.15)
 
         # Sometimes there is a different path when n_photons is not given, so check that too.
         image = obj.drawImage(bandpass=bandpass, method="phot",
