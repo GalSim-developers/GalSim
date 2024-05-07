@@ -18,7 +18,8 @@
 
 __all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles', 
             'PhotonDCR', 'Refraction', 'FocusDepth',
-            'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler', 'ScaleFlux' ]
+            'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler',
+            'ScaleFlux', 'ScaleWavelength' ]
 
 import numpy as np
 
@@ -1358,23 +1359,43 @@ class TimeSampler(PhotonOp):
         s += ")"
         return s
 
+
 class ScaleFlux(PhotonOp):
     """A simple photon operator that multiplies all flux values by a constant.
 
     Parameters:
-        g:          The constant by which to multiply all flux values.
+        x:          The constant by which to multiply all flux values.
     """
-    _req_params = { "g": float }
-    def __init__(self, g):
-        self.g = g
+    _req_params = { "x": float }
+    def __init__(self, x):
+        self.x = x
 
     def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Apply the scaling.
         """
-        photon_array.flux *= self.g
+        photon_array.flux *= self.x
 
     def __repr__(self):
-        return f"galsim.ScaleFlux({self.g})"
+        return f"galsim.ScaleFlux({self.x})"
+
+
+class ScaleWavelength(PhotonOp):
+    """A simple photon operator that multiplies all wavelength values by a constant.
+
+    Parameters:
+        x:          The constant by which to multiply all wavelength values.
+    """
+    _req_params = { "x": float }
+    def __init__(self, x):
+        self.x = x
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Apply the scaling.
+        """
+        photon_array.wavelength *= self.x
+
+    def __repr__(self):
+        return f"galsim.ScaleWavelength({self.x})"
 
 
 # Put these at the end to avoid circular imports
