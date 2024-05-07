@@ -1713,6 +1713,8 @@ def test_concatenate():
     np.testing.assert_array_equal(pa.pupil_v, pupil_v)
     np.testing.assert_array_equal(pa.time, time)
 
+
+@timer
 def test_scale_flux():
     N = 1000
     rng = galsim.BaseDeviate(123)
@@ -1729,6 +1731,28 @@ def test_scale_flux():
     np.testing.assert_allclose(pa.flux, flux * 0.123)
 
     check_pickle(scale_flux)
+
+
+@timer
+def test_scale_wavelength():
+    N = 1000
+    rng = galsim.BaseDeviate(123)
+    x = rng.np.normal(size=N)
+    y = rng.np.normal(size=N)
+    flux = rng.np.normal(size=N)
+    wavelength = rng.np.uniform(500,700,size=N)
+    pa = galsim.PhotonArray.fromArrays(x.copy(), y.copy(), flux.copy(),
+                                       wavelength=wavelength.copy())
+
+    scale_wave = galsim.ScaleWavelength(1+0.123)
+    scale_wave.applyTo(pa)
+
+    np.testing.assert_allclose(pa.x, x)
+    np.testing.assert_allclose(pa.y, y)
+    np.testing.assert_allclose(pa.flux, flux)
+    np.testing.assert_allclose(pa.wavelength, wavelength * (1+0.123))
+
+    check_pickle(scale_wave)
 
 
 
