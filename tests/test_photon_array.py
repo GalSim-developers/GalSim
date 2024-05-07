@@ -1713,6 +1713,24 @@ def test_concatenate():
     np.testing.assert_array_equal(pa.pupil_v, pupil_v)
     np.testing.assert_array_equal(pa.time, time)
 
+def test_scale_flux():
+    N = 1000
+    rng = galsim.BaseDeviate(123)
+    x = rng.np.normal(size=N)
+    y = rng.np.normal(size=N)
+    flux = rng.np.normal(size=N)
+    pa = galsim.PhotonArray.fromArrays(x.copy(), y.copy(), flux.copy())
+
+    scale_flux = galsim.ScaleFlux(0.123)
+    scale_flux.applyTo(pa)
+
+    np.testing.assert_allclose(pa.x, x)
+    np.testing.assert_allclose(pa.y, y)
+    np.testing.assert_allclose(pa.flux, flux * 0.123)
+
+    check_pickle(scale_flux)
+
+
 
 if __name__ == '__main__':
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
