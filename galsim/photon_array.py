@@ -18,7 +18,7 @@
 
 __all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles', 
             'PhotonDCR', 'Refraction', 'FocusDepth',
-            'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler', ]
+            'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler', 'ScaleFlux' ]
 
 import numpy as np
 
@@ -1357,6 +1357,25 @@ class TimeSampler(PhotonOp):
                 s += "exptime=%r"%self.exptime
         s += ")"
         return s
+
+class ScaleFlux(PhotonOp):
+    """A simple photon operator that multiplies all flux values by a constant.
+
+    Parameters:
+        g:          The constant by which to multiply all flux values.
+    """
+    _req_params = { "g": float }
+    def __init__(self, g):
+        self.g = g
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Apply the scaling.
+        """
+        photon_array.flux *= self.g
+
+    def __repr__(self):
+        return f"galsim.ScaleFlux({self.g})"
+
 
 # Put these at the end to avoid circular imports
 from . import fits
