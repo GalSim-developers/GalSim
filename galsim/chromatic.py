@@ -1811,6 +1811,12 @@ class ChromaticTransformation(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
+    def atRedshift(self, redshift):
+        ret = copy.copy(self)
+        ret._redshift = redshift
+        return ret
+
+    @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         ret = copy.copy(self)
@@ -2091,6 +2097,11 @@ class SimpleChromaticTransformation(ChromaticTransformation):
     @lazy_property
     def sed(self):
         return self._flux_ratio * self.original.flux
+
+    @doc_inherit
+    def atRedshift(self, redshift):
+        return SimpleChromaticTransformation(self.original, self._flux_ratio.atRedshift(redshift),
+                                             self._gsparams, False)
 
     def __hash__(self):
         if not hasattr(self, '_hash'):

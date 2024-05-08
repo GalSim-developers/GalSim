@@ -3044,20 +3044,27 @@ def test_atredshift():
 
     final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
     final2 = galsim.Convolve(gal2, psf)
+    final3 = galsim.Convolve(gal1.expand(lambda w:1.0).atRedshift(1.7), psf)
 
     image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image1.array, image2.array)
+    np.testing.assert_allclose(image1.array, image3.array, atol=1.e-5)
     check_pickle(final1)
 
     # ChromaticSum
     gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED
     gal2 = gal * bulge_SED.atRedshift(1.7) + gal.dilate(1.3) * disk_SED.atRedshift(1.7)
+    gal3 = (gal * bulge_SED).atRedshift(1.7) + (gal.dilate(1.3) * disk_SED).atRedshift(1.7)
     final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
     final2 = galsim.Convolve(gal2, psf)
+    final3 = galsim.Convolve(gal3, psf)
     image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image1.array, image2.array)
+    np.testing.assert_allclose(image1.array, image3.array)
 
     # Probably none of the other Chromatic classes make sense to call atRedshift, so let
     # them use the base class implementation if they do so.
