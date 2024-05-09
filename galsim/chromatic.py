@@ -39,7 +39,7 @@ from .table import _LookupTable
 from .sum import Add
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, galsim_warn
-from .photon_array import WavelengthSampler, PhotonArray
+from .photon_array import WavelengthSampler, PhotonArray, PhotonOp, ScaleFlux
 from .random import BaseDeviate, UniformDeviate, BinomialDeviate, PoissonDeviate
 from .shear import Shear, _Shear
 from .interpolatedimage import InterpolatedImage
@@ -459,7 +459,6 @@ class ChromaticObject:
         Returns:
             the drawn `Image`.
         """
-
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
         if self.sed.dimensionless:
@@ -1962,25 +1961,39 @@ class ChromaticTransformation(ChromaticObject):
                                         propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
+        z = self._redshift
         self._original._shoot(photons, rng)
-        wave = photons.wavelength
-        jac, offset, flux_ratio = self._getTransformations(wave)
+        self._photon_op.applyTo(photons)
 
-        # cf. Transformation._fwd_normal
-        if jac is not None:
-            temp = jac[0,1] * photons.y
-            photons.y *= jac[1,1]
-            photons.y += jac[1,0] * photons.x
-            photons.x *= jac[0,0]
-            photons.x += temp
+    @lazy_property
+    def _photon_op(self):
+        # A PhotonOp that just applies the transformation part, not self.original.
+        class ChromaticTransformationPhotonOp(PhotonOp):
+            def __init__(self, ct):
+                self.ct = ct
 
-            det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
-            flux_ratio *= np.abs(det)
+            def applyTo(self, photons, local_wcs=None, rng=None):
+                wave = photons.wavelength
+                if self.ct._redshift is not None:
+                    wave /= z
+                jac, offset, flux_ratio = self.ct._getTransformations(wave)
 
-        photons.x += offset[0]
-        photons.y += offset[1]
+                # cf. Transformation._fwd_normal
+                if jac is not None:
+                    temp = jac[0,1] * photons.y
+                    photons.y *= jac[1,1]
+                    photons.y += jac[1,0] * photons.x
+                    photons.x *= jac[0,0]
+                    photons.x += temp
 
-        photons.flux *= flux_ratio
+                    det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
+                    flux_ratio *= np.abs(det)
+
+                photons.x += offset[0]
+                photons.y += offset[1]
+                photons.flux *= flux_ratio
+
+        return ChromaticTransformationPhotonOp(self)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
@@ -2026,17 +2039,37 @@ class ChromaticTransformation(ChromaticObject):
             int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
                                          propagate_gsparams=self._propagate_gsparams)
             image = int_im.drawImage(image=image, **kwargs)
-        elif kwargs.get('method',None) == 'phot' and self.original.dimensionless:
-            # Then this is a PSF * SED.  Things work better to convert it into a
-            # Convolution(delta * SED, PSF) instead.
-            psf = ChromaticTransformation(self.original, jac=self._jac, offset=self._offset,
-                                          gsparams=self._gsparams, propagate_gsparams=False)
-            sed = self._flux_ratio
-            assert sed.spectral  # This must be true here.
-            if self._redshift is not None:
-                sed = sed.atRedshift(self._redshift)
-            kwargs['photon_ops'] = [psf] + kwargs.get('photon_ops', [])
-            image = (DeltaFunction() * sed).drawImage(bandpass, image=image, **kwargs)
+        elif kwargs.get('method',None) == 'phot':
+            # Need to calculate n_photons now using the fiducial profile, not self.original,
+            # since the transformation may (often does) change the flux.
+            flux = self.calculateFlux(bandpass)
+            wave0, prof0 = self._fiducial_profile(bandpass)
+            prof1 = prof0.withFlux(flux)
+            n_photons = kwargs.pop('n_photons', 0)
+            poisson_flux = kwargs.pop('poisson_flux', n_photons == 0.)
+            max_extra_noise = kwargs.pop('max_extra_noise', 0.)
+            rng = BaseDeviate(kwargs.get('rng', None))
+            n_photons, g = prof1._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+            kwargs['n_photons'] = n_photons
+
+            if self.original.dimensionless:
+                # Then this is a PSF * SED.  Things work better to convert it into a
+                # Convolution(delta * SED, PSF) instead.
+                psf = ChromaticTransformation(self.original, jac=self._jac, offset=self._offset,
+                                              gsparams=self._gsparams, propagate_gsparams=False)
+                sed = self._flux_ratio * g
+                assert sed.spectral  # This must be true here.
+                if self._redshift is not None:
+                    sed = sed.atRedshift(self._redshift)
+                kwargs['photon_ops'] = [psf] + kwargs.get('photon_ops', [])
+                image = (DeltaFunction() * sed).drawImage(bandpass, image=image, **kwargs)
+            else:
+                # If the original is spectral, then treat the transformation as a photon_op.
+                ops = [self._photon_op]
+                if g != 1.0:
+                    ops = ops + [ScaleFlux(g)]
+                ops = ops + kwargs.pop('photon_ops', [])
+                image = self.original.drawImage(bandpass, image=image, photon_ops=ops, **kwargs)
         else:
             image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
         self._last_wcs = image.wcs
