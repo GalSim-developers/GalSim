@@ -3234,6 +3234,7 @@ def test_save_photons():
     # possible types and all possible paths through the various drawImage and shoot functions.
     # This test tries to be more comprehensive on that front.
 
+    rng = galsim.BaseDeviate(1234)
     star_sed = galsim.SED('vega.txt', wave_type="nm", flux_type="fphotons")
     bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
 
@@ -3271,7 +3272,7 @@ def test_save_photons():
         obj = obj.withFlux(flux, bandpass)
         image = obj.drawImage(bandpass=bandpass, method="phot",
                               n_photons=flux, save_photons=True,
-                              scale=0.05, nx=32, ny=32)
+                              scale=0.05, nx=32, ny=32, rng=rng)
         assert hasattr(image, 'photons')
         assert len(image.photons) == flux
         print(np.sum(image.photons.flux))
@@ -3283,7 +3284,7 @@ def test_save_photons():
         # Sometimes there is a different path when n_photons is not given, so check that too.
         image = obj.drawImage(bandpass=bandpass, method="phot",
                               save_photons=True,
-                              scale=0.05, nx=32, ny=32)
+                              scale=0.05, nx=32, ny=32, rng=rng)
         assert hasattr(image, 'photons')
         print(np.sum(image.photons.flux))
         assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
