@@ -1961,7 +1961,6 @@ class ChromaticTransformation(ChromaticObject):
                                         propagate_gsparams=self._propagate_gsparams)
 
     def _shoot(self, photons, rng):
-        z = self._redshift
         self._original._shoot(photons, rng)
         self._photon_op.applyTo(photons)
 
@@ -1975,7 +1974,7 @@ class ChromaticTransformation(ChromaticObject):
             def applyTo(self, photons, local_wcs=None, rng=None):
                 wave = photons.wavelength
                 if self.ct._redshift is not None:
-                    wave /= z
+                    wave /= (1+self.ct._redshift)
                 jac, offset, flux_ratio = self.ct._getTransformations(wave)
 
                 # cf. Transformation._fwd_normal
@@ -2069,7 +2068,10 @@ class ChromaticTransformation(ChromaticObject):
                 if g != 1.0:
                     ops = ops + [ScaleFlux(g)]
                 ops = ops + kwargs.pop('photon_ops', [])
-                image = self.original.drawImage(bandpass, image=image, photon_ops=ops, **kwargs)
+                gal = self.original
+                if self._redshift is not None:
+                    gal = gal.atRedshift(self._redshift)
+                image = gal.drawImage(bandpass, image=image, photon_ops=ops, **kwargs)
         else:
             image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
         self._last_wcs = image.wcs

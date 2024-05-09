@@ -3252,6 +3252,7 @@ def test_save_photons():
         (airy * star_sed).atRedshift(1.1),
         (bulge * bulge_SED + disk * disk_SED),
         (bulge * bulge_SED + disk * disk_SED).atRedshift(0.5),
+        (airy * star_sed).expand(lambda w: (w/500)**0.0).atRedshift(0.2),
         galsim.Convolve(disk * disk_SED, optical, atm),
         galsim.Convolve(disk * disk_SED, atm.interpolate(np.linspace(500,900,5))),
         (atm * star_sed).interpolate(np.linspace(500,900,5)),
