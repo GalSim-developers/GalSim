@@ -3249,7 +3249,7 @@ def test_save_photons():
         optical * star_sed,
         (airy * star_sed).expand(lambda w: (w/500)**0.5),
         (disk * disk_SED).atRedshift(1.1),
-        (airy * star_sed).atRedshift(1.1),
+        (optical * star_sed).atRedshift(1.1),
         (bulge * bulge_SED + disk * disk_SED),
         (bulge * bulge_SED + disk * disk_SED).atRedshift(0.5),
         (airy * star_sed).expand(lambda w: (w/500)**0.0).atRedshift(0.2),
@@ -3278,11 +3278,11 @@ def test_save_photons():
         # Note: tolerance is quite loose, since profiles that use InterpolatedImage can have
         # negative flux photons, which then don't necessarily sum to the right value.
         # Only the expectation value is right, and we're not shooting many photons here.
-        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.15)
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
 
         # Sometimes there is a different path when n_photons is not given, so check that too.
         image = obj.drawImage(bandpass=bandpass, method="phot",
-                              poisson_flux=False, save_photons=True,
+                              save_photons=True,
                               scale=0.05, nx=32, ny=32)
         assert hasattr(image, 'photons')
         print(np.sum(image.photons.flux))
