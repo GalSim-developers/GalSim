@@ -3247,10 +3247,21 @@ def test_save_photons():
     objs = [
         airy * star_sed,
         optical * star_sed,
+        (airy * star_sed).expand(lambda w: (w/500)**0.5),
+        (disk * disk_SED).atRedshift(1.1),
+        (airy * star_sed).atRedshift(1.1),
         (bulge * bulge_SED + disk * disk_SED),
+        (bulge * bulge_SED + disk * disk_SED).atRedshift(0.5),
         galsim.Convolve(disk * disk_SED, optical, atm),
         galsim.Convolve(disk * disk_SED, atm.interpolate(np.linspace(500,900,5))),
         (atm * star_sed).interpolate(np.linspace(500,900,5)),
+
+        # This one doesn't work.  And honestly, I can't figure out any way to make a pure
+        # ChromaticTransformation that *only* implements a redshift to work correctly with phot.
+        # I also think this construction doesn't make sense physically (only the disk is
+        # at redshift > 0, not the psf), but I'm concerned that it means we shouldn't ever
+        # be using atRedshift with objects vs. just applying redshift to the SEDs.
+        #galsim.Convolve(disk * disk_SED, optical).atRedshift(1.2),
     ]
 
     flux = 1000
