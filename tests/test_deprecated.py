@@ -854,6 +854,27 @@ def test_atredshift():
     assert gal3.redshift == 1.7
     assert gal.redshift == 0.
 
+    # One deprecated test from test_chromatic in test_config_image.py.
+    # (Simplified to just test the deprecation.)
+    config = {
+        'gal': {
+            'type': 'Exponential',
+            'half_light_radius': 0.5,
+            'sed': {
+                'file_name': 'CWW_E_ext.sed',
+                'wave_type': 'Ang',
+                'flux_type': 'flambda',
+                'norm_flux_density': 1.0,
+                'norm_wavelength': 500,
+            },
+            'redshift': 0.8,
+        },
+    }
+    gal1, _ = check_dep(galsim.config.BuildGSObject, config, 'gal')
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    gal2 = galsim.Exponential(half_light_radius=0.5) * sed
+    assert gal1 == gal2
+
 
 @timer
 def test_save_photons():
