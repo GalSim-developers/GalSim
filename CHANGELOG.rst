@@ -117,3 +117,12 @@ Changes from v2.5.1 to v2.5.2
 - Added check=False option to hsm routines FindAdaptiveMom and EstimateShdear. (#1279)
 - Fixed a bug in the use of evaluated template strings in the config dict. (#1281)
 - Fixed a bug in CelestialWCS computation of the local jacobian near ra=0. (#1282)
+
+Changes from v2.5.2 to v2.5.3
+=============================
+
+- Fixed several issues with using ``save_photons=True`` with chromatic objects.
+  (#1271, #1284, #1289)
+- Added missing LoggerWrapper.critical method. (#1287)
+- Added ScaleFlux and ScaleWavelength photon ops. (#1289)
+- Deprecated ChromaticObject.atRedshift. (#1291)
