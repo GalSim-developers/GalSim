@@ -3030,69 +3030,6 @@ def test_ne():
     check_all_diff(gals)
 
 @timer
-def test_atredshift():
-    """Test the equivalence of obj.atRedshift and the equivalent with SED.atRedshift
-    """
-    # First simple separable galaxy
-    gal = galsim.Sersic(n=3, half_light_radius=1.5)
-    gal = gal.shear(g1=0.3, g2=0.2)
-    gal1 = gal * bulge_SED
-    gal2 = gal * bulge_SED.atRedshift(1.7)
-
-    psf = galsim.Moffat(beta=2.5, half_light_radius=0.3)
-    psf = galsim.ChromaticAtmosphere(psf, base_wavelength=500.0, zenith_angle=17*galsim.degrees)
-
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-    final3 = galsim.Convolve(gal1.expand(lambda w:1.0).atRedshift(1.7), psf)
-
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array)
-    np.testing.assert_allclose(image1.array, image3.array, atol=1.e-5)
-    check_pickle(final1)
-
-    # ChromaticSum
-    gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED
-    gal2 = gal * bulge_SED.atRedshift(1.7) + gal.dilate(1.3) * disk_SED.atRedshift(1.7)
-    gal3 = (gal * bulge_SED).atRedshift(1.7) + (gal.dilate(1.3) * disk_SED).atRedshift(1.7)
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-    final3 = galsim.Convolve(gal3, psf)
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array)
-    np.testing.assert_allclose(image1.array, image3.array)
-
-    # Probably none of the other Chromatic classes make sense to call atRedshift, so let
-    # them use the base class implementation if they do so.
-    # Just check ChromaticConvolution as one that doesn't have its own implementation.
-    # (This is probably the least implausible use of atRedshift for one of these other classes.)
-    smear = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4))
-    smear1 = smear.expand(lambda wave: (wave/700)**0.3)
-    gal1 = galsim.Convolve(gal * bulge_SED, smear1)
-    # Smear is at redshift 1.7, so scale wave by factor of (1+1.7)
-    smear2 = smear.expand(lambda wave: (wave/700/2.7)**0.3)
-    gal2 = galsim.Convolve(gal * bulge_SED.atRedshift(1.7), smear2)
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array, atol=1.e-6)
-    assert gal1.redshift == 0.
-    assert gal1.atRedshift(1.7).redshift == 1.7
-    assert gal2.redshift == 1.7
-
-    # Finally, if we call atRedshift on a regular GSObject, it doesn't do much.
-    gal3 = gal.atRedshift(1.7)
-    assert gal == gal3
-    # But it does add an attribute, which doesn't obviate equality.
-    assert gal3.redshift == 1.7
-    assert gal.redshift == 0.
-
-@timer
 def test_shoot_transformation():
     """Check that transformed chromatic objects can be photon shot.
     """
@@ -3249,21 +3186,11 @@ def test_save_photons():
         airy * star_sed,
         optical * star_sed,
         (airy * star_sed).expand(lambda w: (w/500)**0.5),
-        (disk * disk_SED).atRedshift(1.1),
-        (optical * star_sed).atRedshift(1.1),
+        disk * disk_SED.atRedshift(1.1),
         (bulge * bulge_SED + disk * disk_SED),
-        (bulge * bulge_SED + disk * disk_SED).atRedshift(0.5),
-        (airy * star_sed).expand(lambda w: (w/500)**0.0).atRedshift(0.2),
         galsim.Convolve(disk * disk_SED, optical, atm),
         galsim.Convolve(disk * disk_SED, atm.interpolate(np.linspace(500,900,5))),
         (atm * star_sed).interpolate(np.linspace(500,900,5)),
-
-        # This one doesn't work.  And honestly, I can't figure out any way to make a pure
-        # ChromaticTransformation that *only* implements a redshift to work correctly with phot.
-        # I also think this construction doesn't make sense physically (only the disk is
-        # at redshift > 0, not the psf), but I'm concerned that it means we shouldn't ever
-        # be using atRedshift with objects vs. just applying redshift to the SEDs.
-        #galsim.Convolve(disk * disk_SED, optical).atRedshift(1.2),
     ]
 
     flux = 1000
