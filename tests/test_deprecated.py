@@ -937,10 +937,11 @@ def test_save_photons():
     bulge = galsim.Sersic(n=3, half_light_radius=0.3)
 
     objs = [
-        #check_dep((disk * disk_SED).atRedshift, 1.1),
-        #check_dep((optical * star_sed).atRedshift, 1.1),
-        #check_dep((bulge * bulge_SED + disk * disk_SED).atRedshift, 0.5),
+        check_dep((disk * disk_SED).atRedshift, 1.1),
+        check_dep((optical * star_sed).atRedshift, 1.1),
+        check_dep((bulge * bulge_SED + disk * disk_SED).atRedshift, 0.5),
         check_dep((airy * star_sed).expand(lambda w: (w/500)**0.0).atRedshift, 0.2),
+        check_dep(galsim.ChromaticTransformation, disk, flux_ratio=disk_SED, redshift=1.1),
     ]
 
     flux = 1000
@@ -965,6 +966,7 @@ def test_save_photons():
         assert hasattr(image, 'photons')
         print(np.sum(image.photons.flux))
         assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+        repr(obj)
 
 
 if __name__ == "__main__":
