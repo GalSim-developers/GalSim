@@ -2836,9 +2836,8 @@ def test_chromatic():
                 'flux_type': 'flambda',
                 'norm_flux_density': 1.0,
                 'norm_wavelength': 500,
+                'redshift': 0.8,
             },
-
-            'redshift': 0.8,
         },
         'psf' : {
             'type': 'Moffat',
@@ -2869,7 +2868,7 @@ def test_chromatic():
     del config['gal']['_get']
     galsim.config.RemoveCurrent(config)
     image = galsim.config.BuildImage(config)
-    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').atRedshift(0.8)
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda')
     gal = (galsim.Exponential(half_light_radius=0.5, flux=500) * sed).withFlux(500, bandpass)
     final = galsim.Convolve(gal, psf1)
     image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
