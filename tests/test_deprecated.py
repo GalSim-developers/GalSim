@@ -875,6 +875,52 @@ def test_atredshift():
     gal2 = galsim.Exponential(half_light_radius=0.5) * sed
     assert gal1 == gal2
 
+    config = {
+        'gal': {
+            'type': 'Sum',
+            'items': [
+                {
+                    'type': 'DeVaucouleurs',
+                    'half_light_radius': 0.5,
+                    'sed': {
+                        'file_name': 'CWW_E_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                    },
+                },
+                {
+                    'type': 'Exponential',
+                    'half_light_radius': 2.0,
+                    'sed': {
+                        'file_name': 'CWW_Im_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                    },
+                },
+            ],
+            'redshift': 0.8,
+        },
+    }
+    gal1, _ = check_dep(galsim.config.BuildGSObject, config, 'gal')
+    sed1 = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    sed2 = galsim.SED('CWW_Im_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    gal2 = galsim.DeVaucouleurs(half_light_radius=0.5) * sed1 + \
+           galsim.Exponential(half_light_radius=2.0) * sed2
+    print(gal1)
+    print(gal2)
+    print(gal1.obj_list == gal2.obj_list)
+    print(gal1.obj_list[0] == gal2.obj_list[0])
+    print(gal1.obj_list[0].original == gal2.obj_list[0].original)
+    print(gal1.obj_list[0].sed == gal2.obj_list[0].sed)
+    print(gal1.obj_list[1] == gal2.obj_list[1])
+    print(gal1._gsparams == gal2._gsparams)
+    print(gal1._propagate_gsparams == gal2._propagate_gsparams)
+    assert gal1 == gal2
+
 
 @timer
 def test_save_photons():

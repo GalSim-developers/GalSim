@@ -2153,7 +2153,7 @@ class SimpleChromaticTransformation(ChromaticTransformation):
 
     def _atRedshift(self, redshift):
         return SimpleChromaticTransformation(self.original, self._flux_ratio.atRedshift(redshift),
-                                             self._gsparams, False)
+                                             self._gsparams, self._propagate_gsparams)
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
