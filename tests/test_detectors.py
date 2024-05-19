@@ -332,16 +332,16 @@ def test_IPC_basic():
         err_msg="Image is altered for no IPC with edge_treatment = 'crop' and with a fill_value" )
     # Check if the edges are filled with fill_value
     np.testing.assert_array_equal(
-        im_new.array[0,:], fill_value,
+        im_new.array[0,:], np.array(fill_value).astype(im_new.array.dtype),
         err_msg="Top edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
-        im_new.array[-1,:], fill_value,
+        im_new.array[-1,:], np.array(fill_value).astype(im_new.array.dtype),
         err_msg="Bottom edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
-        im_new.array[:,0], fill_value,
+        im_new.array[:,0], np.array(fill_value).astype(im_new.array.dtype),
         err_msg="Left edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
-        im_new.array[:,-1], fill_value,
+        im_new.array[:,-1], np.array(fill_value).astype(im_new.array.dtype),
         err_msg="Left edge is not filled with the correct value by applyIPC")
 
     # Testing for flux conservation
