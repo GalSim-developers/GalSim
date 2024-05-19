@@ -19,6 +19,7 @@
 # This file is logically part of utilities.py, but to avoid circular imports, we
 # put a few things in here so files can import _utilties without triggering an ImportError.
 
+import numpy as np
 import os
 import functools
 import weakref
@@ -120,6 +121,20 @@ class doc_inherit:
             raise NameError("Can't find '%s' in parents"%self.name)
         func.__doc__ = source.__doc__
         return func
+
+
+# Numpy array constructor compatibility shim.
+if np.lib.NumpyVersion(np.__version__) >= "2.0.0":
+    copy_if_needed = None
+elif np.lib.NumpyVersion(np.__version__) < "1.28.0":
+    copy_if_needed = False
+else:
+    # 2.0.0 dev versions, handle cases where copy may or may not exist
+    try:
+        np.array([1]).__array__(copy=None)
+        copy_if_needed = None
+    except TypeError:
+        copy_if_needed = False
 
 
 def isinteger(value):
