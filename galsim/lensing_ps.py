@@ -53,9 +53,9 @@ def theoryToObserved(gamma1, gamma2, kappa):
     Returns:
         the reduced shear and magnification as a tuple (g1, g2, mu)
     """
-    gamma1 = np.array(gamma1, copy=False, dtype=float)
-    gamma2 = np.array(gamma2, copy=False, dtype=float)
-    kappa = np.array(kappa, copy=False, dtype=float)
+    gamma1 = np.asarray(gamma1, dtype=float)
+    gamma2 = np.asarray(gamma2, dtype=float)
+    kappa = np.asarray(kappa, dtype=float)
 
     g1 = gamma1/(1.-kappa)
     g2 = gamma2/(1.-kappa)
