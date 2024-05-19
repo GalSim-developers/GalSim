@@ -70,12 +70,12 @@ def test_gaussian():
     np.testing.assert_equal(var1, var)
     var2 = galsim.Image(3,3)
     galsim.config.AddNoiseVariance(config, var2)
-    np.testing.assert_almost_equal(var2.array, var)
+    np.testing.assert_almost_equal(var2.array, np.array(var).astype(var2.array.dtype))
 
     # Check include_obj_var=True, which shouldn't do anything different in this case
     var3 = galsim.Image(32,32)
     galsim.config.AddNoiseVariance(config, var3, include_obj_var=True)
-    np.testing.assert_almost_equal(var3.array, var)
+    np.testing.assert_almost_equal(var3.array, np.array(var).astype(var3.array.dtype))
 
     # Gaussian noise can also be given the variance directly, rather than sigma
     galsim.config.RemoveCurrent(config)
