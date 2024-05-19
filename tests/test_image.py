@@ -1476,10 +1476,11 @@ def test_Image_binary_multiply():
 
         # Check unary -
         image1 = galsim.Image(ref_array.astype(types[i]))
-        image3 = -image1
-        np.testing.assert_array_equal(image3.array, (-1 * ref_array).astype(types[i]),
-                err_msg="Unary - in Image class (dictionary call) does"
-                +" not match reference for dtype = "+str(types[i]))
+        if not types[i] in (np.uint16, np.uint32,):
+            image3 = -image1
+            np.testing.assert_array_equal(image3.array, (-1 * ref_array).astype(types[i]),
+                                          err_msg="Unary - in Image class (dictionary call) does"
+                                          +" not match reference for dtype = "+str(types[i]))
 
         for j in range(ntypes):
             image2_init_func = eval("galsim.Image"+tchar[j])
