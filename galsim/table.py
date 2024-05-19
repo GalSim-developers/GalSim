@@ -23,11 +23,12 @@ import numbers
 import warnings
 
 from . import _galsim
-from ._utilities import lazy_property, basestring
+from ._utilities import lazy_property, basestring, copy_if_needed
 from .bounds import BoundsD
 from .position import _PositionD
 from .errors import *
 from .interpolant import convert_interpolant
+
 
 def _str_array(a):
     # Used by both LookupTable.__str__ and LookupTable2D.__str__
@@ -889,8 +890,8 @@ class LookupTable2D:
             return f
 
     def _call_constant(self, x, y, grid=False):
-        x = np.array(x, dtype=float, copy=False)
-        y = np.array(y, dtype=float, copy=False)
+        x = np.array(x, dtype=float, copy=copy_if_needed)
+        y = np.array(y, dtype=float, copy=copy_if_needed)
         if grid:
             f = np.empty((len(y), len(x)), dtype=float)
             # Fill in interpolated values first, then go back and fill in
@@ -951,8 +952,9 @@ class LookupTable2D:
         Returns:
             a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
-        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
-        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
+        copy_flag = copy_if_needed if not self.edge_mode == 'wrap' else True
+        x1 = np.array(x, dtype=float, copy=copy_flag)
+        y1 = np.array(y, dtype=float, copy=copy_flag)
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 
@@ -1011,8 +1013,8 @@ class LookupTable2D:
         return self._gradient_inbounds(x, y, grid)
 
     def _gradient_constant(self, x, y, grid=False):
-        x = np.array(x, dtype=float, copy=False)
-        y = np.array(y, dtype=float, copy=False)
+        x = np.array(x, dtype=float, copy=copy_if_needed)
+        y = np.array(y, dtype=float, copy=copy_if_needed)
         if grid:
             dfdx = np.empty((len(y), len(x)), dtype=float)
             dfdy = np.empty((len(y), len(x)), dtype=float)
@@ -1064,8 +1066,9 @@ class LookupTable2D:
             A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
             values) or numpy arrays.
         """
-        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
-        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
+        copy_flag = copy_if_needed if not self.edge_mode=='wrap' else True
+        x1 = np.array(x, dtype=float, copy=copy_flag)
+        y1 = np.array(y, dtype=float, copy=copy_flag)
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 
