@@ -240,7 +240,7 @@ def test_Image_basic():
 
                 value3 = 10*x + y
                 im1.addValue(x,y, value3-value2)
-                im2_view[x,y] += value3-value2
+                im2_view[x,y] += np.array(value3-value2).astype(im2_view.dtype, casting="unsafe")
                 assert im1[galsim.PositionI(x,y)] == value3
                 assert im1.view()[x,y] == value3
                 assert im1.view(make_const=True)[galsim.PositionI(x,y)] == value3

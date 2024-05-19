@@ -1370,7 +1370,7 @@ class Image:
             y:      The y coordinate of the pixel to add to.
             value:  The value to add to this pixel.
         """
-        self._array[y-self.ymin, x-self.xmin] += value
+        self._array[y-self.ymin, x-self.xmin] += np.array(value).astype(self._array.dtype, casting="unsafe")
 
     def fill(self, value):
         """Set all pixel values to the given ``value``
