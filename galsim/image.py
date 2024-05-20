@@ -1790,7 +1790,7 @@ class Image:
 
     def __neg__(self):
         result = self.copy()
-        result *= -1
+        result *= np.int64(-1)
         return result
 
     # Define &, ^ and | only for integer-type images
