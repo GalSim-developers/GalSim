@@ -41,6 +41,7 @@ def trapz(func, min, max, points=10000):
         points:     If integer, the number of points to sample the integrand. If array-like, then
                     the points to sample the integrand at. [default: 1000].
     """
+    from ..table import trapz
     from . import depr
     depr('galsim.integ.trapz', 2.3, 'galsim.integ.int1d')
 
@@ -52,7 +53,7 @@ def trapz(func, min, max, points=10000):
     else:
         points = np.linspace(min, max, points)
 
-    return np.trapz(func(points),points)
+    return trapz(func(points),points)
 
 def midpt(fvals, x):
     """Midpoint rule for integration.
