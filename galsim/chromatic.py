@@ -1226,6 +1226,41 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.deinterpolated = original.deinterpolated
+    
+    @classmethod
+    def from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, oversample_fac=1.0):
+        obj = cls.__new__(cls)  # Does not call __init__
+        obj.waves = np.array(waves) # images are assumed to be sorted by wavelength for now
+        obj.oversample = oversample_fac
+        obj.use_exact_sed = False
+
+        obj.separable = False
+        obj.interpolated = True
+
+        pix_scale = images[0].scale
+        N = len((images[0].array)[0])
+        n_img = len(images)
+        
+        # default stepk and maxk from pixel scale
+        stepk  = np.full(n_img, 2*np.pi/(pix_scale*N))
+        maxk = np.full(n_img, np.pi/pix_scale)
+        
+        # if stepk and maxk are provided
+        if _force_stepk is not None:
+            stepk[:] = _force_stepk
+        if _force_maxk is not None:
+            maxk[:] = _force_maxk
+           
+        # set deinterpolated object to a dummy interpolated image
+        obj.deinterpolated = InterpolatedImage(images[0], _force_stepk=stepk[0], _force_maxk=maxk[0])
+        
+        # set ims using the input images, for objs set to interpolated image object
+        obj.ims = images
+        obj.objs = np.array([InterpolatedImage(images[i], _force_stepk=stepk[i], _force_maxk=maxk[i]) for i in range(n_img) ])
+        #obj.objs = np.array([InterpolatedImage(img, _force_stepk=stepk, _force_maxk=maxk) for img in images ])
+        
+        return obj
+        
 
     @property
     def sed(self):
@@ -1328,6 +1363,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         stepk = _linearInterp(self.stepk_vals, frac, lower_idx)
         maxk = _linearInterp(self.maxk_vals, frac, lower_idx)
 
+        #print('_imageAtWavelength', len(self.ims))
         # Rescale to use the exact flux or normalization if requested.
         if self.use_exact_sed:
             interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
@@ -1353,6 +1389,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength, as a `GSObject`.
         """
+        #print('evaluateAtWavelength', wave)
         im, stepk, maxk = self._imageAtWavelength(wave)
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
