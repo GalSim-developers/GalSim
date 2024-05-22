@@ -1236,7 +1236,59 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.deinterpolated = original.deinterpolated
+        
+    @classmethod
+    def from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, oversample_fac=1.0):
+         """
+        Alternative initiazliation to InterpolatedChromaticObject from input images at specific wavelenghts.
+        
 
+        Parameters:
+            images:          list of Galsim Image objects to use as interpolated images.
+            wave:            list of wavelength values in nanometers.
+            _force_stepk:    list of step_k values to pass to InterpolatedImages for each image. Can also be single value
+                             to pass for all images alike. If not given stepk is calculated from image pixel scale. [Default: None]
+            _force_maxk:     list of max_k values to pass to InterpolatedImages for each image. Can also be single value
+                             to pass for all images alike. If not given maxk is calculated from image pixel scale. [Default: None]
+            oversample_fac:  Factor by which to oversample the stored profiles compared to the default, which is to sample them at 
+                             the Nyquist frequency for whichever wavelength has the highest Nyquist frequency. [Default: 1]
+
+        Returns:
+            An InterpolatedChromaticObject intialized from input images.
+        """
+        obj = cls.__new__(cls)  # Does not call __init__
+        obj.waves = np.array(waves) # images are assumed to be sorted by wavelength for now
+        obj.oversample = oversample_fac
+
+        # use_exact_sed set to false as input images won't have sed available 
+        obj.use_exact_sed = False
+        obj.separable = False
+        obj.interpolated = True
+
+        pix_scale = images[0].scale 
+        N = np.max(images[0].array.shape)
+        n_img = len(images)
+        
+        # default stepk and maxk from pixel scale
+        stepk  = np.full(n_img, 2*np.pi/(pix_scale*N))
+        maxk = np.full(n_img, np.pi/pix_scale)
+        
+        # if stepk and maxk are provided as arguments
+        if _force_stepk is not None:
+            stepk[:] = _force_stepk
+        if _force_maxk is not None:
+            maxk[:] = _force_maxk
+           
+        # set deinterpolated to a dummy interpolated image. Galsim uses this object to get gsparams and other properties
+        # so setting it to None will cause issues. Only obj.ims and obj.objs will affect future calculations if use_exact_sed = False
+        obj.deinterpolated = InterpolatedImage(images[0], _force_stepk=stepk[0], _force_maxk=maxk[0])
+        
+        # set ims and objs manually using the input images
+        obj.ims = images
+        obj.objs = np.array([InterpolatedImage(images[i], _force_stepk=stepk[i], _force_maxk=maxk[i]) for i in range(n_img) ])
+        
+        return obj
+    
     @property
     def sed(self):
         return self.deinterpolated.sed
