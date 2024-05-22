@@ -1229,7 +1229,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         
     @classmethod
     def from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, oversample_fac=1.0):
-         """
+        """
         Alternative initiazliation to InterpolatedChromaticObject from input images at specific wavelenghts.
         
 
