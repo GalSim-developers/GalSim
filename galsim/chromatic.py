@@ -1276,7 +1276,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         # set ims and objs manually using the input images
         obj.ims = images
         obj.objs = np.array([InterpolatedImage(images[i], _force_stepk=stepk[i], _force_maxk=maxk[i]) for i in range(n_img) ])
-        
         return obj
     
     @property
