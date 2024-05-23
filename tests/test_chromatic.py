@@ -1951,6 +1951,109 @@ def test_interpolated_ChromaticObject():
     # Also make sure that it ditched the interpolation.
     assert not hasattr(trans_interp_psf, 'waves')
 
+    # test alternate initialization method, "from_images()", of InterpolatedChromaticObject 
+    # that uses images at discrete wavelengths to initialize object.
+
+    PSF_exact = ChromaticGaussian(sigma_0)
+    PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
+    int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves,_force_stepk =PSF.stepk_vals,
+                                                              _force_maxk = PSF.maxk_vals)
+    # check input images are correctly intialized
+    for i in range(len(int_psf.ims)):
+        np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to initialize correct images')
+    test_obj = galsim.Convolve(int_psf, star)
+    true_obj = galsim.Convolve(PSF, star)
+    true_img = true_obj.drawImage(bandpass, scale=scale, method = 'auto')
+    im_interp = true_img.copy()
+    test_img = test_obj.drawImage(bandpass, image=im_interp, scale=scale)
+    # check drawing objects is identical when using same stepk and maxk as images
+    np.testing.assert_allclose(test_img.array, true_img.array, atol=1e-17,
+            err_msg='InterpolatedChromaticObject from_images initialization fails to reproduce default init. images')
+
+    # without specifying the same stepk and maxk for each image, stepk and maxk are caclulated
+    # based on the input image pixel scale and dimensions and have no wavelength dependance. 
+    int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves)
+    test_obj = galsim.Convolve(int_psf, star)
+    test_img = test_obj.drawImage(bandpass, image=im_interp, scale=scale, method = 'auto')
+    # check images are within 0.01% of the total flux, the flux and maximum within 0.1%
+    np.testing.assert_allclose(test_img.array, true_img.array, atol=1e-4*np.sum(true_img.array),
+        err_msg='InterpolatedChromaticObject images differ when using from_images initialization with default stepk, maxk')
+    np.testing.assert_allclose(test_img.array.sum(), true_img.array.sum(), rtol=1e-3,
+        err_msg='InterpolatedChromaticObject images flux differ when using from_images initialization with default stepk, maxk')
+    np.testing.assert_allclose(test_img.array.max(), true_img.array.max(), rtol=1e-3,
+        err_msg='InterpolatedChromaticObject images maximum differ when using from_images initialization with default stepk, maxk')
+    # check moments
+    truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_img)
+    
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments amplitude ')
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.x ')
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.y ')
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments sigma ')
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g1 ')
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g2 ')
+
+    # check that flux macthes when convolved with non-trivial light profile
+    gal = galsim.Exponential(half_light_radius = 2.*scale)
+    gal = gal.shear(g2 = 0.3)
+    gal = disk_SED*gal
+    obj_exact = galsim.Convolve(PSF, gal)
+    obj_interp = galsim.Convolve(int_psf, gal)
+    true_img = obj_exact.drawImage(bandpass_g, scale=scale)
+    im_interp = true_img.copy()
+    test_img = obj_interp.drawImage(bandpass_g, image=im_interp, scale=scale)
+    np.testing.assert_allclose(
+        test_img.array, true_img.array, atol=1.e-4,
+        err_msg='Interpolated ChromaticObject from_images initialization differs from default when drawing galaxy')
+    # check moments
+    truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_img)
+    
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments amplitude ')
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.x ')
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.y ')
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments sigma ')
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g1 ')
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g2 ')
+
+
 
 @timer
 def test_ChromaticOpticalPSF():
