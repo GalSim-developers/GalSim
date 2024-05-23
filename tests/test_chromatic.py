@@ -2054,7 +2054,6 @@ def test_interpolated_ChromaticObject():
                 err_msg='InterpolatedChromaticObject from_images init. differs in moments g2 ')
 
 
-
 @timer
 def test_ChromaticOpticalPSF():
     """Test the ChromaticOpticalPSF functionality."""
