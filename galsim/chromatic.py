@@ -1382,7 +1382,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         stepk = _linearInterp(self.stepk_vals, frac, lower_idx)
         maxk = _linearInterp(self.maxk_vals, frac, lower_idx)
 
-        #print('_imageAtWavelength', len(self.ims))
         # Rescale to use the exact flux or normalization if requested.
         if self.use_exact_sed:
             interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
@@ -1408,7 +1407,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         Returns:
             the monochromatic object at the given wavelength, as a `GSObject`.
         """
-        #print('evaluateAtWavelength', wave)
         im, stepk, maxk = self._imageAtWavelength(wave)
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
