@@ -1311,7 +1311,7 @@ def test_fft():
         maxk_threshold = 1.e-3
         N = 880
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
-    obj = obj.withGSParams(maxk_threshold=1.e-4)
+    obj = obj.withGSParams(maxk_threshold=maxk_threshold)
     im1 = obj.drawKImage()
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
