@@ -547,7 +547,6 @@ def test_drawKImage():
     #   - return the new images
     #   - set the scale to 2pi/(N*obj.nyquist_scale)
     im1 = obj.drawKImage()
-    N = 1174
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
     stepk = obj.stepk
