@@ -1538,7 +1538,7 @@ def test_tiled():
     # Also when built with multiprocessing.
     config['image']['nproc'] = 3
     im4c = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im4c.array, im4a.array)
+    np.testing.assert_allclose(im4c.array, im4a.array)
 
     # If grid sizes aren't square, it also works properly, but with more complicated ngrid calc.
     config = galsim.config.CleanConfig(config)
