@@ -1303,13 +1303,14 @@ def test_fft():
         np.testing.assert_array_almost_equal(xim.array, xim2.array)
 
     # Now use drawKImage (as above in test_drawKImage) to get a more realistic k-space image
+    # NB. It is useful to have this come out not a multiple of 4, since some of the
+    #     calculation needs to be different when N/2 is odd.
     if hasattr(galsim, "_galsim"):
         maxk_threshold = 1.e-4
-        N = 1174  # NB. It is useful to have this come out not a multiple of 4, since some of the
-                  #     calculation needs to be different when N/2 is odd.
+        N = 1174
     else:
         maxk_threshold = 1.2e-3
-        N = 880
+        N = 858
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     obj = obj.withGSParams(maxk_threshold=maxk_threshold)
     im1 = obj.drawKImage()
