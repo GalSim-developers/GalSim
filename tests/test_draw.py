@@ -568,7 +568,7 @@ def test_drawKImage():
     #   - also return that image
     #   - set the scale to obj.stepk
     #   - zero out any existing data
-    im3 = galsim.ImageCD(1149,1149)
+    im3 = galsim.ImageCD(N-25,N-25)
     im4 = obj.drawKImage(im3)
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(im3) produced image with wrong scale")
