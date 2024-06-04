@@ -997,7 +997,10 @@ class my_build_shared_clib(my_build_clib):
     def do_build_libraries(self, libraries):
         from distutils.errors import DistutilsSetupError
         from distutils import log
-        from setuptools.dep_util import newer_pairwise_group
+        try:
+            from setuptools import newer_pairwise_group
+        except ImportError:
+            from setuptools.dep_util import newer_pairwise_group
         from distutils.ccompiler import CCompiler
 
         builder = self.distribution.get_command_obj('build_ext')
