@@ -1308,7 +1308,7 @@ def test_fft():
         N = 1174  # NB. It is useful to have this come out not a multiple of 4, since some of the
                   #     calculation needs to be different when N/2 is odd.
     else:
-        maxk_threshold = 1.1e-3
+        maxk_threshold = 1.2e-3
         N = 880
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     obj = obj.withGSParams(maxk_threshold=maxk_threshold)
