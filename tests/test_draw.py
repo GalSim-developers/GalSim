@@ -1309,7 +1309,7 @@ def test_fft():
         maxk_threshold = 1.e-4
         N = 1174
     else:
-        maxk_threshold = 1.2e-3
+        maxk_threshold = 0.78e-3
         N = 858
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     obj = obj.withGSParams(maxk_threshold=maxk_threshold)
