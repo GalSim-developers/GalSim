@@ -274,7 +274,8 @@ and not for ``psf``.
 * ``resolution`` = *float_value* (optional)  If the base profile allows a ``half_light_radius`` parameter, and the psf is able to calculate a ``half_light_radius``, then it is permissible to specify a resolution: resolution = r_gal / r_psf  (where r_gal and r_psf are the half-light radii) in lieu of specifying the ``half_light_radius`` of the galaxy explicitly. This is especially useful if the PSF size is generated randomly.
 * ``signal_to_noise`` = *float_value* (optional)  You may specify a signal-to-noise value rather than a ``flux``. Our definition of the S/N derives from a weighted integral of the flux in the drawn image:
   :math:`S = \sum W(x,y) I(x,y) / \sum W(x,y)` where :math:`W(x,y)` is taken to be a matched filter, so :math:`W(x,y) = I(x,y)`. (Note: This currently requires ``draw_method = 'fft'``.  It is a bit trickier to do this for photon shooting, and we have not enabled that yet.)
-* ``redshift`` = *float_value* (optional)  The redshift of the galaxy.  This is required when using 'NFWHaloShear' or 'NFWHaloMagnification'.
+* ``redshift`` = *float_value* (optional)  The redshift of the galaxy.  This is required when using 'NFWHaloShear' or 'NFWHaloMagnification'.  But note that this is only valid for achromatic objects. For chromatic objects, the redshift should be applied to the SED instead.
+
 
 Custom Object Types
 -------------------

@@ -788,6 +788,187 @@ def test_photon_array_correlated():
     assert check_dep(pa1.isCorrelated)
 
 
+@timer
+def test_atredshift():
+    """Test the equivalence of obj.atRedshift and the equivalent with SED.atRedshift
+    """
+    from test_chromatic import disk_SED, bulge_SED, bandpass
+
+    # First simple separable galaxy
+    gal = galsim.Sersic(n=3, half_light_radius=1.5)
+    gal = gal.shear(g1=0.3, g2=0.2)
+    gal1 = gal * bulge_SED
+    gal2 = gal * bulge_SED.atRedshift(1.7)
+
+    psf = galsim.Moffat(beta=2.5, half_light_radius=0.3)
+    psf = galsim.ChromaticAtmosphere(psf, base_wavelength=500.0, zenith_angle=17*galsim.degrees)
+
+    final1 = galsim.Convolve(check_dep(gal1.atRedshift, 1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+    final3 = galsim.Convolve(check_dep(gal1.expand(lambda w:1.0).atRedshift, 1.7), psf)
+
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array)
+    np.testing.assert_allclose(image1.array, image3.array, atol=1.e-5)
+    check_pickle(final1)
+
+    # ChromaticSum
+    gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED
+    gal2 = gal * bulge_SED.atRedshift(1.7) + gal.dilate(1.3) * disk_SED.atRedshift(1.7)
+    gal3 = check_dep((gal * bulge_SED).atRedshift, 1.7) + \
+           check_dep((gal.dilate(1.3) * disk_SED).atRedshift, 1.7)
+    final1 = galsim.Convolve(check_dep(gal1.atRedshift, 1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+    final3 = galsim.Convolve(gal3, psf)
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image3 = final3.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array)
+    np.testing.assert_allclose(image1.array, image3.array)
+
+    # Probably none of the other Chromatic classes make sense to call atRedshift, so let
+    # them use the base class implementation if they do so.
+    # Just check ChromaticConvolution as one that doesn't have its own implementation.
+    # (This is probably the least implausible use of atRedshift for one of these other classes.)
+    smear = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4))
+    smear1 = smear.expand(lambda wave: (wave/700)**0.3)
+    gal1 = galsim.Convolve(gal * bulge_SED, smear1)
+    # Smear is at redshift 1.7, so scale wave by factor of (1+1.7)
+    smear2 = smear.expand(lambda wave: (wave/700/2.7)**0.3)
+    gal2 = galsim.Convolve(gal * bulge_SED.atRedshift(1.7), smear2)
+    final1 = galsim.Convolve(check_dep(gal1.atRedshift, 1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array, atol=1.e-6)
+    assert gal1.redshift == 0.
+    assert check_dep(gal1.atRedshift, 1.7).redshift == 1.7
+    assert gal2.redshift == 1.7
+
+    # Finally, if we call atRedshift on a regular GSObject, it doesn't do much.
+    gal3 = check_dep(gal.atRedshift, 1.7)
+    assert gal == gal3
+    # But it does add an attribute, which doesn't obviate equality.
+    assert gal3.redshift == 1.7
+    assert gal.redshift == 0.
+
+    # One deprecated test from test_chromatic in test_config_image.py.
+    # (Simplified to just test the deprecation.)
+    config = {
+        'gal': {
+            'type': 'Exponential',
+            'half_light_radius': 0.5,
+            'sed': {
+                'file_name': 'CWW_E_ext.sed',
+                'wave_type': 'Ang',
+                'flux_type': 'flambda',
+                'norm_flux_density': 1.0,
+                'norm_wavelength': 500,
+            },
+            'redshift': 0.8,
+        },
+    }
+    gal1, _ = check_dep(galsim.config.BuildGSObject, config, 'gal')
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    gal2 = galsim.Exponential(half_light_radius=0.5) * sed
+    assert gal1 == gal2
+
+    config = {
+        'gal': {
+            'type': 'Sum',
+            'items': [
+                {
+                    'type': 'DeVaucouleurs',
+                    'half_light_radius': 0.5,
+                    'sed': {
+                        'file_name': 'CWW_E_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                    },
+                },
+                {
+                    'type': 'Exponential',
+                    'half_light_radius': 2.0,
+                    'sed': {
+                        'file_name': 'CWW_Im_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                    },
+                },
+            ],
+            'redshift': 0.8,
+        },
+    }
+    gal1, _ = check_dep(galsim.config.BuildGSObject, config, 'gal')
+    sed1 = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    sed2 = galsim.SED('CWW_Im_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+    gal2 = galsim.DeVaucouleurs(half_light_radius=0.5) * sed1 + \
+           galsim.Exponential(half_light_radius=2.0) * sed2
+    print(gal1)
+    print(gal2)
+    print(gal1.obj_list == gal2.obj_list)
+    print(gal1.obj_list[0] == gal2.obj_list[0])
+    print(gal1.obj_list[0].original == gal2.obj_list[0].original)
+    print(gal1.obj_list[0].sed == gal2.obj_list[0].sed)
+    print(gal1.obj_list[1] == gal2.obj_list[1])
+    print(gal1._gsparams == gal2._gsparams)
+    print(gal1._propagate_gsparams == gal2._propagate_gsparams)
+    assert gal1 == gal2
+
+
+@timer
+def test_save_photons():
+    # These are the deprecated cases in test_save_photons.
+    from test_chromatic import disk_SED, bulge_SED
+
+    rng = galsim.BaseDeviate(1234)
+    star_sed = galsim.SED('vega.txt', wave_type="nm", flux_type="fphotons")
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+
+    airy = galsim.ChromaticAiry(lam=500, diam=8)
+    optical = galsim.ChromaticOpticalPSF(lam=500, diam=8, defocus=0.2, obscuration=0.3)
+    disk = galsim.Exponential(half_light_radius=0.5).shear(g1=0.4, g2=0.2)
+    bulge = galsim.Sersic(n=3, half_light_radius=0.3)
+
+    objs = [
+        check_dep((disk * disk_SED).atRedshift, 1.1),
+        check_dep((optical * star_sed).atRedshift, 1.1),
+        check_dep((bulge * bulge_SED + disk * disk_SED).atRedshift, 0.5),
+        check_dep((airy * star_sed).expand(lambda w: (w/500)**0.0).atRedshift, 0.2),
+        check_dep(galsim.ChromaticTransformation, disk, flux_ratio=disk_SED, redshift=1.1),
+    ]
+
+    flux = 1000
+    for obj in objs:
+        print('obj = ',obj)
+        obj = obj.withFlux(flux, bandpass)
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              n_photons=flux, save_photons=True,
+                              scale=0.05, nx=32, ny=32, rng=rng)
+        assert hasattr(image, 'photons')
+        assert len(image.photons) == flux
+        print(np.sum(image.photons.flux))
+        # Note: tolerance is quite loose, since profiles that use InterpolatedImage can have
+        # negative flux photons, which then don't necessarily sum to the right value.
+        # Only the expectation value is right, and we're not shooting many photons here.
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+
+        # Sometimes there is a different path when n_photons is not given, so check that too.
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              save_photons=True,
+                              scale=0.05, nx=32, ny=32, rng=rng)
+        assert hasattr(image, 'photons')
+        print(np.sum(image.photons.flux))
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+        repr(obj)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:

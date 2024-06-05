@@ -194,11 +194,29 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
 
     # Apply any SED and redshift that might be present.
+    if 'redshift' in param:
+        if 'sed' in param:
+            from ..deprecated import depr
+            depr('gal.redshift', '2.5.3', 'gal.sed.redshift',
+                 'For chromatic objects, the redshift parameter should be given in the '
+                 'sed field.')
+            param['sed']['redshift'] = param.pop('redshift')
+
     gsobject, safe1 = ApplySED(gsobject, param, base, logger)
     safe = safe and safe1
 
-    gsobject, safe1 = ApplyRedshift(gsobject, param, base, logger)
-    safe = safe and safe1
+    if 'redshift' in param:
+        redshift, safe1 = ParseValue(param, 'redshift', base, float)
+        safe = safe and safe1
+        if isinstance(gsobject, ChromaticObject):
+            from ..deprecated import depr
+            depr('gal.redshift', '2.5.3', 'gal.sed.redshift',
+                 'For chromatic objects, the redshift parameter should be given in the '
+                 'sed field.')
+            gsobject = gsobject._atRedshift(redshift)
+        else:
+            # If not chromatic, then redshift is just an attribute for reference.
+            gsobject.redshift = redshift
 
     if 'flux' in param:
         flux, safe1 = ParseValue(param, 'flux', base, float)
@@ -260,13 +278,6 @@ def ApplySED(gsobject, config, base, logger):
     if 'sed' in config:
         sed, safe = BuildSED(config, 'sed', base, logger)
         return gsobject * sed, safe
-    else:
-        return gsobject, True
-
-def ApplyRedshift(gsobject, config, base, logger):
-    if 'redshift' in config:
-        redshift, safe = ParseValue(config, 'redshift', base, float)
-        return gsobject.atRedshift(redshift), safe
     else:
         return gsobject, True
 
