@@ -77,7 +77,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
 
         sn_target = ParseValue(config, 'signal_to_noise', base, float)[0]
 
-        sn_meas = math.sqrt( np.sum(im.array**2, dtype=float) / noise_var )
+        sn_meas = np.sqrt( np.sum(im.array**2, dtype=float) / noise_var )
         flux = sn_target / sn_meas
         im *= flux
 
