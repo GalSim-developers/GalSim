@@ -1308,9 +1308,11 @@ def test_fft():
     if hasattr(galsim, "_galsim"):
         maxk_threshold = 1.e-4
         N = 1174
+        Nfft = 1536
     else:
         maxk_threshold = 0.78e-3
-        N = 858
+        N = 912
+        Nfft = 1024
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     obj = obj.withGSParams(maxk_threshold=maxk_threshold)
     im1 = obj.drawKImage()
@@ -1340,7 +1342,7 @@ def test_fft():
     # If we give both a good size to use and match up the scales, then they should produce the
     # same thing.
     N = galsim.Image.good_fft_size(N)
-    assert N == 1536 == 3 * 2**9
+    assert N == Nfft
     kscale = 2.*np.pi / (N * nyq_scale)
     im2 = obj.drawKImage(nx=N+1, ny=N+1, scale=kscale)
     im2_real = im2.calculate_inverse_fft()
