@@ -25,7 +25,7 @@ import galsim
 from galsim_test_helpers import *
 
 
-refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
+refdir = os.path.join(os.path.dirname(__file__), ".", "lensing_reference_data") # Directory containing the reference
 
 klim_test = 0.00175 # Value of klim for flat (up to klim, then zero beyond) power spectrum test
 tolerance_var = 0.03 # fractional error allowed in the variance of shear - calculation is not exact

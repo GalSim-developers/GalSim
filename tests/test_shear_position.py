@@ -88,7 +88,7 @@ def test_shear_position_image_integration_pixelwcs():
     )
 
     print("err:", np.max(np.abs(im1.array - im2.array)))
-    assert np.allclose(im1.array, im2.array, rtol=0, atol=5e-8)
+    np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=5e-8)
 
 
 @timer
@@ -119,9 +119,7 @@ def test_shear_position_image_integration_offsetwcs():
     )
 
     print("err:", np.max(np.abs(im1.array - im2.array)))
-    assert np.allclose(im1.array, im2.array, rtol=0, atol=2e-7), (
-        np.max(np.abs(im1.array - im2.array))
-    )
+    np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=2e-7)
 
 
 if __name__ == "__main__":
