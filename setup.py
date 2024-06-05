@@ -998,7 +998,7 @@ class my_build_shared_clib(my_build_clib):
         from distutils.errors import DistutilsSetupError
         from distutils import log
         try:
-            from setuptools import newer_pairwise_group
+            from setuptools.modified import newer_pairwise_group
         except ImportError:
             from setuptools.dep_util import newer_pairwise_group
         from distutils.ccompiler import CCompiler
