@@ -1106,7 +1106,7 @@ class StampBuilder:
         # Then a few things cancel and we find that
         # S/N = sqrt( sum I(x,y)^2 / var )
 
-        sn_meas = math.sqrt( np.sum(image.array**2, dtype=float) / noise_var )
+        sn_meas = np.sqrt( np.sum(image.array**2, dtype=float) / noise_var )
         # Now we rescale the flux to get our desired S/N
         scale_factor = sn_target / sn_meas
         return scale_factor
