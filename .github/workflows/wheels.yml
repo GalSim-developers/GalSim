@@ -13,19 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*manylinux*"
           CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
+          CIBW_SKIP: cp36* cp37* pp*
           # I think yum might always work here.  But leave all options available.
-          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
+          CIBW_BEFORE_ALL: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v5
         with:
+          name: linux-wheels
           path: ./wheelhouse/*.whl
 
   build_musl_wheels:
@@ -34,39 +35,69 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*musllinux*"
           CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
+          CIBW_SKIP: cp36* cp37* pp*
           # I think musl always uses apk, but keep all options available.
           CIBW_BEFORE_ALL: apk add --upgrade fftw-dev || apt-get install libfftw3-dev || yum install -y fftw-devel
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v5
         with:
+          name: musl-wheels
           path: ./wheelhouse/*.whl
 
-  build_macosx_wheels:
-    name: Build wheels on macosx
+  build_macosx_intel_wheels:
+    name: Build wheels on MacOS Intel
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*macosx*"
           CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
-          CIBW_BEFORE_ALL_MACOS: brew install fftw || true
+          CIBW_SKIP: cp36* cp37* pp*
+          CIBW_BEFORE_ALL: brew install fftw || true
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v5
         with:
+          name: macos-wheels
+          path: ./wheelhouse/*.whl
+
+  build_macosx_arm_wheels:
+    name: Build wheels on MacOS ARM
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_BUILD: "*macosx*"
+          CIBW_ARCHS: arm64
+          CIBW_SKIP: cp36* cp37* pp*
+          CIBW_BEFORE_ALL: brew install llvm libomp fftw eigen
+          CIBW_ENVIRONMENT: >-
+            CC=/opt/homebrew/opt/llvm/bin/clang
+            CXX=/opt/homebrew/opt/llvm/bin/clang++
+            LDFLAGS="-L/opt/homebrew/opt/llvm/lib -Wl,-rpath,/opt/homebrew/opt/llvm/lib"
+            CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+            PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+            FFTW_DIR="/opt/homebrew"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: arm-wheels
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -78,7 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Install fftw
         run: |
@@ -106,9 +137,9 @@ jobs:
         run: |
           echo ls -l wheels
           ls -l wheels
-          echo ls -l wheels/artifact
-          ls -l wheels/artifact
-          cp wheels/artifact/*.whl dist
+          echo ls -l wheels/*
+          ls -l wheels/*
+          cp wheels/*/*.whl dist
           echo ls -l dist
           ls -l dist
 
