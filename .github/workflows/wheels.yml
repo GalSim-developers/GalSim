@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
-          name: linux-wheels
+          name: whl-linux
           path: ./wheelhouse/*.whl
 
   build_musl_wheels:
@@ -48,7 +48,7 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
-          name: musl-wheels
+          name: whl-musl
           path: ./wheelhouse/*.whl
 
   build_macosx_intel_wheels:
@@ -69,7 +69,7 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
-          name: macos-wheels
+          name: whl-macos
           path: ./wheelhouse/*.whl
 
   build_macosx_arm_wheels:
@@ -97,7 +97,7 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
-          name: arm-wheels
+          name: whl-arm
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -105,6 +105,12 @@ jobs:
     needs: [build_linux_wheels, build_musl_wheels, build_macosx_wheels]
     # Just need to build sdist on a single machine
     runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/GalSim
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
       - uses: actions/checkout@v4
@@ -123,9 +129,11 @@ jobs:
           pip install -U -r requirements.txt
 
       - name: Download wheels
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./wheels
+          pattern: whl-*
+          merge-multiple: true
 
       - name: Build sdist
         run: |
@@ -137,15 +145,11 @@ jobs:
         run: |
           echo ls -l wheels
           ls -l wheels
-          echo ls -l wheels/*
-          ls -l wheels/*
-          cp wheels/*/*.whl dist
+          cp wheels/*.whl dist
           echo ls -l dist
           ls -l dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-            user: __token__
-            password: ${{ secrets.PYPI_TOKEN }}
             verbose: true
