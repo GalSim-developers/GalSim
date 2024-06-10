@@ -126,3 +126,4 @@ Changes from v2.5.2 to v2.5.3
 - Added missing LoggerWrapper.critical method. (#1287)
 - Added ScaleFlux and ScaleWavelength photon ops. (#1289)
 - Deprecated ChromaticObject.atRedshift. (#1291)
+- Various fixes to work with numpy 2.0. (#1297)
