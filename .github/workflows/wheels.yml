@@ -139,7 +139,7 @@ jobs:
         run: |
           python setup.py sdist
           ls -l dist
-          tar tvfz dist/GalSim-*.tar.gz
+          tar tvfz dist/*.tar.gz
 
       - name: Copy wheels
         run: |
