@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.stamp &mdash; GalSim 2.5.2 documentation</title>
+  <title>galsim.config.stamp &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -1198,7 +1198,7 @@
         <span class="c1"># Then a few things cancel and we find that</span>
         <span class="c1"># S/N = sqrt( sum I(x,y)^2 / var )</span>
 
-        <span class="n">sn_meas</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">noise_var</span> <span class="p">)</span>
+        <span class="n">sn_meas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">noise_var</span> <span class="p">)</span>
         <span class="c1"># Now we rescale the flux to get our desired S/N</span>
         <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">sn_target</span> <span class="o">/</span> <span class="n">sn_meas</span>
         <span class="k">return</span> <span class="n">scale_factor</span></div>

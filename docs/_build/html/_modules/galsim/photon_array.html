@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.photon_array &mdash; GalSim 2.5.2 documentation</title>
+  <title>galsim.photon_array &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -110,7 +110,8 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;PhotonArray&#39;</span><span class="p">,</span> <span class="s1">&#39;PhotonOp&#39;</span><span class="p">,</span> <span class="s1">&#39;WavelengthSampler&#39;</span><span class="p">,</span> <span class="s1">&#39;FRatioAngles&#39;</span><span class="p">,</span> 
             <span class="s1">&#39;PhotonDCR&#39;</span><span class="p">,</span> <span class="s1">&#39;Refraction&#39;</span><span class="p">,</span> <span class="s1">&#39;FocusDepth&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;PupilImageSampler&#39;</span><span class="p">,</span> <span class="s1">&#39;PupilAnnulusSampler&#39;</span><span class="p">,</span> <span class="s1">&#39;TimeSampler&#39;</span><span class="p">,</span> <span class="p">]</span>
+            <span class="s1">&#39;PupilImageSampler&#39;</span><span class="p">,</span> <span class="s1">&#39;PupilAnnulusSampler&#39;</span><span class="p">,</span> <span class="s1">&#39;TimeSampler&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;ScaleFlux&#39;</span><span class="p">,</span> <span class="s1">&#39;ScaleWavelength&#39;</span> <span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -305,6 +306,40 @@
                 <span class="s2">&quot;requires it, please open an issue.&quot;</span><span class="p">)</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
         <span class="k">return</span> <span class="n">ret</span>
+
+<div class="viewcode-block" id="PhotonArray.concatenate"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.concatenate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">concatenate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">photon_arrays</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a single PhotonArray from a list of multiple PhotonArrays.</span>
+
+<span class="sd">        The size of the created PhotonArray will be the sum of the sizes of the given arrays,</span>
+<span class="sd">        and the values will be concatenations of the values in each.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            The optional value arrays (e.g. dxdz, wavelength, etc.) must be given in</span>
+<span class="sd">            all the given photon_arrays or in none of them.  This is not checked.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_arrays:  A list of PhotonArray objects to be concatenated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">photon_arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">]),</span>
+            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">]),</span>
+            <span class="s1">&#39;flux&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">flux</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">]),</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">hasAllocatedAngles</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dxdz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">dxdz</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dydz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">dydz</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">wavelength</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">hasAllocatedPupil</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;pupil_u&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">pupil_u</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;pupil_v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">pupil_v</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">hasAllocatedTimes</span><span class="p">():</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">time</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">photon_arrays</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_fromArrays</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.size"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the size of the photon array.  Equivalent to ``len(self)``.</span>
@@ -1415,6 +1450,45 @@
                 <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;exptime=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">exptime</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">return</span> <span class="n">s</span></div>
+
+
+<span class="k">class</span> <span class="nc">ScaleFlux</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple photon operator that multiplies all flux values by a constant.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x:          The constant by which to multiply all flux values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the scaling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;galsim.ScaleFlux(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">ScaleWavelength</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple photon operator that multiplies all wavelength values by a constant.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x:          The constant by which to multiply all wavelength values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the scaling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;galsim.ScaleWavelength(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">)&quot;</span>
+
 
 <span class="c1"># Put these at the end to avoid circular imports</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>

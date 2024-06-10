@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.5.2 documentation</title>
+  <title>Revision History &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -76,6 +76,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-0-to-v2-5-1">Changes from v2.5.0 to v2.5.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-1-to-v2-5-2">Changes from v2.5.1 to v2.5.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-5-2-to-v2-5-3">Changes from v2.5.2 to v2.5.3</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="older.html">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
@@ -245,6 +246,17 @@ method. (#1259)</p></li>
 <li><p>Added check=False option to hsm routines FindAdaptiveMom and EstimateShdear. (#1279)</p></li>
 <li><p>Fixed a bug in the use of evaluated template strings in the config dict. (#1281)</p></li>
 <li><p>Fixed a bug in CelestialWCS computation of the local jacobian near ra=0. (#1282)</p></li>
+</ul>
+</section>
+<section id="changes-from-v2-5-2-to-v2-5-3">
+<h2>Changes from v2.5.2 to v2.5.3<a class="headerlink" href="#changes-from-v2-5-2-to-v2-5-3" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fixed several issues with using <code class="docutils literal notranslate"><span class="pre">save_photons=True</span></code> with chromatic objects.
+(#1271, #1284, #1289)</p></li>
+<li><p>Added missing LoggerWrapper.critical method. (#1287)</p></li>
+<li><p>Added ScaleFlux and ScaleWavelength photon ops. (#1289)</p></li>
+<li><p>Deprecated ChromaticObject.atRedshift. (#1291)</p></li>
+<li><p>Various fixes to work with numpy 2.0. (#1297)</p></li>
 </ul>
 </section>
 <section id="older-versions">

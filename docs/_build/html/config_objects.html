@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Objects &mdash; GalSim 2.5.2 documentation</title>
+  <title>Config Objects &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -473,7 +473,7 @@ and not for <code class="docutils literal notranslate"><span class="pre">psf</sp
 <li><p><code class="docutils literal notranslate"><span class="pre">resolution</span></code> = <em>float_value</em> (optional)  If the base profile allows a <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> parameter, and the psf is able to calculate a <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>, then it is permissible to specify a resolution: resolution = r_gal / r_psf  (where r_gal and r_psf are the half-light radii) in lieu of specifying the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> of the galaxy explicitly. This is especially useful if the PSF size is generated randomly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">signal_to_noise</span></code> = <em>float_value</em> (optional)  You may specify a signal-to-noise value rather than a <code class="docutils literal notranslate"><span class="pre">flux</span></code>. Our definition of the S/N derives from a weighted integral of the flux in the drawn image:
 <span class="math notranslate nohighlight">\(S = \sum W(x,y) I(x,y) / \sum W(x,y)\)</span> where <span class="math notranslate nohighlight">\(W(x,y)\)</span> is taken to be a matched filter, so <span class="math notranslate nohighlight">\(W(x,y) = I(x,y)\)</span>. (Note: This currently requires <code class="docutils literal notranslate"><span class="pre">draw_method</span> <span class="pre">=</span> <span class="pre">'fft'</span></code>.  It is a bit trickier to do this for photon shooting, and we have not enabled that yet.)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  The redshift of the galaxy.  This is required when using ‘NFWHaloShear’ or ‘NFWHaloMagnification’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  The redshift of the galaxy.  This is required when using ‘NFWHaloShear’ or ‘NFWHaloMagnification’.  But note that this is only valid for achromatic objects. For chromatic objects, the redshift should be applied to the SED instead.</p></li>
 </ul>
 </section>
 <section id="custom-object-types">

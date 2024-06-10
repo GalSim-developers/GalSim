@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.chromatic &mdash; GalSim 2.5.2 documentation</title>
+  <title>galsim.chromatic &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -131,12 +131,13 @@
 <span class="kn">from</span> <span class="nn">.sum</span> <span class="kn">import</span> <span class="n">Add</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimSEDError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
-<span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">WavelengthSampler</span><span class="p">,</span> <span class="n">PhotonArray</span>
+<span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">WavelengthSampler</span><span class="p">,</span> <span class="n">PhotonArray</span><span class="p">,</span> <span class="n">PhotonOp</span><span class="p">,</span> <span class="n">ScaleFlux</span>
 <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span><span class="p">,</span> <span class="n">BinomialDeviate</span><span class="p">,</span> <span class="n">PoissonDeviate</span>
 <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">_Shear</span>
 <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
 <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">_Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span>
 <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
+<span class="kn">from</span> <span class="nn">.deltafunction</span> <span class="kn">import</span> <span class="n">DeltaFunction</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
@@ -550,7 +551,6 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># Store the last bandpass used and any extra kwargs.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_bp</span> <span class="o">=</span> <span class="n">bandpass</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
@@ -576,6 +576,14 @@
             <span class="n">prof0</span> <span class="o">*=</span> <span class="n">multiplier</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="p">(</span><span class="n">wave0</span><span class="p">)</span>
             <span class="n">image</span> <span class="o">=</span> <span class="n">prof0</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">image</span>
+
+        <span class="c1"># Note to developers, if we get to this point, then the implementaion is to integrate</span>
+        <span class="c1"># drawn images as a function of wavelength.  This is quite slow.</span>
+        <span class="c1"># Moreover, for method=phot, it cannot implement some features like save_photons=True.</span>
+        <span class="c1"># The guards to avoid this happening for method=phot are mostly in the drawImage methods</span>
+        <span class="c1"># of subclasses.  So if you find this happening, the solution is most likely to</span>
+        <span class="c1"># specialize something in the subclass&#39;s drawImage method.</span>
+        <span class="k">assert</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span>
 
         <span class="n">integrator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_integrator</span><span class="p">(</span><span class="n">integrator</span><span class="p">,</span> <span class="n">wave_list</span><span class="p">)</span>
 
@@ -831,7 +839,17 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the object with the new redshift</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="n">redshift</span><span class="p">)</span></div>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;atRedshift&#39;</span><span class="p">,</span> <span class="s1">&#39;2.5.3&#39;</span><span class="p">,</span> <span class="s1">&#39;SED.atRedshift&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;We now require that the SED of an object be appropriately redshifted before being &#39;</span>
+             <span class="s1">&#39;used in a chromatic object.  So rather than `(obj * sed).atRedshift(z)`, you &#39;</span>
+             <span class="s1">&#39;should now use `obj * sed.atRedshift(z)`.  For more complicated chromatic objects, &#39;</span>
+             <span class="s1">&#39;it is not always clear what parts of the wavelength dependence should be shifted &#39;</span>
+             <span class="s1">&#39;by this method, so we no longer allow the ambiguous syntax.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_redshift</span><span class="o">=</span><span class="n">redshift</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticObject.calculateCentroid"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.calculateCentroid">[docs]</a>    <span class="k">def</span> <span class="nf">calculateCentroid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the centroid of the wavelength-integrated surface brightness profile.</span>
@@ -1496,8 +1514,10 @@
 
         <span class="k">if</span> <span class="n">_flux_ratio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_flux_ratio</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
-        <span class="c1"># Constant flux_ratio is already an SED at this point, so can treat as function.</span>
-        <span class="c1">#assert hasattr(_flux_ratio, &#39;__call__&#39;)</span>
+        <span class="c1"># _flux_ratio might be a constant float.  For simplicity below, turn it into a function.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_flux_ratio</span>
+            <span class="n">_flux_ratio</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 
         <span class="c1"># setup output image (semi-arbitrarily using the bandpass effective wavelength).</span>
         <span class="c1"># Note: we cannot just use self._imageAtWavelength, because that routine returns an image</span>
@@ -1789,7 +1809,6 @@
 <span class="sd">                            (dx,dy) by which to shift the profile.  May also be a function of</span>
 <span class="sd">                            wavelength returning a numpy array.  [default: None]</span>
 <span class="sd">        flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]</span>
-<span class="sd">        redshift:           A redshift to apply to the wavelength when evaluating. [default: None]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for</span>
 <span class="sd">                            details. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to each of the components.  This</span>
@@ -1797,13 +1816,19 @@
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                 <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_redshift</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">Position</span><span class="p">):</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span><span class="s1">&#39;__call__&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span><span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;SED.atRedshift&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;You should now apply the redshift to the SED before using it in a &#39;</span>
+                 <span class="s1">&#39;chromatic object.&#39;</span><span class="p">)</span>
+            <span class="n">_redshift</span> <span class="o">=</span> <span class="n">redshift</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">chromatic</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span><span class="s1">&#39;__call__&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span><span class="s1">&#39;__call__&#39;</span><span class="p">)</span>
         <span class="c1"># Technically, if the only chromatic transformation is a flux_ratio, and the original object</span>
@@ -1817,7 +1842,7 @@
                         <span class="s2">&quot;non-interpolated version.&quot;</span><span class="p">)</span>
             <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">deinterpolated</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolated</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">interpolated</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="o">=</span> <span class="n">redshift</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="o">=</span> <span class="n">_redshift</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">propagate_gsparams</span>
@@ -1891,6 +1916,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
+    <span class="k">def</span> <span class="nf">_atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_redshift</span> <span class="o">=</span> <span class="n">redshift</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
 <div class="viewcode-block" id="ChromaticTransformation.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
@@ -1961,9 +1991,13 @@
             <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.ChromaticTransformation(</span><span class="si">%r</span><span class="s1">, jac=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">, flux_ratio=</span><span class="si">%r</span><span class="s1">, &#39;</span>
-                <span class="s1">&#39;redshift=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span><span class="p">,</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">redshift_str</span> <span class="o">=</span> <span class="s1">&#39;redshift=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">redshift_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.ChromaticTransformation(</span><span class="si">%r</span><span class="s1">, jac=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">, flux_ratio=</span><span class="si">%r</span><span class="s1">, </span><span class="si">%s</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="n">redshift_str</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2009,7 +2043,7 @@
         <span class="c1"># Same as evaluateAtWavelength, except the starting point is also _approxWavelength</span>
         <span class="n">wave1</span> <span class="o">=</span> <span class="n">wave</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wave</span>
         <span class="n">wave2</span><span class="p">,</span> <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">_approxWavelength</span><span class="p">(</span><span class="n">wave1</span><span class="p">)</span>
-        <span class="n">wave</span> <span class="o">=</span> <span class="n">wave2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wave2</span>
+        <span class="n">wave</span> <span class="o">=</span> <span class="n">wave2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wave2</span>
         <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTransformations</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="o">*</span><span class="n">offset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">wave</span><span class="p">,</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transformation</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">,</span>
@@ -2038,24 +2072,37 @@
 
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
-        <span class="n">wave</span> <span class="o">=</span> <span class="n">photons</span><span class="o">.</span><span class="n">wavelength</span>
-        <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTransformations</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_photon_op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">)</span>
 
-        <span class="c1"># cf. Transformation._fwd_normal</span>
-        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">temp</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span>
-            <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">*=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span>
-            <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">*=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">temp</span>
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_photon_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># A PhotonOp that just applies the transformation part, not self.original.</span>
+        <span class="k">class</span> <span class="nc">ChromaticTransformationPhotonOp</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ct</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ct</span> <span class="o">=</span> <span class="n">ct</span>
 
-            <span class="n">det</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">flux_ratio</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">wave</span> <span class="o">=</span> <span class="n">photons</span><span class="o">.</span><span class="n">wavelength</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">wave</span> <span class="o">/=</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="o">.</span><span class="n">_redshift</span><span class="p">)</span>
+                <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="o">.</span><span class="n">_getTransformations</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
 
-        <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># cf. Transformation._fwd_normal</span>
+                <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span>
+                    <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">*=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span>
+                    <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">*=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">temp</span>
 
-        <span class="n">photons</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="n">flux_ratio</span>
+                    <span class="n">det</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">flux_ratio</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+
+                <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">photons</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="n">flux_ratio</span>
+
+        <span class="k">return</span> <span class="n">ChromaticTransformationPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticTransformation.drawImage"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;quadratic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2101,12 +2148,44 @@
             <span class="n">int_im</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">int_im</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
                                          <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
             <span class="n">image</span> <span class="o">=</span> <span class="n">int_im</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
-            <span class="k">return</span> <span class="n">image</span>
+        <span class="k">elif</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
+            <span class="c1"># Need to calculate n_photons now using the fiducial profile, not self.original,</span>
+            <span class="c1"># since the transformation may (often does) change the flux.</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
+            <span class="n">wave0</span><span class="p">,</span> <span class="n">prof0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fiducial_profile</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
+            <span class="n">prof1</span> <span class="o">=</span> <span class="n">prof0</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+            <span class="n">n_photons</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">poisson_flux</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="n">max_extra_noise</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rng&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="n">n_photons</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">prof1</span><span class="o">.</span><span class="n">_calculate_nphotons</span><span class="p">(</span><span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_photons&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_photons</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
+                <span class="c1"># Then this is a PSF * SED.  Things work better to convert it into a</span>
+                <span class="c1"># Convolution(delta * SED, PSF) instead.</span>
+                <span class="n">psf</span> <span class="o">=</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">,</span>
+                                              <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">sed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">*</span> <span class="n">g</span>
+                <span class="k">assert</span> <span class="n">sed</span><span class="o">.</span><span class="n">spectral</span>  <span class="c1"># This must be true here.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">sed</span> <span class="o">=</span> <span class="n">sed</span><span class="o">.</span><span class="n">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span><span class="p">)</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">psf</span><span class="p">]</span> <span class="o">+</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">,</span> <span class="p">[])</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">DeltaFunction</span><span class="p">()</span> <span class="o">*</span> <span class="n">sed</span><span class="p">)</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If the original is spectral, then treat the transformation as a photon_op.</span>
+                <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_photon_op</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span> <span class="o">+</span> <span class="p">[</span><span class="n">ScaleFlux</span><span class="p">(</span><span class="n">g</span><span class="p">)]</span>
+                <span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span> <span class="o">+</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">,</span> <span class="p">[])</span>
+                <span class="n">gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">_atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redshift</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="n">ops</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">image</span> <span class="o">=</span> <span class="n">ChromaticObject</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
-            <span class="k">return</span> <span class="n">image</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
+        <span class="k">return</span> <span class="n">image</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2163,6 +2242,10 @@
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">sed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">flux</span>
+
+    <span class="k">def</span> <span class="nf">_atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SimpleChromaticTransformation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="o">.</span><span class="n">atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">),</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
@@ -2347,11 +2430,10 @@
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="ChromaticSum.atRedshift"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum.atRedshift">[docs]</a>    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">_atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -2454,16 +2536,24 @@
         <span class="n">add_to_image</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;add_to_image&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="n">n_photons</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">save_photons</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save_photons&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_photons</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">n_photons</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
             <span class="c1"># Use given add_to_image for the first one, then add_to_image=True for the rest.</span>
             <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span>
                     <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">_remove_setup_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">added_flux</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span>
+            <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
+                <span class="n">all_photons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">photons</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
                 <span class="n">image</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="n">added_flux</span> <span class="o">+=</span> <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span>
+                <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
+                    <span class="n">all_photons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">photons</span><span class="p">)</span>
             <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span> <span class="o">=</span> <span class="n">added_flux</span>
+            <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
+                <span class="n">image</span><span class="o">.</span><span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">all_photons</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If n_photons is specified, need some special handling here.</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rng&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
@@ -2492,6 +2582,8 @@
                     <span class="n">image</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">,</span>
                                           <span class="n">n_photons</span><span class="o">=</span><span class="n">this_nphot</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                     <span class="n">added_flux</span> <span class="o">+=</span> <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span>
+                    <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
+                        <span class="n">all_photons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">photons</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
                         <span class="c1"># Note: This might not be i==0.</span>
                         <span class="c1"># Do this after the first call we make to drawImage.</span>
@@ -2501,6 +2593,8 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">remaining_flux</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">break</span>
             <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span> <span class="o">=</span> <span class="n">added_flux</span>
+            <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
+                <span class="n">image</span><span class="o">.</span><span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">all_photons</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
         <span class="k">return</span> <span class="n">image</span></div>
 

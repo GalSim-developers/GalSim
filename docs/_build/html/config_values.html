@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Values &mdash; GalSim 2.5.2 documentation</title>
+  <title>Config Values &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -269,7 +269,7 @@ and register them to be used by the config parser.</p>
 <li><p>‘NFWHaloMagnification’  Calculate a magnification from an NFW Halo mass.  This requires that <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> be specified and uses the following fields:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">magnification</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">magnification</span></code>.  Or if the galaxy is chromatic, it should be in the galaxy’s SED field.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_mu</span></code> = <em>float_value</em> (default = 5)  The maximum magnification to allow.  If NFWHalo returns a mu value greater than this or less than 0, then use <code class="docutils literal notranslate"><span class="pre">max_mu</span></code> instead.  This is a sign of strong lensing, and other approximations are probably breaking down at this point anyway, so this keeps the object profile from going crazy.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> is a list, this indicates which number halo to use.</p></li>
 </ul>
@@ -791,7 +791,7 @@ would normally be used for random booleans with a different probability of True.
 <li><p>‘NFWHaloShear’  Calculate a shear from an NFW Halo mass.  This requires that <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> be specified and uses the following fields:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">shear</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">shear</span></code>.  Or if the galaxy is chromatic, it should be in the galaxy’s SED field.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> is a list, this indicates which number halo to use.</p></li>
 </ul>
 </div></blockquote>

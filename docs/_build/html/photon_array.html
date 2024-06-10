@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photon Arrays &mdash; GalSim 2.5.2 documentation</title>
+  <title>Photon Arrays &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -65,6 +65,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateTimes"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateTimes()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateWavelengths"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateWavelengths()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.assignAt"><code class="docutils literal notranslate"><span class="pre">PhotonArray.assignAt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.concatenate"><code class="docutils literal notranslate"><span class="pre">PhotonArray.concatenate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.convolve"><code class="docutils literal notranslate"><span class="pre">PhotonArray.convolve()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.copyFrom"><code class="docutils literal notranslate"><span class="pre">PhotonArray.copyFrom()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.dxdz"><code class="docutils literal notranslate"><span class="pre">PhotonArray.dxdz</span></code></a></li>
@@ -267,6 +268,24 @@ Photons past the edges of the image are discarded.</p>
 <li><p><strong>istart</strong> – The first index at which to insert new values.</p></li>
 <li><p><strong>rhs</strong> – The other <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> from which to get the values.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.concatenate">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">concatenate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_arrays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.concatenate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.concatenate" title="Permalink to this definition"></a></dt>
+<dd><p>Create a single PhotonArray from a list of multiple PhotonArrays.</p>
+<p>The size of the created PhotonArray will be the sum of the sizes of the given arrays,
+and the values will be concatenations of the values in each.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The optional value arrays (e.g. dxdz, wavelength, etc.) must be given in
+all the given photon_arrays or in none of them.  This is not checked.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>photon_arrays</strong> – A list of PhotonArray objects to be concatenated.</p>
 </dd>
 </dl>
 </dd></dl>

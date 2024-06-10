@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chromatic Profiles &mdash; GalSim 2.5.2 documentation</title>
+  <title>Chromatic Profiles &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -117,7 +117,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#galsim.ChromaticSum"><code class="docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#galsim.ChromaticSum.atRedshift"><code class="docutils literal notranslate"><span class="pre">ChromaticSum.atRedshift()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.ChromaticSum.drawImage"><code class="docutils literal notranslate"><span class="pre">ChromaticSum.drawImage()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.ChromaticSum.evaluateAtWavelength"><code class="docutils literal notranslate"><span class="pre">ChromaticSum.evaluateAtWavelength()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#galsim.ChromaticSum.gsparams"><code class="docutils literal notranslate"><span class="pre">ChromaticSum.gsparams</span></code></a></li>
@@ -1490,19 +1489,6 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="galsim.ChromaticSum.atRedshift">
-<span class="sig-name descname"><span class="pre">atRedshift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">redshift</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.atRedshift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ChromaticSum.atRedshift" title="Permalink to this definition"></a></dt>
-<dd><p>Create a version of the current object with a different redshift.</p>
-<p>This will both adjust the SED to have the given redshift and set a <code class="docutils literal notranslate"><span class="pre">redshift</span></code> attribute
-with the given value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the object with the new redshift</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="galsim.ChromaticSum.drawImage">
 <span class="sig-name descname"><span class="pre">drawImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bandpass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'quadratic'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.drawImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ChromaticSum.drawImage" title="Permalink to this definition"></a></dt>
 <dd><p>Slightly optimized draw method for <a class="reference internal" href="#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> instances.</p>
@@ -1870,7 +1856,7 @@ those component objects will also have their gsparams updated to the new value.<
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.ChromaticTransformation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">ChromaticTransformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ChromaticTransformation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">ChromaticTransformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_redshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ChromaticTransformation" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.chromatic.ChromaticObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a></p>
 <p>A class for modeling a wavelength-dependent affine transformation of a <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>
 instance.</p>
@@ -1893,7 +1879,6 @@ Use None to indicate that the Jacobian is the 2x2 unit matrix.
 (dx,dy) by which to shift the profile.  May also be a function of
 wavelength returning a numpy array.  [default: None]</p></li>
 <li><p><strong>flux_ratio</strong> – A factor by which to multiply the flux of the object. [default: 1]</p></li>
-<li><p><strong>redshift</strong> – A redshift to apply to the wavelength when evaluating. [default: None]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for
 details. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This

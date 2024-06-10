@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsobject &mdash; GalSim 2.5.2 documentation</title>
+  <title>galsim.gsobject &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -294,6 +294,8 @@
                       <span class="s1">&#39;range_division_for_extrema&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                       <span class="s1">&#39;small_fraction_of_flux&#39;</span> <span class="p">:</span> <span class="nb">float</span>
                     <span class="p">}</span>
+    <span class="n">redshift</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># For backwards compatibility with old atRedshift usage.  Can be overwritten.</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span>
 
@@ -540,8 +542,6 @@
     <span class="k">def</span> <span class="nf">dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">wave_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">redshift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_redshift&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
 
     <span class="c1"># Also need these methods to duck-type as a ChromaticObject</span>
     <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -1194,11 +1194,17 @@
 <span class="sd">        attribute with the given value.  But this allows duck typing with ChromaticObjects</span>
 <span class="sd">        where this function will adjust the SED appropriately.</span>
 
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            This method has been deprecated as of version 2.5.3.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            the object with the new redshift</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;atRedshift&#39;</span><span class="p">,</span> <span class="s1">&#39;2.5.3&#39;</span><span class="p">,</span> <span class="s1">&#39;obj = copy.copy(obj); obj.redshift = redshift&#39;</span><span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_redshift</span> <span class="o">=</span> <span class="n">redshift</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">redshift</span> <span class="o">=</span> <span class="n">redshift</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>

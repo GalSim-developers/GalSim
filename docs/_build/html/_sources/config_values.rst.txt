@@ -103,7 +103,7 @@ Options are:
 
         * 'NFWHaloMagnification'  Calculate a magnification from an NFW Halo mass.  This requires that ``input.nfw_halo`` be specified and uses the following fields:
 
-            * ``gal.redshift`` = *float_value* (required)  Special: The ``redshift`` item must be in the ``gal`` field, not ``magnification``.
+            * ``gal.redshift`` = *float_value* (required)  Special: The ``redshift`` item must be in the ``gal`` field, not ``magnification``.  Or if the galaxy is chromatic, it should be in the galaxy's SED field.
             * ``max_mu`` = *float_value* (default = 5)  The maximum magnification to allow.  If NFWHalo returns a mu value greater than this or less than 0, then use ``max_mu`` instead.  This is a sign of strong lensing, and other approximations are probably breaking down at this point anyway, so this keeps the object profile from going crazy.
             * ``num`` = *int_value* (default = 0)  If ``input.nfw_halo`` is a list, this indicates which number halo to use.
 
@@ -435,7 +435,7 @@ Options are:
 
         * 'NFWHaloShear'  Calculate a shear from an NFW Halo mass.  This requires that ``input.nfw_halo`` be specified and uses the following fields:
 
-            * ``gal.redshift`` = *float_value* (required)  Special: The ``redshift`` item must be in the ``gal`` field, not ``shear``.
+            * ``gal.redshift`` = *float_value* (required)  Special: The ``redshift`` item must be in the ``gal`` field, not ``shear``.  Or if the galaxy is chromatic, it should be in the galaxy's SED field.
             * ``num`` = *int_value* (default = 0)  If ``input.nfw_halo`` is a list, this indicates which number halo to use.
 
         * 'List'  Select items from a list.

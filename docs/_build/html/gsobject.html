@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The GSObject base class &mdash; GalSim 2.5.2 documentation</title>
+  <title>The GSObject base class &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -485,6 +485,10 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 <p>For regular GSObjects, this method doesn’t do anything aside from setting a <code class="docutils literal notranslate"><span class="pre">redshift</span></code>
 attribute with the given value.  But this allows duck typing with ChromaticObjects
 where this function will adjust the SED appropriately.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method has been deprecated as of version 2.5.3.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the object with the new redshift</p>

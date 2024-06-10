@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.gsobject &mdash; GalSim 2.5.2 documentation</title>
+  <title>galsim.config.gsobject &mdash; GalSim 2.5.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -286,11 +286,29 @@
         <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">build_func</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
     <span class="c1"># Apply any SED and redshift that might be present.</span>
+    <span class="k">if</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;sed&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;gal.redshift&#39;</span><span class="p">,</span> <span class="s1">&#39;2.5.3&#39;</span><span class="p">,</span> <span class="s1">&#39;gal.sed.redshift&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;For chromatic objects, the redshift parameter should be given in the &#39;</span>
+                 <span class="s1">&#39;sed field.&#39;</span><span class="p">)</span>
+            <span class="n">param</span><span class="p">[</span><span class="s1">&#39;sed&#39;</span><span class="p">][</span><span class="s1">&#39;redshift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;redshift&#39;</span><span class="p">)</span>
+
     <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ApplySED</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
     <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
 
-    <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ApplyRedshift</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+    <span class="k">if</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">redshift</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;gal.redshift&#39;</span><span class="p">,</span> <span class="s1">&#39;2.5.3&#39;</span><span class="p">,</span> <span class="s1">&#39;gal.sed.redshift&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;For chromatic objects, the redshift parameter should be given in the &#39;</span>
+                 <span class="s1">&#39;sed field.&#39;</span><span class="p">)</span>
+            <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">_atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If not chromatic, then redshift is just an attribute for reference.</span>
+            <span class="n">gsobject</span><span class="o">.</span><span class="n">redshift</span> <span class="o">=</span> <span class="n">redshift</span>
 
     <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
         <span class="n">flux</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;flux&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
@@ -352,13 +370,6 @@
     <span class="k">if</span> <span class="s1">&#39;sed&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">sed</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">BuildSED</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;sed&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">gsobject</span> <span class="o">*</span> <span class="n">sed</span><span class="p">,</span> <span class="n">safe</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="kc">True</span>
-
-<span class="k">def</span> <span class="nf">ApplyRedshift</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-    <span class="k">if</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">redshift</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">),</span> <span class="n">safe</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="kc">True</span>
 
