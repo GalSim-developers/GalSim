@@ -24,7 +24,7 @@ jobs:
           # I think yum might always work here.  But leave all options available.
           CIBW_BEFORE_ALL: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
           name: whl-linux
           path: ./wheelhouse/*.whl
@@ -46,7 +46,7 @@ jobs:
           # I think musl always uses apk, but keep all options available.
           CIBW_BEFORE_ALL: apk add --upgrade fftw-dev || apt-get install libfftw3-dev || yum install -y fftw-devel
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
           name: whl-musl
           path: ./wheelhouse/*.whl
@@ -67,7 +67,7 @@ jobs:
           CIBW_SKIP: cp36* cp37* pp*
           CIBW_BEFORE_ALL: brew install fftw || true
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
           name: whl-macos
           path: ./wheelhouse/*.whl
@@ -95,7 +95,7 @@ jobs:
             PATH="/opt/homebrew/opt/llvm/bin:$PATH"
             FFTW_DIR="/opt/homebrew"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
           name: whl-arm
           path: ./wheelhouse/*.whl
