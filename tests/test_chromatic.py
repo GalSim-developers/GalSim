@@ -1954,10 +1954,36 @@ def test_interpolated_ChromaticObject():
     # test alternate initialization method, "from_images()", of InterpolatedChromaticObject 
     # that uses images at discrete wavelengths to initialize object.
 
+    # check sorting is done correctly for unsorted wavelengths/images
     PSF_exact = ChromaticGaussian(sigma_0)
+    PSF = PSF_exact.interpolate(tricky_waves, oversample_fac=oversample_fac)
+    tricky_images = list(PSF.ims[::-1])
+    int_psf = galsim.InterpolatedChromaticObject.from_images(tricky_images, tricky_waves,_force_stepk =PSF.stepk_vals,
+                                                              _force_maxk = PSF.maxk_vals)
+    np.testing.assert_allclose(int_psf.waves, waves, atol=0,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to sort wavelengths')
+    
+    for i in range(len(int_psf.ims)):
+        np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to sort images correctly')
+
     PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
     int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves,_force_stepk =PSF.stepk_vals,
                                                               _force_maxk = PSF.maxk_vals)
+
+    # check error messages from inconsistent pixel scales and image dimensions
+    incorrect_ims = PSF.ims.copy()
+    incorrect_ims[0].scale += 0.01
+    with np.testing.assert_raises(NotImplementedError):
+        galsim.InterpolatedChromaticObject.from_images(incorrect_ims, PSF.waves)
+    incorrect_ims[0].scale -= 0.01
+    smaller_image = incorrect_ims[0].array[1:]
+    incorrect_img = galsim.Image(smaller_image, scale=scale)
+    incorrect_ims[0] = incorrect_img
+    with np.testing.assert_raises(NotImplementedError):
+        galsim.InterpolatedChromaticObject.from_images(incorrect_ims, PSF.waves)
+
+
     # check input images are correctly intialized
     for i in range(len(int_psf.ims)):
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
