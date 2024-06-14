@@ -1245,7 +1245,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         the InterpolatedImage class can be passed in kwargs. Note that stepk and maxk are parameters that can depend on the image size,
         and therefore on the wavelength. If not given, as a list for every image, or a single number for all images, it will be caluclated
         using the input image pixel scale and dimensions. This means it will be identical for all images. This will cause small differences
-        from the normal use of this class using chromatic objects whose stepk and maxk are wavelength-dependant. To avoid sanity checks
+        from the normal use of this class using chromatic objects whose stepk and maxk are wavelength-dependent. To avoid sanity checks
         from method initialization, such as wavelength sorting, pixel scale and image dimensions compatibility, simply call the function
         InterpolatedChromaticObject._from_images directly.
         
