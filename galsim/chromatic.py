@@ -1277,14 +1277,14 @@ class InterpolatedChromaticObject(ChromaticObject):
         
     @classmethod
     def _from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, **kwargs):
-        obj = cls.__new__(cls)  # Does not call __init__
-        obj.waves = np.array(waves) 
+        obj = cls.__new__(cls)  # Does not call __init__ 
         # use_exact_sed set to false as input images won't have sed available. Ovsersample factor not relevant here, set to 1.0
         obj.oversample = 1.0
         obj.use_exact_sed = False
         obj.separable = False
         obj.interpolated = True
         # image properties
+        obj.waves = np.array(waves)
         pix_scale = images[0].scale 
         img_dims = images[0].array.shape
         n_img = len(images)
