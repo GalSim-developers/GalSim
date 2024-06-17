@@ -1967,10 +1967,6 @@ def test_interpolated_ChromaticObject():
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
       err_msg='InterpolatedChromaticObject from_images initialization fails to sort images correctly')
 
-    PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
-    int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves,_force_stepk =PSF.stepk_vals,
-                                                              _force_maxk = PSF.maxk_vals)
-
     # check error messages from inconsistent pixel scales and image dimensions
     incorrect_ims = PSF.ims.copy()
     incorrect_ims[0].scale += 0.01
@@ -1984,7 +1980,10 @@ def test_interpolated_ChromaticObject():
         galsim.InterpolatedChromaticObject.from_images(incorrect_ims, PSF.waves)
 
 
-    # check input images are correctly intialized
+    # check input images are correctly intialized from underscored function directly
+    PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
+    int_psf = galsim.InterpolatedChromaticObject._from_images(PSF.ims, list(PSF.waves),_force_stepk =PSF.stepk_vals,
+                                                              _force_maxk = PSF.maxk_vals)
     for i in range(len(int_psf.ims)):
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
       err_msg='InterpolatedChromaticObject from_images initialization fails to initialize correct images')
