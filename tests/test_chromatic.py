@@ -1984,6 +1984,7 @@ def test_interpolated_ChromaticObject():
     PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
     int_psf = galsim.InterpolatedChromaticObject._from_images(PSF.ims, list(PSF.waves),_force_stepk =PSF.stepk_vals,
                                                               _force_maxk = PSF.maxk_vals)
+    assert isinstance(int_psf.waves, np.ndarray)
     for i in range(len(int_psf.ims)):
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
       err_msg='InterpolatedChromaticObject from_images initialization fails to initialize correct images')
