@@ -1970,13 +1970,13 @@ def test_interpolated_ChromaticObject():
     # check error messages from inconsistent pixel scales and image dimensions
     incorrect_ims = PSF.ims.copy()
     incorrect_ims[0].scale += 0.01
-    with np.testing.assert_raises(NotImplementedError):
+    with assert_raises(galsim.GalSimNotImplementedError):
         galsim.InterpolatedChromaticObject.from_images(incorrect_ims, PSF.waves)
     incorrect_ims[0].scale -= 0.01
     smaller_image = incorrect_ims[0].array[1:]
     incorrect_img = galsim.Image(smaller_image, scale=scale)
     incorrect_ims[0] = incorrect_img
-    with np.testing.assert_raises(NotImplementedError):
+    with assert_raises(galsim.GalSimNotImplementedError):
         galsim.InterpolatedChromaticObject.from_images(incorrect_ims, PSF.waves)
 
 
