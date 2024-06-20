@@ -1967,15 +1967,25 @@ def test_interpolated_ChromaticObject():
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
       err_msg='InterpolatedChromaticObject from_images initialization fails to sort images correctly')
 
-    # check error messages from inconsistent pixel scales and image dimensions
+    # check error messages from images with a non-PixelScale wcs, inconsistent pixel scales and image dimensions
     incorrect_ims = PSF.ims.copy()
+    incorrect_ims[0].wcs = None
+    # wcs = None
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    affine_wcs = galsim.AffineTransform(1.0, 0.1, 0.1, 1.0)
+    incorrect_ims[0].wcs = affine_wcs
+    # non-PixelScale wcs
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    incorrect_ims[0].wcs = incorrect_ims[1].wcs 
     incorrect_ims[0].scale += 0.01
-    assert_raises(galsim.GalSimNotImplementedError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    # incosnistent pixel scales
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
     incorrect_ims[0].scale -= 0.01
     smaller_image = incorrect_ims[0].array[1:]
     incorrect_img = galsim.Image(smaller_image, scale=incorrect_ims[0].scale)
     incorrect_ims[0] = incorrect_img
-    assert_raises(galsim.GalSimNotImplementedError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    # incosnistent image dimensions
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
 
     # check input images are correctly intialized from underscored function directly
     PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)

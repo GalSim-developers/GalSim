@@ -1252,7 +1252,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         Parameters:
             images:          list of Galsim Image objects to use as interpolated images. All images must have the same pixel scale and image
                              dimensions.
-            wave:            list of wavelength values in nanometers.
+            waves:            list of wavelength values in nanometers.
             _force_stepk:    list of step_k values to pass to InterpolatedImages for each image. Can also be single value
                              to pass for all images alike. If not given stepk is calculated from image pixel scale and dimensions. [Default: None]
             _force_maxk:     list of max_k values to pass to InterpolatedImages for each image. Can also be single value
@@ -1261,14 +1261,16 @@ class InterpolatedChromaticObject(ChromaticObject):
         Returns:
             An InterpolatedChromaticObject intialized from input images.
         """ 
-        # check that all images have the same pixel scale and image dimensions. 
+        # check that all images have PixelScale wcs, the same pixel scale and image dimensions.
+        if images[0].wcs is None or not images[0].wcs._isPixelScale:
+            raise GalSimValueError("images must have a pixel scale wcs.", images[0].wcs )
         pix_scale = images[0].scale
         img_dims = images[0].array.shape
         for img in images[1:]:
             if img.scale != pix_scale:
-                raise GalSimNotImplementedError("Cannot interpolate images with different pixel scales.")                         
+                raise GalSimValueError("Cannot interpolate images with different pixel scales.",img.scale,  pix_scale )                         
             if img.array.shape != img_dims:
-                raise GalSimNotImplementedError("Cannot interpolate images with different image dimensions.")
+                raise GalSimValueError("Cannot interpolate images with different image dimensions.",  img.array.shape , img_dims)
         # sort wavelengths and apply sorting to image list
         sorted_indices = np.argsort(waves)
         sorted_waves = np.array(waves)[sorted_indices]
@@ -1277,6 +1279,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         
     @classmethod
     def _from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, **kwargs):
+        """
+        Equivalent to InterpolatedChromaticObject.from_images, but without the sanity checks.
+        Also, the waves must be given in sorted order.
+        """
         obj = cls.__new__(cls)  # Does not call __init__ 
         # use_exact_sed set to false as input images won't have sed available. Ovsersample factor not relevant here, set to 1.0
         obj.oversample = 1.0
