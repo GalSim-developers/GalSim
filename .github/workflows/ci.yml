@@ -4,11 +4,13 @@ on:
     push:
         branches:
             - main
+            - runci
             - releases/*
 
     pull_request:
         branches:
             - main
+            - runci
             - releases/*
 
 jobs:
