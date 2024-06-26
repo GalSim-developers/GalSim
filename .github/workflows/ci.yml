@@ -141,13 +141,6 @@ jobs:
                 if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget --no-check-certificate http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME; fi
                 ln -s $HOME/des_data examples/des/
 
-            - name: Install numpy 2.0.0rc2
-              # Just on python 3.12, use the rc2 branch of numpy 2.0.0.
-              # XXX: Once the default numpy is >= 2.0, remove this.
-              if: matrix.py == 3.12
-              run: |
-                pip install numpy==2.0.0rc2
-
             - name: Install basic dependencies
               run: |
                 python -m pip install -U pip
