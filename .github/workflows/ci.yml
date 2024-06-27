@@ -161,16 +161,20 @@ jobs:
                 pip install -U matplotlib
 
             - name: Install astroplan
-              # astroplan isn't yet numpy 2.0 compatible.  So don't install that on 3.12.
-              if: matrix.py != 3.12
+              # astroplan isn't yet numpy 2.0 compatible.  So don't install that on 3.9+.
+              # I'm also getting errors with starlink, which I think may be related to
+              # numpy 2.0.
+              if: (matrix.py == 3.8) || (matrix.py == 3.9)
               run: |
                 pip install -U astroplan
+                pip install -U starlink-pyast
 
             - name: Install CPython-only dependencies
               if: matrix.py != 'pypy-3.7'
               run: |
                 # The only one left that doesn't seem to work right on pypy is starlink-pyast.
-                pip install -U starlink-pyast
+                # (This is now above in numpy 1.x versions.)
+                #pip install -U starlink-pyast
                 # And now pandas is acting up on pypy.
                 # cf. https://github.com/pandas-dev/pandas/issues/44253
                 pip install -U pandas
