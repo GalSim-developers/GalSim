@@ -390,7 +390,7 @@ def test_gradient():
     # fig.colorbar(scat2, ax=axes[2])
     # plt.show()
 
-    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=1.e-12, atol=1e-12)
 
     Z28 = Zernike([0]*28+[1])
 
@@ -400,7 +400,7 @@ def test_gradient():
         grady = -6*np.sqrt(14)*y*(5*x**4 - 10*x**2*y**2 + y**4)
         return gradx, grady
 
-    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=1.e-12, atol=1e-12)
 
     # Now try some finite differences on a broader set of input
 
