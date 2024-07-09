@@ -127,3 +127,8 @@ Changes from v2.5.2 to v2.5.3
 - Added ScaleFlux and ScaleWavelength photon ops. (#1289)
 - Deprecated ChromaticObject.atRedshift. (#1291)
 - Various fixes to work with numpy 2.0. (#1297)
+
+Changes from v2.5.3 to v2.5.4
+=============================
+
+- Fixed a bug in the config layer parsing of PositionD from a string. (#1299)
