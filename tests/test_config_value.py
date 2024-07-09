@@ -1432,6 +1432,7 @@ def test_pos_value():
         'val1' : galsim.PositionD(0.1,0.2),
         'val2' : '0.1, 0.2',
         'val3' : None,
+        'val4' : '123.4, 567.8',
         'xy1' : { 'type' : 'XY', 'x' : 1.3, 'y' : 2.4 },
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
         'ran2' : { 'type' : 'RandomCircle', 'radius' : 1, 'center' : galsim.PositionD(3,7) },
@@ -1486,6 +1487,10 @@ def test_pos_value():
 
     val3 = galsim.config.ParseValue(config,'val3',config, galsim.PositionD)[0]
     np.testing.assert_equal(val3, None)
+
+    val4 = galsim.config.ParseValue(config,'val4',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(val4.x, 123.4)
+    np.testing.assert_almost_equal(val4.y, 567.8)
 
     xy1 = galsim.config.ParseValue(config,'xy1',config, galsim.PositionD)[0]
     np.testing.assert_almost_equal(xy1.x, 1.3)
@@ -1594,6 +1599,7 @@ def test_pos_value():
     # Finally, these value got changed, so they won't match the original
     # unless we manually set them back to the original strings.
     clean_config['val2'] = '0.1, 0.2'
+    clean_config['val4'] = '123.4, 567.8'
     clean_config['cur2'] = '@input.val2'
     clean_config['input']['val2'] = '0.3, 0.4'
     assert clean_config == orig_config
