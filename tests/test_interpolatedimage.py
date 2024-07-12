@@ -351,12 +351,8 @@ def test_interpolant():
         assert ln.n == n
         true_xval = np.zeros_like(x)
         true_xval[np.abs(x) < n] = np.sinc(x[np.abs(x)<n]) * np.sinc(x[np.abs(x)<n]/n)
-        if hasattr(galsim, "_galsim"):
-            np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
-            assert np.isclose(ln.xval(x[12]), true_xval[12])
-        else:
-            assert np.isclose(ln.xval(x[12]), true_xval[12], rtol=1.e-4, atol=1.e-8)
-            np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-4, atol=1.e-8)
+        np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
+        assert np.isclose(ln.xval(x[12]), true_xval[12])
 
         # Lanczos notably does not conserve dc flux
         print('Lanczos(%s,conserve_dc=False) sum = '%n,np.sum(ln.xval(x)))
@@ -1315,14 +1311,9 @@ def test_conserve_dc():
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.drawImage(im2, method='sb')
         print('The maximum error is ',np.max(abs(im2.array-init_val)))
-        if hasattr(galsim, "_galsim"):
-            np.testing.assert_array_almost_equal(
-                    im2.array,init_val,5,
-                    'Lanczos %d did not preserve a flat input flux using xvals.'%n)
-        else:
-            np.testing.assert_array_almost_equal(
-                    im2.array,init_val,3,
-                    'Lanczos %d did not preserve a flat input flux using xvals.'%n)
+        np.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                'Lanczos %d did not preserve a flat input flux using xvals.'%n)
 
         # Convolve with a delta function to force FFT drawing.
         delta = galsim.Gaussian(sigma=1.e-8)
