@@ -62,9 +62,7 @@ New features introduced in this demo:
 import argparse
 import numpy as np
 import sys, os
-import math
 import logging
-import time
 import galsim
 import galsim.roman as roman
 import datetime

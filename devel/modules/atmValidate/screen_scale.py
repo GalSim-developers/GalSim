@@ -27,9 +27,7 @@ import os
 import numpy as np
 import galsim
 
-import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from astropy.utils.console import ProgressBar

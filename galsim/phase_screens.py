@@ -18,7 +18,6 @@
 
 __all__ = [ 'AtmosphericScreen', 'Atmosphere', 'OpticalScreen', 'UserScreen', ]
 
-import sys
 import numpy as np
 import multiprocessing
 from contextlib import contextmanager

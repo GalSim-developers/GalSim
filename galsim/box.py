@@ -18,7 +18,6 @@
 
 __all__ = [ 'Pixel', 'Box', 'TopHat' ]
 
-import numpy as np
 import math
 
 from . import _galsim

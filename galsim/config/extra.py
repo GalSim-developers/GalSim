@@ -17,8 +17,6 @@
 #
 
 import os
-import logging
-import inspect
 from multiprocessing.managers import ListProxy, DictProxy
 
 from .util import LoggerWrapper, SetDefaultExt, RetryIO, SafeManager, single_threaded

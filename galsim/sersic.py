@@ -18,14 +18,12 @@
 
 __all__ = [ 'Sersic', 'DeVaucouleurs' ]
 
-import numpy as np
 import math
 
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
-from .position import PositionD
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 class Sersic(GSObject):

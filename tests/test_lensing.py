@@ -19,7 +19,6 @@
 import numpy as np
 import math
 import os
-import sys
 
 import galsim
 from galsim_test_helpers import *

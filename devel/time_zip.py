@@ -70,9 +70,7 @@ But for reading, the call version is still faster (except for gunzip with
 very samll images, but that's probably not the most important use case).
 """
 
-import numpy as np
 import os
-import sys
 import astropy.io.fits as pyfits
 
 n_iter = 20

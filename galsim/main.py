@@ -25,7 +25,7 @@ import os
 import logging
 import json
 import argparse
-import cProfile, pstats, io
+import cProfile, pstats
 from io import StringIO
 
 from ._version import __version__ as version

@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import time
 import timeit
 import numpy as np
 import galsim

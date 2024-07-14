@@ -18,7 +18,6 @@
 
 import timeit
 import galsim
-import numpy as np
 
 # This script more or less runs through what happens to faint bulge + disk + knots
 # objects in imSim.  In particular, these used to spend a lot of time computing

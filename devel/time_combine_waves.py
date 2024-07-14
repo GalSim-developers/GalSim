@@ -20,7 +20,6 @@ import timeit
 import galsim
 import numpy as np
 
-from galsim.utilities import Profile
 
 def old_combine_wave_list(*args):
     if len(args) == 1:

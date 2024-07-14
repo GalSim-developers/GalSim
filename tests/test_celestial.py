@@ -18,9 +18,7 @@
 
 import numpy
 import os
-import sys
 import math
-import coord
 
 import galsim
 from galsim_test_helpers import *

@@ -51,7 +51,6 @@ New features introduced in this demo:
 
 import sys
 import os
-import math
 import logging
 import galsim
 

@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import sys
-import math
-
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError

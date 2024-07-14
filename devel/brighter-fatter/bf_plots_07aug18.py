@@ -34,7 +34,6 @@ latest 'hole20' branch of the Poisson_CCD22 code
 import sys
 import os
 import math
-import numpy
 import logging
 import time
 import galsim

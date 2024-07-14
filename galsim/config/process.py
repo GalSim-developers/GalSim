@@ -18,21 +18,15 @@
 
 import sys
 import os
-import logging
-import copy
 import json
-from collections import OrderedDict
 
 # Lots of function that used to be here are now in util, so import them back here in case users
 # were using them as galsim.config.process.*.  But having them in util means that we can safely
 # import from .util in other files without triggering a circular import cycle.
 from .util import *
 
-from .value import ParseValue
 from .output import GetNFiles, BuildFiles
-from ..utilities import SimpleGenerator
-from ..random import BaseDeviate
-from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimValueError
+from ..errors import GalSimValueError
 
 top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
                     'eval_variables', 'root', 'modules', 'profile']
