@@ -1761,5 +1761,4 @@ if __name__ == '__main__':
     if no_astroplan:
         print('Skipping test_dcr_angles, since astroplan not installed.')
         testfns.remove(test_dcr_angles)
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

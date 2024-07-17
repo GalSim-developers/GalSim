@@ -377,23 +377,10 @@ def test_low_folding_threshold():
 if __name__ == "__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("--slow", action='store', default=1, help="Run slow tests")
     parser.add_argument("--benchmark", action='store_true', help="Run timing benchmark")
-    parser.add_argument("--profile", action='store_true', help="Profile the tests")
-    args = parser.parse_args()
-
-    if args.profile:
-        import cProfile, pstats
-        pr = cProfile.Profile()
-        pr.enable()
 
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns, parser=parser)
+    args = parser.parse_args()
     if args.benchmark:
         vk_benchmark()
-
-    if args.profile:
-        pr.disable()
-        ps = pstats.Stats(pr).sort_stats('tottime')
-        ps.print_stats(30)

@@ -392,3 +392,29 @@ def drawNoise(noise):
     im = galsim.ImageD(10,10)
     im.addNoise(noise)
     return im.array.astype(np.float32).tolist()
+
+
+def runtests(testfns, parser=None):
+    if parser is None:
+        from argparse import ArgumentParser
+        parser = ArgumentParser()
+    parser.add_argument('-k', type=str, help='Run only the tests that match the given substring expression.')
+    parser.add_argument('--profile', action='store_true', help='Profile tests')
+    parser.add_argument('--prof_out', default=None, help="Profiler output file")
+    args = parser.parse_args()
+
+    if args.profile:
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
+
+    for testfn in testfns:
+        if args.k is None or args.k in testfn.__name__:
+            testfn()
+
+    if args.profile:
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('tottime')
+        ps.print_stats(30)
+        if args.prof_out:
+            ps.dump_stats(args.prof_out)

@@ -1233,5 +1233,4 @@ def test_integrate_product():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)
