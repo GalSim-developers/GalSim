@@ -33,7 +33,7 @@ from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, convert_cpp_errors, galsim_warn
-from .utilities import horner2d
+from .utilities import horner2d, least_squares
 from .celestial import CelestialCoord
 from ._pyfits import pyfits
 
@@ -1783,8 +1783,6 @@ def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
                    the tangent plane is centered.  [default: None, which means
                    use the average position of the list of reference stars]
     """
-    from scipy.optimize import least_squares
-
     if order < 1:
         raise GalSimValueError("Illegal SIP order", order)
 
