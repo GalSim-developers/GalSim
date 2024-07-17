@@ -121,7 +121,7 @@ def test_simple():
 
     check_pickle(simple)
 
-    
+
 @timer
 def test_silicon():
     """Test the basic construction and use of the SiliconSensor class.
