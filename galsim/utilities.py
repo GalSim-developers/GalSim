@@ -559,6 +559,11 @@ def horner(x, coef, dtype=None):
     Returns:
         a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
+    if dtype is None:
+        dtype = np.result_type(
+            np.min_scalar_type(x),
+            np.min_scalar_type(coef)
+        )
     result = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
     if result.dtype == float:
@@ -616,6 +621,12 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
     Returns:
         a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
+    if dtype is None:
+        dtype = np.result_type(
+            np.min_scalar_type(x),
+            np.min_scalar_type(y),
+            np.min_scalar_type(coefs)
+        )
     result = np.empty_like(x, dtype=dtype)
     temp = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array

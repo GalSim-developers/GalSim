@@ -1046,7 +1046,7 @@ class DoubleZernike:
         coefficients.
         """
         ret = DoubleZernike.__new__(DoubleZernike)
-        ret._coef_array_uvxy = uvxy
+        ret._coef_array_uvxy = np.asarray(uvxy, dtype=float)
         ret.uv_outer = uv_outer
         ret.uv_inner = uv_inner
         ret.xy_outer = xy_outer
@@ -1192,7 +1192,7 @@ class DoubleZernike:
                 a_ij = np.zeros(self._coef_array_uvxy.shape[2:4])
                 for i, j in np.ndindex(a_ij.shape):
                     a_ij[i, j] = horner2d(
-                        u, v, self._coef_array_uvxy[..., i, j]
+                        u, v, self._coef_array_uvxy[..., i, j], dtype=float
                     )
                 return Zernike._from_coef_array_xy(
                     a_ij,
