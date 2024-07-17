@@ -26,6 +26,7 @@ import time
 import galsim
 from galsim_test_helpers import *
 from galsim import trapz
+from pathlib import Path
 
 
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
@@ -517,10 +518,15 @@ def test_SED_withFlux():
     """ Check that setting the flux works.
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
+    rband2 = galsim.Bandpass(Path(rband._orig_tp), 'nm')
+    np.testing.assert_array_equal(rband.wave_list, rband2.wave_list)
+    np.testing.assert_array_equal(rband(rband.wave_list), rband2(rband2.wave_list))
+
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
             for sed in [
                 galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast),
+                galsim.SED(Path('CWW_E_ext.sed'), wave_type='ang', flux_type='flambda', fast=fast),
                 galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast,
                            interpolant='spline'),
                 galsim.SED('wave', wave_type='nm', flux_type='fphotons'),
