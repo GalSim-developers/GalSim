@@ -25,10 +25,10 @@ from galsim_test_helpers import *
 
 
 @timer
-def test_vk(slow=False):
+def test_vk():
     """Test the generation of VonKarman profiles
     """
-    if slow:
+    if __name__ == "__main__":
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.05, 0.15, 0.3]
         L0s = [1e10, 25.0, 10.0]
