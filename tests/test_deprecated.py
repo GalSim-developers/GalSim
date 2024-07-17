@@ -256,6 +256,7 @@ def test_randwalk_config():
         assert (pts.shape == ptsc.shape),\
                 "expected %s shape for points, got %s" % (pts.shape,ptsc.shape)
 
+@timer
 def test_withOrigin():
     from test_wcs import Cubic
 

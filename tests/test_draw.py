@@ -1084,6 +1084,7 @@ def test_offset():
         im3 = obj.drawImage(im.copy(), method='sb', center=im.center)
         np.testing.assert_almost_equal(im3.array, im.array)
 
+@timer
 def test_shoot():
     """Test drawImage(..., method='phot')
 

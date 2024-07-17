@@ -928,6 +928,7 @@ def test_noncontiguous():
     np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
                                    err_msg="HSM measured wrong shear on image with step=2")
 
+@timer
 def test_headers():
     # This isn't really an HSM test per se, but it's testing a feature that we added so
     # LSST DM can use the C++-layer HSM code from their C++ code.
@@ -988,6 +989,7 @@ def test_headers():
     lib = ctypes.cdll.LoadLibrary(galsim.lib_file)
     # The test was that this doesn't raise an OSError or something.
 
+@timer
 def test_failures():
     """Test some images that used to fail, but now work.
     """
@@ -998,6 +1000,7 @@ def test_failures():
         hsm = im.FindAdaptiveMom()
         assert hsm.moments_status == 0
 
+@timer
 def test_very_small():
     """Test an unresolved star reported to fail in #1132, but now works.
     """
@@ -1017,6 +1020,7 @@ def test_very_small():
     assert "Object is too small" in mom.error_message
 
 
+@timer
 def test_negative_stepstride():
     """In response to #1185, check that hsm works for arrays with negative step or stride.
     """

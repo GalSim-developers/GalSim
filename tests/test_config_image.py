@@ -1683,6 +1683,7 @@ def test_njobs():
         galsim.config.ProcessInput(config, logger=logger, safe_only=False)
 
 
+@timer
 def test_wcs():
     """Test various wcs options"""
     config = {

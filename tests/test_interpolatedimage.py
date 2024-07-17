@@ -1693,6 +1693,7 @@ def test_ne():
             galsim.InterpolatedKImage(kim, gsparams=gsp)]
     check_all_diff(gals)
 
+@timer
 def test_quintic_glagn():
     """This is code that was giving a seg fault.  cf. Issue 1079.
     """
@@ -1711,6 +1712,7 @@ def test_quintic_glagn():
 
         gsobj.drawImage(method='phot', image=image, add_to_image=True)
 
+@timer
 def test_depixelize():
     # True, non-II profile.  Something not too symmetric or simple.
     true_prof = galsim.Convolve(
@@ -1841,6 +1843,7 @@ def test_depixelize():
         np.testing.assert_allclose(im6.array, im1.array, atol=1.e-2)
         print(interp,' max error = ',np.max(np.abs(im6.array-im1.array)),'  time = ',t2-t1)
 
+@timer
 def test_drawreal_seg_fault():
     """Test to reproduce bug report in Issue #1164 that was causing seg faults
     """
