@@ -1411,12 +1411,5 @@ def test_roman_focal_plane():
 
 
 if __name__ == "__main__":
-    #import cProfile, pstats
-    #pr = cProfile.Profile()
-    #pr.enable()
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
-    #pr.disable()
-    #ps = pstats.Stats(pr).sort_stats('tottime')
-    #ps.print_stats(30)
+    runtests(testfns)

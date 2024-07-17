@@ -20,7 +20,7 @@ import numpy as np
 
 import galsim
 from galsim.zernike import Zernike, DoubleZernike
-from galsim_test_helpers import timer, check_pickle, assert_raises, check_all_diff
+from galsim_test_helpers import *
 
 
 @timer
@@ -1555,5 +1555,4 @@ def test_dz_mean():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

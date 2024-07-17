@@ -301,24 +301,5 @@ def test_sk_ne():
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
-    parser.add_argument("--profile", action='store_true', help="Profile tests")
-    parser.add_argument("--prof_out", default=None, help="Profiler output file")
-    args = parser.parse_args()
-
-    if args.profile:
-        import cProfile, pstats
-        pr = cProfile.Profile()
-        pr.enable()
-
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
-
-    if args.profile:
-        pr.disable()
-        ps = pstats.Stats(pr).sort_stats('tottime')
-        ps.print_stats(30)
-        if args.prof_out:
-            pr.dump_stats(args.prof_out)
+    runtests(testfns)
