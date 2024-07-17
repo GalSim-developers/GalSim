@@ -1951,7 +1951,7 @@ def test_interpolated_ChromaticObject():
     # Also make sure that it ditched the interpolation.
     assert not hasattr(trans_interp_psf, 'waves')
 
-    # test alternate initialization method, "from_images()", of InterpolatedChromaticObject 
+    # test alternate initialization method, "from_images()", of InterpolatedChromaticObject
     # that uses images at discrete wavelengths to initialize object.
 
     # check sorting is done correctly for unsorted wavelengths/images
@@ -1962,7 +1962,7 @@ def test_interpolated_ChromaticObject():
                                                               _force_maxk = PSF.maxk_vals)
     np.testing.assert_allclose(int_psf.waves, waves, atol=0,
       err_msg='InterpolatedChromaticObject from_images initialization fails to sort wavelengths')
-    
+
     for i in range(len(int_psf.ims)):
         np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
       err_msg='InterpolatedChromaticObject from_images initialization fails to sort images correctly')
@@ -1976,7 +1976,7 @@ def test_interpolated_ChromaticObject():
     incorrect_ims[0].wcs = affine_wcs
     # non-PixelScale wcs
     assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
-    incorrect_ims[0].wcs = incorrect_ims[1].wcs 
+    incorrect_ims[0].wcs = incorrect_ims[1].wcs
     incorrect_ims[0].scale += 0.01
     # incosnistent pixel scales
     assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
@@ -2005,7 +2005,7 @@ def test_interpolated_ChromaticObject():
             err_msg='InterpolatedChromaticObject from_images initialization fails to reproduce default init. images')
 
     # without specifying the same stepk and maxk for each image, stepk and maxk are caclulated
-    # based on the input image pixel scale and dimensions and have no wavelength dependance. 
+    # based on the input image pixel scale and dimensions and have no wavelength dependance.
     int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves)
     test_obj = galsim.Convolve(int_psf, star)
     test_img = test_obj.drawImage(bandpass, image=im_interp, scale=scale, method = 'auto')
@@ -2019,7 +2019,7 @@ def test_interpolated_ChromaticObject():
     # check moments
     truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
     test_mom = galsim.hsm.FindAdaptiveMom(test_img)
-    
+
     np.testing.assert_allclose(test_mom.moments_amp,
                                truth_mom.moments_amp,
                                rtol=1e-3, atol=0,
@@ -2060,7 +2060,7 @@ def test_interpolated_ChromaticObject():
     # check moments
     truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
     test_mom = galsim.hsm.FindAdaptiveMom(test_img)
-    
+
     np.testing.assert_allclose(test_mom.moments_amp,
                                truth_mom.moments_amp,
                                rtol=1e-3, atol=0,
