@@ -895,6 +895,7 @@ def test_dz_val():
     check_pickle(dz)
 
 
+@timer
 def test_dz_coef_uvxy():
     rng = galsim.BaseDeviate(4321).as_numpy_generator()
     for _ in range(100):
@@ -959,6 +960,7 @@ def test_dz_coef_uvxy():
                 )
 
 
+@timer
 def test_dz_sum():
     """Test that DZ.__add__, __sub__, and __neg__ work as expected.
     """
@@ -1075,6 +1077,7 @@ def test_dz_sum():
         assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
 
+@timer
 def test_dz_product():
     """Test that __mul__ and __rmul__ work as expected.
     """
@@ -1177,6 +1180,7 @@ def test_dz_product():
     assert (dz2 * 3) == (3 * dz2)
 
 
+@timer
 def test_dz_grad():
     """Test that DZ gradients work as expected.
     """
@@ -1244,6 +1248,7 @@ def test_dz_grad():
             np.testing.assert_allclose(dzdy1, dzdy2, atol=1e-12)
 
 
+@timer
 def test_dz_to_T():
     """Test that DZs enable efficient computation of optical PSF sizes."""
 
@@ -1369,6 +1374,7 @@ def test_dz_to_T():
         # plt.show()
 
 
+@timer
 def test_dz_rotate():
     rng = galsim.BaseDeviate(12775).as_numpy_generator()
 
@@ -1413,6 +1419,7 @@ def test_dz_rotate():
                 )
 
 
+@timer
 def test_dz_basis():
     """Test the doubleZernikeBasis function"""
 
@@ -1454,6 +1461,7 @@ def test_dz_basis():
                     )
 
 
+@timer
 def test_dz_mean():
     """Test the dz.mean_xy and .mean_uv properties"""
     rng = galsim.BaseDeviate(51413).as_numpy_generator()

@@ -288,6 +288,7 @@ def test_atm_input():
         galsim.config.InputLoader(AtmPSF, use_proxy=False,
                                   worker_initargs=galsim.phase_screens.initWorkerArgs)
 
+@timer
 def test_dependent_inputs():
     """Test inputs that depend on other inputs.
 

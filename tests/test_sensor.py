@@ -1150,6 +1150,7 @@ def test_flat():
     np.testing.assert_allclose(cov20 / counts_total, 0., atol=2*toler)
     np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
 
+@timer
 def test_omp():
     """Test setting the number of omp threads.
     """

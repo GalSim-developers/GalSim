@@ -1040,6 +1040,7 @@ def test_unweighted_moments():
     np.testing.assert_almost_equal(mom4['My'], 0.0)
 
 
+@timer
 def test_dol_to_lod():
     """Check broadcasting behavior of dol_to_lod"""
 
@@ -1366,6 +1367,7 @@ def test_horner_complex():
     result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
+@timer
 def test_merge_sorted():
     from galsim.utilities import merge_sorted
 

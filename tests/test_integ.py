@@ -320,6 +320,7 @@ def test_hankel():
         galsim.integ.hankel(f1, k=0.3, nu=-0.5)
 
 
+@timer
 def test_gq_annulus():
     """Test the galsim.integ.gq_annulus function
     """
