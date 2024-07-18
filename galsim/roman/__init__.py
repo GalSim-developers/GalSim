@@ -43,7 +43,11 @@ thermal_backgrounds = {'R062': 0.00, # e-/pix/s
                        'H158': 0.04,
                        'F184': 0.17,
                        'K213': 4.52,
-                       'W146': 0.98}
+                       'W146': 0.98,
+                       'SNPrism': 0.00,
+                       'Grism_0thOrder': 0.00,
+                       'Grism_1stOrder': 0.00,
+                       }
 
 # Physical pixel size
 pixel_scale_mm = 0.01 # mm
