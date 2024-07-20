@@ -31,14 +31,13 @@ import logging
 import time
 from collections.abc import Hashable
 from collections import Counter
-from numbers import Integral, Real, Complex
 import pickle
 import copy
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
-from .position import Position, PositionD, PositionI, _PositionD, _PositionI
+from .position import Position, PositionD, _PositionD, _PositionI
 from .angle import AngleUnit, arcsec
 from .image import Image
 from .table import trapz, _LookupTable, LookupTable2D

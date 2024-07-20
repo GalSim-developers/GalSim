@@ -16,8 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import os
-import sys
 import time
 
 import galsim

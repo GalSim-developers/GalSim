@@ -25,7 +25,6 @@ import warnings
 import numpy as np
 import galsim
 
-import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.animation as anim

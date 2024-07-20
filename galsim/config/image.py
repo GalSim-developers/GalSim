@@ -16,9 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-import logging
 import numpy as np
-import math
 
 from .util import LoggerWrapper, UpdateNProc, MultiProcess, SetupConfigRNG
 from .input import SetupInput, SetupInputsForImage

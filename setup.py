@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 import sys,os,glob,re
-import platform
 import ctypes
 import ctypes.util
 import types

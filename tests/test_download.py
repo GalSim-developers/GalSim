@@ -18,7 +18,6 @@
 
 import sys
 import logging
-import builtins
 import shutil
 from unittest import mock
 import galsim

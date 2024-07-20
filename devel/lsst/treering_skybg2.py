@@ -18,7 +18,6 @@
 
 from __future__ import print_function
 
-import sys
 import time
 import numpy as np
 import galsim

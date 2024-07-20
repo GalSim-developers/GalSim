@@ -25,7 +25,6 @@ the issues with interpolators.
 The parameters of the Sersic images come from a COSMOS best-fitting Sersic model catalog.
 """
 
-import cPickle
 import numpy as np
 import galsim
 import test_interpolants

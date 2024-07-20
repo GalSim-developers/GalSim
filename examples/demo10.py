@@ -52,9 +52,7 @@ New features introduced in this demo:
 import sys
 import os
 import math
-import numpy
 import logging
-import time
 import galsim
 
 def main(argv):

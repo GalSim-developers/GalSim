@@ -40,15 +40,11 @@ Using kcrit=0.2 seems about the right maximum that doesn't yield a very discrepa
 using smaller values also yields pretty good agreement.
 """
 
-
-import warnings
 import os
 import numpy as np
 import galsim
 
-import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from astropy.utils.console import ProgressBar

@@ -16,15 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
-import logging
-
 from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
 from .input import RegisterInputConnectedType
 from .bandpass import BuildBandpass
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..sed import SED
-from ..bandpass import Bandpass
 from ..utilities import basestring, LRU_Cache
 
 # This module-level dict will store all the registered SED types.

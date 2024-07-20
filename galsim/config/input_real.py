@@ -17,7 +17,7 @@
 #
 
 from .input import InputLoader, GetInputObj, RegisterInputType, GetNumInputObj
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
+from .util import GetRNG, get_cls_params
 from .value import GetAllParams, SetDefaultIndex
 from .gsobject import RegisterObjectType
 from ..gsparams import GSParams

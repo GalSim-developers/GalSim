@@ -29,8 +29,6 @@ for characterizing the tree rings
 
 import sys
 import os
-import math
-import numpy
 import logging
 import time
 import galsim

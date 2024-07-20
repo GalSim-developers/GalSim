@@ -19,10 +19,6 @@
 """Unit tests for the InterpolatedImage class.
 """
 
-import numpy as np
-import os
-import sys
-
 n_iter = 50
 
 import galsim

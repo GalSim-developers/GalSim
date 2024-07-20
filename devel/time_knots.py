@@ -22,8 +22,6 @@ import time
 import cProfile
 import pstats
 
-import argparse
-
 ntrial = 100
 
 

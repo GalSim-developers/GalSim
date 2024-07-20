@@ -26,7 +26,6 @@ from multiprocessing import Lock
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .position import PositionD
 from .bounds import BoundsI
 from .utilities import lazy_property, doc_inherit, convert_interpolant, merge_sorted
 from .interpolant import Quintic
@@ -34,7 +33,7 @@ from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
 from .convolve import Convolve, Deconvolve
 from .image import Image, ImageCD
 from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise, CovarianceSpectrum
-from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimIndexError
 from .table import LookupTable
 from .random import BaseDeviate, UniformDeviate

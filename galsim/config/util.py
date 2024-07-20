@@ -22,7 +22,7 @@ import sys
 import time
 import json
 from io import StringIO
-import cProfile, pstats, io
+import cProfile, pstats
 from collections import OrderedDict
 from multiprocessing.managers import BaseManager
 from multiprocessing import current_process, get_context, cpu_count
