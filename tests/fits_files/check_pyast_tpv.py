@@ -41,20 +41,20 @@ true_ra = (3 + 30/60. + 9.340034/3600.) * numpy.pi / 12.
 true_dec = -(28 + 43/60. + 50.811107/3600.) * numpy.pi / 180.
 
 ra1, dec1 = wcs.tran( numpy.array([ [x], [y] ]))
-print 'Initial read of tpv.fits:'
-print 'error in ra = ',(ra1-true_ra) * 180.*3600./numpy.pi, 'arcsec'
-print 'error in dec = ',(dec1-true_dec) * 180.*3600./numpy.pi, 'arcsec'
+print ('Initial read of tpv.fits:')
+print ('error in ra = ',(ra1-true_ra) * 180.*3600./numpy.pi, 'arcsec')
+print ('error in dec = ',(dec1-true_dec) * 180.*3600./numpy.pi, 'arcsec')
 
 # Now cycle through writing and reading to a file
 
 hdu2 = pyfits.PrimaryHDU()
 fc2 = Ast.FitsChan(None, Atl.PyFITSAdapter(hdu2, clear=False), "Encoding=FITS-WCS")
 success = fc2.write(wcs)
-print 'success = ',success
+print ('success = ',success)
 if not success:
     fc2 = Ast.FitsChan(None, Atl.PyFITSAdapter(hdu2, clear=False))
     success = fc2.write(wcs)
-    print 'Native encoding: success = ',success
+    print ('Native encoding: success = ',success)
 fc2.writefits()
 hdu2.writeto('test_tpv.fits', clobber=True)
 # This also becomes the tanflip.fits test file, since pyast writes this # file with 
@@ -75,13 +75,13 @@ wcs3 = fc3.read()
 wcs3 = wcs3.findframe( Ast.SkyFrame() )
 
 ra3, dec3 = wcs3.tran( numpy.array([ [x], [y] ]))
-print 'ra1 = ',ra1
-print 'ra3 = ',ra3
-print 'dec1 = ',dec1
-print 'dec3 = ',dec3
-print 'After write/read round trip through fits file:'
-print 'error in ra = ',(ra3-true_ra) * 180.*3600./numpy.pi, 'arcsec'
-print 'error in dec = ',(dec3-true_dec) * 180.*3600./numpy.pi, 'arcsec'
+print ('ra1 = ',ra1)
+print ('ra3 = ',ra3)
+print ('dec1 = ',dec1)
+print ('dec3 = ',dec3)
+print ('After write/read round trip through fits file:')
+print ('error in ra = ',(ra3-true_ra) * 180.*3600./numpy.pi, 'arcsec')
+print ('error in dec = ',(dec3-true_dec) * 180.*3600./numpy.pi, 'arcsec')
 
 # Make a version identical to tanflip.fits, but not actually flipped.
 hdu4 = pyfits.PrimaryHDU()

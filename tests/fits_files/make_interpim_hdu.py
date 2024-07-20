@@ -33,7 +33,7 @@ kim_list = []
 for g2 in g2_vals:
     gal = obj.shear(g2=g2)
     im = gal.drawImage(scale=pix_scale, method='no_pixel')
-    print 'For shear ',g2,':',im.FindAdaptiveMom()
+    print ('For shear ',g2,':',im.FindAdaptiveMom())
     im_list.append(im)
     kim = gal.drawKImage(scale=0.2)
     kim_list.append(kim.real)
