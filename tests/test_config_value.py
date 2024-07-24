@@ -1922,6 +1922,79 @@ def test_eval():
     np.testing.assert_almost_equal(ps_mu, mu)
 
 
+def test_quantity():
+    import astropy.units as u
+    config = {
+        'length': 1.0 * u.m,
+        'length2': '1.0 m',
+        'length3': '100.0 cm',
+        'length4': {
+            'type': 'Quantity',
+            'value': 0.001,
+            'unit': 'km',
+        },
+        'length5': {
+            'type': 'Quantity',
+            'value': 0.001,
+            'unit': u.km,
+        },
+        'length6': '$1.0 * u.m',
+        'length7': '10 kg',  # Not a length!
+        'length8': {
+            'type': 'Quantity',
+            'value': {
+                'type': 'Random',
+                'min': 0.0,
+                'max': 1.0,
+            },
+            'unit': 'm',
+        },
+        'length9': {
+            'type': 'Sum',
+            'items': [
+                {
+                    'type': 'Quantity',
+                    'value': 1.0,
+                    'unit': 'm',
+                },
+                {
+                    'type': 'Quantity',
+                    'value': 1.0,
+                    'unit': 'cm',
+                }
+            ]
+        },
+        'length10': {
+            'type': 'Current',
+            'key': 'length',
+        },
+    }
+
+    value, _ = galsim.config.ParseValue(config, 'length', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length2', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length3', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length4', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length5', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length6', config, u.Quantity)
+    assert value == 1.0 * u.m
+    # We can demand a Quantity, but there's currently no way to demand a
+    # particular dimensionality.  So this one just yields a mass.
+    value, _ = galsim.config.ParseValue(config, 'length7', config, u.Quantity)
+    assert value == 10 * u.kg
+    value, _ = galsim.config.ParseValue(config, 'length8', config, u.Quantity)
+    assert 0 <= value.value <= 1.0
+    assert value.unit == u.m
+    value, _ = galsim.config.ParseValue(config, 'length9', config, u.Quantity)
+    assert value == 1.01 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length10', config, u.Quantity)
+    assert value == 1.0 * u.m
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     runtests(testfns)

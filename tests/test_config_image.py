@@ -23,6 +23,7 @@ import logging
 import math
 import re
 import warnings
+import astropy.units as u
 
 import galsim
 from galsim_test_helpers import *
@@ -1982,8 +1983,8 @@ def test_bandpass():
             'file_name' : 'ACS_wfc_F814W.dat',
             'wave_type' : 'nm',
             'thin' : [1.e-4, 1.e-5, 1.e-6],
-            'blue_limit': 700,
-            'red_limit': 950,
+            'blue_limit': 7000*u.Angstrom,  # Try mismatched units
+            'red_limit': 9500*u.Angstrom,
         },
         'bp3' : galsim.Bandpass('LSST_g.dat', 'nm'),
 
