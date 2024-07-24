@@ -17,6 +17,7 @@
 #
 import numpy as np
 import re
+from astropy.units import Quantity
 
 from .util import PropagateIndexKeyRNGNum
 from .value import GetCurrentValue, GetAllParams, RegisterValueType
@@ -94,6 +95,7 @@ def _GenerateFromEval(config, base, value_type):
             exec('import numpy', gdict)
             exec('import numpy as np', gdict)
             exec('import os', gdict)
+            exec('import astropy.units as u', gdict)
             ImportModules(base, gdict)
             base['_eval_gdict'] = gdict
         else:
@@ -195,4 +197,4 @@ def _GenerateFromEval(config, base, value_type):
 # Register this as a valid value type
 RegisterValueType('Eval', _GenerateFromEval,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord,
-                    LookupTable, dict, list, None ])
+                    LookupTable, dict, list, None, Quantity ])
