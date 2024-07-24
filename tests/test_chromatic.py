@@ -2518,6 +2518,40 @@ def test_chromatic_fiducial_wavelength():
     with assert_raises(galsim.GalSimError):
         gal3.drawImage(bp)
 
+@timer
+def test_convolve_pixel():
+    """Check that convolving a chromatic object with a Pixel works
+    """
+    # In response to issue #1302
+    # The problem here had been that if some of the components of the convolution were
+    # inseparable, then when separating out the separable and inseparable components,
+    # the code called `obj._fiducual_profile(bandpass)` on the separable ones.
+    # However, if any of these were simple GSObjects, this gave an error, since we didn't have
+    # that method for GSObject.  The fix was to add a trivial version of that for GSObject.
+
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm").thin(rel_err=1.e-2)
+    sed = galsim.SED('vega.txt', 'nm', 'flambda').thin(rel_err=1.e-2)
+    insep_psf = galsim.ChromaticAiry(lam=550, diam=0.1)
+    sep_psf = galsim.Kolmogorov(fwhm=0.65) * galsim.SED('(wave/500)**-0.2', 'nm', '1')
+    scale = 0.2
+    pixel = galsim.Pixel(scale)
+
+    for psf in [sep_psf, insep_psf]:
+        star = galsim.DeltaFunction() * sed
+        star = star.withFlux(1000., bandpass)
+        eff_psf = galsim.Convolve(psf, pixel)
+
+        im1 = galsim.Convolve(star, psf).drawImage(bandpass, scale=scale, nx=32, ny=32)
+        im2 = galsim.Convolve(star, eff_psf).drawImage(bandpass, scale=scale, nx=32, ny=32,
+                                                       method='no_pixel')
+        np.testing.assert_allclose(im1.array, im2.array, atol=1.e-5)
+
+        galaxy = galsim.Exponential(half_light_radius=1.3) * sed
+        galaxy = galaxy.withFlux(1000., bandpass)
+        im3 = galsim.Convolve(galaxy, psf).drawImage(bandpass, scale=scale, nx=32, ny=32)
+        im4 = galsim.Convolve(galaxy, eff_psf).drawImage(bandpass, scale=scale, nx=32, ny=32,
+                                                         method='no_pixel')
+        np.testing.assert_allclose(im3.array, im4.array, atol=1.e-5)
 
 @timer
 def test_chromatic_image_setup():

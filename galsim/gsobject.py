@@ -450,6 +450,7 @@ class GSObject:
     def dimensionless(self): return True
     @property
     def wave_list(self): return np.array([], dtype=float)
+    def _fiducial_profile(self, bandpass): return bandpass.effective_wavelength, self
 
     # Also need these methods to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
