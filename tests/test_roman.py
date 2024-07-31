@@ -783,7 +783,11 @@ def test_roman_basic_numbers():
                                'H158': 0.04,
                                'F184': 0.17,
                                'K213': 4.52,
-                               'W146': 0.98}
+                               'W146': 0.98,
+                               'SNPrism': 0.00,
+                               'Grism_0thOrder': 0.00,
+                               'Grism_1stOrder': 0.00,
+                              }
     ref_pupil_plane_file = os.path.join(
             galsim.meta_data.share_dir, 'roman', 'SCA2_rim_mask.fits.gz')
     ref_stray_light_fraction = 0.1
