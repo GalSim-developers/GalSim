@@ -41,7 +41,6 @@ using smaller values also yields pretty good agreement.
 """
 
 
-import warnings
 import os
 import numpy as np
 import galsim

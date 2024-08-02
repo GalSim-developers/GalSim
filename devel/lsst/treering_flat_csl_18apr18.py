@@ -18,9 +18,7 @@
 
 from __future__ import print_function
 
-import sys
 import time
-import numpy as np
 import galsim
 
 # Put the salient numbers up here so they are easy to adjust.

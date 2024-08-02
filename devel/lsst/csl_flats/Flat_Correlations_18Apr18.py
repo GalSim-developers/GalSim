@@ -23,7 +23,7 @@
 
 import pyfits as pf
 from pylab import *
-import os, sys, glob, time
+import sys, glob, time
 import numpy as np
 
 
@@ -37,12 +37,12 @@ edges[ymax:-1,:] = True
 edges[:,0:xmin] = True
 edges[:,xmax:-1] = True
 edge_mask = np.ma.make_mask(edges)
-print edges.sum()
+print (edges.sum())
 mydir = "/Users/cslage/Research/LSST/code/galsim-developers-18apr18/GalSim/devel/lsst/flats/"
 series = int(sys.argv[1])
 even_patterns = sort(glob.glob(mydir+'flat_%d_*.fits*'%series))[0::2]
 odd_patterns = sort(glob.glob(mydir+'flat_%d_*.fits*'%series))[1::2]
-print "There are %d even patterns and %d oddpatterns"%(len(even_patterns), len(odd_patterns))
+print ("There are %d even patterns and %d oddpatterns"%(len(even_patterns), len(odd_patterns)))
 sys.stdout.flush()
 numfiles = len(even_patterns)
 
@@ -101,7 +101,7 @@ for n in range(numfiles):
                 sum121=(sub1*sub2).sum()
                 corr = (sum121 - sum11*sum21/npixused1)/npixused1
 
-            print "For file %d, NumDataPoints = %d, ii = %d, jj = %d,Cij = %.2f"%(n, npixused1, l, k, corr)
+            print ("For file %d, NumDataPoints = %d, ii = %d, jj = %d,Cij = %.2f"%(n, npixused1, l, k, corr))
             file = open(filename,'a')
             if k==0 and l==0:
                 line = '%d     %d     %d      %f      %f\n'%(l,k,n,corr,avemed)
@@ -111,6 +111,6 @@ for n in range(numfiles):
             file.close()
     time_finish = time.time()
     elapsed = time_finish - time_start
-    print "Elapsed time for file %d  = %.2f"%(n,elapsed)
+    print ("Elapsed time for file %d  = %.2f"%(n,elapsed))
     sys.stdout.flush()
 

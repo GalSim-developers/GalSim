@@ -95,7 +95,7 @@ def check_dir(dir):
     """
     try:
         os.makedirs(dir)
-        print "Created directory %s for outputs"%dir
+        print ("Created directory %s for outputs"%dir)
     except OSError:
         if os.path.isdir(dir):
             # It was already a directory.
@@ -156,7 +156,7 @@ def generate_ps_cutoff_plots(ell, ps, theory_ps,
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote power spectrum (grid cutoff) plot to file %r"%outfile
+    print ("Wrote power spectrum (grid cutoff) plot to file %r"%outfile)
 
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
@@ -257,7 +257,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote power spectrum plots to file %r"%outfile
+    print ("Wrote power spectrum plots to file %r"%outfile)
 
 def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_plot_prefix,
                              type='p'):
@@ -303,7 +303,7 @@ def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_p
     # Write to file.
     outfile = cf_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote correlation function (grid cutoff) plots to file %r"%outfile
+    print ("Wrote correlation function (grid cutoff) plots to file %r"%outfile)
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                       dth, type='p', theory_raw=None, theory_binned=None, theory_rand=None):
@@ -380,7 +380,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     # Write to file.
     outfile = cf_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote correlation function plots to file %r"%outfile
+    print ("Wrote correlation function plots to file %r"%outfile)
 
 def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type='EE'):
     """Routine to write final power spectra to file.
@@ -405,7 +405,7 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type=
     # Make ascii output.
     outfile = ps_plot_prefix + interpolant + '_' + type + '.dat'
     np.savetxt(outfile, np.column_stack((ell, ps, interpolated_ps)), fmt='%12.4e')
-    print "Wrote ascii output to file %r"%outfile
+    print ("Wrote ascii output to file %r"%outfile)
 
     # Set up a FITS table for output file.
     ell_col = pyfits.Column(name='ell', format='1D', array=ell)

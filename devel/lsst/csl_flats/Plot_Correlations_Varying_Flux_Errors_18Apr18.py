@@ -24,9 +24,7 @@
 
 import matplotlib
 matplotlib.use("PDF")
-import pyfits as pf
 from pylab import *
-import sys, glob, time
 from scipy import stats
 covsteps = 6
 
@@ -67,7 +65,7 @@ for i, seqno in enumerate(seqnos):
                  fluxes[i] += float(items[4])
                  numfluxvalues += 1
         except Exception as e:
-            print "Exception of type %s and args = \n"%type(e).__name__, e.args
+            print ("Exception of type %s and args = \n"%type(e).__name__, e.args)
             break
     fluxes[i] /= float(numfluxvalues) # calculate the average flux in ADU
     
@@ -104,7 +102,7 @@ for ii in range(covsteps):
                 reduced_cov[ii,jj] = 1.0 + slope * flux_value
             else:
                 reduced_cov[ii,jj] = slope * flux_value
-            print "ii = %d, jj = %d, slope = %g, reduced_cov = %.4f"%(ii,jj,slope, reduced_cov[ii,jj])
+            print ("ii = %d, jj = %d, slope = %g, reduced_cov = %.4f"%(ii,jj,slope, reduced_cov[ii,jj]))
         if ii < 3 and jj < 3:
             plotnum = 3 * ii + jj + 1
             subplot(3,3,plotnum)
