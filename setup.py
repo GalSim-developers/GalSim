@@ -1228,6 +1228,9 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
         self.distribution.script_install_dir = self.install_dir
 
 class my_test(test):
+    # TODO: setuptools v72 deprecated python setup.py test, so we need to figure out another
+    # way to test the C++ code.  For now, we are pinning setuptools to <72.
+
     # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
     user_options = [('njobs=', 'j', "Number of jobs to use in py.test")]
 
@@ -1340,7 +1343,7 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros,
               extra_link_args = ["-lfftw3"])
 
-build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
+build_dep = ['setuptools>=38,<72', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose', 'scipy', 'pyyaml']
 # Note: Even though we don't use nosetests, nose is required for some tests to work.

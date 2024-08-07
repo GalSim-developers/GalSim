@@ -148,7 +148,7 @@ jobs:
 
                 # Do these three first to clarify potential conflicts
                 pip install -U numpy
-                pip install -U setuptools
+                pip install -U "setuptools<72"
                 pip install -U wheel
 
                 # Standard dependencies

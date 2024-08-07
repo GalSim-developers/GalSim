@@ -1,6 +1,6 @@
 # The requirements packages that can be installed with
 #    conda install -y -c conda-forge --file conda_requirements.txt
-setuptools>=38
+setuptools>=38,<72
 numpy>=1.17
 astropy>=2.0
 pybind11>=2.2
