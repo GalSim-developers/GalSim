@@ -39,7 +39,7 @@ try:
 except ImportError:
     print()
     print("****")
-    print("    Installation requires setuptools version >= 38.")
+    print("    Installation requires setuptools version >= 38 < 72.")
     print("    Please upgrade or install with pip install -U setuptools")
     print("****")
     print()
