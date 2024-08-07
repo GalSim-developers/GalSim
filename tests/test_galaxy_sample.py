@@ -18,7 +18,6 @@
 
 import os
 import numpy as np
-import sys
 
 import galsim
 from galsim_test_helpers import *

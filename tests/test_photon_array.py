@@ -19,7 +19,6 @@
 import unittest
 import numpy as np
 import os
-import sys
 import warnings
 
 # We don't require astroplan.  So check if it's installed.

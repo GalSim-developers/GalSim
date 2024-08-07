@@ -18,12 +18,10 @@
 
 import numpy as np
 import os
-import sys
 import platform
 
 import galsim
 from galsim_test_helpers import *
-from galsim._pyfits import pyfits
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 

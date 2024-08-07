@@ -16,9 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
+import os
 import sys
 import logging
-import builtins
 import shutil
 from unittest import mock
 import galsim

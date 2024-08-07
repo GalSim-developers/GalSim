@@ -16,10 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import os
-import logging
-import types
-
 from multiprocessing.managers import NamespaceProxy
 
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params

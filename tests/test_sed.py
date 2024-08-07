@@ -18,7 +18,6 @@
 
 import os
 import numpy as np
-import sys
 from astropy import units, constants
 import warnings
 import time

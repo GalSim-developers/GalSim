@@ -18,21 +18,15 @@
 
 import sys
 import os
-import logging
-import copy
 import json
-from collections import OrderedDict
 
 # Lots of function that used to be here are now in util, so import them back here in case users
 # were using them as galsim.config.process.*.  But having them in util means that we can safely
 # import from .util in other files without triggering a circular import cycle.
 from .util import *
 
-from .value import ParseValue
 from .output import GetNFiles, BuildFiles
-from ..utilities import SimpleGenerator
-from ..random import BaseDeviate
-from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimValueError
+from ..errors import GalSimValueError
 
 top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
                     'eval_variables', 'root', 'modules', 'profile']
@@ -65,10 +59,6 @@ def ReadConfig(config_file, file_type=None, logger=None):
 
     A JSON file does not have this feature, but to be consistent, we always return a list,
     which would only have one element in this case.
-
-    Also, we actually read in the config file into an OrderedDict.  The main advantage of
-    this is for the truth catalog.  This lets the columns be in the same order as the entries
-    in the config file.  With a normal dict, they get scrambled.
 
     Parameters:
         config_file:    The name of the configuration file to read.

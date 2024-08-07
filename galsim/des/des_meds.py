@@ -18,7 +18,6 @@
 
 import numpy as np
 import sys
-import os
 import time
 
 from ..errors import GalSimValueError, GalSimError, GalSimConfigError

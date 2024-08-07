@@ -43,7 +43,7 @@ from .photon_array import WavelengthSampler, PhotonArray, PhotonOp, ScaleFlux
 from .random import BaseDeviate, UniformDeviate, BinomialDeviate, PoissonDeviate
 from .shear import Shear, _Shear
 from .interpolatedimage import InterpolatedImage
-from .angle import Angle, _Angle, AngleUnit, arcsec, radians
+from .angle import AngleUnit, arcsec, radians
 from .airy import Airy
 from .deltafunction import DeltaFunction
 from . import utilities

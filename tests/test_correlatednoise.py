@@ -16,8 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
-import time
 import numpy as np
+import os
 
 import galsim
 from galsim_test_helpers import *

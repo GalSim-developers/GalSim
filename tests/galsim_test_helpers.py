@@ -17,11 +17,6 @@
 #
 
 import numpy as np
-import os
-import sys
-import logging
-import coord
-import copy
 import galsim
 
 from galsim.utilities import check_pickle, check_all_diff, timer, CaptureLog, Profile

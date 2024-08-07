@@ -16,15 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
-import logging
-
 from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from .sed import BuildSED
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import basestring
-from ..photon_array import PhotonArray, PhotonOp
+from ..photon_array import PhotonOp
 from ..photon_array import WavelengthSampler, FRatioAngles, PhotonDCR, Refraction, FocusDepth
 from ..photon_array import TimeSampler, PupilImageSampler, PupilAnnulusSampler
 

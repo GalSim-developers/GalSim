@@ -17,7 +17,7 @@
 #
 
 from .extra import ExtraOutputBuilder, RegisterExtraOutput
-from .value import ParseValue, GetCurrentValue
+from .value import ParseValue
 from .noise import AddNoiseVariance
 from ..image import ImageF
 

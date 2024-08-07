@@ -21,6 +21,7 @@ import os
 import sys
 import warnings
 import time
+import coord
 from unittest import mock
 
 import galsim

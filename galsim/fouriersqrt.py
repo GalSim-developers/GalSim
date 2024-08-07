@@ -21,7 +21,6 @@ __all__ = [ 'FourierSqrt', 'FourierSqrtProfile' ]
 import numpy as np
 import copy
 
-from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .utilities import lazy_property

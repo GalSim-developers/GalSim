@@ -18,8 +18,6 @@
 
 __all__ = [ 'SecondKick' ]
 
-import numpy as np
-
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
