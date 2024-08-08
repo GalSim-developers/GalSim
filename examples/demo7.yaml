@@ -42,6 +42,8 @@
 # - stamp : draw_method (fft or phot)
 # - stamp : gsparams
 # - output : file_name with .gz, .bz2 or .fz extension automatically uses compression.
+# - Multiple random seeds (particular so one can repeat the same values for multiple images)
+# - rng_num specification in various fields
 
 
 # Define the PSF profiles
@@ -135,6 +137,13 @@ gal :
         e : { type : Random , min : 0.0 , max : 0.8 }
         beta : { type : Random }
 
+    # This line tells GalSim to use the image_num-indexed rng for all the random parameters
+    # in this field of the config.  Specifying rng_num anywhere in the config dict will apply
+    # to all items in that field at that level or lower, unless overridden by another rng_num
+    # specification at a lower level. (See image.random_seed below for how we set the seed
+    # for this rng.)
+    rng_num: 1
+
 
 # Define some other information about the images
 image :
@@ -158,13 +167,23 @@ image :
     noise :
         sky_level : 1.e4  # ADU / arcsec^2
 
-    # This is pretty contrived.  It is really only relevant for this particular demo.
-    # The usual case is to just set a single number, which really means that each object
-    # gets a sequential value starting with this number.  In this case we want to use the
-    # same value for both the fft and phot images to get the same values for the random
-    # parameters. To implement this, we tell it to use the image_num for the sequencing key
-    # rather than the usual obj_num.
-    random_seed : { type : Sequence , first : 553728 , index_key : 'image_num' }
+    # The usual way we set the random_seed is to just set a single number, which really means that
+    # each object gets a sequential value starting with something based on this number.
+    # This is fine for the noise, but it wouldn't work for the galaxy parameters, which we want
+    # to be the same for both fft and photon-shooting images.
+    # To get an rng that gives the same values for both, we need a second one indexed by
+    # image_num, rather than obj_num.  This will repeat the seed values for the two galaxies
+    # in each image, which we want to have identical properties.
+    # Note: Starting in verson 2.6, GalSim always converts the first random_seed to a sequence
+    # indexed by obj_num, so each galaxy gets a new rng.  Any more complicated seed specifications
+    # need to be done in rng_num=1 or higher (i.e. any but the first item in the list).
+    random_seed :
+      # rng_num=0 is implicitly converted to a sequence indexed by obj_num.  Used for noise here.
+      - 553728
+
+      # rng_num=1 is the one we use for the galaxy parameters so they are the same for
+      # both fft and photon shooting images.  We set rng_num=1 in the galaxy field above.
+      - { type : Sequence , first : 553728 , index_key : 'image_num' }
 
 
 # Define some image properties that are specific to the stamp generation phase:
