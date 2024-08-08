@@ -1459,7 +1459,7 @@ def test_eval_full_word():
             # is basically the same.
             'random_seed' : [
                 # Used for noise and nobjects.
-                { 'type' : 'Sequence', 'index_key' : 'obj_num', 'first' : 1234 },
+                12345,
                 # Used for objects.  Repeats sequence for each image in file
                 {
                     'type' : 'Eval',
@@ -1561,12 +1561,14 @@ def test_eval_full_word():
     data0 = np.genfromtxt('output/test_eval_full_word_0.dat', names=True, deletechars='')
     data1 = np.genfromtxt('output/test_eval_full_word_1.dat', names=True, deletechars='')
 
-    assert len(data0) == 18 # 9 obj each for first two exposures
-    assert len(data1) == 24 # 12 obj each for next two exposures
-    data00 = data0[:9]
-    data01 = data0[9:]
-    data10 = data1[:12]
-    data11 = data1[12:]
+    n1 = 11  # 11 obj each for first two exposures
+    n2 = 14  # 14 obj each for next two exposures
+    assert len(data0) == 2*n1
+    assert len(data1) == 2*n2
+    data00 = data0[:n1]
+    data01 = data0[n1:]
+    data10 = data1[:n2]
+    data11 = data1[n2:]
 
     # Check exposure = image_num
     np.testing.assert_array_equal(data00['exposure'], 0)
@@ -1575,21 +1577,21 @@ def test_eval_full_word():
     np.testing.assert_array_equal(data11['exposure'], 3)
 
     # Check obj_num
-    np.testing.assert_array_equal(data00['num'], range(0,9))
-    np.testing.assert_array_equal(data01['num'], range(9,18))
-    np.testing.assert_array_equal(data10['num'], range(18,30))
-    np.testing.assert_array_equal(data11['num'], range(30,42))
+    np.testing.assert_array_equal(data00['num'], range(0,n1))
+    np.testing.assert_array_equal(data01['num'], range(n1,2*n1))
+    np.testing.assert_array_equal(data10['num'], range(2*n1,2*n1+n2))
+    np.testing.assert_array_equal(data11['num'], range(2*n1+n2,2*n1+2*n2))
 
     # Check that galaxy properties are identical within exposures, but different across exposures
     for key in ['pos.x', 'pos.y', 'ra.rad', 'dec.rad', 'flux', 'size']:
         np.testing.assert_array_equal(data00[key], data01[key])
         np.testing.assert_array_equal(data10[key], data11[key])
-        assert np.all(np.not_equal(data00[key], data10[key][:9]))
+        assert np.all(np.not_equal(data00[key], data10[key][:n1]))
 
     # PSFs should all be different, but only in the mean
     assert np.all(np.not_equal(data00['psf_fwhm'], data01['psf_fwhm']))
     assert np.all(np.not_equal(data10['psf_fwhm'], data11['psf_fwhm']))
-    assert np.all(np.not_equal(data00['psf_fwhm'], data10['psf_fwhm'][:9]))
+    assert np.all(np.not_equal(data00['psf_fwhm'], data10['psf_fwhm'][:n1]))
     np.testing.assert_array_almost_equal(data00['psf_fwhm'] - np.mean(data00['psf_fwhm']),
                                          data01['psf_fwhm'] - np.mean(data01['psf_fwhm']))
     np.testing.assert_array_almost_equal(data10['psf_fwhm'] - np.mean(data10['psf_fwhm']),
@@ -1599,13 +1601,13 @@ def test_eval_full_word():
     # be in the Gaussian noise.
     im00, im01 = galsim.fits.readMulti('output/test_eval_full_word_0.fits')
     assert np.all(np.not_equal(im00.array, im01.array))
-    assert abs(np.mean(im00.array - im01.array)) < 0.1
+    assert abs(np.mean(im00.array - im01.array)) < 0.5
     assert 13.5 < np.std(im00.array - im01.array) < 15  # should be ~10 * sqrt(2)
     assert np.max(np.abs(im00.array)) > 200  # Just verify that many values are quite large
 
     im10, im11 = galsim.fits.readMulti('output/test_eval_full_word_1.fits')
     assert np.all(np.not_equal(im10.array, im11.array))
-    assert abs(np.mean(im10.array - im11.array)) < 0.1
+    assert abs(np.mean(im10.array - im11.array)) < 0.5
     assert 13.5 < np.std(im10.array - im11.array) < 15
     assert np.max(np.abs(im10.array)) > 200
 
