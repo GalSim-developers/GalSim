@@ -392,18 +392,25 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
     # start a sequential sequence of seeds for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the
     # normal case, we just convert it into a Sequence.
-    if isinstance(config[param_name], (int, str)):
-         first = ParseValue(config, param_name, base, int)[0]
-         seed_rng = BaseDeviate(first)
-         new_first = seed_rng.raw()
-         # Note: This new "first" seed is actually the seed value to use for anything at file or
-         # image scope using the obj_num of the first object in the file or image.
-         # Seeds for objects will start at 1 more than this.
-         config[param_name] = {
-                 'type' : 'Sequence',
-                 'index_key' : 'obj_num',
-                 'first' : new_first
-         }
+    # We only do this for the first item in the list though.  Any items after the first
+    # are left as they are, so the user can do something more complicated if they want.
+    if param_name in ['random_seed', 0] and not (
+        isinstance(config[param_name], dict) and config[param_name].get('default', False)):
+            first = ParseValue(config, param_name, base, int)[0]
+            seed_rng = BaseDeviate(first)
+            new_first = seed_rng.raw()
+            # Note: This new "first" seed is actually the seed value to use for anything at file or
+            # image scope using the obj_num of the first object in the file or image.
+            # Seeds for objects will start at 1 more than this.
+            config[param_name] = {
+                    'type' : 'Sequence',
+                    'index_key' : 'obj_num',
+                    'first' : new_first,
+                    # This is out indicator that the dict has been converted from an initial
+                    # integer value to generate the sequence.  After the first time, we don't
+                    # want to redo this step.
+                    'default' : True
+            }
 
     index_key = base['index_key']
     if index_key == 'obj_num':
