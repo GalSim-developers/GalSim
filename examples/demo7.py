@@ -80,7 +80,8 @@ def main(argv):
 
     file_name = os.path.join('output','cube_phot.fits.gz')
 
-    random_seed = 553728
+    gal_random_seed = 553728
+    noise_random_seed = galsim.BaseDeviate(553728).raw()
     sky_level = 1.e4        # ADU / arcsec^2
     pixel_scale = 0.28      # arcsec
     nx = 64
@@ -222,20 +223,25 @@ def main(argv):
                 logger.debug('      Start work on image %d',i)
                 t1 = time.time()
 
-                # Initialize the random number generator we will be using.
-                rng = galsim.UniformDeviate(random_seed+k+1)
+                # Initialize the random number generators we will be using.
+                # We have one for the galaxy parameters, and then a different one
+                # for the noise in each of the two stamps.
+                # This ensures that the results of this script match those of the config run.
+                gal_rng = galsim.UniformDeviate(gal_random_seed+k+1)
+                fft_noise_rng = galsim.UniformDeviate(noise_random_seed+2*k+1)
+                phot_noise_rng = galsim.UniformDeviate(noise_random_seed+2*k+2)
 
                 # Generate random variates:
-                flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
+                flux = gal_rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
 
                 # Use a new variable name, since we'll want to keep the original unmodified.
                 this_gal = gal.withFlux(flux)
 
-                hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
+                hlr = gal_rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
                 this_gal = this_gal.dilate(hlr)
 
-                beta_ellip = rng() * 2*math.pi * galsim.radians
-                ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
+                beta_ellip = gal_rng() * 2*math.pi * galsim.radians
+                ellip = gal_rng() * (gal_e_max-gal_e_min) + gal_e_min
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
                 this_gal = this_gal.shear(gal_shape)
 
@@ -273,27 +279,22 @@ def main(argv):
 
                 # Add Poisson noise
                 sky_level_pixel = sky_level * pixel_scale**2
-                fft_image.addNoise(galsim.PoissonNoise(rng, sky_level=sky_level_pixel))
+                fft_image.addNoise(galsim.PoissonNoise(fft_noise_rng, sky_level=sky_level_pixel))
 
                 t4 = time.time()
-
-                # The next two lines are just to get the output from this demo script
-                # to match the output from the parsing of demo7.yaml.
-                rng = galsim.UniformDeviate(random_seed+k+1)
-                rng(); rng(); rng(); rng();
 
                 # Repeat for photon shooting image.
                 # The max_extra_noise parameter indicates how much extra noise per pixel we are
                 # willing to tolerate.  The sky noise will be adding a variance of sky_level_pixel,
                 # so we allow up to 1% of that extra.
                 final.drawImage(phot_image, method='phot', max_extra_noise=sky_level_pixel/100,
-                                rng=rng)
+                                rng=phot_noise_rng)
                 t5 = time.time()
 
-                # For photon shooting, galaxy already has Poisson noise, so we want to make
+                # For photon shooting, the galaxy already has Poisson noise, so we want to make
                 # sure not to add that noise again!  Thus, we just add sky noise, which
                 # is Poisson with the mean = sky_level_pixel
-                pd = galsim.PoissonDeviate(rng, mean=sky_level_pixel)
+                pd = galsim.PoissonDeviate(phot_noise_rng, mean=sky_level_pixel)
                 # DeviateNoise just adds the action of the given deviate to every pixel.
                 phot_image.addNoise(galsim.DeviateNoise(pd))
                 # For PoissonDeviate, the mean is not zero, so for a background-subtracted

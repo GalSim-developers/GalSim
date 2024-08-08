@@ -11,10 +11,20 @@ Dependency Changes
 API Changes
 -----------
 
+- Changed the behavior of random_seed. (See below) For most use cases, this is essentially a bug
+  fix, but if users were relying on the old behavior, you may need to change your config file to
+  work with the new behavior.  See `Image Field Attributes` for more details about the new
+  behavior. (#1309)
+
 
 Config Updates
 --------------
 
+- Changed the behavior of random_seed to be less confusing.  Now the first random_seed is always
+  converted into a sequence based on obj_num, and later ones (if any) in a list are not.
+  If you want a non-standard seed sequence, you should now put it in a list somewhere after
+  the first item.  The first item will always evaluate as an integer value and create a sequence
+  based on that indexed by obj_num. (#1309)
 
 
 New Features
