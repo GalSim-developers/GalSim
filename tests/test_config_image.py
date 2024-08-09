@@ -2332,7 +2332,7 @@ def test_multirng():
         np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
 
-    # Finally, test invalid rng_num
+    # Test invalid rng_num
     config4 = galsim.config.CopyConfig(config)
     config4['image']['world_pos']['rng_num'] = -1
     with assert_raises(galsim.GalSimConfigError):
@@ -2353,6 +2353,16 @@ def test_multirng():
     del config7['gal']['shear']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config7)
+
+    # Check that a warning is given if the user uses a Sequence for the first random seed.
+    config8 = galsim.config.CopyConfig(config)
+    config8['image']['random_seed'] = {
+        'type': 'Sequence',
+        'repeat': 3
+    }
+    with assert_warns(galsim.GalSimWarning):
+        galsim.config.BuildImage(config8)
+
 
 @timer
 def test_sequential_seeds():

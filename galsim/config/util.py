@@ -31,7 +31,7 @@ import traceback
 
 from ..utilities import SimpleGenerator, single_threaded
 from ..random import BaseDeviate
-from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
+from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError, galsim_warn
 
 max_queue_size = 32767  # This is where multiprocessing.Queue starts to have trouble.
                         # We make it a settable parameter here really for unit testing.
@@ -396,6 +396,17 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
     # are left as they are, so the user can do something more complicated if they want.
     if param_name in ['random_seed', 0] and not (
         isinstance(config[param_name], dict) and config[param_name].get('default', False)):
+            if (isinstance(config[param_name], dict)
+                and config[param_name].get('type',None) == 'Sequence'):
+                    # Not really a deprecation, but similar.
+                    # Warn users of the change in behavior.
+                    galsim_warn('You have a custom Sequence as the (first) random_seed. '
+                                'As of GalSim version 2.6, this will be parsed as an integer '
+                                'and converted to a new sequence indexed by obj_num, '
+                                'rather than whatever sequence you have specified. '
+                                'You probably want to put your custom random_seed sequence '
+                                'as the second item in the radom_seed list and use rng_num=1.')
+
             first = ParseValue(config, param_name, base, int)[0]
             seed_rng = BaseDeviate(first)
             new_first = seed_rng.raw()
