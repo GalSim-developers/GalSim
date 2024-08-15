@@ -488,6 +488,20 @@ def test_roman_bandpass():
     for key in nozp_bp:
         assert nozp_bp[key].zeropoint is None
 
+@timer
+def test_roman_nonimaging_bandpass():
+    """Test the Roman non-imaging bandpasses for basic sanity.
+    """
+    bp_imaging = galsim.roman.getBandpasses(AB_zeropoint=True)
+    bp_all = galsim.roman.getBandpasses(AB_zeropoint=True, include_all_bands=True)
+
+    # Check that the imaging bandpasses arein the all bandpasses
+    for key in bp_imaging:
+        assert key in bp_all
+
+    assert 'Grism_0thOrder' in bp_all
+    assert 'Grism_1stOrder' in bp_all
+    assert 'SNPrism' in bp_all
 
 @timer
 def test_roman_detectors():
