@@ -325,7 +325,7 @@ def test_roman_backgrounds():
     # The routine should not allow us to look directly at the sun since the background there is high
     # (to understate the problem).  If no date is supplied, then the routine assumes RA=dec=0 means
     # we are looking at the sun.
-    bp_dict = galsim.roman.getBandpasses(include_all_bands=True)
+    bp_dict = galsim.roman.getBandpasses()
     bp = bp_dict['J129'] # one of the standard filters, doesn't really matter which
     with assert_raises(ValueError):
         galsim.roman.getSkyLevel(
@@ -495,13 +495,19 @@ def test_roman_nonimaging_bandpass():
     bp_imaging = galsim.roman.getBandpasses(AB_zeropoint=True)
     bp_all = galsim.roman.getBandpasses(AB_zeropoint=True, include_all_bands=True)
 
-    # Check that the imaging bandpasses arein the all bandpasses
+    # Check that the imaging bandpasses are in the all bandpasses
     for key in bp_imaging:
         assert key in bp_all
 
+    # Check that the non-imaging bandpasses are in the all bandpasses
     assert 'Grism_0thOrder' in bp_all
     assert 'Grism_1stOrder' in bp_all
     assert 'SNPrism' in bp_all
+
+    # Check that the non-imaging bandpasses are not in the imaging bandpasses
+    assert 'Grism_0thOrder' not in bp_imaging
+    assert 'Grism_1stOrder' not in bp_imaging
+    assert 'SNPrism' not in bp_imaging
 
 @timer
 def test_roman_detectors():
