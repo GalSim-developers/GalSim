@@ -325,7 +325,7 @@ def test_roman_backgrounds():
     # The routine should not allow us to look directly at the sun since the background there is high
     # (to understate the problem).  If no date is supplied, then the routine assumes RA=dec=0 means
     # we are looking at the sun.
-    bp_dict = galsim.roman.getBandpasses()
+    bp_dict = galsim.roman.getBandpasses(include_all_bands=True)
     bp = bp_dict['J129'] # one of the standard filters, doesn't really matter which
     with assert_raises(ValueError):
         galsim.roman.getSkyLevel(
