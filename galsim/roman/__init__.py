@@ -70,8 +70,9 @@ pupil_plane_scale = 0.00111175097
 longwave_bands = ['F184', 'K213']
 # R062, Z087, Y106, J129, H158, W146, SNPrism, Grism_0thOrder, Grism_1stOrder.
 # Note that the last three are not imaging bands.
-shortwave_bands = ['R062', 'Z087', 'Y106', 'J129', 'H158', 'W146',
-                   'SNPrism', 'Grism_0thOrder', 'Grism_1stOrder']
+non_imaging_bands = ['Grism_0thOrder', 'Grism_1stOrder', 'SNPrism']
+shortwave_bands = ['R062', 'Z087', 'Y106', 'J129', 'H158', 'W146'] \
+    + non_imaging_bands
 
 stray_light_fraction = 0.1
 
