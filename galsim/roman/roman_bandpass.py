@@ -101,7 +101,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
 
     @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
-    from . import collecting_area
+    from . import collecting_area, non_imaging_bands
 
     # Begin by reading in the file containing the info.
     datafile = os.path.join(meta_data.share_dir, "roman", "Roman_effarea_20210614.txt")
@@ -139,7 +139,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     bandpass_dict = {}
     # Loop over the bands.
     for index, bp_name in enumerate(data.dtype.names[1:]):
-        if include_all_bands is False and bp_name in ('Grism_0thOrder', 'Grism_1stOrder', 'SNPrism'):
+        if include_all_bands is False and bp_name in non_imaging_bands:
             continue
 
         # Initialize the bandpass object.
