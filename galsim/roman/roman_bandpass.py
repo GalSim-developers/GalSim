@@ -93,6 +93,8 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
                             [default: True]
         include_all_bands:  Should the routine include the non-imaging bands (e.g., grisms)?
                             This does not implement any dispersion physics by itself.
+                            There is currently no estimate for the thermal background for these
+                            bands and they are set to zero arbitrarily.
                             [default: False]
         **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
                             `Bandpass.truncate` as appropriate.
