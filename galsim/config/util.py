@@ -405,7 +405,7 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
                                 'and converted to a new sequence indexed by obj_num, '
                                 'rather than whatever sequence you have specified. '
                                 'You probably want to put your custom random_seed sequence '
-                                'as the second item in the radom_seed list and use rng_num=1.')
+                                'as the second item in the random_seed list and use rng_num=1.')
 
             first = ParseValue(config, param_name, base, int)[0]
             seed_rng = BaseDeviate(first)
