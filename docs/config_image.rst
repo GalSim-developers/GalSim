@@ -18,6 +18,10 @@ Some attributes that are allowed for all image types are:
 
     * The typical use case is that this is a simple integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image.
     * If ``random_seed`` is a list, then the first one will be converted as described above, but the later ones will not. Rather, it will respect your specification and evaluate the seed for each object as you specifiy. This will create multiple random number generators, according to the multiple seed specifications. This is normally used to have one random number behave normally for noise and such, and another one (or more) repeat with some other cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure). See `Demo 7` and `Demo 13` for examples of this. Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
+
+      .. note::
+          We use 0-based indexing for ``rng_num``, so the first item in the ``random_seed`` list is ``rng_num=0``, the second one is ``rng_num=1``, etc.
+
     * The default behavior, if ``random_seed`` is not given, is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
