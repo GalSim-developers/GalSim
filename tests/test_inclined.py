@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import os
 from copy import deepcopy
 import numpy as np
 
