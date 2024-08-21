@@ -235,7 +235,7 @@ def test_zernike_eval():
         np.ones(4, dtype=float),
         np.ones(4, dtype=np.float32)
     ]:
-        Z = Zernike(coef)
+        Z = galsim.zernike.Zernike(coef)
         assert Z.coef.dtype == np.float64
         assert Z(0.0, 0.0) == 1.0
         assert Z(0, 0) == 1.0
@@ -245,13 +245,13 @@ def test_zernike_eval():
         np.ones((4, 4), dtype=float),
         np.ones((4, 4), dtype=np.float32)
     ]:
-        dz = DoubleZernike(coefs)
+        dz = galsim.zernike.DoubleZernike(coefs)
         assert dz.coef.dtype == np.float64
         assert dz(0.0, 0.0) == dz(0, 0)
 
         # Make sure we cast to float in _from_uvxy
         uvxy = dz._coef_array_uvxy
-        dz2 = DoubleZernike._from_uvxy(uvxy.astype(int))
+        dz2 = galsim.zernike.DoubleZernike._from_uvxy(uvxy.astype(int))
         np.testing.assert_array_equal(dz2._coef_array_uvxy, dz._coef_array_uvxy)
 
 
