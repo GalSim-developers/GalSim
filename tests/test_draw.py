@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import os
 import numpy as np
 
 import galsim

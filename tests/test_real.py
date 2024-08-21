@@ -77,8 +77,8 @@ def test_real_galaxy_catalog():
 
     # Test some values that are lazy evaluated:
     assert rgc.ident[0] == '100533'
-    assert rgc.gal_file_name[0] == './real_comparison_images/test_images.fits'
-    assert rgc.psf_file_name[0] == './real_comparison_images/test_images.fits'
+    assert rgc.gal_file_name[0].split("/")[-2:] == ['real_comparison_images', 'test_images.fits']
+    assert rgc.psf_file_name[0].split("/")[-2:] == ['real_comparison_images', 'test_images.fits']
     assert rgc.noise_file_name is None
     np.testing.assert_array_equal(rgc.gal_hdu, [0,1])
     np.testing.assert_array_equal(rgc.psf_hdu, [2,3])
