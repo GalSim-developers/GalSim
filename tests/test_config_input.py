@@ -24,7 +24,7 @@ import sys
 import logging
 
 import galsim
-from galsim_test_helpers import timer, CaptureLog, assert_raises
+from galsim_test_helpers import *
 
 @timer
 def test_input_init():
@@ -288,6 +288,7 @@ def test_atm_input():
         galsim.config.InputLoader(AtmPSF, use_proxy=False,
                                   worker_initargs=galsim.phase_screens.initWorkerArgs)
 
+@timer
 def test_dependent_inputs():
     """Test inputs that depend on other inputs.
 
@@ -438,5 +439,4 @@ def test_dependent_inputs():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

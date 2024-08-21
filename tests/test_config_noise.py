@@ -68,12 +68,12 @@ def test_gaussian():
     var = sigma**2
     var1 = galsim.config.CalculateNoiseVariance(config)
     np.testing.assert_equal(var1, var)
-    var2 = galsim.Image(3,3)
+    var2 = galsim.Image(3,3, dtype=float)
     galsim.config.AddNoiseVariance(config, var2)
     np.testing.assert_almost_equal(var2.array, var)
 
     # Check include_obj_var=True, which shouldn't do anything different in this case
-    var3 = galsim.Image(32,32)
+    var3 = galsim.Image(32,32, dtype=float)
     galsim.config.AddNoiseVariance(config, var3, include_obj_var=True)
     np.testing.assert_almost_equal(var3.array, var)
 
@@ -890,5 +890,4 @@ def test_no_noise():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

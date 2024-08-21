@@ -20,9 +20,6 @@
 
 import galsim
 import galsim.des
-import os
-import math
-import numpy
 
 #
 # Define the Blend stamp type

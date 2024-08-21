@@ -13,19 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*manylinux*"
           CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
+          CIBW_SKIP: cp36* cp37* pp*
           # I think yum might always work here.  But leave all options available.
-          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
+          CIBW_BEFORE_ALL: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: whl-linux
           path: ./wheelhouse/*.whl
 
   build_musl_wheels:
@@ -34,51 +35,87 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*musllinux*"
           CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
+          CIBW_SKIP: cp36* cp37* pp*
           # I think musl always uses apk, but keep all options available.
           CIBW_BEFORE_ALL: apk add --upgrade fftw-dev || apt-get install libfftw3-dev || yum install -y fftw-devel
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: whl-musl
           path: ./wheelhouse/*.whl
 
-  build_macosx_wheels:
-    name: Build wheels on macosx
+  build_macosx_intel_wheels:
+    name: Build wheels on MacOS Intel
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_BUILD: "*macosx*"
+          CIBW_ARCHS: auto64
+          CIBW_SKIP: cp36* cp37* pp*
+          CIBW_BEFORE_ALL: brew install fftw || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: whl-macos
+          path: ./wheelhouse/*.whl
+
+  build_macosx_arm_wheels:
+    name: Build wheels on MacOS ARM
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: "*macosx*"
-          CIBW_ARCHS: auto64
-          CIBW_SKIP: cp36* pp*
-          CIBW_BEFORE_ALL_MACOS: brew install fftw || true
+          CIBW_ARCHS: arm64
+          CIBW_SKIP: cp36* cp37* pp*
+          CIBW_BEFORE_ALL: brew install llvm libomp fftw eigen
+          CIBW_ENVIRONMENT: >-
+            CC=/opt/homebrew/opt/llvm/bin/clang
+            CXX=/opt/homebrew/opt/llvm/bin/clang++
+            LDFLAGS="-L/opt/homebrew/opt/llvm/lib -Wl,-rpath,/opt/homebrew/opt/llvm/lib"
+            CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+            PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+            FFTW_DIR="/opt/homebrew/lib"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: whl-arm
           path: ./wheelhouse/*.whl
 
   build_sdist:
     name: Build sdist and upload to PyPI
-    needs: [build_linux_wheels, build_musl_wheels, build_macosx_wheels]
+    needs: [build_linux_wheels, build_musl_wheels, build_macosx_intel_wheels, build_macosx_arm_wheels]
     # Just need to build sdist on a single machine
     runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/GalSim
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Install fftw
         run: |
@@ -88,33 +125,31 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          pip install -U numpy setuptools
+          pip install -U numpy "setuptools<72"
           pip install -U -r requirements.txt
 
       - name: Download wheels
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./wheels
+          pattern: whl-*
+          merge-multiple: true
 
       - name: Build sdist
         run: |
           python setup.py sdist
           ls -l dist
-          tar tvfz dist/GalSim-*.tar.gz
+          tar tvfz dist/*.tar.gz
 
       - name: Copy wheels
         run: |
           echo ls -l wheels
           ls -l wheels
-          echo ls -l wheels/artifact
-          ls -l wheels/artifact
-          cp wheels/artifact/*.whl dist
+          cp wheels/*.whl dist
           echo ls -l dist
           ls -l dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-            user: __token__
-            password: ${{ secrets.PYPI_TOKEN }}
             verbose: true

@@ -19,7 +19,6 @@
 import os
 import sys
 import logging
-import builtins
 import shutil
 from unittest import mock
 import galsim
@@ -670,5 +669,4 @@ def test_full():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -1713,6 +1713,7 @@ def test_timeout():
                 galsim.config.Process(config2, logger=cl.logger, except_abort=True)
         assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
 
+@timer
 def test_direct_extra_output():
     # Test the ability to get extra output directly after calling BuildImage, but
     # not the usual higher level functions (Process or BuildFile).
@@ -1777,5 +1778,4 @@ def test_direct_extra_output():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

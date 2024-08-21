@@ -17,8 +17,6 @@
 #
 
 from copy import deepcopy
-import os
-import sys
 import numpy as np
 
 import galsim
@@ -670,5 +668,4 @@ def test_value_retrieval():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

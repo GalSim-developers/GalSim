@@ -17,8 +17,6 @@
 #
 
 import numpy as np
-import os
-import sys
 
 import galsim
 from galsim_test_helpers import *
@@ -1095,6 +1093,7 @@ def test_offset():
         im3 = obj.drawImage(im.copy(), method='sb', center=im.center)
         np.testing.assert_almost_equal(im3.array, im.array)
 
+@timer
 def test_shoot():
     """Test drawImage(..., method='phot')
 
@@ -1729,5 +1728,4 @@ def test_direct_scale():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

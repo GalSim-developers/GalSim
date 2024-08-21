@@ -25,7 +25,6 @@ the code).
 """
 
 import os
-import sys
 import numpy as np
 import math
 import glob
@@ -505,6 +504,56 @@ def test_masks():
 
 
 @timer
+def test_masks_with_check():
+    """Test which errors in masks for moments and shear estimation routines are caught with check."""
+    # Set up some toy galaxy and PSF
+    my_sigma = 1.0
+    my_pixscale = 0.1
+    my_g1 = 0.15
+    my_g2 = -0.4
+    imsize = 256
+    g = galsim.Gaussian(sigma = my_sigma)
+    p = galsim.Gaussian(sigma = my_sigma)
+
+    g = g.shear(g1=my_g1, g2=my_g2)
+    obj = galsim.Convolve(g, p)
+    im = galsim.ImageF(imsize, imsize)
+    p_im = galsim.ImageF(imsize, imsize)
+    obj.drawImage(image=im, scale=my_pixscale, method='no_pixel')
+    p.drawImage(image=p_im, scale=my_pixscale, method='no_pixel')
+
+    ## Create a weight image with size different from image
+    ## Let it be smaller in one dimension, and larger in the other.
+    bad_weight_im = galsim.ImageI(imsize, 2*imsize, init_value=1)
+    small_weight_im = galsim.ImageI(2*imsize, imsize//4, init_value=1)
+    # Setting strict=True (default) catches this error even if check=False.
+    galsim.hsm.FindAdaptiveMom(im, small_weight_im, strict=False, check=False)
+    assert_raises(galsim.errors.GalSimHSMError, galsim.hsm.FindAdaptiveMom, im, small_weight_im, strict=True, check=False)
+
+    # A zero weight image raises errors,
+    zero_weight_im = galsim.ImageI(imsize, 2*imsize, init_value=0)
+    assert_raises(galsim.errors.GalSimHSMError, galsim.hsm.FindAdaptiveMom, im, zero_weight_im, check=False)
+    assert_raises(galsim.errors.GalSimHSMError, galsim.hsm.EstimateShear, im, p_im, zero_weight_im, strict=True, check=False)
+    # but a negative weight image can slip through with check=False.
+    negative_weight_im = galsim.ImageI(imsize, 2*imsize, init_value=-1)
+    galsim.hsm.FindAdaptiveMom(im, negative_weight_im, check=False)
+    galsim.hsm.EstimateShear(im, p_im, negative_weight_im, check=False)
+    # But these are unique to ImageI. Passing the same as ImageS will catch the error, but is more expensive due to deep copy.
+    negative_weight_im_singleprecision = galsim.ImageS(imsize, imsize, init_value=-1)
+    assert_raises(galsim.errors.GalSimHSMError, galsim.hsm.FindAdaptiveMom, im, negative_weight_im_singleprecision, check=False)
+
+    # But all of these errors are caught with check=True.
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.FindAdaptiveMom, im, bad_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.FindAdaptiveMom, im, zero_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.FindAdaptiveMom, im, negative_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimValueError, galsim.hsm.FindAdaptiveMom, im, negative_weight_im_singleprecision, check=True)
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.EstimateShear, im, p_im, bad_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.EstimateShear, im, p_im, zero_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimIncompatibleValuesError, galsim.hsm.EstimateShear, im, p_im, negative_weight_im, check=True)
+    assert_raises(galsim.errors.GalSimValueError, galsim.hsm.EstimateShear, im, p_im, negative_weight_im_singleprecision, check=True)
+
+
+@timer
 def test_shearest_shape():
     """Test that shear estimation is insensitive to shape of input images."""
     # this test can help reveal bugs having to do with x / y indexing issues
@@ -878,6 +927,7 @@ def test_noncontiguous():
     np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
                                    err_msg="HSM measured wrong shear on image with step=2")
 
+@timer
 def test_headers():
     # This isn't really an HSM test per se, but it's testing a feature that we added so
     # LSST DM can use the C++-layer HSM code from their C++ code.
@@ -938,6 +988,7 @@ def test_headers():
     lib = ctypes.cdll.LoadLibrary(galsim.lib_file)
     # The test was that this doesn't raise an OSError or something.
 
+@timer
 def test_failures():
     """Test some images that used to fail, but now work.
     """
@@ -948,6 +999,7 @@ def test_failures():
         hsm = im.FindAdaptiveMom()
         assert hsm.moments_status == 0
 
+@timer
 def test_very_small():
     """Test an unresolved star reported to fail in #1132, but now works.
     """
@@ -967,6 +1019,7 @@ def test_very_small():
     assert "Object is too small" in mom.error_message
 
 
+@timer
 def test_negative_stepstride():
     """In response to #1185, check that hsm works for arrays with negative step or stride.
     """
@@ -983,5 +1036,4 @@ def test_negative_stepstride():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -19,7 +19,6 @@
 import unittest
 import numpy as np
 import os
-import sys
 import warnings
 
 # We don't require astroplan.  So check if it's installed.
@@ -1049,6 +1048,7 @@ def test_dcr_angles():
                 np.tan(q), np.tan(ap_q), 2,
                 "parallactic angle doesn't agree with astroplan's calculation.")
 
+@timer
 def test_dcr_moments():
     """Check that DCR gets the direction of the moment changes correct for some simple geometries.
     i.e. Basically check the sign conventions used in the DCR code.
@@ -1582,6 +1582,7 @@ def test_fromArrays():
         galsim.PhotonArray.fromArrays(np.empty(2000)[::2], y, flux, dxdz, dydz, wavelength)
 
 
+@timer
 def test_pupil_annulus_sampler():
     """ Check that we get a uniform distribution from PupilAnnulusSampler
     """
@@ -1605,6 +1606,7 @@ def test_pupil_annulus_sampler():
     check_pickle(sampler)
 
 
+@timer
 def test_time_sampler():
     """ Check TimeSampler build arguments
     """
@@ -1640,6 +1642,7 @@ def test_time_sampler():
     np.testing.assert_array_less(-pa.time, 10)
     check_pickle(sampler)
 
+@timer
 def test_setFromImage_crash():
     """Geri Braunlich ran into a seg fault where the photon array was not allocated to be
     sufficiently large for the photons it got from an image.
@@ -1677,11 +1680,110 @@ def test_setFromImage_crash():
     print('diff in ',len(w[0]),'pixels')
     assert len(w[0]) < 100  # I find it to be different in only 39 photons on my machine.
 
+@timer
+def test_concatenate():
+    """Check the PhotonArray.concatenate classmethod"""
+
+    rng = galsim.BaseDeviate(123)
+
+    N = 1000
+    x = rng.np.normal(size=N)
+    y = rng.np.normal(size=N)
+    flux = rng.np.normal(size=N)
+    dxdz = rng.np.normal(size=N)
+    dydz = rng.np.normal(size=N)
+    wavelength = rng.np.normal(size=N)
+    pupil_u = rng.np.normal(size=N)
+    pupil_v = rng.np.normal(size=N)
+    time = rng.np.normal(size=N)
+
+    N1 = 234
+    N2 = 399
+    N3 = 765
+    pa1 = galsim.PhotonArray.fromArrays(x[:N1], y[:N1], flux[:N1])
+    pa2 = galsim.PhotonArray.fromArrays(x[N1:N2], y[N1:N2], flux[N1:N2])
+    pa3 = galsim.PhotonArray.fromArrays(x[N2:N3], y[N2:N3], flux[N2:N3])
+    pa4 = galsim.PhotonArray.fromArrays(x[N3:], y[N3:], flux[N3:])
+
+    pa = galsim.PhotonArray.concatenate([pa1, pa2, pa3, pa4])
+    np.testing.assert_array_equal(pa.x, x)
+    np.testing.assert_array_equal(pa.y, y)
+    np.testing.assert_array_equal(pa.flux, flux)
+
+    pa1 = galsim.PhotonArray.fromArrays(x[:N1], y[:N1], flux[:N1],
+                                        dxdz=dxdz[:N1], dydz=dydz[:N1],
+                                        wavelength=wavelength[:N1], time=time[:N1],
+                                        pupil_u=pupil_u[:N1], pupil_v=pupil_v[:N1])
+    pa2 = galsim.PhotonArray.fromArrays(x[N1:N2], y[N1:N2], flux[N1:N2],
+                                        dxdz=dxdz[N1:N2], dydz=dydz[N1:N2],
+                                        wavelength=wavelength[N1:N2], time=time[N1:N2],
+                                        pupil_u=pupil_u[N1:N2], pupil_v=pupil_v[N1:N2])
+    pa3 = galsim.PhotonArray.fromArrays(x[N2:N3], y[N2:N3], flux[N2:N3],
+                                        dxdz=dxdz[N2:N3], dydz=dydz[N2:N3],
+                                        wavelength=wavelength[N2:N3], time=time[N2:N3],
+                                        pupil_u=pupil_u[N2:N3], pupil_v=pupil_v[N2:N3])
+    pa4 = galsim.PhotonArray.fromArrays(x[N3:], y[N3:], flux[N3:],
+                                        dxdz=dxdz[N3:], dydz=dydz[N3:],
+                                        wavelength=wavelength[N3:], time=time[N3:],
+                                        pupil_u=pupil_u[N3:], pupil_v=pupil_v[N3:])
+
+    pa = galsim.PhotonArray.concatenate([pa1, pa2, pa3, pa4])
+    np.testing.assert_array_equal(pa.x, x)
+    np.testing.assert_array_equal(pa.y, y)
+    np.testing.assert_array_equal(pa.flux, flux)
+    np.testing.assert_array_equal(pa.dxdz, dxdz)
+    np.testing.assert_array_equal(pa.dydz, dydz)
+    np.testing.assert_array_equal(pa.wavelength, wavelength)
+    np.testing.assert_array_equal(pa.pupil_u, pupil_u)
+    np.testing.assert_array_equal(pa.pupil_v, pupil_v)
+    np.testing.assert_array_equal(pa.time, time)
+
+
+@timer
+def test_scale_flux():
+    N = 1000
+    rng = galsim.BaseDeviate(123)
+    x = rng.np.normal(size=N)
+    y = rng.np.normal(size=N)
+    flux = rng.np.normal(size=N)
+    pa = galsim.PhotonArray.fromArrays(x.copy(), y.copy(), flux.copy())
+
+    scale_flux = galsim.ScaleFlux(0.123)
+    scale_flux.applyTo(pa)
+
+    np.testing.assert_allclose(pa.x, x)
+    np.testing.assert_allclose(pa.y, y)
+    np.testing.assert_allclose(pa.flux, flux * 0.123)
+
+    check_pickle(scale_flux)
+
+
+@timer
+def test_scale_wavelength():
+    N = 1000
+    rng = galsim.BaseDeviate(123)
+    x = rng.np.normal(size=N)
+    y = rng.np.normal(size=N)
+    flux = rng.np.normal(size=N)
+    wavelength = rng.np.uniform(500,700,size=N)
+    pa = galsim.PhotonArray.fromArrays(x.copy(), y.copy(), flux.copy(),
+                                       wavelength=wavelength.copy())
+
+    scale_wave = galsim.ScaleWavelength(1+0.123)
+    scale_wave.applyTo(pa)
+
+    np.testing.assert_allclose(pa.x, x)
+    np.testing.assert_allclose(pa.y, y)
+    np.testing.assert_allclose(pa.flux, flux)
+    np.testing.assert_allclose(pa.wavelength, wavelength * (1+0.123))
+
+    check_pickle(scale_wave)
+
+
 
 if __name__ == '__main__':
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     if no_astroplan:
         print('Skipping test_dcr_angles, since astroplan not installed.')
         testfns.remove(test_dcr_angles)
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

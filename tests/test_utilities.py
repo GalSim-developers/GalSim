@@ -17,8 +17,6 @@
 #
 
 import numpy as np
-import os
-import sys
 
 import galsim
 from galsim_test_helpers import *
@@ -1063,6 +1061,7 @@ def test_unweighted_moments():
     np.testing.assert_almost_equal(mom4['My'], 0.0)
 
 
+@timer
 def test_dol_to_lod():
     """Check broadcasting behavior of dol_to_lod"""
 
@@ -1410,6 +1409,7 @@ def test_horner_complex():
     result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
+@timer
 def test_merge_sorted():
     from galsim.utilities import merge_sorted
 
@@ -1532,5 +1532,4 @@ def test_merge_sorted():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -49,9 +49,8 @@
 # New features introduced in this demo:
 #
 # - sed : file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,
-#         norm_flux, norm_bandpass
+#         norm_flux, norm_bandpass, redshift
 # - bandpass : filename, wave_type, thin
-# - gal : redshift
 # - psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)
 
 
@@ -111,8 +110,7 @@ gal:
         flux_type: flambda
         norm_flux_density: 1.0
         norm_wavelength: 500
-
-    redshift: 0.8
+        redshift: 0.8
 
     shear:
         type: G1G2
@@ -147,6 +145,7 @@ gal:
                 flux_type: flambda
                 norm_flux_density: 1.0
                 norm_wavelength: 500
+                redshift: 0.8
             shear:
                 type: G1G2
                 g1: 0.12
@@ -161,13 +160,13 @@ gal:
                 flux_type: flambda
                 norm_flux_density: 1.0
                 norm_wavelength: 500
+                redshift: 0.8
             shear:
                 type: G1G2
                 g1: 0.4
                 g2: 0.2
             scale_flux: 4
 
-    redshift: 0.8
     scale_flux: 1.1
 
 psf:

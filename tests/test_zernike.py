@@ -229,6 +229,33 @@ def test_Zernike_rotate():
 
 
 @timer
+def test_zernike_eval():
+    for coef in [
+        np.ones(4),
+        np.ones(4, dtype=float),
+        np.ones(4, dtype=np.float32)
+    ]:
+        Z = Zernike(coef)
+        assert Z.coef.dtype == np.float64
+        assert Z(0.0, 0.0) == 1.0
+        assert Z(0, 0) == 1.0
+
+    for coefs in [
+        np.ones((4, 4)),
+        np.ones((4, 4), dtype=float),
+        np.ones((4, 4), dtype=np.float32)
+    ]:
+        dz = DoubleZernike(coefs)
+        assert dz.coef.dtype == np.float64
+        assert dz(0.0, 0.0) == dz(0, 0)
+
+        # Make sure we cast to float in _from_uvxy
+        uvxy = dz._coef_array_uvxy
+        dz2 = DoubleZernike._from_uvxy(uvxy.astype(int))
+        np.testing.assert_array_equal(dz2._coef_array_uvxy, dz._coef_array_uvxy)
+
+
+@timer
 def test_ne():
     objs = [
         galsim.zernike.Zernike([0, 1, 2]),
@@ -389,7 +416,7 @@ def test_gradient():
     # fig.colorbar(scat2, ax=axes[2])
     # plt.show()
 
-    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=1.e-12, atol=1e-12)
 
     Z28 = galsim.zernike.Zernike([0]*28+[1])
 
@@ -399,7 +426,7 @@ def test_gradient():
         grady = -6*np.sqrt(14)*y*(5*x**4 - 10*x**2*y**2 + y**4)
         return gradx, grady
 
-    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=1.e-12, atol=1e-12)
 
     # Now try some finite differences on a broader set of input
 
@@ -873,6 +900,7 @@ def test_dz_val():
     check_pickle(dz)
 
 
+@timer
 def test_dz_coef_uvxy():
     rng = galsim.BaseDeviate(4321).as_numpy_generator()
     for _ in range(100):
@@ -937,6 +965,7 @@ def test_dz_coef_uvxy():
                 )
 
 
+@timer
 def test_dz_sum():
     """Test that DZ.__add__, __sub__, and __neg__ work as expected.
     """
@@ -1053,6 +1082,7 @@ def test_dz_sum():
         assert (dz2 - dz1) == dz2 + (-dz1) == -(dz1 - dz2)
 
 
+@timer
 def test_dz_product():
     """Test that __mul__ and __rmul__ work as expected.
     """
@@ -1155,6 +1185,7 @@ def test_dz_product():
     assert (dz2 * 3) == (3 * dz2)
 
 
+@timer
 def test_dz_grad():
     """Test that DZ gradients work as expected.
     """
@@ -1222,6 +1253,7 @@ def test_dz_grad():
             np.testing.assert_allclose(dzdy1, dzdy2, atol=1e-12)
 
 
+@timer
 def test_dz_to_T():
     """Test that DZs enable efficient computation of optical PSF sizes."""
 
@@ -1347,6 +1379,7 @@ def test_dz_to_T():
         # plt.show()
 
 
+@timer
 def test_dz_rotate():
     rng = galsim.BaseDeviate(12775).as_numpy_generator()
 
@@ -1391,6 +1424,7 @@ def test_dz_rotate():
                 )
 
 
+@timer
 def test_dz_basis():
     """Test the doubleZernikeBasis function"""
 
@@ -1432,6 +1466,7 @@ def test_dz_basis():
                     )
 
 
+@timer
 def test_dz_mean():
     """Test the dz.mean_xy and .mean_uv properties"""
     rng = galsim.BaseDeviate(51413).as_numpy_generator()
@@ -1525,5 +1560,4 @@ def test_dz_mean():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -18,6 +18,7 @@
 
 import sys
 import os
+import sys
 import numpy as np
 import time
 from unittest import mock
@@ -1010,6 +1011,11 @@ def test_ne():
 
 @timer
 def test_integrate():
+    if np.__version__ >= '2.0':
+        np_trapz = np.trapezoid
+    else:
+        np_trapz = np.trapz
+
     functions = [
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,4], [1,8], interpolant='linear'),
@@ -1046,7 +1052,7 @@ def test_integrate():
                     xmax = x_max
                 x = np.linspace(xmin, xmax, 10000)
                 f = func(x)
-                np_ans = np.trapz(f,x)
+                np_ans = np_trapz(f,x)
                 print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
                 if func.interpolant in ['linear', 'spline']:
                     rtol = 1.e-7
@@ -1084,7 +1090,7 @@ def test_integrate():
     t5 = time.time()
     ans6 = galsim.trapz(y,x)
     t6 = time.time()
-    ans7 = np.trapz(y,x)
+    ans7 = np_trapz(y,x)
     t7 = time.time()
     ans8 = galsim.trapz(y,x, interpolant='spline')
     t8 = time.time()
@@ -1126,6 +1132,11 @@ def test_integrate():
 
 @timer
 def test_integrate_product():
+    if np.__version__ >= '2.0':
+        np_trapz = np.trapezoid
+    else:
+        np_trapz = np.trapz
+
     functions = [
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,4], [1,8], interpolant='linear'),
@@ -1186,7 +1197,7 @@ def test_integrate_product():
                         # Do the integral using trapz with fine x spacing.
                         x = np.linspace(xmin, xmax, 10000)
                         fg = func(x*xfact) * g2(x)
-                        np_ans = np.trapz(fg,x)
+                        np_ans = np_trapz(fg,x)
                         #print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
                         if func.interpolant in ['linear', 'spline']:
                             rtol = 1.e-7
@@ -1223,5 +1234,4 @@ def test_integrate_product():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

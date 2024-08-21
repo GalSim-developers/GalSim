@@ -39,15 +39,17 @@ from .table import _LookupTable
 from .sum import Add
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, galsim_warn
-from .photon_array import WavelengthSampler, PhotonArray
+from .photon_array import WavelengthSampler, PhotonArray, PhotonOp, ScaleFlux
 from .random import BaseDeviate, UniformDeviate, BinomialDeviate, PoissonDeviate
 from .shear import Shear, _Shear
 from .interpolatedimage import InterpolatedImage
-from .angle import Angle, _Angle, AngleUnit, arcsec, radians
+from .angle import AngleUnit, arcsec, radians
 from .airy import Airy
+from .deltafunction import DeltaFunction
 from . import utilities
 from . import integ
 from . import dcr
+from .image import Image ##change
 
 
 class ChromaticObject:
@@ -458,7 +460,6 @@ class ChromaticObject:
         Returns:
             the drawn `Image`.
         """
-
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
         if self.sed.dimensionless:
@@ -484,6 +485,14 @@ class ChromaticObject:
             prof0 *= multiplier/self.sed(wave0)
             image = prof0.drawImage(image=image, **kwargs)
             return image
+
+        # Note to developers, if we get to this point, then the implementaion is to integrate
+        # drawn images as a function of wavelength.  This is quite slow.
+        # Moreover, for method=phot, it cannot implement some features like save_photons=True.
+        # The guards to avoid this happening for method=phot are mostly in the drawImage methods
+        # of subclasses.  So if you find this happening, the solution is most likely to
+        # specialize something in the subclass's drawImage method.
+        assert kwargs.get('method', None) != 'phot'
 
         integrator = self._get_integrator(integrator, wave_list)
 
@@ -739,7 +748,17 @@ class ChromaticObject:
         Returns:
             the object with the new redshift
         """
-        return ChromaticTransformation(self, redshift=redshift)
+        from .deprecated import depr
+        depr('atRedshift', '2.5.3', 'SED.atRedshift',
+             'We now require that the SED of an object be appropriately redshifted before being '
+             'used in a chromatic object.  So rather than `(obj * sed).atRedshift(z)`, you '
+             'should now use `obj * sed.atRedshift(z)`.  For more complicated chromatic objects, '
+             'it is not always clear what parts of the wavelength dependence should be shifted '
+             'by this method, so we no longer allow the ambiguous syntax.')
+        return self._atRedshift(redshift)
+
+    def _atRedshift(self, redshift):
+        return ChromaticTransformation(self, _redshift=redshift)
 
     def calculateCentroid(self, bandpass):
         """Determine the centroid of the wavelength-integrated surface brightness profile.
@@ -1218,6 +1237,96 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.deinterpolated = original.deinterpolated
+    
+    @classmethod
+    def from_images(self, images, waves, _force_stepk = None, _force_maxk = None, **kwargs):
+        """
+        Alternative initiazliation to InterpolatedChromaticObject from input images at specific wavelenghts. Any parameters accepted by
+        the InterpolatedImage class can be passed in kwargs. Note that stepk and maxk are parameters that can depend on the image size,
+        and therefore on the wavelength. If not given, as a list for every image, or a single number for all images, it will be caluclated
+        using the input image pixel scale and dimensions. This means it will be identical for all images. This will cause small differences
+        from the normal use of this class using chromatic objects whose stepk and maxk are wavelength-dependent. To avoid sanity checks
+        from method initialization, such as wavelength sorting, pixel scale and image dimensions compatibility, simply call the function
+        InterpolatedChromaticObject._from_images directly.
+        
+        Parameters:
+            images:          list of Galsim Image objects to use as interpolated images. All images must have the same pixel scale and image
+                             dimensions.
+            waves:            list of wavelength values in nanometers.
+            _force_stepk:    list of step_k values to pass to InterpolatedImages for each image. Can also be single value
+                             to pass for all images alike. If not given stepk is calculated from image pixel scale and dimensions. [Default: None]
+            _force_maxk:     list of max_k values to pass to InterpolatedImages for each image. Can also be single value
+                             to pass for all images alike. If not given maxk is calculated from image pixel scale. [Default: None]
+
+        Returns:
+            An InterpolatedChromaticObject intialized from input images.
+        """ 
+        # check that all images have PixelScale wcs, the same pixel scale and image dimensions.
+        if images[0].wcs is None or not images[0].wcs._isPixelScale:
+            raise GalSimValueError("images must have a pixel scale wcs.", images[0].wcs )
+        pix_scale = images[0].scale
+        img_dims = images[0].array.shape
+        for img in images[1:]:
+            if img.scale != pix_scale:
+                raise GalSimValueError("Cannot interpolate images with different pixel scales.",img.scale,  pix_scale )                         
+            if img.array.shape != img_dims:
+                raise GalSimValueError("Cannot interpolate images with different image dimensions.",  img.array.shape , img_dims)
+        # sort wavelengths and apply sorting to image list
+        sorted_indices = np.argsort(waves)
+        sorted_waves = np.array(waves)[sorted_indices]
+        sorted_images = [images[i] for i in sorted_indices]
+        return self._from_images(sorted_images, sorted_waves, _force_stepk = _force_stepk, _force_maxk = _force_maxk, **kwargs)
+        
+    @classmethod
+    def _from_images(cls, images, waves, _force_stepk = None, _force_maxk = None, **kwargs):
+        """
+        Equivalent to InterpolatedChromaticObject.from_images, but without the sanity checks.
+        Also, the waves must be given in sorted order.
+        """
+        obj = cls.__new__(cls)  # Does not call __init__ 
+        # use_exact_sed set to false as input images won't have sed available. Ovsersample factor not relevant here, set to 1.0
+        obj.oversample = 1.0
+        obj.use_exact_sed = False
+        obj.separable = False
+        obj.interpolated = True
+        # image properties
+        obj.waves = np.array(waves)
+        pix_scale = images[0].scale 
+        img_dims = images[0].array.shape
+        n_img = len(images)
+        
+        stepk = np.zeros(n_img)
+        maxk =  np.zeros(n_img)
+        mean_stepk, mean_maxk = 0.0, 0.0
+        # in the case _force_stepk and/or _force_maxk are passed as lists or single value, set up variables for dummy interpolated object
+        if _force_stepk is not None:
+            mean_stepk = np.mean(_force_stepk)
+        if _force_maxk is not None:
+            mean_maxk = np.mean(_force_maxk)
+
+        # set deinterpolated to a dummy interpolated image. Galsim uses this object to get gsparams and other properties
+        # so setting it to None will cause issues. Only obj.ims and obj.objs will affect future calculations if use_exact_sed = False.
+        # In here we set it to be the average profile in order to calculate the default stepk and maxk to use for all images
+        avg_image = np.zeros(img_dims, dtype=float)
+        for img in images:
+            avg_image += img.array
+        avg_image /= n_img
+        avg_img = Image(avg_image, scale=pix_scale)
+        obj.deinterpolated = InterpolatedImage(avg_img, _force_stepk = mean_stepk, _force_maxk= mean_maxk,  **kwargs)
+        stepk[:] = obj.deinterpolated._stepk
+        maxk[:] = obj.deinterpolated._maxk
+        
+        # if stepk and maxk are provided as arguments, overwrite default from average profile
+        if _force_stepk is not None:
+            stepk[:] = _force_stepk
+        if _force_maxk is not None:
+            maxk[:] = _force_maxk
+        
+        # set ims and objs manually using the input images
+        obj.ims = images
+        obj.objs = np.array([InterpolatedImage(images[i], _force_stepk=stepk[i], _force_maxk=maxk[i], **kwargs) for i in range(n_img) ])
+        return obj
+             
 
     @property
     def sed(self):
@@ -1404,8 +1513,10 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         if _flux_ratio is None:
             _flux_ratio = lambda w: np.ones_like(w)
-        # Constant flux_ratio is already an SED at this point, so can treat as function.
-        #assert hasattr(_flux_ratio, '__call__')
+        # _flux_ratio might be a constant float.  For simplicity below, turn it into a function.
+        if not hasattr(_flux_ratio, '__call__'):
+            val = _flux_ratio
+            _flux_ratio = lambda w: np.full_like(w, val)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -1697,7 +1808,6 @@ class ChromaticTransformation(ChromaticObject):
                             (dx,dy) by which to shift the profile.  May also be a function of
                             wavelength returning a numpy array.  [default: None]
         flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]
-        redshift:           A redshift to apply to the wavelength when evaluating. [default: None]
         gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
@@ -1705,13 +1815,19 @@ class ChromaticTransformation(ChromaticObject):
                             would not want to do this. [default: True]
     """
     def __init__(self, obj, jac=None, offset=(0.,0.), flux_ratio=1., redshift=None,
-                 gsparams=None, propagate_gsparams=True):
+                 gsparams=None, propagate_gsparams=True, _redshift=None):
         if isinstance(offset, Position):
             offset = (offset.x, offset.y)
         if not hasattr(jac,'__call__') and jac is not None:
             jac = np.asarray(jac).reshape(2,2)
         if not hasattr(offset,'__call__'):
             offset = np.asarray(offset)
+        if redshift is not None:
+            from .deprecated import depr
+            depr('redshift', 2.5, 'SED.atRedshift',
+                 'You should now apply the redshift to the SED before using it in a '
+                 'chromatic object.')
+            _redshift = redshift
 
         self.chromatic = hasattr(jac,'__call__') or hasattr(offset,'__call__')
         # Technically, if the only chromatic transformation is a flux_ratio, and the original object
@@ -1725,7 +1841,7 @@ class ChromaticTransformation(ChromaticObject):
                         "non-interpolated version.")
             obj = obj.deinterpolated
         self.interpolated = obj.interpolated
-        self._redshift = redshift
+        self._redshift = _redshift
 
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
@@ -1799,6 +1915,11 @@ class ChromaticTransformation(ChromaticObject):
         """
         return self._gsparams
 
+    def _atRedshift(self, redshift):
+        ret = copy.copy(self)
+        ret._redshift = redshift
+        return ret
+
     @doc_inherit
     def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
@@ -1869,9 +1990,13 @@ class ChromaticTransformation(ChromaticObject):
             offset = self._offset
         else:
             offset = _PositionD(*(self._offset.tolist()))
-        return ('galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, '
-                'redshift=%r, gsparams=%r, propagate_gsparams=%r)')%(
-            self.original, jac, offset, self._flux_ratio, self._redshift,
+        if self._redshift is not None:
+            redshift_str = 'redshift=%r, '%self._redshift
+        else:
+            redshift_str = ''
+        return ('galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, %s'
+                'gsparams=%r, propagate_gsparams=%r)')%(
+            self.original, jac, offset, self._flux_ratio, redshift_str,
             self._gsparams, self._propagate_gsparams)
 
     def __str__(self):
@@ -1917,7 +2042,7 @@ class ChromaticTransformation(ChromaticObject):
         # Same as evaluateAtWavelength, except the starting point is also _approxWavelength
         wave1 = wave / (1.+self._redshift) if self._redshift is not None else wave
         wave2, ret = self.original._approxWavelength(wave1)
-        wave = wave2 * (1.+self._redshift) if self._redshift is not None else wave2
+        wave = wave2 * (1.+self.redshift) if self._redshift is not None else wave2
         jac, offset, flux_ratio = self._getTransformations(wave)
         offset = _PositionD(*offset)
         return wave, transform.Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
@@ -1946,24 +2071,37 @@ class ChromaticTransformation(ChromaticObject):
 
     def _shoot(self, photons, rng):
         self._original._shoot(photons, rng)
-        wave = photons.wavelength
-        jac, offset, flux_ratio = self._getTransformations(wave)
+        self._photon_op.applyTo(photons)
 
-        # cf. Transformation._fwd_normal
-        if jac is not None:
-            temp = jac[0,1] * photons.y
-            photons.y *= jac[1,1]
-            photons.y += jac[1,0] * photons.x
-            photons.x *= jac[0,0]
-            photons.x += temp
+    @lazy_property
+    def _photon_op(self):
+        # A PhotonOp that just applies the transformation part, not self.original.
+        class ChromaticTransformationPhotonOp(PhotonOp):
+            def __init__(self, ct):
+                self.ct = ct
 
-            det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
-            flux_ratio *= np.abs(det)
+            def applyTo(self, photons, local_wcs=None, rng=None):
+                wave = photons.wavelength
+                if self.ct._redshift is not None:
+                    wave /= (1+self.ct._redshift)
+                jac, offset, flux_ratio = self.ct._getTransformations(wave)
 
-        photons.x += offset[0]
-        photons.y += offset[1]
+                # cf. Transformation._fwd_normal
+                if jac is not None:
+                    temp = jac[0,1] * photons.y
+                    photons.y *= jac[1,1]
+                    photons.y += jac[1,0] * photons.x
+                    photons.x *= jac[0,0]
+                    photons.x += temp
 
-        photons.flux *= flux_ratio
+                    det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
+                    flux_ratio *= np.abs(det)
+
+                photons.x += offset[0]
+                photons.y += offset[1]
+                photons.flux *= flux_ratio
+
+        return ChromaticTransformationPhotonOp(self)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
@@ -2009,12 +2147,44 @@ class ChromaticTransformation(ChromaticObject):
             int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
                                          propagate_gsparams=self._propagate_gsparams)
             image = int_im.drawImage(image=image, **kwargs)
-            self._last_wcs = image.wcs
-            return image
+        elif kwargs.get('method',None) == 'phot':
+            # Need to calculate n_photons now using the fiducial profile, not self.original,
+            # since the transformation may (often does) change the flux.
+            flux = self.calculateFlux(bandpass)
+            wave0, prof0 = self._fiducial_profile(bandpass)
+            prof1 = prof0.withFlux(flux)
+            n_photons = kwargs.pop('n_photons', 0)
+            poisson_flux = kwargs.pop('poisson_flux', n_photons == 0.)
+            max_extra_noise = kwargs.pop('max_extra_noise', 0.)
+            rng = BaseDeviate(kwargs.get('rng', None))
+            n_photons, g = prof1._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+            kwargs['n_photons'] = n_photons
+
+            if self.original.dimensionless:
+                # Then this is a PSF * SED.  Things work better to convert it into a
+                # Convolution(delta * SED, PSF) instead.
+                psf = ChromaticTransformation(self.original, jac=self._jac, offset=self._offset,
+                                              gsparams=self._gsparams, propagate_gsparams=False)
+                sed = self._flux_ratio * g
+                assert sed.spectral  # This must be true here.
+                if self._redshift is not None:
+                    sed = sed.atRedshift(self._redshift)
+                kwargs['photon_ops'] = [psf] + kwargs.get('photon_ops', [])
+                image = (DeltaFunction() * sed).drawImage(bandpass, image=image, **kwargs)
+            else:
+                # If the original is spectral, then treat the transformation as a photon_op.
+                ops = [self._photon_op]
+                if g != 1.0:
+                    ops = ops + [ScaleFlux(g)]
+                ops = ops + kwargs.pop('photon_ops', [])
+                gal = self.original
+                if self._redshift is not None:
+                    gal = gal._atRedshift(self._redshift)
+                image = gal.drawImage(bandpass, image=image, photon_ops=ops, **kwargs)
         else:
             image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
-            self._last_wcs = image.wcs
-            return image
+        self._last_wcs = image.wcs
+        return image
 
     @lazy_property
     def noise(self):
@@ -2071,6 +2241,10 @@ class SimpleChromaticTransformation(ChromaticTransformation):
     @lazy_property
     def sed(self):
         return self._flux_ratio * self.original.flux
+
+    def _atRedshift(self, redshift):
+        return SimpleChromaticTransformation(self.original, self._flux_ratio.atRedshift(redshift),
+                                             self._gsparams, self._propagate_gsparams)
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
@@ -2255,10 +2429,9 @@ class ChromaticSum(ChromaticObject):
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
-    @doc_inherit
-    def atRedshift(self, redshift):
+    def _atRedshift(self, redshift):
         ret = copy.copy(self)
-        ret._obj_list = [ obj.atRedshift(redshift) for obj in self.obj_list ]
+        ret._obj_list = [ obj._atRedshift(redshift) for obj in self.obj_list ]
         return ret
 
     def __eq__(self, other):
@@ -2362,16 +2535,24 @@ class ChromaticSum(ChromaticObject):
         add_to_image = kwargs.pop('add_to_image', False)
 
         n_photons = kwargs.pop('n_photons', None)
+        save_photons = kwargs.get('save_photons', False)
+        all_photons = []
         if n_photons is None or kwargs.get('method', None) != 'phot':
             # Use given add_to_image for the first one, then add_to_image=True for the rest.
             image = self.obj_list[0].drawImage(
                     bandpass, image=image, add_to_image=add_to_image, **kwargs)
             _remove_setup_kwargs(kwargs)
             added_flux = image.added_flux
+            if save_photons:
+                all_photons.append(image.photons)
             for obj in self.obj_list[1:]:
                 image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
                 added_flux += image.added_flux
+                if save_photons:
+                    all_photons.append(image.photons)
             image.added_flux = added_flux
+            if save_photons:
+                image.photons = PhotonArray.concatenate(all_photons)
         else:
             # If n_photons is specified, need some special handling here.
             rng = BaseDeviate(kwargs.get('rng', None))
@@ -2400,6 +2581,8 @@ class ChromaticSum(ChromaticObject):
                     image = obj.drawImage(bandpass, image=image, add_to_image=add_to_image,
                                           n_photons=this_nphot, poisson_flux=False, **kwargs)
                     added_flux += image.added_flux
+                    if save_photons:
+                        all_photons.append(image.photons)
                     if first:
                         # Note: This might not be i==0.
                         # Do this after the first call we make to drawImage.
@@ -2409,6 +2592,8 @@ class ChromaticSum(ChromaticObject):
                 if not remaining_flux > 0:
                     break
             image.added_flux = added_flux
+            if save_photons:
+                image.photons = PhotonArray.concatenate(all_photons)
         self._last_wcs = image.wcs
         return image
 

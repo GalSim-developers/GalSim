@@ -8,11 +8,13 @@ on:
     push:
         branches:
             - main
+            - runci
             - releases/*
 
     pull_request:
         branches:
             - main
+            - runci
             - releases/*
 
 jobs:
@@ -26,6 +28,7 @@ jobs:
                 py: [ 3.7, 3.8, 3.9, "3.10", 3.11, 3.12 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
+                FFTW_DIR: [ "/usr/local/lib" ]
 
                 # Add some other particular combinations to test
                 include:
@@ -37,12 +40,14 @@ jobs:
                       py: "3.10"
                       CC: cc
                       CXX: c++
+                      FFTW_DIR: "/opt/homebrew/lib/"
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
                       py: "3.10"
                       CC: clang
                       CXX: clang++
+                      FFTW_DIR: "/usr/local/lib/"
 
                     # And a pypy system.
                     # As of 12/1/2022, this is broken for astropy.
@@ -53,8 +58,11 @@ jobs:
                       #CC: gcc
                       #CXX: g++
 
+        env:
+            FFTW_DIR: ${{ matrix.FFTW_DIR }}
+
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                 # Need this for git commands to work right.
                 # Also for codecov upload apparently.
@@ -71,7 +79,7 @@ jobs:
                   echo 'event.after: ${{ github.event.after }}'
 
             - name: Set up Python ${{ matrix.py }}
-              uses: actions/setup-python@v3
+              uses: actions/setup-python@v5
               with:
                 python-version: ${{ matrix.py }}
 
@@ -81,7 +89,7 @@ jobs:
                 key: ${{ matrix.os }}-${{ matrix.py }}-${{ matrix.CXX }}
 
             - name: Cache pip
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                 path: |
                   ~/.cache/pip
@@ -99,6 +107,7 @@ jobs:
                 echo ${{ matrix.os }}
                 sudo -H apt update -y
                 sudo -H apt install -y libfftw3-dev
+                ls $FFTW_DIR
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
                 # it gets downloaded and installed properly if it isn't installed.
@@ -128,9 +137,7 @@ jobs:
                 brew link --overwrite fftw gcc wget || true
                 brew install eigen || true
                 brew link --overwrite eigen || true
-                brew cask install gfortran || true
-                brew install libav || true
-                brew link --overwrite libav || true
+                ls $FFTW_DIR
 
             - name: Download des_data
               run: |
@@ -145,7 +152,7 @@ jobs:
 
                 # Do these three first to clarify potential conflicts
                 pip install -U numpy
-                pip install -U setuptools
+                pip install -U "setuptools<72"
                 pip install -U wheel
 
                 # Standard dependencies
@@ -154,13 +161,24 @@ jobs:
                 # Extra packages needed for testing
                 pip install -U -r test_requirements.txt
                 pip install -U nose coverage
-                pip install -U matplotlib astroplan
+
+                pip install -U matplotlib
+
+            - name: Install astroplan
+              # astroplan isn't yet numpy 2.0 compatible.  So don't install that on 3.9+.
+              # I'm also getting errors with starlink, which I think may be related to
+              # numpy 2.0.
+              if: (matrix.py == 3.8) || (matrix.py == 3.9)
+              run: |
+                pip install -U astroplan
+                pip install -U starlink-pyast
 
             - name: Install CPython-only dependencies
               if: matrix.py != 'pypy-3.7'
               run: |
                 # The only one left that doesn't seem to work right on pypy is starlink-pyast.
-                pip install -U starlink-pyast
+                # (This is now above in numpy 1.x versions.)
+                #pip install -U starlink-pyast
                 # And now pandas is acting up on pypy.
                 # cf. https://github.com/pandas-dev/pandas/issues/44253
                 pip install -U pandas
@@ -169,7 +187,10 @@ jobs:
               run: pip list
 
             - name: Build GalSim
-              run: pip install -vvv .
+              run: |
+                # The prefix is required for recent MacOS, because of System Integrity Protection.
+                # It's not necessary on Linux, but is harmless enough.
+                FFTW_DIR=$FFTW_DIR pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
               if: matrix.py == 3.7 && github.base_ref != ''

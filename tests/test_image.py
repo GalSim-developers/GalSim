@@ -44,7 +44,6 @@ incremented by one.
 """
 
 import os
-import sys
 import numpy as np
 
 import galsim
@@ -273,8 +272,8 @@ def test_Image_basic():
                 assert im2_cview.imag(x,y) == 0
 
                 value3 = 10*x + y + 111
-                im1.addValue(x,y, value3-value2)
-                im2_view[x,y] += value3-value2
+                im1.addValue(x,y, np.int64(value3-value2))
+                im2_view[x,y] += np.int64(value3-value2)
                 assert im1[galsim.PositionI(x,y)] == value3
                 assert im1.view()[x,y] == value3
                 assert im1.view(make_const=True)[galsim.PositionI(x,y)] == value3
@@ -3762,5 +3761,4 @@ def test_flips():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

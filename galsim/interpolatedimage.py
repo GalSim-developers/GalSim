@@ -28,12 +28,12 @@ from .gsparams import GSParams
 from .image import Image
 from .bounds import _BoundsI
 from .position import PositionD, _PositionD
-from .interpolant import Quintic, Interpolant, SincInterpolant
+from .interpolant import Quintic
 from .utilities import convert_interpolant, lazy_property, doc_inherit, basestring
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
+from .errors import GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
 from .wcs import BaseWCS, PixelScale
 from .noise import GaussianNoise

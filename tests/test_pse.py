@@ -18,7 +18,6 @@
 
 import os
 import numpy as np
-import time
 
 import galsim
 from galsim_test_helpers import *
@@ -188,5 +187,4 @@ def test_PSE_weight():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

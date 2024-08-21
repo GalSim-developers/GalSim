@@ -294,7 +294,7 @@ def test_quantize():
 def test_IPC_basic():
     # Make an image with non-trivially interesting scale.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.drawImage(scale=0.25)
+    im = g.drawImage(scale=0.25, dtype=float)
     im_save = im.copy()
 
     # Check for no IPC
@@ -513,5 +513,4 @@ def test_Persistence_basic():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

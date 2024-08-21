@@ -22,10 +22,10 @@ import time
 
 from .util import LoggerWrapper, UpdateNProc, CopyConfig, MultiProcess, SetupConfigRNG
 from .util import RetryIO, SetDefaultExt
+from .value import ParseValue, CheckAllParams
 from .input import ProcessInput
 from .extra import valid_extra_outputs, SetupExtraOutput, WriteExtraOutputs
 from .extra import AddExtraOutputHDUs, CheckNoExtraOutputHDUs
-from .value import ParseValue, CheckAllParams
 from .image import BuildImage, GetNObjForImage
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import ensure_dir

@@ -18,13 +18,14 @@
 
 import os
 import numpy as np
-import sys
 from astropy import units, constants
 import warnings
 import time
 
 import galsim
 from galsim_test_helpers import *
+from galsim import trapz
+from pathlib import Path
 
 
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
@@ -516,10 +517,15 @@ def test_SED_withFlux():
     """ Check that setting the flux works.
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
+    rband2 = galsim.Bandpass(Path(rband._orig_tp), 'nm')
+    np.testing.assert_array_equal(rband.wave_list, rband2.wave_list)
+    np.testing.assert_array_equal(rband(rband.wave_list), rband2(rband2.wave_list))
+
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
             for sed in [
                 galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast),
+                galsim.SED(Path('CWW_E_ext.sed'), wave_type='ang', flux_type='flambda', fast=fast),
                 galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda', fast=fast,
                            interpolant='spline'),
                 galsim.SED('wave', wave_type='nm', flux_type='fphotons'),
@@ -695,7 +701,7 @@ def test_redshift_calculateFlux():
                 print('z = {} flux = {}, {}'.format(z, flux1, flux2))
                 wave = np.linspace(bp1.blue_limit, bp1.red_limit, 10000)
                 f = sedz(wave) * bp1(wave)
-                flux3 = np.trapz(f, wave)
+                flux3 = trapz(f, wave)
                 np.testing.assert_allclose(flux1, flux3)
                 np.testing.assert_allclose(flux2, flux3)
 
@@ -768,14 +774,14 @@ def test_SED_calculateDCRMomentShifts():
     # where sed is in units of photons/nm (which is the default)
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, 1000)
     R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
-    Rnum = np.trapz(sed(waves) * bandpass(waves) * R, waves)
-    den = np.trapz(sed(waves) * bandpass(waves), waves)
+    Rnum = trapz(sed(waves) * bandpass(waves) * R, waves)
+    den = trapz(sed(waves) * bandpass(waves), waves)
     rad2arcsec = galsim.radians / galsim.arcsec
 
     np.testing.assert_almost_equal(Rnum/den*rad2arcsec, Rbar[1]*rad2arcsec, 4)
     # and for the second moment, V, the numerator is:
     # \int{sed(\lambda) * bandpass(\lambda) * (R(\lambda) - Rbar)^2 d\lambda}
-    Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
+    Vnum = trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
     # Repeat with a function sed and bandpass, since different path in code
@@ -791,10 +797,10 @@ def test_SED_calculateDCRMomentShifts():
     np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
     np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
     R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
-    Rnum = np.trapz(sed2(waves) * R, waves)
-    den = np.trapz(sed2(waves), waves)
+    Rnum = trapz(sed2(waves) * R, waves)
+    den = trapz(sed2(waves), waves)
     np.testing.assert_almost_equal(Rnum/den, Rbar[1], 4)
-    Vnum = np.trapz(sed2(waves) * (R - Rnum/den)**2, waves)
+    Vnum = trapz(sed2(waves) * (R - Rnum/den)**2, waves)
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
     dim = galsim.SED('200', 'nm', '1')
@@ -821,16 +827,16 @@ def test_SED_calculateSeeingMomentRatio():
     # \Delta r^2/r^2 = \frac{\int{sed(\lambda) * bandpass(\lambda) * (\lambda/500)^-0.4 d\lambda}}
     #                       {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, 1000)
-    num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
-    den = np.trapz(sed(waves) * bandpass(waves), waves)
+    num = trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
+    den = trapz(sed(waves) * bandpass(waves), waves)
     np.testing.assert_almost_equal(relative_size, num/den, 5)
 
     # Repeat with a function sed and bandpass, since different path in code
     sed2 = galsim.SED(spec=lambda x: 20.+5.*np.sin(x/400), flux_type='flambda', wave_type='nm')
     bp2 = galsim.Bandpass('1', 'nm', blue_limit=bandpass.blue_limit, red_limit=bandpass.red_limit)
     relative_size = sed2.calculateSeeingMomentRatio(bp2)
-    num = np.trapz(sed2(waves) * (waves/500.0)**(-0.4), waves)
-    den = np.trapz(sed2(waves), waves)
+    num = trapz(sed2(waves) * (waves/500.0)**(-0.4), waves)
+    den = trapz(sed2(waves), waves)
     np.testing.assert_almost_equal(relative_size, num/den, 4)
 
     # Invalid for dimensionless SED
@@ -1260,7 +1266,7 @@ def test_flux_type_calculateFlux():
         print('flux = {}, {}, {}'.format(flux1, flux2, flux3))
         wave = np.linspace(bp.blue_limit, bp.red_limit, 10000)
         f = sed(wave) * bp(wave)
-        flux5 = np.trapz(f, wave)
+        flux5 = trapz(f, wave)
         np.testing.assert_allclose(flux1, flux2)
         np.testing.assert_allclose(flux1, flux3)
         np.testing.assert_allclose(flux1, flux4)
@@ -1269,5 +1275,4 @@ def test_flux_type_calculateFlux():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

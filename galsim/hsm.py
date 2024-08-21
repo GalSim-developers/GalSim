@@ -23,7 +23,7 @@ from .position import PositionD
 from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
-from .errors import GalSimError, GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
+from .errors import GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
 
 class ShapeData:
     """A class to contain the outputs of the HSM shape and moments measurement routines.
@@ -38,6 +38,9 @@ class ShapeData:
 
     - ``observed_shape``: a `Shear` object representing the observed shape based on adaptive
       moments.
+
+    - ``observed_e1``, ``observed_e2``: floats representing the e1 and e2 components respectively of the
+      ``observed_shape``.
 
     - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;
       -1 if not measured.  (If `FindAdaptiveMom` is called with ``use_sky_coords=True``, then
@@ -128,8 +131,16 @@ class ShapeData:
     def moments_status(self): return self._data.moments_status
 
     @property
+    def observed_e1(self):
+        return self._data.observed_e1
+
+    @property
+    def observed_e2(self):
+        return self._data.observed_e2
+
+    @property
     def observed_shape(self):
-        return Shear(e1=self._data.observed_e1, e2=self._data.observed_e2)
+        return Shear(e1=self.observed_e1, e2=self.observed_e2)
 
     @property
     def moments_sigma(self): return self._data.moments_sigma
@@ -478,6 +489,27 @@ class HSMParams:
 HSMParams.default = HSMParams()
 
 
+# A helper function that checks if the weight and the badpix bounds are
+# consistent with that of the image, and that the weight is non-negative.
+def _checkWeightAndBadpix(image, weight=None, badpix=None):
+    # Check that the weight and badpix, if given, are sensible and compatible
+    # with the image.
+    if weight is not None:
+        if weight.bounds != image.bounds:
+            raise GalSimIncompatibleValuesError(
+                "Weight image does not have same bounds as the input Image.",
+                weight=weight, image=image)
+                # also make sure there are no negative values
+
+        if np.any(weight.array < 0):
+            raise GalSimValueError("Weight image cannot contain negative values.", weight)
+
+    if badpix is not None and badpix.bounds != image.bounds:
+        raise GalSimIncompatibleValuesError(
+            "Badpix image does not have the same bounds as the input Image.",
+            badpix=badpix, image=image)
+
+
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the
 # format that the C++ functions want
 def _convertMask(image, weight=None, badpix=None):
@@ -487,18 +519,7 @@ def _convertMask(image, weight=None, badpix=None):
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight is None:
         mask = ImageI(bounds=image.bounds, init_value=1)
-
     else:
-        # if weight image was supplied, check if it has the right bounds and is non-negative
-        if weight.bounds != image.bounds:
-            raise GalSimIncompatibleValuesError(
-                "Weight image does not have same bounds as the input Image.",
-                weight=weight, image=image)
-
-        # also make sure there are no negative values
-        if np.any(weight.array < 0) == True:
-            raise GalSimValueError("Weight image cannot contain negative values.", weight)
-
         # if weight is an ImageI, then we can use it as the mask image:
         if weight.dtype == np.int32:
             if not badpix:
@@ -515,14 +536,10 @@ def _convertMask(image, weight=None, badpix=None):
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
     if badpix is not None:
-        if badpix.bounds != image.bounds:
-            raise GalSimIncompatibleValuesError(
-                "Badpix image does not have the same bounds as the input Image.",
-                badpix=badpix, image=image)
         mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception
-    if mask.array.sum() == 0:
+    if not np.any(mask.array):
         raise GalSimHSMError("No pixels are being used!")
 
     # finally, return the Image for the weight map
@@ -537,8 +554,7 @@ def _convertImage(image):
     # if weight is not of type float/double, convert to float/double
     if (image.dtype == np.int16 or image.dtype == np.uint16):
         image = ImageF(image)
-
-    if (image.dtype == np.int32 or image.dtype == np.uint32):
+    elif (image.dtype == np.int32 or image.dtype == np.uint32):
         image = ImageD(image)
 
     return image
@@ -547,7 +563,7 @@ def _convertImage(image):
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                   shear_est="REGAUSS", recompute_flux="FIT", guess_sig_gal=5.0,
                   guess_sig_PSF=3.0, precision=1.0e-6, guess_centroid=None,
-                  strict=True, hsmparams=None):
+                  strict=True, check=True, hsmparams=None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -557,7 +573,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     This method works from `Image` inputs rather than `GSObject` inputs, which provides
     additional flexibility (e.g., it is possible to work from an `Image` that was read from file and
     corresponds to no particular `GSObject`), but this also means that users who wish to apply it to
-    compount `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing
+    compound `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing
     their `GSObject` into `Image` instances.
 
     This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
@@ -651,6 +667,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                         ``False``, then information about failures will be silently stored in
                         the output ShapeData object. [default: True]
 
+        check:          Check if the object_image, weight and badpix are in the correct format and valid.
+                        [default: True]
+
         hsmparams:      The hsmparams keyword can be used to change the settings used by
                         `EstimateShear` when estimating shears; see `HSMParams` documentation
                         for more information. [default: None]
@@ -661,8 +680,10 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
-    weight = _convertMask(gal_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    if check:
+        _checkWeightAndBadpix(gal_image, weight=weight, badpix=badpix)
+    weight = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
         guess_centroid = gal_image.true_center
@@ -681,7 +702,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
             return ShapeData(error_message = str(err))
 
 def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
-                    guess_centroid=None, strict=True, round_moments=False, hsmparams=None,
+                    guess_centroid=None, strict=True, check=True, round_moments=False, hsmparams=None,
                     use_sky_coords=False):
     """Measure adaptive moments of an object.
 
@@ -779,6 +800,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             ``GalSimHSMError`` exception if shear estimation fails.  If set to
                             ``False``, then information about failures will be silently stored in
                             the output ShapeData object. [default: True]
+        check:              Check if the object_image, weight and badpix are in the correct format and valid.
+                            [default: True]
         round_moments:      Use a circular weight function instead of elliptical.
                             [default: False]
         hsmparams:          The hsmparams keyword can be used to change the settings used by
@@ -794,8 +817,11 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     """
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
-    weight = _convertMask(object_image, weight=weight, badpix=badpix)
     hsmparams = HSMParams.check(hsmparams)
+    if check:
+        _checkWeightAndBadpix(object_image, weight=weight, badpix=badpix)
+
+    weight = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
         guess_centroid = object_image.true_center

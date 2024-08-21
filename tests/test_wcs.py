@@ -21,6 +21,7 @@ import os
 import sys
 import warnings
 import time
+import coord
 from unittest import mock
 
 import coord
@@ -3242,6 +3243,19 @@ def test_razero():
     do_celestial_wcs(wcs, 'Astropy file '+file_name)
     do_wcs_image(wcs, 'Astropy near ra=0')
 
+    # Test that the local wcs comes out right where ra crosses 0.
+    image_pos = wcs.toImage(galsim.CelestialCoord(ra=0.*galsim.degrees, dec=47*galsim.degrees))
+    print('0,47 is at ',image_pos)
+    local_wcs = wcs.local(image_pos)
+    print('local_wcs = ',local_wcs)
+
+    # Should be very close to the same jacobian a spot a few arcsec over.
+    image_pos2 = wcs.toImage(galsim.CelestialCoord(ra=3*galsim.arcsec, dec=47*galsim.degrees))
+    print('3 arcsec east = ',image_pos2)
+    local_wcs2 = wcs.local(image_pos2)
+    print('local_wcs2 = ',local_wcs2)
+    np.testing.assert_allclose(local_wcs.getMatrix(), local_wcs2.getMatrix(), rtol=1.e-3)
+
     # This file is similar, but adjusted to be located near the south pole.
     file_name = 'pole.fits'
     wcs = galsim.AstropyWCS(file_name, dir=dir)
@@ -3270,5 +3284,4 @@ def test_razero():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

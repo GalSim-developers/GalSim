@@ -86,7 +86,7 @@ def _GenerateFromEval(config, base, value_type):
 
         # These will be the variables to use for evaluating the eval statement.
         # Start with the current locals and globals, and add extra items to them.
-        if 'eval_gdict' not in base:
+        if '_eval_gdict' not in base:
             gdict = globals().copy()
             # We allow the following modules to be used in the eval string:
             exec('import galsim', gdict)
@@ -95,9 +95,9 @@ def _GenerateFromEval(config, base, value_type):
             exec('import numpy as np', gdict)
             exec('import os', gdict)
             ImportModules(base, gdict)
-            base['eval_gdict'] = gdict
+            base['_eval_gdict'] = gdict
         else:
-            gdict = base['eval_gdict']
+            gdict = base['_eval_gdict']
 
         if 'str' not in config:
             raise GalSimConfigError(

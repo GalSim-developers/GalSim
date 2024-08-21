@@ -320,6 +320,7 @@ def test_hankel():
         galsim.integ.hankel(f1, k=0.3, nu=-0.5)
 
 
+@timer
 def test_gq_annulus():
     """Test the galsim.integ.gq_annulus function
     """
@@ -348,5 +349,4 @@ def test_gq_annulus():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -18,6 +18,7 @@
 
 import copy
 import os
+import copy
 import numpy as np
 
 import galsim
@@ -1952,6 +1953,141 @@ def test_interpolated_ChromaticObject():
     # Also make sure that it ditched the interpolation.
     assert not hasattr(trans_interp_psf, 'waves')
 
+    # test alternate initialization method, "from_images()", of InterpolatedChromaticObject
+    # that uses images at discrete wavelengths to initialize object.
+
+    # check sorting is done correctly for unsorted wavelengths/images
+    PSF_exact = ChromaticGaussian(sigma_0)
+    PSF = PSF_exact.interpolate(tricky_waves, oversample_fac=oversample_fac)
+    tricky_images = list(PSF.ims[::-1])
+    int_psf = galsim.InterpolatedChromaticObject.from_images(tricky_images, tricky_waves,_force_stepk =PSF.stepk_vals,
+                                                              _force_maxk = PSF.maxk_vals)
+    np.testing.assert_allclose(int_psf.waves, waves, atol=0,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to sort wavelengths')
+
+    for i in range(len(int_psf.ims)):
+        np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to sort images correctly')
+
+    # check error messages from images with a non-PixelScale wcs, inconsistent pixel scales and image dimensions
+    incorrect_ims = PSF.ims.copy()
+    incorrect_ims[0].wcs = None
+    # wcs = None
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    affine_wcs = galsim.AffineTransform(1.0, 0.1, 0.1, 1.0)
+    incorrect_ims[0].wcs = affine_wcs
+    # non-PixelScale wcs
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    incorrect_ims[0].wcs = incorrect_ims[1].wcs
+    incorrect_ims[0].scale += 0.01
+    # incosnistent pixel scales
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+    incorrect_ims[0].scale -= 0.01
+    smaller_image = incorrect_ims[0].array[1:]
+    incorrect_img = galsim.Image(smaller_image, scale=incorrect_ims[0].scale)
+    incorrect_ims[0] = incorrect_img
+    # incosnistent image dimensions
+    assert_raises(galsim.GalSimValueError, galsim.InterpolatedChromaticObject.from_images, incorrect_ims, PSF.waves)
+
+    # check input images are correctly intialized from underscored function directly
+    PSF = PSF_exact.interpolate(waves, oversample_fac=oversample_fac)
+    int_psf = galsim.InterpolatedChromaticObject._from_images(PSF.ims, list(PSF.waves),_force_stepk =PSF.stepk_vals,
+                                                              _force_maxk = PSF.maxk_vals)
+    assert isinstance(int_psf.waves, np.ndarray)
+    for i in range(len(int_psf.ims)):
+        np.testing.assert_allclose(int_psf.ims[i].array, PSF.ims[i].array, atol=1e-17,
+      err_msg='InterpolatedChromaticObject from_images initialization fails to initialize correct images')
+    test_obj = galsim.Convolve(int_psf, star)
+    true_obj = galsim.Convolve(PSF, star)
+    true_img = true_obj.drawImage(bandpass, scale=scale, method = 'auto')
+    im_interp = true_img.copy()
+    test_img = test_obj.drawImage(bandpass, image=im_interp, scale=scale)
+    # check drawing objects is identical when using same stepk and maxk as images
+    np.testing.assert_allclose(test_img.array, true_img.array, atol=1e-17,
+            err_msg='InterpolatedChromaticObject from_images initialization fails to reproduce default init. images')
+
+    # without specifying the same stepk and maxk for each image, stepk and maxk are caclulated
+    # based on the input image pixel scale and dimensions and have no wavelength dependance.
+    int_psf = galsim.InterpolatedChromaticObject.from_images(PSF.ims, PSF.waves)
+    test_obj = galsim.Convolve(int_psf, star)
+    test_img = test_obj.drawImage(bandpass, image=im_interp, scale=scale, method = 'auto')
+    # check images are within 0.01% of the total flux, the flux and maximum within 0.1%
+    np.testing.assert_allclose(test_img.array, true_img.array, atol=1e-4*np.sum(true_img.array),
+        err_msg='InterpolatedChromaticObject images differ when using from_images initialization with default stepk, maxk')
+    np.testing.assert_allclose(test_img.array.sum(), true_img.array.sum(), rtol=1e-3,
+        err_msg='InterpolatedChromaticObject images flux differ when using from_images initialization with default stepk, maxk')
+    np.testing.assert_allclose(test_img.array.max(), true_img.array.max(), rtol=1e-3,
+        err_msg='InterpolatedChromaticObject images maximum differ when using from_images initialization with default stepk, maxk')
+    # check moments
+    truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_img)
+
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments amplitude ')
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.x ')
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.y ')
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments sigma ')
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g1 ')
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g2 ')
+
+    # check that flux macthes when convolved with non-trivial light profile
+    gal = galsim.Exponential(half_light_radius = 2.*scale)
+    gal = gal.shear(g2 = 0.3)
+    gal = disk_SED*gal
+    obj_exact = galsim.Convolve(PSF, gal)
+    obj_interp = galsim.Convolve(int_psf, gal)
+    true_img = obj_exact.drawImage(bandpass_g, scale=scale)
+    im_interp = true_img.copy()
+    test_img = obj_interp.drawImage(bandpass_g, image=im_interp, scale=scale)
+    np.testing.assert_allclose(
+        test_img.array, true_img.array, atol=1.e-4,
+        err_msg='Interpolated ChromaticObject from_images initialization differs from default when drawing galaxy')
+    # check moments
+    truth_mom = galsim.hsm.FindAdaptiveMom(true_img)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_img)
+
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments amplitude ')
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.x ')
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments centroid.y ')
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments sigma ')
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g1 ')
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4,
+                err_msg='InterpolatedChromaticObject from_images init. differs in moments g2 ')
+
 
 @timer
 def test_ChromaticOpticalPSF():
@@ -2320,12 +2456,18 @@ def test_phot():
 
         # Now let the ChromaticConvolution reorganize this for us.
         t0 = time.time()
-        im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+        calc_flux = obj.calculateFlux(bandpass)
+        im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng,
+                            n_photons=flux, save_photons=True)
         t1 = time.time()
         print('regular phot time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
         print('im5.max,sum = ', im5.array.max(), im5.array.sum())
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
+
+        assert hasattr(im5, 'photons')
+        assert len(im5.photons) == flux
+        assert np.allclose(np.sum(im5.photons.flux), calc_flux, rtol=1.e-3)
 
         # Check that n_photons=1 doesn't do something bad, like produce NaNs.
         (obj/flux).drawImage(bandpass, image=im5, method='phot', rng=rng, n_photons=1,
@@ -2378,6 +2520,40 @@ def test_chromatic_fiducial_wavelength():
     with assert_raises(galsim.GalSimError):
         gal3.drawImage(bp)
 
+@timer
+def test_convolve_pixel():
+    """Check that convolving a chromatic object with a Pixel works
+    """
+    # In response to issue #1302
+    # The problem here had been that if some of the components of the convolution were
+    # inseparable, then when separating out the separable and inseparable components,
+    # the code called `obj._fiducual_profile(bandpass)` on the separable ones.
+    # However, if any of these were simple GSObjects, this gave an error, since we didn't have
+    # that method for GSObject.  The fix was to add a trivial version of that for GSObject.
+
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm").thin(rel_err=1.e-2)
+    sed = galsim.SED('vega.txt', 'nm', 'flambda').thin(rel_err=1.e-2)
+    insep_psf = galsim.ChromaticAiry(lam=550, diam=0.1)
+    sep_psf = galsim.Kolmogorov(fwhm=0.65) * galsim.SED('(wave/500)**-0.2', 'nm', '1')
+    scale = 0.2
+    pixel = galsim.Pixel(scale)
+
+    for psf in [sep_psf, insep_psf]:
+        star = galsim.DeltaFunction() * sed
+        star = star.withFlux(1000., bandpass)
+        eff_psf = galsim.Convolve(psf, pixel)
+
+        im1 = galsim.Convolve(star, psf).drawImage(bandpass, scale=scale, nx=32, ny=32)
+        im2 = galsim.Convolve(star, eff_psf).drawImage(bandpass, scale=scale, nx=32, ny=32,
+                                                       method='no_pixel')
+        np.testing.assert_allclose(im1.array, im2.array, atol=1.e-5)
+
+        galaxy = galsim.Exponential(half_light_radius=1.3) * sed
+        galaxy = galaxy.withFlux(1000., bandpass)
+        im3 = galsim.Convolve(galaxy, psf).drawImage(bandpass, scale=scale, nx=32, ny=32)
+        im4 = galsim.Convolve(galaxy, eff_psf).drawImage(bandpass, scale=scale, nx=32, ny=32,
+                                                         method='no_pixel')
+        np.testing.assert_allclose(im3.array, im4.array, atol=1.e-5)
 
 @timer
 def test_chromatic_image_setup():
@@ -3025,62 +3201,6 @@ def test_ne():
     check_all_diff(gals)
 
 @timer
-def test_atredshift():
-    """Test the equivalence of obj.atRedshift and the equivalent with SED.atRedshift
-    """
-    # First simple separable galaxy
-    gal = galsim.Sersic(n=3, half_light_radius=1.5)
-    gal = gal.shear(g1=0.3, g2=0.2)
-    gal1 = gal * bulge_SED
-    gal2 = gal * bulge_SED.atRedshift(1.7)
-
-    psf = galsim.Moffat(beta=2.5, half_light_radius=0.3)
-    psf = galsim.ChromaticAtmosphere(psf, base_wavelength=500.0, zenith_angle=17*galsim.degrees)
-
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array)
-    check_pickle(final1)
-
-    # ChromaticSum
-    gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED
-    gal2 = gal * bulge_SED.atRedshift(1.7) + gal.dilate(1.3) * disk_SED.atRedshift(1.7)
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array)
-
-    # Probably none of the other Chromatic classes make sense to call atRedshift, so let
-    # them use the base class implementation if they do so.
-    # Just check ChromaticConvolution as one that doesn't have its own implementation.
-    # (This is probably the least implausible use of atRedshift for one of these other classes.)
-    smear = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4))
-    smear1 = smear.expand(lambda wave: (wave/700)**0.3)
-    gal1 = galsim.Convolve(gal * bulge_SED, smear1)
-    # Smear is at redshift 1.7, so scale wave by factor of (1+1.7)
-    smear2 = smear.expand(lambda wave: (wave/700/2.7)**0.3)
-    gal2 = galsim.Convolve(gal * bulge_SED.atRedshift(1.7), smear2)
-    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
-    final2 = galsim.Convolve(gal2, psf)
-    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
-    np.testing.assert_allclose(image1.array, image2.array, atol=1.e-6)
-    assert gal1.redshift == 0.
-    assert gal1.atRedshift(1.7).redshift == 1.7
-    assert gal2.redshift == 1.7
-
-    # Finally, if we call atRedshift on a regular GSObject, it doesn't do much.
-    gal3 = gal.atRedshift(1.7)
-    assert gal == gal3
-    # But it does add an attribute, which doesn't obviate equality.
-    assert gal3.redshift == 1.7
-    assert gal.redshift == 0.
-
-@timer
 def test_shoot_transformation():
     """Check that transformed chromatic objects can be photon shot.
     """
@@ -3215,8 +3335,59 @@ def test_shoot_transformation():
     print(img.added_flux)
     assert abs(img.added_flux - flux) > 0.1
 
+@timer
+def test_save_photons():
+    # Test save_photons=True option for various Chromatic types
+    # Note: there are additional tests of save_photons in test_phot, but that doesn't cover all
+    # possible types and all possible paths through the various drawImage and shoot functions.
+    # This test tries to be more comprehensive on that front.
+
+    rng = galsim.BaseDeviate(1234)
+    star_sed = galsim.SED('vega.txt', wave_type="nm", flux_type="fphotons")
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+
+    airy = galsim.ChromaticAiry(lam=500, diam=8)
+    optical = galsim.ChromaticOpticalPSF(lam=500, diam=8, defocus=0.2, obscuration=0.3)
+    disk = galsim.Exponential(half_light_radius=0.5).shear(g1=0.4, g2=0.2)
+    bulge = galsim.Sersic(n=3, half_light_radius=0.3)
+    atm = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.9), base_wavelength=500.0,
+                                     zenith_angle=20 * galsim.degrees)
+
+    objs = [
+        airy * star_sed,
+        optical * star_sed,
+        (airy * star_sed).expand(lambda w: (w/500)**0.5),
+        disk * disk_SED.atRedshift(1.1),
+        (bulge * bulge_SED + disk * disk_SED),
+        galsim.Convolve(disk * disk_SED, optical, atm),
+        galsim.Convolve(disk * disk_SED, atm.interpolate(np.linspace(500,900,5))),
+        (atm * star_sed).interpolate(np.linspace(500,900,5)),
+    ]
+
+    flux = 1000
+    for obj in objs:
+        print('obj = ',obj)
+        obj = obj.withFlux(flux, bandpass)
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              n_photons=flux, save_photons=True,
+                              scale=0.05, nx=32, ny=32, rng=rng)
+        assert hasattr(image, 'photons')
+        assert len(image.photons) == flux
+        print(np.sum(image.photons.flux))
+        # Note: tolerance is quite loose, since profiles that use InterpolatedImage can have
+        # negative flux photons, which then don't necessarily sum to the right value.
+        # Only the expectation value is right, and we're not shooting many photons here.
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+
+        # Sometimes there is a different path when n_photons is not given, so check that too.
+        image = obj.drawImage(bandpass=bandpass, method="phot",
+                              save_photons=True,
+                              scale=0.05, nx=32, ny=32, rng=rng)
+        assert hasattr(image, 'photons')
+        print(np.sum(image.photons.flux))
+        assert np.allclose(np.sum(image.photons.flux), flux, rtol=0.1)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

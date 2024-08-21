@@ -202,6 +202,8 @@ class GSObject:
                       'range_division_for_extrema' : int,
                       'small_fraction_of_flux' : float
                     }
+    redshift = 0  # For backwards compatibility with old atRedshift usage.  Can be overwritten.
+
     def __init__(self):
         raise NotImplementedError("The GSObject base class should not be instantiated directly.")
 
@@ -448,8 +450,7 @@ class GSObject:
     def dimensionless(self): return True
     @property
     def wave_list(self): return np.array([], dtype=float)
-    @property
-    def redshift(self): return getattr(self, '_redshift', 0.)
+    def _fiducial_profile(self, bandpass): return bandpass.effective_wavelength, self
 
     # Also need these methods to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
@@ -1102,11 +1103,17 @@ class GSObject:
         attribute with the given value.  But this allows duck typing with ChromaticObjects
         where this function will adjust the SED appropriately.
 
+        .. warning::
+
+            This method has been deprecated as of version 2.5.3.
+
         Returns:
             the object with the new redshift
         """
+        from .deprecated import depr
+        depr('atRedshift', '2.5.3', 'obj = copy.copy(obj); obj.redshift = redshift')
         ret = copy.copy(self)
-        ret._redshift = redshift
+        ret.redshift = redshift
         return ret
 
     # Make sure the image is defined with the right size and wcs for drawImage()

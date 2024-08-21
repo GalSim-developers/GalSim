@@ -31,19 +31,17 @@ import logging
 import time
 from collections.abc import Hashable
 from collections import Counter
-from numbers import Integral, Real, Complex
 import pickle
 import copy
 
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
-from .position import Position, PositionD, PositionI, _PositionD, _PositionI
+from .position import Position, PositionD, _PositionD
 from .angle import AngleUnit, arcsec
 from .image import Image
 from .table import trapz, _LookupTable, LookupTable2D
 from .wcs import JacobianWCS, PixelScale
-from .position import _PositionD
 from .random import BaseDeviate, UniformDeviate
 from . import meta_data
 
@@ -559,6 +557,11 @@ def horner(x, coef, dtype=None):
     Returns:
         a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
+    if dtype is None:
+        dtype = np.result_type(
+            np.min_scalar_type(x),
+            np.min_scalar_type(coef)
+        )
     result = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
     if result.dtype == float:
@@ -567,8 +570,8 @@ def horner(x, coef, dtype=None):
         x = np.ascontiguousarray(x, dtype=float)
         coef = np.ascontiguousarray(coef, dtype=float)
     else:
-        x = np.array(x, copy=False)
-        coef = np.array(coef, copy=False)
+        x = np.asarray(x)
+        coef = np.asarray(coef)
     if len(coef.shape) != 1:
         raise GalSimValueError("coef must be 1-dimensional", coef)
     _horner(x, coef, result)
@@ -616,6 +619,12 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
     Returns:
         a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
+    if dtype is None:
+        dtype = np.result_type(
+            np.min_scalar_type(x),
+            np.min_scalar_type(y),
+            np.min_scalar_type(coefs)
+        )
     result = np.empty_like(x, dtype=dtype)
     temp = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
@@ -626,9 +635,9 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         y = np.ascontiguousarray(y, dtype=float)
         coefs = np.ascontiguousarray(coefs, dtype=float)
     else:
-        x = np.array(x, copy=False)
-        y = np.array(y, copy=False)
-        coefs = np.array(coefs, copy=False)
+        x = np.asarray(x)
+        y = np.asarray(y)
+        coefs = np.asarray(coefs)
 
     if x.shape != y.shape:
         raise GalSimIncompatibleValuesError("x and y are not the same shape", x=x, y=y)
@@ -1821,3 +1830,72 @@ class Profile:
         if self.reverse:  # pragma: no cover
             ps = ps.reverse_order()
         ps.print_stats(self.nlines)
+
+
+def least_squares(fun, x0, args=(), kwargs={}, max_iter=1000, tol=1e-9, lambda_init=1.0):
+    """Perform a non-linear least squares fit using the Levenberg-Marquardt algorithm.
+
+    Drop in replacement for scipy.optimize.least_squares when using default options,
+    though many fewer options available in general.
+
+    Parameters:
+        fun: Function which computes vector of residuals, with the signature
+             fun(params, *args, **kwargs) -> np.ndarray.
+        x0: Initial guess for the parameters.
+        args: Additional arguments to pass to the function.
+        kwargs: Additional keyword arguments to pass to the function.
+        max_iter: Maximum number of iterations.  [default: 1000]
+        tol: Tolerance for convergence.  [default: 1e-9]
+        lambda_init: Initial damping factor for Levenberg-Marquardt.  [default: 1.0]
+
+    Returns:
+        A named tuple with fields:
+            x: The final parameter values.
+            cost: The final cost (sum of squared residuals).
+    """
+    # JM: This is a tweaked version of a ChatGPT-generated implementation of
+    # Levenberg-Marquardt (cross-checked against the wikipedia page
+    # https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm).
+
+    from collections import namedtuple
+    params = np.array(x0)
+    lambda_ = lambda_init
+
+    for _ in range(max_iter):  # pragma: no branch
+        residuals = fun(params, *args, **kwargs)
+
+        # Jacobian matrix
+        J = np.zeros((len(residuals), len(params)))
+        for j in range(len(params)):
+            perturbation = np.zeros(len(params))
+            perturbation[j] = tol
+            J[:, j] = (fun(params + perturbation, *args, **kwargs) - residuals) / tol
+
+        # Regular least squares param update
+        JTJ = np.dot(J.T, J)
+        JTr = np.dot(J.T, residuals)
+
+        # Levenberg-Marquardt adjustment
+        A = JTJ + lambda_ * np.eye(len(JTJ))
+        delta_params = np.linalg.solve(A, JTr)
+
+        new_params = params - delta_params
+        new_residuals = fun(new_params, *args, **kwargs)
+
+        if np.linalg.norm(new_residuals) < np.linalg.norm(residuals):
+            params = new_params
+            residuals = new_residuals
+            lambda_ /= 3  # reduce damping
+        else:
+            lambda_ *= 3  # increase damping
+
+        if np.linalg.norm(delta_params) < tol:
+            break
+
+    cost = 0.5 * np.sum(residuals**2)
+
+    # Create a result object similar to scipy.optimize.OptimizeResult
+    Result = namedtuple('Result', ['x', 'cost'])
+    result = Result(x=params, cost=cost)
+
+    return result

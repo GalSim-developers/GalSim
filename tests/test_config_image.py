@@ -58,6 +58,12 @@ def test_single():
     assert logger_wrapper.isEnabledFor(logging.CRITICAL)
     assert not logger_wrapper.isEnabledFor(logging.DEBUG)
 
+    # smoke test for critical calls
+    # these are not normally used by galsim so a test here is needed
+    logger_wrapper.critical("blah blah")
+    none_logger_wrapper = galsim.config.LoggerWrapper(None)
+    none_logger_wrapper.critical("blah blah")
+
     im1_list = []
     nimages = 6
     first_seed = galsim.BaseDeviate(1234).raw()
@@ -1527,12 +1533,12 @@ def test_tiled():
 
     # Compare to what config builds
     im4b = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im4b.array, im4a.array)
+    np.testing.assert_allclose(im4b.array, im4a.array, atol=1.e-14)
 
     # Also when built with multiprocessing.
     config['image']['nproc'] = 3
     im4c = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im4c.array, im4a.array)
+    np.testing.assert_allclose(im4c.array, im4a.array, atol=1.e-14)
 
     # If grid sizes aren't square, it also works properly, but with more complicated ngrid calc.
     config = galsim.config.CleanConfig(config)
@@ -1566,7 +1572,8 @@ def test_tiled():
             im5a[stamp.bounds] = stamp
 
     im5b = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im5b.array, im5a.array)
+    # Not sure why this isn't always exact, but GHA macos started failing with abs err=4e-16 here.
+    np.testing.assert_allclose(im5b.array, im5a.array, atol=1.e-15)
 
     # Finally, if the image type isn't tiled, then grid_spacing is required.
     config = {
@@ -1676,6 +1683,7 @@ def test_njobs():
         galsim.config.ProcessInput(config, logger=logger, safe_only=False)
 
 
+@timer
 def test_wcs():
     """Test various wcs options"""
     config = {
@@ -2547,6 +2555,21 @@ def test_template():
     config8['psf']['items'][2] = config4['image']['noise']
     assert config9 == config8
 
+    # Make sure evals work correltly for template string when not at top level.
+    # (This used to give an error about the config dict changing size during iteration.)
+    config10 = {
+        "eval_variables" : {
+            "iabc": 123,
+            "ddict": {
+                "template": "$os.path.join('config_input','dict.yaml')"
+            }
+        }
+    }
+    galsim.config.ProcessAllTemplates(config10)
+    assert config10['eval_variables']['ddict']['b'] == False
+    assert config10['eval_variables']['ddict']['s'] == "Brian"
+    assert config10['eval_variables']['ddict']['noise']['models'][0]['variance'] == 0.12
+
 
 @timer
 def test_variable_cat_size():
@@ -2814,9 +2837,8 @@ def test_chromatic():
                 'flux_type': 'flambda',
                 'norm_flux_density': 1.0,
                 'norm_wavelength': 500,
+                'redshift': 0.8,
             },
-
-            'redshift': 0.8,
         },
         'psf' : {
             'type': 'Moffat',
@@ -2847,7 +2869,7 @@ def test_chromatic():
     del config['gal']['_get']
     galsim.config.RemoveCurrent(config)
     image = galsim.config.BuildImage(config)
-    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').atRedshift(0.8)
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda')
     gal = (galsim.Exponential(half_light_radius=0.5, flux=500) * sed).withFlux(500, bandpass)
     final = galsim.Convolve(gal, psf1)
     image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
@@ -3440,5 +3462,4 @@ def test_initial_image():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

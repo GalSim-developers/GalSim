@@ -22,7 +22,7 @@ import sys
 import time
 import json
 from io import StringIO
-import cProfile, pstats, io
+import cProfile, pstats
 from collections import OrderedDict
 from multiprocessing.managers import BaseManager
 from multiprocessing import current_process, get_context, cpu_count
@@ -321,6 +321,10 @@ class LoggerWrapper:
     def error(self, *args, **kwargs):
         if self.logger and self.isEnabledFor(logging.ERROR):
             self.logger.error(*args, **kwargs)
+
+    def critical(self, *args, **kwargs):
+        if self.logger and self.isEnabledFor(logging.CRITICAL):
+            self.logger.critical(*args, **kwargs)
 
     def log(self, level, *args, **kwargs):
         if self.logger and self.isEnabledFor(level):

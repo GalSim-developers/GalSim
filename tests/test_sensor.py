@@ -121,7 +121,7 @@ def test_simple():
 
     check_pickle(simple)
 
-    
+
 @timer
 def test_silicon():
     """Test the basic construction and use of the SiliconSensor class.
@@ -1150,6 +1150,7 @@ def test_flat():
     np.testing.assert_allclose(cov20 / counts_total, 0., atol=2*toler)
     np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
 
+@timer
 def test_omp():
     """Test setting the number of omp threads.
     """
@@ -1277,5 +1278,4 @@ def test_big_then_small():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

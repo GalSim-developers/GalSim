@@ -4,7 +4,7 @@
 # These are in conda_requirements.txt.  If using that, you may prefer to do
 #   conda install -c conda-forge --file conda_requirements.txt
 # prior to running pip install -r requirements.txt
-setuptools>=38
+setuptools>=38,<72
 numpy>=1.17
 astropy>=2.0
 pybind11>=2.2

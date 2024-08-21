@@ -18,7 +18,6 @@
 
 __all__ = [ 'AtmosphericScreen', 'Atmosphere', 'OpticalScreen', 'UserScreen', ]
 
-import sys
 import numpy as np
 import multiprocessing
 from contextlib import contextmanager
@@ -676,8 +675,8 @@ class AtmosphericScreen:
         Returns:
             Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float, copy=False)
-        v = np.array(v, dtype=float, copy=False)
+        u = np.asarray(u, dtype=float)
+        v = np.asarray(v, dtype=float)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape",u=u,v=v)
 
@@ -689,7 +688,7 @@ class AtmosphericScreen:
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float, copy=False)
+            t = np.asarray(t, dtype=float)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -743,8 +742,8 @@ class AtmosphericScreen:
         Returns:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float, copy=False)
-        v = np.array(v, dtype=float, copy=False)
+        u = np.asarray(u, dtype=float)
+        v = np.asarray(v, dtype=float)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
 
@@ -753,7 +752,7 @@ class AtmosphericScreen:
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float, copy=False)
+            t = np.asarray(t, dtype=float)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -1108,8 +1107,8 @@ class OpticalScreen:
         Returns:
             Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float, copy=False)
-        v = np.array(v, dtype=float, copy=False)
+        u = np.asarray(u, dtype=float)
+        v = np.asarray(v, dtype=float)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront(u, v, t, theta)
@@ -1133,8 +1132,8 @@ class OpticalScreen:
         Returns:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float, copy=False)
-        v = np.array(v, dtype=float, copy=False)
+        u = np.asarray(u, dtype=float)
+        v = np.asarray(v, dtype=float)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront_gradient(u, v, t, theta)

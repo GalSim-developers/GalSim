@@ -18,7 +18,6 @@
 
 import numpy as np
 import os
-import sys
 import math
 import warnings
 
@@ -2264,5 +2263,4 @@ def test_numpy_generator():
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    for testfn in testfns:
-        testfn()
+    runtests(testfns)

@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import sys
-import math
-
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -451,8 +448,9 @@ def _GetPositionValue(param):
     """Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
     """
     try:
-        x = float(param[0])
-        y = float(param[1])
+        x, y = param
+        x = float(x)
+        y = float(y)
     except (ValueError, TypeError):
         try:
             x, y = param.split(',')

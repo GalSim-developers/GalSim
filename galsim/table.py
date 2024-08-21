@@ -472,7 +472,7 @@ class LookupTable:
                 warnings.simplefilter("ignore")
                 import pandas
                 from pandas.errors import ParserError
-            data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
+            data = pandas.read_csv(file_name, comment='#', sep=r'\s+', header=None)
             data = data.values.transpose()
         except (ImportError, AttributeError, ParserError):
             data = np.loadtxt(file_name).transpose()
@@ -889,8 +889,8 @@ class LookupTable2D:
             return f
 
     def _call_constant(self, x, y, grid=False):
-        x = np.array(x, dtype=float, copy=False)
-        y = np.array(y, dtype=float, copy=False)
+        x = np.asarray(x, dtype=float)
+        y = np.asarray(y, dtype=float)
         if grid:
             f = np.empty((len(y), len(x)), dtype=float)
             # Fill in interpolated values first, then go back and fill in
@@ -951,8 +951,15 @@ class LookupTable2D:
         Returns:
             a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
-        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
-        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
+        if np.__version__ >= "2.0":
+            # I'm not sure if there is a simpler way to do this in 2.0.
+            # We want a copy when edge_mode == wrap. Otherwise, only copy if dtype changes or
+            # x,y aren't already arrays. That used to be simple...
+            copy = True if self.edge_mode=='wrap' else None
+        else:
+            copy = self.edge_mode=='wrap'
+        x1 = np.array(x, dtype=float, copy=copy)
+        y1 = np.array(y, dtype=float, copy=copy)
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 
@@ -1011,8 +1018,8 @@ class LookupTable2D:
         return self._gradient_inbounds(x, y, grid)
 
     def _gradient_constant(self, x, y, grid=False):
-        x = np.array(x, dtype=float, copy=False)
-        y = np.array(y, dtype=float, copy=False)
+        x = np.asarray(x, dtype=float)
+        y = np.asarray(y, dtype=float)
         if grid:
             dfdx = np.empty((len(y), len(x)), dtype=float)
             dfdy = np.empty((len(y), len(x)), dtype=float)
@@ -1064,8 +1071,12 @@ class LookupTable2D:
             A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
             values) or numpy arrays.
         """
-        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
-        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
+        if np.__version__ >= "2.0":
+            copy = True if self.edge_mode=='wrap' else None
+        else:
+            copy = self.edge_mode=='wrap'
+        x1 = np.array(x, dtype=float, copy=copy)
+        y1 = np.array(y, dtype=float, copy=copy)
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 

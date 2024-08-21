@@ -263,7 +263,7 @@ class Image:
         # Figure out what dtype we want:
         dtype = Image._alias_dtypes.get(dtype,dtype)
         if dtype is not None and dtype not in Image.valid_dtypes:
-            raise GalSimValueError("Invlid dtype.", dtype, Image.valid_dtypes)
+            raise GalSimValueError("Invalid dtype.", dtype, Image.valid_dtypes)
         if array is not None:
             if copy is None: copy = False
             if dtype is None:
@@ -1790,7 +1790,7 @@ class Image:
 
     def __neg__(self):
         result = self.copy()
-        result *= -1
+        result *= np.int64(-1)
         return result
 
     # Define &, ^ and | only for integer-type images

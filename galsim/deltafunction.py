@@ -18,10 +18,6 @@
 
 __all__ = [ 'DeltaFunction' ]
 
-import numpy as np
-import math
-
-from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import doc_inherit
