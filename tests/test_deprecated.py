@@ -662,6 +662,8 @@ def test_photon_array_depr():
         # JAX-Galsim does not allow by reference setting - changed this
         # to make tests below run
         photon_array.dydz = 0.59
+        # non-nan means allocated for jax-galsim
+        assert photon_array.hasAllocatedAngles()
     else:
         dydz[:] = 0.59
     np.testing.assert_array_equal(photon_array.dxdz, 0.)
@@ -691,6 +693,8 @@ def test_photon_array_depr():
         # JAX-Galsim does not allow by reference setting - changed this
         # to make tests below run
         photon_array.pupil_v = 10.0
+        # jax-galsim is allocated now
+        assert photon_array.hasAllocatedPupil()
     else:
         v[:] = 10.0
     np.testing.assert_array_equal(photon_array.pupil_u, 0.0)
