@@ -136,10 +136,10 @@ def test_moffat_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    if hasattr(galsim, "_galsim"):
-        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
+    if is_jax_galsim():
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
     else:
-        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
     np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795873)
     np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
@@ -153,10 +153,10 @@ def test_moffat_properties():
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid, cen)
-    if hasattr(galsim, "_galsim"):
-        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
+    if is_jax_galsim():
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
     else:
-        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
     np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795862)
     np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
@@ -201,10 +201,10 @@ def test_moffat_maxk():
     for psf in psfs:
         for thresh in threshs:
             psf = psf.withGSParams(maxk_threshold=thresh)
-            if hasattr(galsim, "_galsim"):
-                rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
-            else:
+            if is_jax_galsim():
                 rtol = 5e-3
+            else:
+                rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
             fk = psf.kValue(psf.maxk,0).real/psf.flux
             print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e} \t {psf.maxk:.3e}')
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol)
