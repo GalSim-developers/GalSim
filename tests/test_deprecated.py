@@ -587,6 +587,8 @@ def test_photon_array_depr():
         # JAX-Galsim does not allow by reference setting - changed this
         # to make tests below run
         photon_array.wavelength = 500.0
+        # jax-galsim is allocated now
+        assert photon_array.hasAllocatedWavelengths()
     else:
         wave[:] = 500.
     np.testing.assert_array_equal(photon_array.wavelength, 500)
