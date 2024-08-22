@@ -1182,7 +1182,7 @@ def test_pixelscale():
     assert wcs.world_origin == galsim.PositionD(0,0)
 
     assert_raises(TypeError, galsim.PixelScale)
-    if hasattr(galsim, "_galsim"):
+    if is_pure_galsim():
         assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, origin=galsim.PositionD(0,0))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, world_origin=galsim.PositionD(0,0))
@@ -2465,7 +2465,11 @@ def test_inverseab_convergence():
     # Now one that should fail, since it's well outside the applicable area for the SIP polynomials.
     ra = -200.1
     dec = 70.45
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+        assert np.all(np.isnan(x))
+        assert np.all(np.isnan(y))
+    else:
         with assert_raises(galsim.GalSimError):
             x, y = wcs.radecToxy(ra, dec, units="radians")
         try:
@@ -2473,10 +2477,6 @@ def test_inverseab_convergence():
         except galsim.GalSimError as e:
             print('Error message is\n',e)
             assert "[0,]" in str(e) or "[0]" in str(e)
-    else:
-        x, y = wcs.radecToxy(ra, dec, units="radians")
-        assert np.all(np.isnan(x))
-        assert np.all(np.isnan(y))
 
     # Check as part of a longer list (longer than 256 is important)
     rng = np.random.RandomState(1234)
@@ -2486,7 +2486,11 @@ def test_inverseab_convergence():
     dec = np.append(dec, [-0.45, 0.2])
     print('ra = ',ra)
     print('dec = ',dec)
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+        assert np.sum(np.isnan(x)) >= 2
+        assert np.sum(np.isnan(y)) >= 2
+    else:
         with assert_raises(galsim.GalSimError):
             x, y = wcs.radecToxy(ra, dec, units="radians")
         try:
@@ -2498,10 +2502,6 @@ def test_inverseab_convergence():
             # of the bad indices.  Included here as an example for users who may need this.
             bad = eval(str(e)[str(e).rfind('['):])
             print('as a python list: ',bad)
-    else:
-        x, y = wcs.radecToxy(ra, dec, units="radians")
-        assert np.sum(np.isnan(x)) >= 2
-        assert np.sum(np.isnan(y)) >= 2
 
 
 @timer

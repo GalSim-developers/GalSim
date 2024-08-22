@@ -601,14 +601,14 @@ def test_photon_array_depr():
     photon_array.pupil_v = 10.0
     np.testing.assert_array_equal(photon_array.pupil_v, 10.0)
 
-    if hasattr(galsim, "_galsim"):
-        t = check_dep(getattr, photon_array, 'time')
-        assert photon_array.hasAllocatedTimes()
-    else:
+    if is_jax_galsim():
         # jax-galsim always sets these additional properties
         # t = check_dep(getattr, photon_array, "time")
         # however jax-galsim sets them to NaN so they are not allocated
         assert not photon_array.hasAllocatedTimes()
+    else:
+        t = check_dep(getattr, photon_array, 'time')
+        assert photon_array.hasAllocatedTimes()
     # jax-galsim needs to set 0
     photon_array.time = 0.0
     # jax-galsim is allocated now
@@ -622,14 +622,14 @@ def test_photon_array_depr():
 
     # For coverage, also need to test the two pair ones in other order.
     photon_array = galsim.PhotonArray(nphotons)
-    if hasattr(galsim, "_galsim"):
-        dydz = check_dep(getattr, photon_array, 'dydz')
-        assert photon_array.hasAllocatedAngles()
-    else:
+    if is_jax_galsim():
         # jax-galsim always sets these additional properties
         # dydz = check_dep(getattr, photon_array, "dydz")
         # however jax-galsim sets them to NaN so they are not allocated
         assert not photon_array.hasAllocatedAngles()
+    else:
+        dydz = check_dep(getattr, photon_array, 'dydz')
+        assert photon_array.hasAllocatedAngles()
     assert len(photon_array.dxdz) == nphotons
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
@@ -643,15 +643,15 @@ def test_photon_array_depr():
     photon_array.dxdz = 0.17
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
 
-    if hasattr(galsim, "_galsim"):
-        v = check_dep(getattr, photon_array, 'pupil_v')
-        assert photon_array.hasAllocatedPupil()
-        assert len(photon_array.pupil_u) == nphotons
-    else:
+    if is_jax_galsim():
         # jax-galsim always sets these additional properties
         # v = check_dep(getattr, photon_array, "pupil_v")
         # however jax-galsim sets them to NaN so they are not allocated
         assert not photon_array.hasAllocatedPupil()
+    else:
+        v = check_dep(getattr, photon_array, 'pupil_v')
+        assert photon_array.hasAllocatedPupil()
+        assert len(photon_array.pupil_u) == nphotons
     assert len(photon_array.pupil_v) == nphotons
     # JAX-Galsim does not allow by reference setting - changed this
     # to make tests below run
@@ -667,13 +667,13 @@ def test_photon_array_depr():
     # Check assignAt
     pa1 = galsim.PhotonArray(50)
     pa1.x = photon_array.x[:50]
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
+        pa1.y = photon_array.y[:50]
+        pa1.flux.at[0:50].set(photon_array.flux[:50])
+    else:
         for i in range(50):
             pa1.y[i] = photon_array.y[i]
         pa1.flux[0:50] = photon_array.flux[:50]
-    else:
-        pa1.y = photon_array.y[:50]
-        pa1.flux.at[0:50].set(photon_array.flux[:50])
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
     pa1.pupil_u = photon_array.pupil_u[:50]
