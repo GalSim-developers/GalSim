@@ -127,7 +127,7 @@ def test_angle():
     assert_raises(TypeError,galsim.AngleUnit, 1, 3)
     assert_raises(TypeError,galsim.Angle, 3.4)
     assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
-    assert_raises((ValueError, TypeError), galsim.AngleUnit, 'spam'))
+    assert_raises((ValueError, TypeError), galsim.Angle, 'spam'))
     assert_raises(TypeError,galsim.Angle, 1, 3)
 
 
