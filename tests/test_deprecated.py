@@ -34,7 +34,9 @@ def check_dep(f, *args, **kwargs):
 
 @timer
 def test_gsparams():
-    if is_pure_galsim():
+    if is_jax_galsim():
+        pass
+    else:
         check_dep(galsim.GSParams, allowed_flux_variation=0.90)
         check_dep(galsim.GSParams, range_division_for_extrema=50)
         check_dep(galsim.GSParams, small_fraction_of_flux=1.e-6)

@@ -48,7 +48,6 @@ __all__ = [
     "Profile",
     "galsim_backend",
     "is_jax_galsim",
-    "is_pure_galsim",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
@@ -79,10 +78,6 @@ def galsim_backend():
 
 def is_jax_galsim():
     return galsim_backend() == "jax_galsim"
-
-
-def is_pure_galsim():
-    return galsim_backend() == "galsim"
 
 
 def gsobject_compare(obj1, obj2, conv=None, decimal=10):
