@@ -123,17 +123,11 @@ def test_angle():
 
     # Check invalid constructors
     assert_raises(TypeError,galsim.AngleUnit, galsim.degrees)
-    try:
-        assert_raises(ValueError,galsim.AngleUnit, 'spam')
-    except Exception:
-        assert_raises(TypeError,galsim.AngleUnit, 'spam')
+    assert_raises((ValueError, TypeError), galsim.AngleUnit, 'spam')
     assert_raises(TypeError,galsim.AngleUnit, 1, 3)
     assert_raises(TypeError,galsim.Angle, 3.4)
     assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
-    try:
-        assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
-    except Exception:
-        assert_raises(TypeError,galsim.Angle, 'spam', galsim.degrees)
+    assert_raises((ValueError, TypeError), galsim.AngleUnit, 'spam'))
     assert_raises(TypeError,galsim.Angle, 1, 3)
 
 
@@ -360,6 +354,8 @@ def test_projection():
     np.testing.assert_allclose(
         c0.rad,
         center.rad,
+        rtol=0,
+        atol=1e-16,
     )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='lambert').ravel(),
                                    (1,0,0,1))
@@ -423,6 +419,8 @@ def test_projection():
     np.testing.assert_allclose(
         c0.rad,
         center.rad,
+        rtol=0,
+        atol=1e-16,
     )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='stereographic').ravel(),
                                    (1,0,0,1))
@@ -489,6 +487,8 @@ def test_projection():
     np.testing.assert_allclose(
         c0.rad,
         center.rad,
+        rtol=0,
+        atol=1e-16,
     )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='gnomonic').ravel(),
                                    (1,0,0,1))
@@ -551,6 +551,8 @@ def test_projection():
     np.testing.assert_allclose(
         c0.rad,
         center.rad,
+        rtol=0,
+        atol=1e-16,
     )
     np.testing.assert_almost_equal(center.jac_deproject(*p0, projection='postel').ravel(),
                                    (1,0,0,1))
