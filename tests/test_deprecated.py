@@ -631,6 +631,7 @@ def test_photon_array_depr():
         # jax-galsim needs to set 0
         photon_array.time = 0.0
         # jax-galsim is allocated now
+        assert photon_array.hasAllocatedTimes()
     else:
         t = check_dep(getattr, photon_array, 'time')
     assert photon_array.hasAllocatedTimes()
