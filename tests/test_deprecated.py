@@ -655,17 +655,26 @@ def test_photon_array_depr():
     else:
         dydz = check_dep(getattr, photon_array, 'dydz')
         assert photon_array.hasAllocatedAngles()
+        assert photon_array.hasAllocatedAngles()
     assert len(photon_array.dxdz) == nphotons
-    # JAX-Galsim does not allow by reference setting - changed this
-    # to make tests below run
-    photon_array.dydz = 0.59
-    np.testing.assert_array_equal(photon_array.dxdz, 0.0)
+    assert len(photon_array.dydz) == nphotons
+    if is_jax_galsim():
+        # JAX-Galsim does not allow by reference setting - changed this
+        # to make tests below run
+        photon_array.dydz = 0.59
+    else:
+        dydz[:] = 0.59
+    np.testing.assert_array_equal(photon_array.dxdz, 0.)
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
-    assert hasattr(photon_array, "dxdz")
-    # JAX-Galsim does not allow by reference setting - changed this
-    # to make tests below run
-    photon_array.dxdz = 0.17
+    if is_jax_galsim():
+        assert hasattr(photon_array, "dxdz")
+        # JAX-Galsim does not allow by reference setting - changed this
+        # to make tests below run
+        photon_array.dxdz = 0.17
+    else:
+        dxdz = photon_array.dxdz  # Allowed now.
+            dxdz[:] = 0.17
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
 
     if is_jax_galsim():
