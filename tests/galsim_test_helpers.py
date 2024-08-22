@@ -48,6 +48,7 @@ __all__ = [
     "Profile",
     "galsim_backend",
     "is_jax_galsim",
+    "is_pure_galsim",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
@@ -69,15 +70,19 @@ default_params = galsim.GSParams(
         integration_abserr = 1.e-8)
 
 
-def galsim_backend(galsim):
+def galsim_backend():
     if "jax_galsim/__init__.py" in galsim.__file__:
         return "jax_galsim"
     else:
         return "galsim"
 
 
-def is_jax_galsim(galsim):
-    return galsim_backend(galsim) == "jax_galsim"
+def is_jax_galsim():
+    return galsim_backend() == "jax_galsim"
+
+
+def is_pure_galsim():
+    return galsim_backend() == "galsim"
 
 
 def gsobject_compare(obj1, obj2, conv=None, decimal=10):
@@ -170,10 +175,7 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
                 err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
-    if hasattr(galsim, "_galsim"):
-        assert prof.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
-        assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
-    else:
+    if is_jax_galsim():
         for line in galsim.GSObject.withFlux.__doc__.splitlines():
             if line.strip() and "LAX" not in line:
                 assert line.strip() in prof.withFlux.__doc__, (
@@ -184,6 +186,9 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
                 assert line.strip() in prof.__class__.withFlux.__doc__, (
                     prof.__class__.withFlux.__doc__, galsim.GSObject.withFlux.__doc__,
                 )
+    else:
+        assert prof.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
+        assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
