@@ -264,7 +264,7 @@ def assert_floatlike(val):
     assert (
         isinstance(val, float)
         or (
-            (not hasattr(galsim, "_galsim"))
+            is_jax_galsim()
             and hasattr(val, "shape")
             and val.shape == ()
             and hasattr(val, "dtype")
@@ -276,7 +276,7 @@ def assert_intlike(val):
     assert (
         isinstance(val, int)
         or (
-            (not hasattr(galsim, "_galsim"))
+            is_jax_galsim()
             and hasattr(val, "shape")
             and val.shape == ()
             and hasattr(val, "dtype")
@@ -376,7 +376,8 @@ def do_shoot(prof, img, name):
     print('nphot = ',nphot)
     img2 = img.copy()
 
-    rtol *= 3
+    if is_jax_galsim():
+        rtol *= 3
 
     # Use a deterministic random number generator so we don't fail tests because of rare flukes
     # in the random numbers.
