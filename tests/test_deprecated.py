@@ -674,7 +674,7 @@ def test_photon_array_depr():
         photon_array.dxdz = 0.17
     else:
         dxdz = photon_array.dxdz  # Allowed now.
-            dxdz[:] = 0.17
+        dxdz[:] = 0.17
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
 
     if is_jax_galsim():
@@ -687,15 +687,22 @@ def test_photon_array_depr():
         assert photon_array.hasAllocatedPupil()
         assert len(photon_array.pupil_u) == nphotons
     assert len(photon_array.pupil_v) == nphotons
-    # JAX-Galsim does not allow by reference setting - changed this
-    # to make tests below run
-    photon_array.pupil_v = 10.0
+    if is_jax_galsim():
+        # JAX-Galsim does not allow by reference setting - changed this
+        # to make tests below run
+        photon_array.pupil_v = 10.0
+    else:
+        v[:] = 10.0
     np.testing.assert_array_equal(photon_array.pupil_u, 0.0)
     np.testing.assert_array_equal(photon_array.pupil_v, 10.0)
-    assert hasattr(photon_array, "pupil_u")
-    # JAX-Galsim does not allow by reference setting - changed this
-    # to make tests below run
-    photon_array.pupil_u = 6.0
+    if is_jax_galsim():
+        assert hasattr(photon_array, "pupil_u")
+        # JAX-Galsim does not allow by reference setting - changed this
+        # to make tests below run
+        photon_array.pupil_u = 6.0
+    else:
+        u = photon_array.pupil_u
+        u[:] = 6.0
     np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
 
     # Check assignAt
