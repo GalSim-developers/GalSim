@@ -46,6 +46,8 @@ __all__ = [
     "assert_raises",
     "assert_warns",
     "Profile",
+    "galsim_backend",
+    "is_jax_galsim",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
@@ -65,6 +67,18 @@ default_params = galsim.GSParams(
         realspace_abserr = 1.e-6,
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
+
+
+def galsim_backend(galsim):
+    if "jax_galsim/__init__.py" in galsim.__file__:
+        return "jax_galsim"
+    else:
+        return "galsim"
+
+
+def is_jax_galsim(galsim):
+    return galsim_backend(galsim) == "jax_galsim"
+
 
 def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     """Helper function to check that two GSObjects are equivalent
