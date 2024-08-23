@@ -38,10 +38,10 @@ def test_deviate_noise():
     u = galsim.UniformDeviate(testseed)
     uResult = np.empty((10,10))
     # jax-galsim cannot fill arrays so it returns
-    if hasattr(galsim, "_galsim"):
-        u.generate(uResult)
-    else:
+    if is_jax_galsim():
         uResult = u.generate(uResult)
+    else:
+        u.generate(uResult)
 
     noise = galsim.DeviateNoise(galsim.UniformDeviate(testseed))
 
@@ -105,10 +105,10 @@ def test_gaussian_noise():
     g = galsim.GaussianDeviate(testseed, sigma=gSigma)
     gResult = np.empty((10,10))
     # jax-galsim cannot fill arrays so it returns
-    if hasattr(galsim, "_galsim"):
-        g.generate(gResult)
-    else:
+    if is_jax_galsim():
         gResult = g.generate(gResult)
+    else:
+        g.generate(gResult)
     noise = galsim.DeviateNoise(g)
 
     # Test filling an image
@@ -285,21 +285,21 @@ def test_variable_gaussian_noise():
     var_image = galsim.ImageD(galsim.BoundsI(0,9,0,9))
     coords = np.ogrid[0:10, 0:10]
     # jax does not support item assignment
-    if hasattr(galsim, "_galsim"):
-        var_image.array[ (coords[0] + coords[1]) % 2 == 1 ] = gSigma1**2
-        var_image.array[ (coords[0] + coords[1]) % 2 == 0 ] = gSigma2**2
-    else:
+    if is_jax_galsim():
         var_image._array = var_image.array.at[(coords[0] + coords[1]) % 2 == 1].set(gSigma1**2)
         var_image._array = var_image.array.at[(coords[0] + coords[1]) % 2 == 0].set(gSigma2**2)
+    else:
+        var_image.array[ (coords[0] + coords[1]) % 2 == 1 ] = gSigma1**2
+        var_image.array[ (coords[0] + coords[1]) % 2 == 0 ] = gSigma2**2
     print('var_image.array = ',var_image.array)
 
     g = galsim.GaussianDeviate(testseed, sigma=1.)
     vgResult = np.empty((10,10))
     # jax-galsim cannot fill arrays so it returns
-    if hasattr(galsim, "_galsim"):
-        g.generate(vgResult)
-    else:
+    if is_jax_galsim():
         vgResult = g.generate(vgResult)
+    else:
+        g.generate(vgResult)
     vgResult *= np.sqrt(var_image.array)
 
     # Test filling an image
@@ -329,12 +329,12 @@ def test_variable_gaussian_noise():
     mask1 = (big_coords[0] + big_coords[1]) % 2 == 0
     mask2 = (big_coords[0] + big_coords[1]) % 2 == 1
     # jax does not support item assignment
-    if hasattr(galsim, "_galsim"):
-        big_var_image.array[mask1] = gSigma1**2
-        big_var_image.array[mask2] = gSigma2**2
-    else:
+    if is_jax_galsim():
         big_var_image._array = big_var_image.array.at[mask1].set(gSigma1**2)
         big_var_image._array = big_var_image.array.at[mask2].set(gSigma2**2)
+    else:
+        big_var_image.array[mask1] = gSigma1**2
+        big_var_image.array[mask2] = gSigma2**2
     big_vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), big_var_image)
 
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -342,9 +342,13 @@ def test_variable_gaussian_noise():
     var = np.var(big_im.array)
     print('variance = ',var)
     print('getVar = ',big_vgn.var_image.array.mean())
-    # jax galsim has a different RNG
+    if is_jax_galsim():
+        # jax galsim has a different RNG
+        decimal = 0
+    else:
+        decimal = 1
     np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1 if hasattr(galsim, "_galsim") else 0,
+            var, big_vgn.var_image.array.mean(), decimal,
             err_msg='Realized variance for VariableGaussianNoise did not match var_image')
 
     # Check realized variance in each mask
@@ -360,8 +364,13 @@ def test_variable_gaussian_noise():
     big_im.addNoise(big_vgn)
     gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
     var = np.var(big_im.array)
+    if is_jax_galsim():
+        # jax galsim has a different RNG
+        decimal = 0
+    else:
+        decimal = 1
     np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1 if hasattr(galsim, "_galsim") else 0,
+            var, big_vgn.var_image.array.mean(), decimal,
             err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
 
     # Check picklability
@@ -400,10 +409,10 @@ def test_poisson_noise():
     p = galsim.PoissonDeviate(testseed, mean=pMean)
     pResult = np.empty((10,10))
     # jax does not support item assignment
-    if hasattr(galsim, "_galsim"):
-        p.generate(pResult)
-    else:
+    if is_jax_galsim():
         pResult = p.generate(pResult)
+    else:
+        p.generate(pResult)
     noise = galsim.DeviateNoise(p)
 
     # Test filling an image
@@ -572,13 +581,7 @@ def test_ccdnoise():
     sky = 50
 
     # Tabulated results for the above settings and testseed value.
-    if hasattr(galsim, "_galsim"):
-        cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)
-        cResultI = np.array([[44, 47], [50, 49]], dtype=np.int32)
-        cResultF = np.array([[44.45332718, 47.79725266], [50.67744064, 49.58272934]], dtype=np.float32)
-        cResultD = np.array([[44.453328440057618, 47.797254142519577],
-                            [50.677442088335162, 49.582730949808081]],dtype=np.float64)
-    else:
+    if is_jax_galsim():
         # jax-galsim has a different RNG
         cResultS = np.array([[42, 52], [49, 45]], dtype=np.int16)  # noqa: F841
         cResultI = np.array([[42, 52], [49, 45]], dtype=np.int32)  # noqa: F841
@@ -590,6 +593,12 @@ def test_ccdnoise():
             [42.42870031326479, 52.42875718917211],
             [49.016050296441094, 45.61003745208172]
         ], dtype=np.float64)
+    else:
+        cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)
+        cResultI = np.array([[44, 47], [50, 49]], dtype=np.int32)
+        cResultF = np.array([[44.45332718, 47.79725266], [50.67744064, 49.58272934]], dtype=np.float32)
+        cResultD = np.array([[44.453328440057618, 47.797254142519577],
+                            [50.677442088335162, 49.582730949808081]],dtype=np.float64)
 
     for i in range(4):
         prec = eval("precision"+typestrings[i])
