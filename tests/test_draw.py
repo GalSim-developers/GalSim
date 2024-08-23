@@ -1259,10 +1259,11 @@ def test_fft():
                              [4,6,8,4],
                              [2,4,6,6] ],
                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
-        if is_jax_galsim() and dt not in [np.complex128, complex]:
-            kim = xim.calculate_fft()
-            xim2 = kim.calculate_inverse_fft()
-            np.testing.assert_array_almost_equal(xim.array, xim2.array)
+        if is_jax_galsim():
+            if dt not in [np.complex128, complex]:
+                kim = xim.calculate_fft()
+                xim2 = kim.calculate_inverse_fft()
+                np.testing.assert_array_almost_equal(xim.array, xim2.array)
         else:
             kim = xim.calculate_fft()
             xim2 = kim.calculate_inverse_fft()
@@ -1298,10 +1299,11 @@ def test_fft():
         xim2 = galsim.Image([ [2,4,6],
                               [4,6,8] ],
                             xmin=-2, ymin=-1, dtype=dt, scale=0.1)
-        if is_jax_galsim() and dt not in [np.complex128, complex]:
-            kim = xim.calculate_fft()
-            kim2 = xim2.calculate_fft()
-            np.testing.assert_array_almost_equal(kim.array, kim2.array)
+        if is_jax_galsim():
+            if dt not in [np.complex128, complex]:
+                kim = xim.calculate_fft()
+                kim2 = xim2.calculate_fft()
+                np.testing.assert_array_almost_equal(kim.array, kim2.array)
         else:
             kim = xim.calculate_fft()
             kim2 = xim2.calculate_fft()
