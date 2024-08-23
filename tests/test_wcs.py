@@ -2465,8 +2465,8 @@ def test_inverseab_convergence():
     assert np.isclose(dec1, dec)
 
     # Now one that should fail, since it's well outside the applicable area for the SIP polynomials.
-    ra = -200.1
-    dec = 70.45
+    ra = 2.1
+    dec = -0.45
     if is_jax_galsim():
         x, y = wcs.radecToxy(ra, dec, units="radians")
         assert np.all(np.isnan(x))
