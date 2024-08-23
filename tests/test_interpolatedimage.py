@@ -369,12 +369,12 @@ def test_interpolant():
                      -(vm+1) * sici(np.pi*(vm+1))[0]
                      -(vp-1) * sici(np.pi*(vp-1))[0]
                      +(vp+1) * sici(np.pi*(vp+1))[0] ) / (2*np.pi)
-        if hasattr(galsim, "_galsim"):
-            np.testing.assert_allclose(ln.kval(x), true_kval, rtol=1.e-4, atol=1.e-8)
-            assert np.isclose(ln.kval(x[12]), true_kval[12])
-        else:
+        if is_jax_galsim():
             np.testing.assert_allclose(ln.kval(x), true_kval, rtol=3.0e-4, atol=3.0e-6)
             np.testing.assert_allclose(ln.kval(x[12]), true_kval[12], rtol=3.0e-4, atol=3.0e-6)
+        else:
+            np.testing.assert_allclose(ln.kval(x), true_kval, rtol=1.e-4, atol=1.e-8)
+            assert np.isclose(ln.kval(x[12]), true_kval[12])
 
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
@@ -513,10 +513,15 @@ def test_exceptions():
         galsim.InterpolatedImage(image=galsim.ImageF(5, 5))
 
     # Image must be real type (F or D)
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
+        pass
+    else:
         with assert_raises(galsim.GalSimValueError):
             galsim.InterpolatedImage(image=galsim.ImageI(5, 5, scale=1))
 
+    if is_jax_galsim():
+        pass
+    else:
         # Image must have non-zero flux
         with assert_raises(galsim.GalSimValueError):
             galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.))
@@ -1616,9 +1621,12 @@ def test_ii_shoot():
         assert np.isclose(added_flux, obj.flux, rtol=rtol)
         assert np.isclose(im.array.sum(), obj.flux, rtol=rtol)
         photons2 = obj.makePhot(poisson_flux=False, rng=rng.duplicate())
-        np.testing.assert_allclose(photons2.x, photons.x)
-        np.testing.assert_allclose(photons2.y, photons.y)
-        np.testing.assert_allclose(photons2.flux, photons.flux)
+        if is_jax_galsim():
+            np.testing.assert_allclose(photons2.x, photons.x)
+            np.testing.assert_allclose(photons2.y, photons.y)
+            np.testing.assert_allclose(photons2.flux, photons.flux)
+        else:
+            assert photons2 == photons, "InterpolatedImage makePhot not equivalent to drawPhot"
 
         # Can treat as a convolution of a delta function and put it in a photon_ops list.
         delta = galsim.DeltaFunction(flux=flux)
@@ -1640,10 +1648,10 @@ def test_ne():
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
     # repr string will report.
     perturb_image = ref_image.copy()
-    if hasattr(galsim, "_galsim"):
-        perturb_image.array[64, 64] *= 100
-    else:
+    if is_jax_galsim():
         perturb_image._array = perturb_image._array.at[64, 64].set(perturb_image._array[64, 64] * 100)
+    else:
+        perturb_image.array[64, 64] *= 100
     obj2 = galsim.InterpolatedImage(perturb_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     with galsim.utilities.printoptions(threshold=128*128):
@@ -1859,7 +1867,9 @@ def test_drawreal_seg_fault():
     """Test to reproduce bug report in Issue #1164 that was causing seg faults
     """
     # this test only runs with real galsim
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         import pickle
 
         prof_file = os.path.join(
