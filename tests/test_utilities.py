@@ -35,7 +35,9 @@ def test_pos():
     assert pi1.y == 23
     assert isinstance(pi1.x, int)
     assert isinstance(pi1.y, int)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert isinstance(pi1._p, galsim._galsim.PositionI)
 
     pi2 = galsim.PositionI((11,23))
@@ -44,10 +46,10 @@ def test_pos():
     pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
     pi6 = galsim.PositionD(11.3,23.4).round()
     pi7 = pi2.round()
-    if hasattr(galsim, '_galsim'):
-        pi8 = galsim._PositionI(11,23)
-    else:
+    if is_jax_galsim():
         pi8 = galsim.PositionI(11,23)
+    else:
+        pi8 = galsim._PositionI(11,23)
     assert pi2 == pi1
     assert pi3 == pi1
     assert pi4 == pi1
@@ -65,7 +67,9 @@ def test_pos():
     assert pd1.y == 23.
     assert isinstance(pd1.x, float)
     assert isinstance(pd1.y, float)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert isinstance(pd1._p, galsim._galsim.PositionD)
 
     pd2 = galsim.PositionD((11,23))
@@ -73,10 +77,10 @@ def test_pos():
     pd4 = galsim.PositionD(pd1)
     pd5 = galsim.PositionD(pi1)
     pd6 = galsim.PositionD(galsim.PositionD(11.3,23.4).round())
-    if hasattr(galsim, '_galsim'):
-        pd7 = galsim._PositionD(11.0,23.0)
-    else:
+    if is_jax_galsim():
         pd7 = galsim.PositionD(11.0,23.0)
+    else:
+        pd7 = galsim._PositionD(11.0,23.0)
     assert pd2 == pd1
     assert pd3 == pd1
     assert pd4 == pd1
@@ -94,7 +98,9 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionI, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionI, 11, 23, x=13, z=21)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert_raises(TypeError, galsim.PositionI, 11, 23.5)
 
     assert_raises(TypeError, galsim.PositionD, 11)
@@ -103,10 +109,7 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionD, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionD, 11, 23, x=13, z=21)
-    try:
-        assert_raises(ValueError, galsim.PositionD, 11, "blue")
-    except Exception:
-        assert_raises(TypeError, galsim.PositionD, 11, "blue")
+    assert_raises((ValueError, TypeError), galsim.PositionD, 11, "blue")
 
     # Can't use base class directly.
     assert_raises(TypeError, galsim.Position, 11, 23)
@@ -182,7 +185,9 @@ def test_bounds():
     assert isinstance(bi1.xmax, int)
     assert isinstance(bi1.ymin, int)
     assert isinstance(bi1.ymax, int)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert isinstance(bi1._b, galsim._galsim.BoundsI)
 
     bi2 = galsim.BoundsI(galsim.PositionI(11,17), galsim.PositionI(23,50))
@@ -196,10 +201,10 @@ def test_bounds():
     bi10 = galsim.BoundsI() + galsim.PositionI(11,17) + galsim.PositionI(23,50)
     bi11 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
     bi12 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
-    if hasattr(galsim, '_galsim'):
-        bi13 = galsim._BoundsI(11,23,17,50)
-    else:
+    if is_jax_galsim():
         bi13 = galsim.BoundsI(11,23,17,50)
+    else:
+        bi13 = galsim._BoundsI(11,23,17,50)
     bi14 = galsim.BoundsI()
     bi14 += galsim.PositionI(11,17)
     bi14 += galsim.PositionI(23,50)
@@ -223,7 +228,9 @@ def test_bounds():
     assert_floatlike(bd1.xmax)
     assert_floatlike(bd1.ymin)
     assert_floatlike(bd1.ymax)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert isinstance(bd1._b, galsim._galsim.BoundsD)
 
     bd2 = galsim.BoundsD(galsim.PositionI(11,17), galsim.PositionI(23,50))
@@ -237,10 +244,10 @@ def test_bounds():
     bd10 = galsim.BoundsD() + galsim.PositionD(11,17) + galsim.PositionD(23,50)
     bd11 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
     bd12 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
-    if hasattr(galsim, '_galsim'):
-        bd13 = galsim._BoundsD(11,23,17,50)
-    else:
+    if is_jax_galsim():
         bd13 = galsim.BoundsD(11,23,17,50)
+    else:
+        bd13 = galsim._BoundsD(11,23,17,50)
     bd14 = galsim.BoundsD()
     bd14 += galsim.PositionD(11.,17.)
     bd14 += galsim.PositionD(23,50)
@@ -261,7 +268,9 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
+        pass
+    else:
         assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
@@ -273,8 +282,10 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
-    if hasattr(galsim, '_galsim'):
+    if is_jax_galsim():
         # jax doesn't raise for this
+        pass
+    else:
         assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
@@ -396,14 +407,18 @@ def test_bounds():
     assert galsim.BoundsD() == galsim.BoundsD() + galsim.BoundsD()
     assert galsim.BoundsD().area() == 0
 
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
+        pass
+    else:
         assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
         assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
         assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
         assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
 
-    if hasattr(galsim, "_galsim"):
+    if is_jax_galsim():
         # jax doesn't raise for these things
+        pass
+    else:
         assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'center')
         assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'center')
         assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'true_center')
@@ -1135,10 +1150,10 @@ def test_horner():
     # Make a random list of values to test
     x = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(x)
-    else:
+    if is_jax_galsim():
         x = rng.generate(x)
+    else:
+        rng.generate(x)
 
     # Check against the direct calculation
     truth = coef[0] + coef[1]*x + coef[2]*x**2 + coef[3]*x**3 + coef[4]*x**4
@@ -1192,10 +1207,10 @@ def test_horner():
 
     # Check length > 64
     xx = np.empty(2000)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(xx)
-    else:
+    if is_jax_galsim():
         xx = rng.generate(xx)
+    else:
+        rng.generate(xx)
     result = galsim.utilities.horner(xx, coef)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
@@ -1219,12 +1234,12 @@ def test_horner2d():
     x = np.empty(20)
     y = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(x)
-        rng.generate(y)
-    else:
+    if is_jax_galsim():
         x = rng.generate(x)
         y = rng.generate(y)
+    else:
+        rng.generate(x)
+        rng.generate(y)
 
     # Check against the direct calculation
     truth = coef[0,0] + coef[0,1]*y + coef[0,2]*y**2 + coef[0,3]*y**3 + coef[0,4]*y**4
@@ -1287,12 +1302,12 @@ def test_horner2d():
     # Check length > 64
     xx = np.empty(2000)
     yy = np.empty(2000)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(xx)
-        rng.generate(yy)
-    else:
+    if is_jax_galsim():
         xx = rng.generate(xx)
         yy = rng.generate(yy)
+    else:
+        rng.generate(xx)
+        rng.generate(yy)
     result = galsim.utilities.horner2d(xx, yy, coef)
     np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
 
@@ -1347,22 +1362,22 @@ def test_horner_complex():
     rx = np.empty(20)
     ry = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(rx)
-        rng.generate(ry)
-    else:
+    if is_jax_galsim():
         rx = rng.generate(rx)
         ry = rng.generate(ry)
+    else:
+        rng.generate(rx)
+        rng.generate(ry)
 
     ix = np.empty(20)
     iy = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    if hasattr(galsim, "_galsim"):
-        rng.generate(ix)
-        rng.generate(iy)
-    else:
+    if is_jax_galsim():
         ix = rng.generate(ix)
         iy = rng.generate(iy)
+    else:
+        rng.generate(ix)
+        rng.generate(iy)
     x = rx + 1j*ix
     y = ry + 1j*iy
 
