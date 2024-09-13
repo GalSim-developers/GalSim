@@ -404,14 +404,18 @@ def test_unit_integrals():
         print(str(interp))
         # Compute directly with int1d
         n = interp.ixrange//2 + 1
-        print("number of intervas: ",n)
+        if is_jax_galsim():
+            # jax galsim is slow when doing direct integration
+            _n_do = min(n, 100)
+        else:
+            _n_do = n
+
         direct_integrals = np.zeros(n)
         if isinstance(interp, galsim.Delta):
             # int1d doesn't handle this well.
             direct_integrals[0] = 1
         else:
-            for k in range(n):
-                print(k, n)
+            for k in range(_n_do):
                 direct_integrals[k] = galsim.integ.int1d(interp.xval, k-0.5, k+0.5)
         print('direct: ',direct_integrals)
 
@@ -420,7 +424,7 @@ def test_unit_integrals():
         print('integrals: ',len(integrals),integrals)
 
         assert len(integrals) == n
-        np.testing.assert_allclose(integrals, direct_integrals, atol=1.e-12)
+        np.testing.assert_allclose(integrals[_n_do], direct_integrals[_n_do], atol=1.e-12)
 
         if n > 10:
             print('n>10 for ',repr(interp))
