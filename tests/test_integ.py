@@ -184,10 +184,10 @@ def test_invroot_infinite_limits():
         err_msg="x^(-2) integral failed across interval [1, inf].")
 
     if is_jax_galsim():
+        assert np.isnan(galsim.integ.int1d(test_func, 0., 1., test_rel_err, test_abs_err))
+    else:
         with assert_raises(galsim.GalSimError):
             galsim.integ.int1d(test_func, 0., 1., test_rel_err, test_abs_err)
-    else:
-        assert np.isnan(galsim.integ.int1d(test_func, 0., 1., test_rel_err, test_abs_err))
 
 
 @timer
