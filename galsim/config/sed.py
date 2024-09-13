@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from astropy.units import Quantity, Unit
+
 from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
 from .input import RegisterInputConnectedType
@@ -131,7 +133,11 @@ class FileSEDBuilder(SEDBuilder):
         """
         logger = LoggerWrapper(logger)
 
-        req = {'file_name': str, 'wave_type': str, 'flux_type': str}
+        req = {
+            'file_name': str,
+            'wave_type': (Unit, str),
+            'flux_type': (Unit, str),
+        }
         opt = {'norm_flux_density': float, 'norm_wavelength': float,
                'norm_flux': float, 'redshift': float}
         ignore = ['norm_bandpass']
