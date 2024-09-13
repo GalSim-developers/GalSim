@@ -1995,6 +1995,30 @@ def test_quantity():
     assert value == 1.0 * u.m
 
 
+def test_astropy_unit():
+    import astropy.units as u
+    config = {
+        'mass1': u.kg,
+        'mass2': 'kg',
+        'mass3': '$u.kg',
+        'mass4': {
+            'type': 'Unit',
+            'unit': 'kg',
+        },
+        'area1': 'm^2',
+        'area2': '$u.m * u.m',
+        'area3': '$u.m**2'
+    }
+
+    for k in ['mass1', 'mass2', 'mass3', 'mass4']:
+        value, _ = galsim.config.ParseValue(config, k, config, u.Unit)
+        assert value == u.kg
+
+    for k in ['area1', 'area2', 'area3']:
+        value, _ = galsim.config.ParseValue(config, k, config, u.Unit)
+        assert value == u.m**2
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     runtests(testfns)
