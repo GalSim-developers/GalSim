@@ -424,7 +424,7 @@ def test_unit_integrals():
         print('integrals: ',len(integrals),integrals)
 
         assert len(integrals) == n
-        np.testing.assert_allclose(integrals[_n_do], direct_integrals[_n_do], atol=1.e-12)
+        np.testing.assert_allclose(integrals[:_n_do], direct_integrals[:_n_do], atol=1.e-12)
 
         if n > 10:
             print('n>10 for ',repr(interp))
