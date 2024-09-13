@@ -138,8 +138,12 @@ class FileSEDBuilder(SEDBuilder):
             'wave_type': (Unit, str),
             'flux_type': (Unit, str),
         }
-        opt = {'norm_flux_density': float, 'norm_wavelength': float,
-               'norm_flux': float, 'redshift': float}
+        opt = {
+            'norm_flux_density': (float, Quantity),
+            'norm_wavelength': (float, Quantity),
+            'norm_flux': float,
+            'redshift': float
+        }
         ignore = ['norm_bandpass']
 
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
@@ -155,7 +159,7 @@ class FileSEDBuilder(SEDBuilder):
 
         logger.info("Using SED file: %s",file_name)
         sed = read_sed_file(file_name, wave_type, flux_type)
-        if norm_flux_density:
+        if norm_flux_density is not None:
             sed = sed.withFluxDensity(norm_flux_density, wavelength=norm_wavelength)
         elif norm_flux:
             bandpass, safe1 = BuildBandpass(config, 'norm_bandpass', base, logger)
