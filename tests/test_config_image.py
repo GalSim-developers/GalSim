@@ -1981,7 +1981,7 @@ def test_bandpass():
         'bp2' : {
             'type' : 'FileBandpass',
             'file_name' : 'ACS_wfc_F814W.dat',
-            'wave_type' : 'nm',
+            'wave_type' : u.nm,
             'thin' : [1.e-4, 1.e-5, 1.e-6],
             'blue_limit': 7000*u.Angstrom,  # Try mismatched units
             'red_limit': 9500*u.Angstrom,
