@@ -2844,8 +2844,8 @@ def test_chromatic():
 
             'sed': {
                 'file_name': 'CWW_E_ext.sed',
-                'wave_type': 'Ang',
-                'flux_type': 'flambda',
+                'wave_type': u.Angstrom,
+                'flux_type': u.erg/u.Angstrom/u.cm**2/u.s,
                 'norm_flux_density': 1.0,
                 'norm_wavelength': 500,
                 'redshift': 0.8,
