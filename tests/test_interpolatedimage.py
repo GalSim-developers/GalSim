@@ -410,7 +410,9 @@ def test_unit_integrals():
             direct_integrals[0] = 1
         else:
             for k in range(n):
+                print(k)
                 direct_integrals[k] = galsim.integ.int1d(interp.xval, k-0.5, k+0.5)
+                print('direct: ',direct_integrals[k])
         print('direct: ',direct_integrals)
 
         # Get from unit_integrals method (sometimes using analytic formulas)
