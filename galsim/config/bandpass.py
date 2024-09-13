@@ -148,9 +148,12 @@ class FileBandpassBuilder(BandpassBuilder):
 
         file_name = kwargs.pop('file_name')
         thin = kwargs.pop('thin', None)
+        zeropoint = kwargs.pop('zeropoint', None)
 
         logger.info("Reading Bandpass file: %s",file_name)
         bandpass = Bandpass(file_name, **kwargs)
+        if zeropoint:
+            bandpass = bandpass.withZeropoint(zeropoint)
         if thin:
             bandpass = bandpass.thin(thin)
 

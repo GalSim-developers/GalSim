@@ -2000,6 +2000,12 @@ def test_bandpass():
             'str' : '@bp1 * @bp3'
         },
 
+        'bpz' : {
+            'file_name' : 'chromatic_reference_images/simple_bandpass.dat',
+            'wave_type' : 'nm',
+            'zeropoint' : 'Vega',
+        },
+
         'bad1' : 34,
         'bad2' : { 'type' : 'Invalid' },
     }
@@ -2041,6 +2047,9 @@ def test_bandpass():
     bp9 = galsim.config.BuildBandpass(config, 'bp2', config)[0]
     assert bp9 is not bp2
     assert bp9 == bp2b.thin(1.e-5)
+
+    bpz = galsim.config.BuildBandpass(config, 'bpz', config)[0]
+    assert bpz == bp1.withZeropoint('Vega')
 
     for bad in ['bad1', 'bad2']:
         with assert_raises(galsim.GalSimConfigError):
