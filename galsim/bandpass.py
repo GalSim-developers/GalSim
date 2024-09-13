@@ -79,8 +79,9 @@ class Bandpass:
 
     The argument ``wave_type`` specifies the units to assume for wavelength and must be one of
     'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms', or an astropy
-    distance unit.  (For the string values, case is unimportant.)  If given, blue_limit and
-    red_limit are taken to be in these units as well.
+    distance unit.  (For the string values, case is unimportant.)  If given as floats, blue_limit
+    and red_limit are taken to be in these units as well.  (If given as an astropy Quantity, then
+    the units are taken directly and converted to ``wave_type``.)
 
     Note that the ``wave_type`` parameter does not propagate into other methods of Bandpass.
     For instance, `Bandpass.__call__` assumes its input argument is in nanometers.
@@ -118,14 +119,6 @@ class Bandpass:
                                     # function (see _initialize_tp()), although in some cases,
                                     # it can be supplied directly as a constructor argument.
 
-        if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
-            raise GalSimRangeError("blue_limit must be less than red_limit",
-                                   blue_limit, None, red_limit)
-        self.blue_limit = blue_limit # These may change as we go through this.
-        self.red_limit = red_limit
-        self.zeropoint = zeropoint
-        self.interpolant = interpolant
-
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
@@ -148,6 +141,19 @@ class Bandpass:
             except units.UnitConversionError:
                 # Unlike in SED, we require a distance unit for wave_type
                 raise GalSimValueError("Invalid wave_type.  Must be a distance.", wave_type)
+
+        if isinstance(blue_limit, units.Quantity):
+            blue_limit = blue_limit.to_value(units.Unit(self.wave_type))
+        if isinstance(red_limit, units.Quantity):
+            red_limit = red_limit.to_value(units.Unit(self.wave_type))
+
+        if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
+            raise GalSimRangeError("blue_limit must be less than red_limit",
+                                   blue_limit, None, red_limit)
+        self.blue_limit = blue_limit # These may change as we go through this.
+        self.red_limit = red_limit
+        self.zeropoint = zeropoint
+        self.interpolant = interpolant
 
         # Convert string input into a real function (possibly a LookupTable)
         self._initialize_tp()
