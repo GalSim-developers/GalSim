@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -796,6 +796,13 @@ def _GenerateFromQuantity(config, base, value_type):
     return Quantity(kwargs['value'], kwargs['unit']), safe
 
 
+def _GenerateFromUnit(config, base, value_type):
+    """Return a Unit from a string
+    """
+    req = { 'unit' : str }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    return Unit(kwargs['unit']), safe
+
 def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
@@ -865,3 +872,4 @@ RegisterValueType('RTheta', _GenerateFromRTheta, [ PositionD ])
 RegisterValueType('RADec', _GenerateFromRADec, [ CelestialCoord ])
 RegisterValueType('File', _GenerateFromFile, [ LookupTable ])
 RegisterValueType('Quantity', _GenerateFromQuantity, [ Quantity ])
+RegisterValueType('Unit', _GenerateFromUnit, [ Unit ])
