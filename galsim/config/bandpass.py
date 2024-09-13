@@ -17,7 +17,7 @@
 #
 
 import logging
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 
 from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
@@ -135,7 +135,7 @@ class FileBandpassBuilder(BandpassBuilder):
 
         req = {
             'file_name': str,
-            'wave_type': str
+            'wave_type': (str, Unit),
         }
         opt = {
             'thin' : float,
