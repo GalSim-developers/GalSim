@@ -292,7 +292,7 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             ratio, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with fwhm")
-    np.testing.assert_equal(
+    np.testing.assert_array_equal(
             test_gal.fwhm, test_fwhm,
             err_msg="Moffat fwhm returned wrong value")
 
