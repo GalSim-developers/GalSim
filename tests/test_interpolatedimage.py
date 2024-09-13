@@ -404,15 +404,14 @@ def test_unit_integrals():
         print(str(interp))
         # Compute directly with int1d
         n = interp.ixrange//2 + 1
+        print("number of intervas: ",n)
         direct_integrals = np.zeros(n)
         if isinstance(interp, galsim.Delta):
             # int1d doesn't handle this well.
             direct_integrals[0] = 1
         else:
             for k in range(n):
-                print(k)
                 direct_integrals[k] = galsim.integ.int1d(interp.xval, k-0.5, k+0.5)
-                print('direct: ',direct_integrals[k])
         print('direct: ',direct_integrals)
 
         # Get from unit_integrals method (sometimes using analytic formulas)
