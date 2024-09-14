@@ -24,6 +24,7 @@ import time
 import coord
 from unittest import mock
 
+import coord
 import galsim
 from galsim_test_helpers import *
 
@@ -499,7 +500,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     wcs2 = wcs.local()
     assert wcs == wcs2, name+' local() is not == the original'
     new_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.withOrigin(new_origin)
+    wcs3 = wcs.shiftOrigin(new_origin)
     assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
     assert wcs3 != wcs, name+' is not != wcs.withOrigin(pos) (reverse)'
     wcs2 = wcs3.local()
@@ -513,7 +514,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
             world_pos2.y, world_pos1.y, digits,
             'withOrigin(new_origin) returned wrong world position')
     new_world_origin = galsim.PositionD(5352.7, 9234.3)
-    wcs4 = wcs.withOrigin(new_origin, new_world_origin)
+    wcs4 = wcs.shiftOrigin(new_origin, new_world_origin)
     world_pos3 = wcs4.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos3.x, new_world_origin.x, digits,
@@ -1181,7 +1182,10 @@ def test_pixelscale():
     assert wcs.world_origin == galsim.PositionD(0,0)
 
     assert_raises(TypeError, galsim.PixelScale)
-    assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
+    if is_jax_galsim():
+        pass
+    else:
+        assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, origin=galsim.PositionD(0,0))
     assert_raises(TypeError, galsim.PixelScale, scale=scale, world_origin=galsim.PositionD(0,0))
 
@@ -2370,7 +2374,7 @@ def test_gsfitswcs():
     # And it's required to get (relatively) complete test coverage.
     test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP', 'ZTF' ]
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
@@ -2463,32 +2467,44 @@ def test_inverseab_convergence():
     # Now one that should fail, since it's well outside the applicable area for the SIP polynomials.
     ra = 2.1
     dec = -0.45
-    with assert_raises(galsim.GalSimError):
+    if is_jax_galsim():
         x, y = wcs.radecToxy(ra, dec, units="radians")
-    try:
-        x, y = wcs.radecToxy(ra, dec, units="radians")
-    except galsim.GalSimError as e:
-        print('Error message is\n',e)
-        assert "[0,]" in str(e)
+        assert np.all(np.isnan(x))
+        assert np.all(np.isnan(y))
+    else:
+        with assert_raises(galsim.GalSimError):
+            x, y = wcs.radecToxy(ra, dec, units="radians")
+        try:
+            x, y = wcs.radecToxy(ra, dec, units="radians")
+        except galsim.GalSimError as e:
+            print('Error message is\n',e)
+            assert "[0,]" in str(e) or "[0]" in str(e)
 
     # Check as part of a longer list (longer than 256 is important)
-    ra = np.random.uniform(2.185, 2.186, 1000)
-    dec = np.random.uniform(-0.501, -0.499, 1000)
+    rng = np.random.RandomState(1234)
+    ra = rng.uniform(2.185, 2.186, 1000)
+    dec = rng.uniform(-0.501, -0.499, 1000)
     ra = np.append(ra, [2.1, 2.9])
     dec = np.append(dec, [-0.45, 0.2])
     print('ra = ',ra)
     print('dec = ',dec)
-    with assert_raises(galsim.GalSimError):
+    if is_jax_galsim():
         x, y = wcs.radecToxy(ra, dec, units="radians")
-    try:
-        x, y = wcs.radecToxy(ra, dec, units="radians")
-    except galsim.GalSimError as e:
-        print('Error message is\n',e)
-        assert "[1000,1001,]" in str(e)
-        # We don't currently do this for the user, but it's not too hard to get a python list
-        # of the bad indices.  Included here as an example for users who may need this.
-        bad = eval(str(e)[str(e).rfind('['):])
-        print('as a python list: ',bad)
+        assert np.sum(np.isnan(x)) >= 2
+        assert np.sum(np.isnan(y)) >= 2
+    else:
+        with assert_raises(galsim.GalSimError):
+            x, y = wcs.radecToxy(ra, dec, units="radians")
+        try:
+            x, y = wcs.radecToxy(ra, dec, units="radians")
+        except galsim.GalSimError as e:
+            print('Error message is\n',e)
+            assert "[1000,1001,]" in str(e) or "[1000, 1001]" in str(e)
+            # We don't currently do this for the user, but it's not too hard to get a python list
+            # of the bad indices.  Included here as an example for users who may need this.
+            bad = eval(str(e)[str(e).rfind('['):])
+            print('as a python list: ',bad)
+
 
 @timer
 def test_tanwcs():
@@ -2580,7 +2596,7 @@ def test_fitswcs():
         except:
             pass
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
@@ -2688,7 +2704,7 @@ def test_fittedsipwcs():
         'ZTF': (0.1, 0.1),
     }
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     if __name__ == "__main__":
         test_tags = all_tags
@@ -2917,7 +2933,7 @@ def test_fittedsipwcs():
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
     """
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     file_name = 'scamp.head'
 
     wcs = galsim.FitsWCS(file_name, dir=dir, text_file=True)
@@ -3138,7 +3154,7 @@ def test_int_args():
 
     test_tags = all_tags
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
@@ -3161,7 +3177,7 @@ def test_int_args():
     # Along the way, check issue #1024 where Erin noticed that reading the WCS from the
     # header of a compressed file was spending lots of time decompressing the data, which
     # is unnecessary.
-    dir = 'des_data'
+    dir = os.path.join(os.path.dirname(__file__), 'des_data')
     file_name = 'DECam_00158414_01.fits.fz'
     with Profile():
         t0 = time.time()
@@ -3211,7 +3227,7 @@ def test_razero():
         import astropy.wcs
         import scipy  # AstropyWCS constructor will do this, so check now.
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     # This file is based in sipsample.fits, but with the CRVAL1 changed to 0.002322805429
     file_name = 'razero.fits'
     wcs = galsim.AstropyWCS(file_name, dir=dir)

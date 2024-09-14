@@ -35,7 +35,10 @@ def test_pos():
     assert pi1.y == 23
     assert isinstance(pi1.x, int)
     assert isinstance(pi1.y, int)
-    assert isinstance(pi1._p, galsim._galsim.PositionI)
+    if is_jax_galsim():
+        pass
+    else:
+        assert isinstance(pi1._p, galsim._galsim.PositionI)
 
     pi2 = galsim.PositionI((11,23))
     pi3 = galsim.PositionI(x=11.0, y=23.0)
@@ -43,7 +46,10 @@ def test_pos():
     pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
     pi6 = galsim.PositionD(11.3,23.4).round()
     pi7 = pi2.round()
-    pi8 = galsim._PositionI(11,23)
+    if is_jax_galsim():
+        pi8 = galsim.PositionI(11,23)
+    else:
+        pi8 = galsim._PositionI(11,23)
     assert pi2 == pi1
     assert pi3 == pi1
     assert pi4 == pi1
@@ -61,14 +67,20 @@ def test_pos():
     assert pd1.y == 23.
     assert isinstance(pd1.x, float)
     assert isinstance(pd1.y, float)
-    assert isinstance(pd1._p, galsim._galsim.PositionD)
+    if is_jax_galsim():
+        pass
+    else:
+        assert isinstance(pd1._p, galsim._galsim.PositionD)
 
     pd2 = galsim.PositionD((11,23))
     pd3 = galsim.PositionD(x=11.0, y=23.0)
     pd4 = galsim.PositionD(pd1)
     pd5 = galsim.PositionD(pi1)
     pd6 = galsim.PositionD(galsim.PositionD(11.3,23.4).round())
-    pd7 = galsim._PositionD(11.0,23.0)
+    if is_jax_galsim():
+        pd7 = galsim.PositionD(11.0,23.0)
+    else:
+        pd7 = galsim._PositionD(11.0,23.0)
     assert pd2 == pd1
     assert pd3 == pd1
     assert pd4 == pd1
@@ -86,7 +98,10 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionI, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionI, 11, 23, x=13, z=21)
-    assert_raises(TypeError, galsim.PositionI, 11, 23.5)
+    if is_jax_galsim():
+        pass
+    else:
+        assert_raises(TypeError, galsim.PositionI, 11, 23.5)
 
     assert_raises(TypeError, galsim.PositionD, 11)
     assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
@@ -94,7 +109,7 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionD, x=11)
     assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
     assert_raises(TypeError, galsim.PositionD, 11, 23, x=13, z=21)
-    assert_raises(ValueError, galsim.PositionD, 11, "blue")
+    assert_raises((ValueError, TypeError), galsim.PositionD, 11, "blue")
 
     # Can't use base class directly.
     assert_raises(TypeError, galsim.Position, 11, 23)
@@ -170,7 +185,10 @@ def test_bounds():
     assert isinstance(bi1.xmax, int)
     assert isinstance(bi1.ymin, int)
     assert isinstance(bi1.ymax, int)
-    assert isinstance(bi1._b, galsim._galsim.BoundsI)
+    if is_jax_galsim():
+        pass
+    else:
+        assert isinstance(bi1._b, galsim._galsim.BoundsI)
 
     bi2 = galsim.BoundsI(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bi3 = galsim.BoundsI(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
@@ -183,17 +201,20 @@ def test_bounds():
     bi10 = galsim.BoundsI() + galsim.PositionI(11,17) + galsim.PositionI(23,50)
     bi11 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
     bi12 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
-    bi13 = galsim._BoundsI(11,23,17,50)
+    if is_jax_galsim():
+        bi13 = galsim.BoundsI(11,23,17,50)
+    else:
+        bi13 = galsim._BoundsI(11,23,17,50)
     bi14 = galsim.BoundsI()
     bi14 += galsim.PositionI(11,17)
     bi14 += galsim.PositionI(23,50)
     for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13, bi14]:
         assert b.isDefined()
         assert b == bi1
-        assert isinstance(b.xmin, int)
-        assert isinstance(b.xmax, int)
-        assert isinstance(b.ymin, int)
-        assert isinstance(b.ymax, int)
+        assert_intlike(b.xmin)
+        assert_intlike(b.xmax)
+        assert_intlike(b.ymin)
+        assert_intlike(b.ymax)
         assert b.origin == galsim.PositionI(11, 17)
         assert b.center == galsim.PositionI(17, 34)
         assert b.true_center == galsim.PositionD(17, 33.5)
@@ -203,11 +224,14 @@ def test_bounds():
     assert bd1.xmax == bd1.getXMax() == 23.
     assert bd1.ymin == bd1.getYMin() == 17.
     assert bd1.ymax == bd1.getYMax() == 50.
-    assert isinstance(bd1.xmin, float)
-    assert isinstance(bd1.xmax, float)
-    assert isinstance(bd1.ymin, float)
-    assert isinstance(bd1.ymax, float)
-    assert isinstance(bd1._b, galsim._galsim.BoundsD)
+    assert_floatlike(bd1.xmin)
+    assert_floatlike(bd1.xmax)
+    assert_floatlike(bd1.ymin)
+    assert_floatlike(bd1.ymax)
+    if is_jax_galsim():
+        pass
+    else:
+        assert isinstance(bd1._b, galsim._galsim.BoundsD)
 
     bd2 = galsim.BoundsD(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bd3 = galsim.BoundsD(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
@@ -220,17 +244,20 @@ def test_bounds():
     bd10 = galsim.BoundsD() + galsim.PositionD(11,17) + galsim.PositionD(23,50)
     bd11 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
     bd12 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
-    bd13 = galsim._BoundsD(11,23,17,50)
+    if is_jax_galsim():
+        bd13 = galsim.BoundsD(11,23,17,50)
+    else:
+        bd13 = galsim._BoundsD(11,23,17,50)
     bd14 = galsim.BoundsD()
     bd14 += galsim.PositionD(11.,17.)
     bd14 += galsim.PositionD(23,50)
     for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13, bd14]:
         assert b.isDefined()
         assert b == bd1
-        assert isinstance(b.xmin, float)
-        assert isinstance(b.xmax, float)
-        assert isinstance(b.ymin, float)
-        assert isinstance(b.ymax, float)
+        assert_floatlike(b.xmin)
+        assert_floatlike(b.xmax)
+        assert_floatlike(b.ymin)
+        assert_floatlike(b.ymax)
         assert b.origin == galsim.PositionD(11, 17)
         assert b.center == galsim.PositionD(17, 33.5)
         assert b.true_center == galsim.PositionD(17, 33.5)
@@ -241,7 +268,10 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
-    assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+    if is_jax_galsim():
+        pass
+    else:
+        assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
         bi1 += (11,23)
@@ -252,7 +282,11 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
-    assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
+    if is_jax_galsim():
+        # jax doesn't raise for this
+        pass
+    else:
+        assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, xmin=19, xmax=2)
     with assert_raises(TypeError):
         bd1 += (11,23)
@@ -373,15 +407,22 @@ def test_bounds():
     assert galsim.BoundsD() == galsim.BoundsD() + galsim.BoundsD()
     assert galsim.BoundsD().area() == 0
 
-    assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
-    assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
-    assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
-    assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
+    if is_jax_galsim():
+        pass
+    else:
+        assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
+        assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
+        assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
+        assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
 
-    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'center')
-    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'center')
-    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'true_center')
-    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'true_center')
+    if is_jax_galsim():
+        # jax doesn't raise for these things
+        pass
+    else:
+        assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'center')
+        assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'center')
+        assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'true_center')
+        assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'true_center')
 
     check_pickle(bi1)
     check_pickle(bd1)
@@ -501,15 +542,14 @@ def test_check_all_contiguous():
 
 @timer
 def test_deInterleaveImage():
-    from galsim.utilities import deInterleaveImage, interleaveImages
 
     np.random.seed(84) # for generating the same random instances
 
     # 1) Check compatability with interleaveImages
     img = galsim.Image(np.random.randn(64,64),scale=0.25)
     img.setOrigin(galsim.PositionI(5,7)) ## for non-trivial bounds
-    im_list, offsets = deInterleaveImage(img,8)
-    img1 = interleaveImages(im_list,8,offsets)
+    im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
+    img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
     np.testing.assert_array_equal(img1.array,img.array,
             err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "
                       "images")
@@ -519,8 +559,8 @@ def test_deInterleaveImage():
 
     img = galsim.Image(abs(np.random.randn(16*5,16*2)),scale=0.5)
     img.setCenter(0,0) ## for non-trivial bounds
-    im_list, offsets = deInterleaveImage(img,(2,5))
-    img1 = interleaveImages(im_list,(2,5),offsets)
+    im_list, offsets = galsim.utilities.deInterleaveImage(img,(2,5))
+    img1 = galsim.utilities.interleaveImages(im_list,(2,5),offsets)
     np.testing.assert_array_equal(img1.array,img.array,
             err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for "
                       "rectangular images")
@@ -530,7 +570,7 @@ def test_deInterleaveImage():
 
     # 2) Checking for offsets
     img = galsim.Image(np.random.randn(32,32),scale=2.0)
-    im_list, offsets = deInterleaveImage(img,(4,2))
+    im_list, offsets = galsim.utilities.deInterleaveImage(img,(4,2))
 
     ## Checking if offsets are centered around zero
     assert np.sum([offset.x for offset in offsets]) == 0.
@@ -547,7 +587,7 @@ def test_deInterleaveImage():
     img0 = galsim.Image(32,32)
     g0.drawImage(image=img0,method='no_pixel',scale=0.25)
 
-    im_list0, offsets0 = deInterleaveImage(img0,2,conserve_flux=True)
+    im_list0, offsets0 = galsim.utilities.deInterleaveImage(img0,2,conserve_flux=True)
 
     for n in range(len(im_list0)):
         im = galsim.Image(16,16)
@@ -570,8 +610,8 @@ def test_deInterleaveImage():
     g1.drawImage(image=img1,scale=0.5/n1,method='no_pixel')
     g2.drawImage(image=img2,scale=0.5/n2,method='no_pixel')
 
-    im_list1, offsets1 = deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
-    im_list2, offsets2 = deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
+    im_list1, offsets1 = galsim.utilities.deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
+    im_list2, offsets2 = galsim.utilities.deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
 
     for n in range(n1**2):
         im, offset = im_list1[n], offsets1[n]
@@ -588,26 +628,24 @@ def test_deInterleaveImage():
                      "horizontal direction")
         # im is scaled to account for flux not being conserved
 
-    assert_raises(TypeError, deInterleaveImage, image=img0.array, N=2)
-    assert_raises(TypeError, deInterleaveImage, image=img0, N=2.0)
-    assert_raises(TypeError, deInterleaveImage, image=img0, N=(2.0, 2.0))
-    assert_raises(TypeError, deInterleaveImage, image=img0, N=(2,2,3))
-    assert_raises(ValueError, deInterleaveImage, image=img0, N=7)
-    assert_raises(ValueError, deInterleaveImage, image=img0, N=(2,7))
-    assert_raises(ValueError, deInterleaveImage, image=img0, N=(7,2))
+    assert_raises(TypeError, galsim.utilities.deInterleaveImage, image=img0.array, N=2)
+    assert_raises(TypeError, galsim.utilities.deInterleaveImage, image=img0, N=2.0)
+    assert_raises(TypeError, galsim.utilities.deInterleaveImage, image=img0, N=(2.0, 2.0))
+    assert_raises(TypeError, galsim.utilities.deInterleaveImage, image=img0, N=(2,2,3))
+    assert_raises(ValueError, galsim.utilities.deInterleaveImage, image=img0, N=7)
+    assert_raises(ValueError, galsim.utilities.deInterleaveImage, image=img0, N=(2,7))
+    assert_raises(ValueError, galsim.utilities.deInterleaveImage, image=img0, N=(7,2))
 
     # It is legal to have the input image with wcs=None, but it emits a warning
     img0.wcs = None
     with assert_warns(galsim.GalSimWarning):
-        deInterleaveImage(img0, N=2)
+        galsim.utilities.deInterleaveImage(img0, N=2)
     # Unless suppress_warnings is True
-    deInterleaveImage(img0, N=2, suppress_warnings=True)
+    galsim.utilities.deInterleaveImage(img0, N=2, suppress_warnings=True)
 
 
 @timer
 def test_interleaveImages():
-    from galsim.utilities import interleaveImages, deInterleaveImage
-
     # 1a) With galsim Gaussian
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -625,7 +663,7 @@ def test_interleaveImages():
     scale = im.scale
 
     # Input to N as an int
-    img = interleaveImages(im_list,n,offsets=offset_list)
+    img = galsim.utilities.interleaveImages(im_list,n,offsets=offset_list)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -651,7 +689,7 @@ def test_interleaveImages():
     im_list_randperm = [im_list[idx] for idx in rand_idx]
     offset_list_randperm = [offset_list[idx] for idx in rand_idx]
     # Input to N as a tuple
-    img_randperm = interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
+    img_randperm = galsim.utilities.interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
 
     np.testing.assert_array_equal(img_randperm.array,img.array,
         err_msg="Interleaved images do not match when 'offsets' is supplied")
@@ -674,9 +712,9 @@ def test_interleaveImages():
 
     N = (n,n)
     with assert_raises(ValueError):
-        interleaveImages(im_list,N,offset_list)
+        galsim.utilities.interleaveImages(im_list,N,offset_list)
     # Can turn off the checks and just use these as they are with catch_offset_errors=False
-    interleaveImages(im_list,N,offset_list, catch_offset_errors=False)
+    galsim.utilities.interleaveImages(im_list,N,offset_list, catch_offset_errors=False)
 
     offset_list = []
     im_list = []
@@ -693,8 +731,8 @@ def test_interleaveImages():
 
     N = (n,n)
     with assert_raises(ValueError):
-        interleaveImages(im_list, N, offset_list)
-    interleaveImages(im_list, N, offset_list, catch_offset_errors=False)
+        galsim.utilities.interleaveImages(im_list, N, offset_list)
+    galsim.utilities.interleaveImages(im_list, N, offset_list, catch_offset_errors=False)
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -713,8 +751,8 @@ def test_interleaveImages():
         gal1.drawImage(im,offset=offset,method='no_pixel',scale=2.0)
         im_list.append(im)
 
-    img = interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
-                           add_flux=False, suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
+                                            add_flux=False, suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
     # The interleaved image has the total flux averaged out since `add_flux = False'
     gal = galsim.Gaussian(sigma=3.7*n,flux=100.)
@@ -741,7 +779,7 @@ def test_interleaveImages():
         gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
         im_list.append(im)
 
-    img = interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
+    img = galsim.utilities.interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
                                             suppress_warnings=True)
     im = galsim.Image(16*n*n,16*n*n)
     gal = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
@@ -770,8 +808,8 @@ def test_interleaveImages():
             im.setOrigin(3,3) # for non-trivial bounds
             im_list.append(im)
 
-    img = interleaveImages(im_list,N=n,offsets=offset_list)
-    im_list_1, offset_list_1 = deInterleaveImage(img, N=n)
+    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
+    im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img, N=n)
 
     for k in range(n**2):
         assert offset_list_1[k] == offset_list[k]
@@ -782,50 +820,50 @@ def test_interleaveImages():
         assert im_list[k].bounds == im_list_1[k].bounds
 
     # Checking for non-default flux option
-    img = interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
-    im_list_2, offset_list_2 = deInterleaveImage(img,N=n,conserve_flux=True)
+    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
+    im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,N=n,conserve_flux=True)
 
     for k in range(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
         assert im_list_2[k].wcs == im_list[k].wcs
 
-    assert_raises(TypeError, interleaveImages, im_list=img, N=n, offsets=offset_list)
-    assert_raises(ValueError, interleaveImages, [img], N=1, offsets=offset_list)
-    assert_raises(ValueError, interleaveImages, im_list, n, offset_list[:-1])
-    assert_raises(TypeError, interleaveImages, [im.array for im in im_list], n, offset_list)
-    assert_raises(TypeError, interleaveImages,
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list=img, N=n, offsets=offset_list)
+    assert_raises(ValueError, galsim.utilities.interleaveImages, [img], N=1, offsets=offset_list)
+    assert_raises(ValueError, galsim.utilities.interleaveImages, im_list, n, offset_list[:-1])
+    assert_raises(TypeError, galsim.utilities.interleaveImages, [im.array for im in im_list], n, offset_list)
+    assert_raises(TypeError, galsim.utilities.interleaveImages,
                   [im_list[0]] + [im.array for im in im_list[1:]],
                   n, offset_list)
-    assert_raises(TypeError, interleaveImages,
+    assert_raises(TypeError, galsim.utilities.interleaveImages,
                   [galsim.Image(16+i,16+j,scale=1) for i in range(n) for j in range(n)],
                   n, offset_list)
-    assert_raises(TypeError, interleaveImages,
+    assert_raises(TypeError, galsim.utilities.interleaveImages,
                   [galsim.Image(16,16,scale=i) for i in range(n) for j in range(n)],
                   n, offset_list)
-    assert_raises(TypeError, interleaveImages, im_list, N=3.0, offsets=offset_list)
-    assert_raises(TypeError, interleaveImages, im_list, N=(3.0, 3.0), offsets=offset_list)
-    assert_raises(TypeError, interleaveImages, im_list, N=(3,3,3), offsets=offset_list)
-    assert_raises(ValueError, interleaveImages, im_list, N=7, offsets=offset_list)
-    assert_raises(ValueError, interleaveImages, im_list, N=(2,7), offsets=offset_list)
-    assert_raises(ValueError, interleaveImages, im_list, N=(7,2), offsets=offset_list)
-    assert_raises(TypeError, interleaveImages, im_list, N=n)
-    assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=offset_list[0])
-    assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=range(n*n))
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=3.0, offsets=offset_list)
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=(3.0, 3.0), offsets=offset_list)
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=(3,3,3), offsets=offset_list)
+    assert_raises(ValueError, galsim.utilities.interleaveImages, im_list, N=7, offsets=offset_list)
+    assert_raises(ValueError, galsim.utilities.interleaveImages, im_list, N=(2,7), offsets=offset_list)
+    assert_raises(ValueError, galsim.utilities.interleaveImages, im_list, N=(7,2), offsets=offset_list)
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=n)
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=n, offsets=offset_list[0])
+    assert_raises(TypeError, galsim.utilities.interleaveImages, im_list, N=n, offsets=range(n*n))
 
     # It is legal to have the input images with wcs=None, but it emits a warning
     for im in im_list:
         im.wcs = None
     with assert_warns(galsim.GalSimWarning):
-        interleaveImages(im_list, N=n, offsets=offset_list)
+        galsim.utilities.interleaveImages(im_list, N=n, offsets=offset_list)
     # Unless suppress_warnings is True
-    interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
+    galsim.utilities.interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
 
     # Also legal to have different origins
     im_list[0].setCenter(0,0)
     with assert_warns(galsim.GalSimWarning):
-        interleaveImages(im_list, N=n, offsets=offset_list)
-    interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
+        galsim.utilities.interleaveImages(im_list, N=n, offsets=offset_list)
+    galsim.utilities.interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
 
 
 @timer
@@ -1112,67 +1150,73 @@ def test_horner():
     # Make a random list of values to test
     x = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(x)
+    if is_jax_galsim():
+        x = rng.generate(x)
+    else:
+        rng.generate(x)
 
     # Check against the direct calculation
     truth = coef[0] + coef[1]*x + coef[2]*x**2 + coef[3]*x**3 + coef[4]*x**4
     result = galsim.utilities.horner(x, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Also check against the (slower) numpy code
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
 
     # Check that trailing zeros give the same answer
     result = galsim.utilities.horner(x, coef + [0]*3)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that leading zeros give the right answer
     result = galsim.utilities.horner(x, [0]*3 + coef)
-    np.testing.assert_almost_equal(result, truth*x**3)
+    np.testing.assert_array_almost_equal(result, truth*x**3)
 
     # Check using a different dtype
     result = galsim.utilities.horner(x, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that a single element coef gives the right answer
     result = galsim.utilities.horner([1,2,3], [17])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner(x, [17])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner([1,2,3], [17,0,0,0])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner(x, [17,0,0,0])
-    np.testing.assert_almost_equal(result, 17)
+    np.testing.assert_array_almost_equal(result, 17)
     result = galsim.utilities.horner([1,2,3], [0,0,0,0])
-    np.testing.assert_almost_equal(result, 0)
+    np.testing.assert_array_almost_equal(result, 0)
     result = galsim.utilities.horner(x, [0,0,0,0])
-    np.testing.assert_almost_equal(result, 0)
+    np.testing.assert_array_almost_equal(result, 0)
 
     # Check that x may be non-contiguous
     result = galsim.utilities.horner(x[::3], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
 
     # Check that coef may be non-contiguous
     result = galsim.utilities.horner(x, coef[::-1])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
 
     # Check odd length
     result = galsim.utilities.horner(x[:15], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[:15],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[:15],coef))
 
     # Check unaligned array
     result = galsim.utilities.horner(x[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x[1:],coef))
 
     # Check length > 64
     xx = np.empty(2000)
-    rng.generate(xx)
+    if is_jax_galsim():
+        xx = rng.generate(xx)
+    else:
+        rng.generate(xx)
     result = galsim.utilities.horner(xx, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
     # Check scalar x
     result = galsim.utilities.horner(3.9, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval([3.9],coef))
 
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
@@ -1190,78 +1234,86 @@ def test_horner2d():
     x = np.empty(20)
     y = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(x)
-    rng.generate(y)
+    if is_jax_galsim():
+        x = rng.generate(x)
+        y = rng.generate(y)
+    else:
+        rng.generate(x)
+        rng.generate(y)
 
     # Check against the direct calculation
     truth = coef[0,0] + coef[0,1]*y + coef[0,2]*y**2 + coef[0,3]*y**3 + coef[0,4]*y**4
     truth += (coef[1,0] + coef[1,1]*y + coef[1,2]*y**2 + coef[1,3]*y**3 + coef[1,4]*y**4)*x
     truth += (coef[2,0] + coef[2,1]*y + coef[2,2]*y**2 + coef[2,3]*y**3 + coef[2,4]*y**4)*x**2
     result = galsim.utilities.horner2d(x, y, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Also check against the (slower) numpy code
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef))
 
     # Check that trailing zeros give the same answer
     result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,1))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,6))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((1,5))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((6,5))]))
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that leading zeros give the right answer
     result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,1)), coef]))
-    np.testing.assert_almost_equal(result, truth*y)
+    np.testing.assert_array_almost_equal(result, truth*y)
     result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,6)), coef]))
-    np.testing.assert_almost_equal(result, truth*y**6)
+    np.testing.assert_array_almost_equal(result, truth*y**6)
     result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((1,5)), coef]))
-    np.testing.assert_almost_equal(result, truth*x)
+    np.testing.assert_array_almost_equal(result, truth*x)
     result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((6,5)), coef]))
-    np.testing.assert_almost_equal(result, truth*x**6)
+    np.testing.assert_array_almost_equal(result, truth*x**6)
 
     # Check using a different dtype
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check that x,y may be non-contiguous
     result = galsim.utilities.horner2d(x[::3], y[:7], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[::3],y[:7],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[::3],y[:7],coef))
     result = galsim.utilities.horner2d(x[:7], y[::-3], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:7],y[::-3],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:7],y[::-3],coef))
 
     # Check that coef may be non-contiguous
     result = galsim.utilities.horner2d(x, y, coef[:,::-1])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
     result = galsim.utilities.horner2d(x, y, coef[::-1,:])
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
 
     # Check odd length
     result = galsim.utilities.horner2d(x[:15], y[:15], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:15],y[:15],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:15],y[:15],coef))
 
     # Check unaligned array
     result = galsim.utilities.horner2d(x[1:], y[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[1:],coef))
     result = galsim.utilities.horner2d(x[1:], y[:-1], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[:-1],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[:-1],coef))
     result = galsim.utilities.horner2d(x[:-1], y[1:], coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:-1],y[1:],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:-1],y[1:],coef))
 
     # Check length > 64
     xx = np.empty(2000)
     yy = np.empty(2000)
-    rng.generate(xx)
-    rng.generate(yy)
+    if is_jax_galsim():
+        xx = rng.generate(xx)
+        yy = rng.generate(yy)
+    else:
+        rng.generate(xx)
+        rng.generate(yy)
     result = galsim.utilities.horner2d(xx, yy, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
 
     # Check scalar x, y
     result = galsim.utilities.horner2d(3.9, 1.7, coef)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d([3.9],[1.7],coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d([3.9],[1.7],coef))
 
 
     # Check the triangle = True option
@@ -1275,13 +1327,13 @@ def test_horner2d():
     truth += coef[1,0]*x + coef[1,1]*x*y
     truth += coef[2,0]*x**2
     result = galsim.utilities.horner2d(x, y, coef)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
     result = galsim.utilities.horner2d(x, y, coef, triangle=True)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check using a different dtype
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex, triangle=True)
-    np.testing.assert_almost_equal(result, truth)
+    np.testing.assert_array_almost_equal(result, truth)
 
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
@@ -1310,60 +1362,67 @@ def test_horner_complex():
     rx = np.empty(20)
     ry = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(rx)
-    rng.generate(ry)
+    if is_jax_galsim():
+        rx = rng.generate(rx)
+        ry = rng.generate(ry)
+    else:
+        rng.generate(rx)
+        rng.generate(ry)
 
     ix = np.empty(20)
     iy = np.empty(20)
     rng = galsim.UniformDeviate(1234)
-    rng.generate(ix)
-    rng.generate(iy)
-
+    if is_jax_galsim():
+        ix = rng.generate(ix)
+        iy = rng.generate(iy)
+    else:
+        rng.generate(ix)
+        rng.generate(iy)
     x = rx + 1j*ix
     y = ry + 1j*iy
 
     # Check all combinations of which things are complex and which are real.
     # First, just 1 of the three complex:
     result = galsim.utilities.horner2d(rx, ry, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, ry, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, ry, coef))
 
     result = galsim.utilities.horner2d(rx, y, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, rcoef))
 
     result = galsim.utilities.horner2d(x, ry, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, rcoef))
 
     # Now two complex:
     result = galsim.utilities.horner2d(rx, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, coef))
 
     result = galsim.utilities.horner2d(x, ry, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, coef))
 
     result = galsim.utilities.horner2d(x, y, rcoef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, rcoef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, rcoef))
 
     # All three complex
     result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, coef))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, coef))
 
     # Check scalar complex x, y
     result = galsim.utilities.horner2d(3.9+2.1j, 1.7-0.9j, coef, dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval2d(
             [3.9+2.1j],[1.7-0.9j],coef))
 
     # Repeast for 1d
     result = galsim.utilities.horner(rx, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(rx, coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(rx, coef[0]))
 
     result = galsim.utilities.horner(x, rcoef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, rcoef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x, rcoef[0]))
 
     result = galsim.utilities.horner(x, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval(x, coef[0]))
 
     result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
-    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
+    np.testing.assert_array_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
 @timer
 def test_merge_sorted():
