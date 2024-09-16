@@ -44,6 +44,8 @@ letter_codes = {
     'd' : dict,
     'l' : list,
     'x' : None,
+    'q' : Quantity,
+    'u' : Unit,
 }
 
 

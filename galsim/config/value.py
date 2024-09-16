@@ -851,7 +851,7 @@ RegisterValueType('List', _GenerateFromList,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable ])
 RegisterValueType('Current', _GenerateFromCurrent,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable,
-                    dict, list, None, Quantity ])
+                    dict, list, None, Quantity, Unit ])
 RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD, Quantity ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
