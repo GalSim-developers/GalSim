@@ -19,6 +19,7 @@
 __all__ = [ 'Kolmogorov' ]
 
 import numpy as np
+import astropy.units as u
 import math
 
 from . import _galsim
@@ -120,12 +121,21 @@ class Kolmogorov(GSObject):
         fwhm:               The full-width half-max size
         half_light_radius:  The half-light radius
     """
-    _opt_params = { "flux" : float, "r0" : float, "r0_500" : float, "scale_unit" : str }
+    _opt_params = {
+        "flux" : float,
+        "r0" : (float, u.Quantity),
+        "r0_500" : (float, u.Quantity),
+        "scale_unit" : str
+    }
     # Note that this is not quite right; it's true that exactly one of these 4 should be supplied,
     # but if lam is supplied then r0 is required.  Errors in which parameters are used may be
     # caught either by config or by the python code itself, depending on the particular error.
-    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float,
-                         "lam" : float } ]
+    _single_params = [ {
+        "lam_over_r0" : float,
+        "fwhm" : float,
+        "half_light_radius" : float,
+        "lam" : (float, u.Quantity)
+    } ]
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.9758634299
@@ -165,6 +175,13 @@ class Kolmogorov(GSObject):
 
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
+
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(r0, u.Quantity):
+            r0 = r0.to_value(u.m)
+        if isinstance(r0_500, u.Quantity):
+            r0_500 = r0_500.to_value(u.m)
 
         if fwhm is not None :
             if any(item is not None for item in (lam_over_r0, lam, r0, r0_500, half_light_radius)):
