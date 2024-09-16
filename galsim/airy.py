@@ -19,6 +19,7 @@
 __all__ = [ 'Airy' ]
 
 import math
+import astropy.units as u
 
 from . import _galsim
 from .gsobject import GSObject
@@ -80,13 +81,16 @@ class Airy(GSObject):
         gsparams:       An optional `GSParams` argument. [default: None]
     """
     _req_params = { }
-    _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
-                    "scale_unit" : str }
+    _opt_params = { "flux" : float ,
+                    "obscuration" : float,
+                    "diam" : (float, u.Quantity),
+                    "scale_unit" : str
+                  }
     # Note that this is not quite right; it's true that either lam_over_diam or lam should be
     # supplied, but if lam is supplied then diam is required.  Errors in which parameters are used
     # may be caught either by config or by the python code itself, depending on the particular
     # error.
-    _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
+    _single_params = [{ "lam_over_diam" : float , "lam" : (float, u.Quantity) } ]
 
     # For an unobscured Airy, we have the following factor which can be derived using the
     # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
@@ -107,6 +111,11 @@ class Airy(GSObject):
         self._obscuration = float(obscuration)
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
+
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(diam, u.Quantity):
+            diam = diam.to_value(u.m)
 
         # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
         # If the latter, then get lam_over_diam in units of scale_unit, as specified in

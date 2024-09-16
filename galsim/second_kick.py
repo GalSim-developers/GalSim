@@ -18,6 +18,8 @@
 
 __all__ = [ 'SecondKick' ]
 
+import astropy.units as u
+
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
@@ -84,7 +86,11 @@ class SecondKick(GSObject):
                         construct one (e.g., 'arcsec', 'radians', etc.). [default: galsim.arcsec]
         gsparams:       An optional `GSParams` argument. [default: None]
     """
-    _req_params = { "lam" : float, "r0" : float, "diam" : float }
+    _req_params = {
+        "lam" : (float, u.Quantity),
+        "r0" : (float, u.Quantity),
+        "diam" : (float, u.Quantity),
+    }
     _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }
 
     _has_hard_edges = False
@@ -94,6 +100,13 @@ class SecondKick(GSObject):
 
     def __init__(self, lam, r0, diam, obscuration=0, kcrit=0.2, flux=1,
                  scale_unit=arcsec, gsparams=None):
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(r0, u.Quantity):
+            r0 = r0.to_value(u.m)
+        if isinstance(diam, u.Quantity):
+            diam = diam.to_value(u.m)
+
         if isinstance(scale_unit, str):
             self._scale_unit = AngleUnit.from_name(scale_unit)
         else:

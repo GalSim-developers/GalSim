@@ -18,6 +18,7 @@
 
 import logging
 import numpy as np
+import astropy.units as u
 import os
 import sys
 
@@ -222,6 +223,7 @@ def test_airy():
                     'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
                  },
         'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : 'arcmin' },
+        'gal7' : { 'type' : 'Airy' , 'lam' : 400*u.nm, 'diam' : '4000 mm', 'scale_unit' : 'arcmin' },
         'bad1' : { 'type' : 'Airy' , 'lam_over_diam' : 0.4, 'lam' : 400, 'diam' : 10 },
         'bad2' : { 'type' : 'Airy' , 'flux' : 1.3 },
         'bad3' : { 'type' : 'Airy' , 'lam_over_diam' : 0.4, 'obsc' : 0.3, 'flux' : 100 },
@@ -259,6 +261,8 @@ def test_airy():
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.Airy(lam=400., diam=4., scale_unit=galsim.arcmin)
     gsobject_compare(gal6a, gal6b)
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gsobject_compare(gal6a, gal7a)
 
     # Make sure they don't match when using the default GSParams
     gal5c = galsim.Airy(lam_over_diam=45)
@@ -298,6 +302,8 @@ def test_kolmogorov():
         'gal5' : { 'type' : 'Kolmogorov' , 'lam_over_r0' : 1, 'flux' : 50,
                    'gsparams' : { 'integration_relerr' : 1.e-2, 'integration_abserr' : 1.e-4 }
                  },
+        'gal6' : { 'type' : 'Kolmogorov' , 'lam' : '400 nm', 'r0_500' : '15 cm' },
+        'gal7' : { 'type' : 'Kolmogorov' , 'lam' : '$4000*u.Angstrom', 'r0' : 0.18 },
         'bad1' : { 'type' : 'Kolmogorov' , 'fwhm' : 2, 'lam_over_r0' : 3, 'flux' : 100 },
         'bad2' : { 'type' : 'Kolmogorov', 'flux' : 100 },
         'bad3' : { 'type' : 'Kolmogorov' , 'lam_over_r0' : 2, 'lam' : 400, 'r0' : 0.15 },
@@ -334,12 +340,102 @@ def test_kolmogorov():
     with assert_raises(AssertionError):
         gsobject_compare(gal5a, gal5c)
 
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Kolmogorov(lam=400*u.nm, r0_500=15*u.cm)
+    gsobject_compare(gal6a, gal6b)
+
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.Kolmogorov(lam=4000*u.Angstrom, r0=0.18)
+    gsobject_compare(gal7a, gal7b)
+
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'bad1')
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'bad2')
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'bad3')
+
+
+@timer
+def test_VonKarman():
+    """Test various ways to build a VonKarman
+    """
+    config = {
+        'gal1' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2 },
+        'gal2' : { 'type' : 'VonKarman' , 'lam' : 760, 'r0_500' : 0.2 },
+        'gal3' : { 'type' : 'VonKarman' , 'lam' : 450*u.nm, 'r0_500' : '20 cm', 'flux' : 1.e6,
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
+                 },
+        'gal4' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2,
+                   'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
+                   'rotate' : 12 * galsim.degrees,
+                   'lens' : {
+                       'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                       'mu' : 1.03,
+                   },
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 },
+                 },
+        'gal5' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2, 'do_delta' : True,
+                   'gsparams' : { 'integration_relerr' : 1.e-2, 'integration_abserr' : 1.e-4 }
+                 },
+        'bad1' : { 'type' : 'VonKarman' , 'fwhm' : 2, 'lam_over_r0' : 3, 'flux' : 100 },
+        'bad2' : { 'type' : 'VonKarman', 'flux' : 100 },
+        'bad3' : { 'type' : 'VonKarman' , 'lam' : 400, 'r0' : 0.15, 'r0_500' : 0.12 },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.VonKarman(lam = 500, r0 = 0.2)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.VonKarman(lam = 760, r0_500 = 0.2)
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.VonKarman(lam = 450*u.nm, r0_500 = 20*u.cm, flux = 1.e6)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
+    gsobject_compare(gal3a, gal3b)
+
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b = galsim.VonKarman(lam = 500, r0 = 0.2)
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.lens(0.03, -0.05, 1.03).shift(dx = 0.7, dy = -1.2)
+    gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(integration_relerr=1.e-2, integration_abserr=1.e-4)
+    gal5b = galsim.VonKarman(lam=500, r0=0.2, do_delta=True, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b)
+
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'bad1')
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'bad2')
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'bad3')
+
+
+@timer
+def test_secondKick():
+    config = {
+        'gal1' : { 'type' : 'SecondKick' , 'lam' : 500, 'r0' : 0.2, 'diam': 4.0 },
+        'gal2' : { 'type' : 'SecondKick' , 'lam' : '0.5 micron', 'r0' : '10 cm', 'diam': 8.2*u.m, 'flux' : 100 },
+        'gal3' : { 'type' : 'SecondKick' , 'lam' : '$2*450*u.nm', 'r0' : 0.2, 'diam': 4.0, 'obscuration' : 0.2, 'kcrit' : 0.1 },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.SecondKick(lam = 500, r0 = 0.2, diam=4.0)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.SecondKick(lam = 0.5*u.micron, r0 = 10*u.cm, diam=8.2*u.m, flux = 100)
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.SecondKick(lam = 2*450, r0 = 0.2, diam=4.0, obscuration=0.2, kcrit=0.1)
+    gsobject_compare(gal3a, gal3b)
+
 
 @timer
 def test_opticalpsf():
@@ -371,10 +467,10 @@ def test_opticalpsf():
                    'pupil_plane_im' :
                        os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
                    'pupil_angle' : 27.*galsim.degrees },
-        'gal6' : {'type' : 'OpticalPSF' , 'lam' : 874.0, 'diam' : 7.4, 'flux' : 70.,
+        'gal6' : {'type' : 'OpticalPSF' , 'lam' : '874 nm', 'diam' : '7.4 m', 'flux' : 70.,
                   'aberrations' : [0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13],
                   'obscuration' : 0.1 },
-        'gal7' : {'type' : 'OpticalPSF' , 'lam' : 874.0, 'diam' : 7.4, 'aberrations' : []},
+        'gal7' : {'type' : 'OpticalPSF' , 'lam' : 0.874*u.micron, 'diam' : '$740*u.cm', 'aberrations' : []},
         'bad1' : {'type' : 'OpticalPSF' , 'lam' : 874.0, 'diam' : 7.4, 'lam_over_diam' : 0.2},
         'bad2' : {'type' : 'OpticalPSF' , 'lam_over_diam' : 0.2,
                   'aberrations' : "0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13"},

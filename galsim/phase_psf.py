@@ -20,6 +20,7 @@ __all__ = [ 'Aperture', 'PhaseScreenList', 'PhaseScreenPSF', 'OpticalPSF' ]
 
 from heapq import heappush, heappop
 import numpy as np
+import astropy.units as u
 import copy
 
 from . import fits
@@ -1807,7 +1808,7 @@ class OpticalPSF(GSObject):
         gsparams:           An optional `GSParams` argument. [default: None]
     """
     _opt_params = {
-        "diam": float,
+        "diam": (float, u.Quantity),
         "defocus": float,
         "astig1": float,
         "astig2": float,
@@ -1833,7 +1834,7 @@ class OpticalPSF(GSObject):
         "pupil_plane_size": float,
         "scale_unit": str,
         "fft_sign": str}
-    _single_params = [{"lam_over_diam": float, "lam": float}]
+    _single_params = [{"lam_over_diam": float, "lam": (float, u.Quantity)}]
 
     _has_hard_edges = False
     _is_axisymmetric = False
@@ -1852,6 +1853,10 @@ class OpticalPSF(GSObject):
                  pupil_angle=0.*radians, scale_unit=arcsec, fft_sign='+', gsparams=None,
                  _force_stepk=0., _force_maxk=0.,
                  suppress_warning=False, geometric_shooting=False):
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(diam, u.Quantity):
+            diam = diam.to_value(u.m)
         if fft_sign not in ['+', '-']:
             raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
         if isinstance(scale_unit, str):
