@@ -16,12 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
-__all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles', 
+__all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles',
             'PhotonDCR', 'Refraction', 'FocusDepth',
             'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler',
             'ScaleFlux', 'ScaleWavelength' ]
 
 import numpy as np
+import astropy.units as u
 
 from . import _galsim
 from .random import BaseDeviate
@@ -1017,9 +1018,14 @@ class PhotonDCR(PhotonOp):
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     _req_params = { 'base_wavelength' : float }
-    _opt_params = { 'scale_unit' : str, 'alpha' : float,
-                    'parallactic_angle' : Angle, 'latitude' : Angle,
-                    'pressure' : float, 'temperature' : float, 'H2O_pressure' : float }
+    _opt_params = { 'scale_unit' : str,
+                    'alpha' : float,
+                    'parallactic_angle' : Angle,
+                    'latitude' : Angle,
+                    'pressure' : (float, u.Quantity),
+                    'temperature' : (float, u.Quantity),
+                    'H2O_pressure' : (float, u.Quantity)
+                  }
     _single_params = [ { 'zenith_angle' : Angle, 'HA' : Angle, 'zenith_coord' : CelestialCoord } ]
 
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
@@ -1032,6 +1038,16 @@ class PhotonDCR(PhotonOp):
         self.alpha = kwargs.pop('alpha', 0.)
 
         self.zenith_angle, self.parallactic_angle, self.kw = dcr.parse_dcr_angles(**kwargs)
+        # Convert any weather data to the appropriate units
+        p = self.kw.get('pressure', None)
+        if p is not None and isinstance(p, u.Quantity):
+            self.kw['pressure'] = p.to_value(u.kPa)
+        t = self.kw.get('temperature', None)
+        if t is not None and isinstance(t, u.Quantity):
+            self.kw['temperature'] = t.to_value(u.K)
+        h = self.kw.get('H2O_pressure', None)
+        if h is not None and isinstance(h, u.Quantity):
+            self.kw['H2O_pressure'] = h.to_value(u.kPa)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
