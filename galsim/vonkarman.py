@@ -70,12 +70,14 @@ class VonKarman(GSObject):
         though, then you can pass the do_delta=True argument to the VonKarman initializer.
 
     Parameters:
-        lam:                Wavelength in nanometers.
-        r0:                 Fried parameter at specified wavelength ``lam`` in meters.  Exactly one
-                            of r0 and r0_500 should be specified.
-        r0_500:             Fried parameter at 500 nm in meters.  Exactly one of r0 and r0_500
-                            should be specified.
-        L0:                 Outer scale in meters.  [default: 25.0]
+        lam:                Wavelength, either as an astropy Quantity or a float in nanometers.
+        r0:                 Fried parameter at specified wavelength ``lam``, either as an astropy
+                            Quantity or a float in meters. Exactly one of r0 and r0_500 should be
+                            specified.
+        r0_500:             Fried parameter at 500 nm, either as an astropy Quantity or a float in
+                            meters. Exactly one of r0 and r0_500 should be specified.
+        L0:                 Outer scale, either as an astropy Quantity or a float in meters.
+                            [default: 25.0 m]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         scale_unit:         Units assumed when drawing this profile or evaluating xValue, kValue,
                             etc.  Should be a `galsim.AngleUnit` or a string that can be used to

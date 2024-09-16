@@ -97,15 +97,17 @@ class Kolmogorov(GSObject):
         half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
                             [One of ``lam_over_r0``, ``fwhm``, ``half_light_radius``, or ``lam``
                             (along with either ``r0`` or ``r0_500``) is required.]
-        lam:                Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            either ``r0`` or ``r0_500``, and in this case, image scales (``scale``)
-                            should be specified in units of ``scale_unit``.
-        r0:                 The Fried parameter in units of meters.  Must be supplied with ``lam``,
-                            and in this case, image scales (``scale``) should be specified in units
-                            of ``scale_unit``.
-        r0_500:             The Fried parameter in units of meters at 500 nm.  The Fried parameter
-                            at the given wavelength, ``lam``, will be computed using the standard
-                            relation r0 = r0_500 * (lam/500)**1.2.
+        lam:                Lambda (wavelength) either as an astropy Quantity or a float in units of
+                            nanometers.  Must be supplied with either ``r0`` or ``r0_500``, and in
+                            this case, image scales (``scale``) should be specified in units of
+                            ``scale_unit``.
+        r0:                 The Fried parameter, either as an astropy Quantity or a float in units
+                            of meters.  Must be supplied with ``lam``, and in this case, image
+                            scales (``scale``) should be specified in units of ``scale_unit``.
+        r0_500:             The Fried parameter at wavelength of 500 nm, either as an astropy
+                            Quantity or a float in units of meters.  The Fried parameter at the
+                            given wavelength, ``lam``, will be computed using the standard relation
+                            r0 = r0_500 * (lam/500)**1.2.
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         scale_unit:         Units to use for the sky coordinates when calculating lam/r0 if these
                             are supplied separately.  Note that the results of using properties

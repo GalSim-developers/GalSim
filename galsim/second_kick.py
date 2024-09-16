@@ -73,9 +73,9 @@ class SecondKick(GSObject):
         Peterson et al.  2015  ApJSS  vol. 218
 
     Parameters:
-        lam:            Wavelength in nanometers
-        r0:             Fried parameter in meters.
-        diam:           Aperture diameter in meters.
+        lam:            Wavelength, either as an astropy Quantity or a float in nanometers.
+        r0:             Fried parameter, either as an astropy Quantity or a float in meters.
+        diam:           Aperture diameter, either as an astropy Quantity or a float in nanmeters.
         obscuration:    Linear dimension of central obscuration as fraction of aperture
                         linear dimension. [0., 1.).  [default: 0.0]
         kcrit:          Critical Fourier mode (in units of 1/r0) below which the turbulence
