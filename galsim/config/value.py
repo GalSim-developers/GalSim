@@ -66,7 +66,7 @@ def ParseValue(config, key, base, value_type):
         for vt in value_type:
             try:
                 return ParseValue(config, key, base, vt)
-            except GalSimConfigError:
+            except (GalSimConfigError, TypeError):
                 pass
         else:
             raise GalSimConfigError(
