@@ -33,17 +33,17 @@ PSF Types
 * 'Airy'  A simple Airy disk. (Typically one would convolve this by some model of the atmospheric component of the PSF.  cf. 'Convolution' below.)
 
     * ``lam_over_diam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required)  Lambda / telescope_diameter converted to units of arcsec (or whatever units you want your profile to use).
-    * ``lam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the wavelength in nanometers.
-    * ``diam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the telescope diameter in meters.
+    * ``lam`` = *float_value* or *quantity_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the wavelength in nanometers.
+    * ``diam`` = *float_value* or *quantity_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the telescope diameter in meters.
     * ``obscuration`` = *float_value* (default = 0)  The linear size of an obstructing secondary mirror as a fraction of the full mirror size.
     * ``scale_unit`` = *str_value* (default = 'arcsec') Units to be used for internal calculations when calculating lam/diam.
 
 * 'Kolmogorov'  A Kolmogorov turbulent spectrum: :math:`T(k) \sim \exp(-D(k)/2)`, where :math:`D(k) = 6.8839 (\lambda k/2\pi r0)^{5/3}`.
 
     * ``lam_over_r0`` = *float_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required) Lambda / r0 converted to units of arcsec (or whatever units you want your profile to use).
-    * ``lam`` = *float_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required) The wavelength in nanometers.
-    * ``r0`` = *float_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required) The Fried parameter in meters.
-    * ``r0_500`` = *float_value* (optional, in lieu of ``r0``).  The Fried parameter in meters at a wavelength of 500 nm.  The correct ``r0`` value will be calculated using the standard relation r0 = r0_500 * (lam/500)``1.2.
+    * ``lam`` = *float_value* or *quantity_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required) The wavelength in nanometers.
+    * ``r0`` = *float_value* or *quantity_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required) The Fried parameter in meters.
+    * ``r0_500`` = *float_value* or *quantity_value* (optional, in lieu of ``r0``).  The Fried parameter in meters at a wavelength of 500 nm.  The correct ``r0`` value will be calculated using the standard relation r0 = r0_500 * (lam/500)``1.2.
     * ``fwhm`` = *float_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required)
     * ``half_light_radius`` = *float_value* (exactly one of ``lam_over_r0``, ``fwhm`` or ``half_light_radius`` or both ``lam`` and ``r0`` is required)
     * ``scale_unit`` = *str_value* (default = 'arcsec') Units to be used for internal calculations when calculating lam/r0.
@@ -51,8 +51,8 @@ PSF Types
 * 'OpticalPSF'  A PSF from aberrated telescope optics.
 
     * ``lam_over_diam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required)
-    * ``lam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the wavelength in nanometers.
-    * ``diam`` = *float_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the telescope diameter in meters.
+    * ``lam`` = *float_value* or *quantity_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the wavelength in nanometers.
+    * ``diam`` = *float_value* or *quantity_value* (either ``lam_over_diam`` or both ``lam`` and ``diam`` required).  This should be the telescope diameter in meters.
     * ``defocus`` = *float_value* (default = 0) The defocus value, using the Noll convention for the normalization. (Noll index 4)
     * ``astig1`` = *float_value* (default = 0) The astigmatism in the y direction, using the Noll convention for the normalization. (Noll index 5)
     * ``astig2`` = *float_value* (default = 0) The astigmatism in the x direction, using the Noll convention for the normalization. (Noll index 6)
@@ -85,9 +85,9 @@ PSF Types
     * ``zenith_coord`` = *CelestialCoord*  (optional)  The (ra,dec) coordinate of the zenith.
     * ``HA`` = *Angle_value* (optional)  Hour angle of the observation.
     * ``latitude`` = *Angle_value* (optional)  Latitude of the observatory.
-    * ``pressure`` = *float_value* (default = 69.328)  Air pressure in kPa.
-    * ``temperature`` = *float_value* (default = 293.15)  Temperature in K.
-    * ``H2O_pressure`` = *float_value* (default = 1.067)  Water vapor pressure in kPa.
+    * ``pressure`` = *float_value* or *quantity_value* (default = 69.328)  Air pressure in kPa.
+    * ``temperature`` = *float_value* or *quantity_value* (default = 293.15)  Temperature in K.
+    * ``H2O_pressure`` = *float_value* or *quantity_value* (default = 1.067)  Water vapor pressure in kPa.
 
 Galaxy Types
 ------------
@@ -410,11 +410,11 @@ other types, including custom SED types.
 * 'FileSED' is the default type here, and you may omit the type name when using it.
 
     * ``file_name`` = *str_value* (required)  The file to read in.
-    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `SED`)
+    * ``wave_type`` = *str_value* or *unit_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `SED`)
     * ``flux_type`` = *str_value* (required)  The type of spectral density or dimensionless normalization used in the file ('flambda', 'fnu', 'fphotons' or '1' -- cf. `SED`)
     * ``redshift`` = *float_value* (optional)  If given, shift the spectrum to the given redshift.  You can also specify the redshift as an object-level parameter if preferred.
-    * ``norm_flux_density`` = *float_value* (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, ``norm_wavelength`` is required.
-    * ``norm_wavelength`` = *float_value* (optional)  The wavelength to use for the normalization flux density.
+    * ``norm_flux_density`` = *float_value* or *quantity_value* (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, ``norm_wavelength`` is required.
+    * ``norm_wavelength`` = *float_value* or *quantity_value* (optional)  The wavelength to use for the normalization flux density.
     * ``norm_flux`` = *float_value* (optional)  Set a normalization value of the flux over a specific bandpass.  If given, ``norm_bandpass`` is required.
     * ``norm_bandpass`` = *Bandpass* (optional)  The bandpass to use for the normalization flux.
 
