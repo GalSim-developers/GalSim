@@ -70,7 +70,7 @@ def ParseValue(config, key, base, value_type):
                 pass
         else:
             raise GalSimConfigError(
-                "No valid value_type found for %s"%key, value_type)
+                "Could not parse %s as any of types %s."%(key, value_type))
 
     # Special: if the "value_type" is GSObject, then switch over to that builder instead.
     if value_type is GSObject:
