@@ -303,7 +303,7 @@ def test_kolmogorov():
                    'gsparams' : { 'integration_relerr' : 1.e-2, 'integration_abserr' : 1.e-4 }
                  },
         'gal6' : { 'type' : 'Kolmogorov' , 'lam' : '400 nm', 'r0_500' : '15 cm' },
-        'gal7' : { 'type' : 'Kolmogorov' , 'lam' : '$4000*u.Angstrom', 'r0' : 0.18 },
+        'gal7' : { 'type' : 'Kolmogorov' , 'lam' : '$4000*u.Angstrom', 'r0' : 0.18*u.m },
         'bad1' : { 'type' : 'Kolmogorov' , 'fwhm' : 2, 'lam_over_r0' : 3, 'flux' : 100 },
         'bad2' : { 'type' : 'Kolmogorov', 'flux' : 100 },
         'bad3' : { 'type' : 'Kolmogorov' , 'lam_over_r0' : 2, 'lam' : 400, 'r0' : 0.15 },
@@ -362,11 +362,12 @@ def test_VonKarman():
     """
     config = {
         'gal1' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2 },
-        'gal2' : { 'type' : 'VonKarman' , 'lam' : 760, 'r0_500' : 0.2 },
-        'gal3' : { 'type' : 'VonKarman' , 'lam' : 450*u.nm, 'r0_500' : '20 cm', 'flux' : 1.e6,
+        'gal2' : { 'type' : 'VonKarman' , 'lam' : 760, 'r0_500' : 0.2, 'L0' : 24.0 },
+        'gal3' : { 'type' : 'VonKarman' , 'lam' : 450*u.nm, 'r0_500' : '20 cm', 'L0' : '$80*u.imperial.ft',
+                   'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
                  },
-        'gal4' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2,
+        'gal4' : { 'type' : 'VonKarman' , 'lam' : 500, 'r0' : 0.2*u.m,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
                    'lens' : {
@@ -381,6 +382,7 @@ def test_VonKarman():
         'bad1' : { 'type' : 'VonKarman' , 'fwhm' : 2, 'lam_over_r0' : 3, 'flux' : 100 },
         'bad2' : { 'type' : 'VonKarman', 'flux' : 100 },
         'bad3' : { 'type' : 'VonKarman' , 'lam' : 400, 'r0' : 0.15, 'r0_500' : 0.12 },
+        'bad4' : { 'type' : 'VonKarman' , 'lam' : 'not_a_quantity_or_float', 'r0' : 0.2},
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -388,11 +390,11 @@ def test_VonKarman():
     gsobject_compare(gal1a, gal1b)
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
-    gal2b = galsim.VonKarman(lam = 760, r0_500 = 0.2)
+    gal2b = galsim.VonKarman(lam = 760, r0_500 = 0.2, L0 = 24.0)
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-    gal3b = galsim.VonKarman(lam = 450*u.nm, r0_500 = 20*u.cm, flux = 1.e6)
+    gal3b = galsim.VonKarman(lam = 450*u.nm, r0_500 = 20*u.cm, L0 = 80*u.imperial.ft, flux = 1.e6)
     gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
@@ -414,6 +416,8 @@ def test_VonKarman():
         galsim.config.BuildGSObject(config, 'bad2')
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'bad3')
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'bad4')
 
 
 @timer

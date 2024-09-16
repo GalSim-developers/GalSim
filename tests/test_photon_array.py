@@ -843,7 +843,7 @@ def test_dcr():
         'HA': local_sidereal_time-obj_coord.ra,
         'latitude': '-30:14:23.76 deg',
         'pressure': 72*u.kPa,
-        'temperature': 290, #'290 K',
+        'temperature': '290 K',
         'H2O_pressure': '$900*u.Pa',
     }
     im5c = galsim.config.BuildImage(config)
