@@ -64,12 +64,12 @@ class Airy(GSObject):
     Parameters:
         lam_over_diam:  The parameter that governs the scale size of the profile.
                         See above for details about calculating it.
-        lam:            Lambda (wavelength) in units of nanometers.  Must be supplied with
-                        ``diam``, and in this case, image scales (``scale``) should be specified
-                        in units of ``scale_unit``.
-        diam:           Telescope diameter in units of meters.  Must be supplied with
-                        ``lam``, and in this case, image scales (``scale``) should be specified
-                        in units of ``scale_unit``.
+        lam:            Lambda (wavelength) either as an astropy Quantity, or as a float in units
+                        of nanometers.  Must be supplied with ``diam``, and in this case, image
+                        scales (``scale``) should be specified in units of ``scale_unit``.
+        diam:           Telescope diameter either as an astropy Quantity, or as a float in units of
+                        meters.  Must be supplied with ``lam``, and in this case, image scales
+                        (``scale``) should be specified in units of ``scale_unit``.
         obscuration:    The linear dimension of a central obscuration as a fraction of the
                         pupil dimension.  [default: 0]
         flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]

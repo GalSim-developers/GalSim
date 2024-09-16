@@ -1013,9 +1013,12 @@ class PhotonDCR(PhotonOp):
                             [default: None]
         HA:                 Hour angle of the object as an `Angle`. [default: None]
         latitude:           Latitude of the observer as an `Angle`. [default: None]
-        pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
-        temperature:        Temperature in Kelvins.  [default: 293.15 K]
-        H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+        pressure:           Air pressure, either as an astropy Quantity or a float in units of
+                            kiloPascals.  [default: 69.328 kPa]
+        temperature:        Temperature, either as an astropy Quantity or a float in units of
+                            Kelvin.  [default: 293.15 K]
+        H2O_pressure:       Water vapor pressure, either as an astropy Quantity or a float in units
+                            of kiloPascals.  [default: 1.067 kPa]
     """
     _req_params = { 'base_wavelength' : float }
     _opt_params = { 'scale_unit' : str,

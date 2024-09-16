@@ -1710,12 +1710,12 @@ class OpticalPSF(GSObject):
         lam_over_diam:      Lambda / telescope diameter in the physical units adopted for ``scale``
                             (user responsible for consistency).  Either ``lam_over_diam``, or
                             ``lam`` and ``diam``, must be supplied.
-        lam:                Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            ``diam``, and in this case, image scales (``scale``) should be
-                            specified in units of ``scale_unit``.
-        diam :              Telescope diameter in units of meters.  Must be supplied with
-                            ``lam``, and in this case, image scales (``scale``) should be
-                            specified in units of ``scale_unit``.
+        lam:                Lambda (wavelength), either as an astropy Quantity or a float in units
+                            of nanometers.  Must be supplied with ``diam``, and in this case, image
+                            scales (``scale``) should be specified in units of ``scale_unit``.
+        diam :              Telescope diameter, either as an astropy Quantity or a float in units of
+                            meters.  Must be supplied with ``lam``, and in this case, image scales
+                            (``scale``) should be specified in units of ``scale_unit``.
         tip:                Tip in units of incident light wavelength. [default: 0]
         tilt:               Tilt in units of incident light wavelength. [default: 0]
         defocus:            Defocus in units of incident light wavelength. [default: 0]
