@@ -13,6 +13,8 @@ have been designating using the following italic names:
 - *pos_value* corresponds to a GalSim `PositionD` instance.  See `pos_value`
 - *sky_value* corresponds to a GalSim `CelestialCoord` instance.  See `sky_value`
 - *table_value* corresponds to a GalSim `LookupTable` instance.  See `table_value`
+- *quantity_value* corresponds to an Astropy :class:`~astropy.units.Quantity` instance.  See `quantity_value`
+- *unit_value* corresponds to an Astropy :class:`~astropy.units.Unit` instance.  See `unit_value`
 
 Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim *angle_value* and *pos_value* also have
@@ -566,6 +568,49 @@ Options are:
         * 'Current'  Use the current value of some other item in the config file.  (See the description of this for *float_value* for more details.)
 
             * ``key`` = *str_value* (required)  The key name of the item to use.
+
+        * 'Eval'  Evaluate a string.  See `Eval type`.
+
+* A string that starts with '$' or '@'.  See `Shorthand Notation`.
+
+quantity_value
+--------------
+
+These represent `astropy.units.Quantity` values, which are a combination of a float and a unit (specifically, an `astropy.units.Unit`).
+
+Options are:
+
+* An `astropy.units.Quantity` value (e.g. '8.7*u.m', where 'u' is the `astropy.units` module)
+* A string interpretable by `astropy.units.Quantity` (e.g. '8.7 m')
+* A dict with:
+
+    * ``type`` = *str* (required)  There is only one valid option:
+
+        * 'Quantity' Specify the value and unit separately.
+
+            * ``value`` = *float_value* (required)
+            * ``unit`` = *unit_value* (required)
+
+        * 'Eval'  Evaluate a string.  See `Eval type`.
+
+* A string that starts with '$' or '@'.  See `Shorthand Notation`.
+
+unit_value
+----------
+
+These represent `astropy.units.Unit` values.
+
+Options are:
+
+* An `astropy.units.Unit` value (e.g. 'u.m', where 'u' is the `astropy.units` module)
+* A string interpretable by `astropy.units.Unit` (e.g. 'm')
+* A dict with:
+
+    * ``type`` = *str* (required)  There is only one valid option:
+
+        * 'Unit' Specify the unit.
+
+            * ``unit`` = *str_value* (required)
 
         * 'Eval'  Evaluate a string.  See `Eval type`.
 

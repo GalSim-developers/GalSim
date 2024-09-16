@@ -182,16 +182,16 @@ The photon operator types defined by GalSim are:
     * ``zenith_coord`` = *sky_value* (optional; see above) the celestial coordinates of the zenith.
     * ``HA`` = *angle_value* (optional; see above) the local hour angle.
     * ``latitude`` = *angle_value* (optional; see above) the latitude of the telescope.
-    * ``pressure`` = *float_value* (default = 69.328) the pressure in kPa.
-    * ``temperature`` = *float_value* (default = 293.15) the temperature in Kelvin.
-    * ``H2O_pressure`` = *float_value* (default = 1.067) the water vapor pressure in kPa.
+    * ``pressure`` = *float_value* or *quantity_value* (default = 69.328) the pressure in kPa.
+    * ``temperature`` = *float_value* or *quantity_value* (default = 293.15) the temperature in Kelvin.
+    * ``H2O_pressure`` = *float_value* or *quantity_value* (default = 1.067) the water vapor pressure in kPa.
 
 * 'FocusDepth' adjusts the positions of the photons at the surface of the sensor to account for
   the nominal focus being either above or below the sensor surface.  The depth value is typically
   negative, since the best focus is generally somewhere in the bulk of the sensor (although for
   short wavelengths it is often very close to the surface).
 
-    * ``depth`` = *float_value* (required)  The distance above the surface where the photons are
+    * ``depth`` = *float_value* (required)  The distance (in pixels) above the surface where the photons are
       nominally in focus.  A negative value means the focus in below the surface of the sensor.
 
 * 'Refraction' adjusts the incidence angles to account for refraction at the surface of the

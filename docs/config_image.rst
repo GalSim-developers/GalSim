@@ -344,9 +344,9 @@ other types, including custom Bandpass types.
 * 'FileBandpass' is the default type here, and you may omit the type name when using it.
 
     * ``file_name`` = *str_value* (required)  The file to read in.
-    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
-    * ``blue_limit`` = *float_value* (optional)  Hard cut off on the blue side.
-    * ``red_limit`` = *float value* (optional)  Hard cut off on the red side.
+    * ``wave_type`` = *str_value* or *unit_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
+    * ``blue_limit`` = *float_value* or *quantity_value* (optional)  Hard cut off on the blue side.
+    * ``red_limit`` = *float value* or *quantity_value* (optional)  Hard cut off on the red side.
     * ``zeropoint`` = *float_value* (optional)  The zero-point to use.
     * ``thin`` = *float_value* (optional)  If given, call `Bandpass.thin` on the Bandpass after reading in from the file, using this for the ``rel_err``.
 
