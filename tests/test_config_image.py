@@ -2095,7 +2095,7 @@ def test_index_key(run_slow):
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
     if run_slow:
-        # For nose tests skip these 3 to save some time.
+        # For pytest tests, skip these 3 to save some time.
         # images5 is really the hardest test, and images1 is the easiest, so those two will
         # give good diagnostics for any errors.
 
@@ -2839,7 +2839,7 @@ def test_chromatic(run_slow):
     if run_slow:
         bp_file = 'LSST_r.dat'
     else:
-        # In nosetests, use a simple bandpass to go faster.
+        # In pytest, use a simple bandpass to go faster.
         bp_file = 'chromatic_reference_images/simple_bandpass.dat'
 
     # First check a chromatic galaxy with a regular PSF.

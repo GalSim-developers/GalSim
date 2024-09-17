@@ -244,7 +244,7 @@ int main() {
     extra_cflags = copt[cc_type]
     extra_lflags = lopt[cc_type]
     return try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
-    
+
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
     import distutils.sysconfig
@@ -434,29 +434,29 @@ def find_eigen_dir(output=False):
         if output:
             print("Downloaded %s.  Unpacking tarball."%fname)
         with tarfile.open(fname) as tar:
-            
+
             def is_within_directory(directory, target):
-                
+
                 abs_directory = os.path.abspath(directory)
                 abs_target = os.path.abspath(target)
-            
+
                 prefix = os.path.commonprefix([abs_directory, abs_target])
-                
+
                 return prefix == abs_directory
-            
+
             def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
                 # Avoid security vulnerability in tar.extractall function.
                 # This bit of code was added by the Advanced Research Center at Trellix in PR #1188.
                 # For more information about the security vulnerability, see
                 # https://github.com/advisories/GHSA-gw9q-c7gh-j9vm
-            
+
                 for member in tar.getmembers():
                     member_path = os.path.join(path, member.name)
                     if not is_within_directory(path, member_path):
                         raise Exception("Attempted Path Traversal in Tar File")
-            
-                tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
+
+                tar.extractall(path, members, numeric_owner=numeric_owner)
+
             safe_extract(tar, dir)
         os.remove(fname)
         # This actually extracts into a subdirectory with a name eigen-eigen-5a0156e40feb/
@@ -1345,9 +1345,7 @@ ext=Extension("galsim._galsim",
 
 build_dep = ['setuptools>=38,<72', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
-test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose', 'scipy', 'pyyaml']
-# Note: Even though we don't use nosetests, nose is required for some tests to work.
-#       cf. https://gist.github.com/dannygoldstein/e18866ebb9c39a2739f7b9f16440e2f5
+test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy', 'pyyaml']
 
 # If Eigen doesn't exist in the normal places, download it.
 find_eigen_dir(output=True)

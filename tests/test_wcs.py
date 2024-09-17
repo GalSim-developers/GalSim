@@ -486,7 +486,7 @@ def do_wcs_image(wcs, name, run_slow, approx=False):
     # used to be a problem if the wcs returned ra values that jump from 360 to 0.
     # Not very stringent test, since we're just checking that we don't have some pixels
     # that are orders of magnitude different from the average.  So rtol=2 is good.
-    # (1 is fine for the nosetests runs, but one of the edge cases fails in main runs.  It's not
+    # (1 is fine for the pytest runs, but one of the edge cases fails in main runs.  It's not
     # a problem I think, just one of the weird wcs types has a more variable pixel area.)
     np.testing.assert_allclose(im.array, area*sky_level, rtol=2)
 
