@@ -527,7 +527,7 @@ Options are:
 
 * A dict with:
 
-    * ``type`` = *str* (required)  There is currently only one valid option:
+    * ``type`` = *str* (required)  Valid options are:
 
         * 'RADec' Specify ra and dec separately.
 
@@ -584,7 +584,7 @@ Options are:
 * A string interpretable by `astropy.units.Quantity` (e.g. '8.7 m')
 * A dict with:
 
-    * ``type`` = *str* (required)  There is only one valid option:
+    * ``type`` = *str* (required)  Valid options are:
 
         * 'Quantity' Specify the value and unit separately.
 
@@ -606,7 +606,7 @@ Options are:
 * A string interpretable by `astropy.units.Unit` (e.g. 'm')
 * A dict with:
 
-    * ``type`` = *str* (required)  There is only one valid option:
+    * ``type`` = *str* (required)  Valid options are:
 
         * 'Unit' Specify the unit.
 
