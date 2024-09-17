@@ -156,7 +156,7 @@ jobs:
 
                 # Extra packages needed for testing
                 pip install -U -r test_requirements.txt
-                pip install -U nose coverage
+                pip install -U coverage
 
                 pip install -U matplotlib
 
@@ -208,7 +208,7 @@ jobs:
             - name: Check shared library
               if: matrix.py == 3.8
               run: |
-                # On a few systems (arbitrarily py3.8, where we also chec mac and clang),
+                # On a few systems (arbitrarily py3.8, where we also check mac and clang),
                 # check the shared library creation and link.
                 GALSIM_BUILD_SHARED=1 python setup.py install
 
