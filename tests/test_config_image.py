@@ -28,6 +28,7 @@ import astropy.units as u
 import galsim
 from galsim_test_helpers import *
 
+
 @timer
 def test_single():
     """Test the default image type = Single and stamp type = Basic
@@ -685,6 +686,7 @@ def test_reject():
     expected_fluxes = [0, 76673, 0, 0, 24074, 0, 0, 9124, 0, 0, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
+
 @timer
 def test_snr():
     """Test signal-to-noise option for setting the flux
@@ -1132,6 +1134,7 @@ def test_scattered():
     image = galsim.fits.read('output/test_scattered.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
 
+
 @timer
 def test_scattered_noskip():
     """The default StampBuilder will automatically skip objects whose stamps are fully
@@ -1198,6 +1201,7 @@ def test_scattered_noskip():
     # Repeat with config
     image2 = galsim.config.BuildImage(config)
     np.testing.assert_equal(image2.array, image.array)
+
 
 @timer
 def test_scattered_whiten():
@@ -1970,6 +1974,7 @@ def test_wcs():
     builder = galsim.config.wcs.WCSBuilder()
     assert_raises(NotImplementedError, builder.buildWCS, config, config, logger=None)
 
+
 @timer
 def test_bandpass():
     """Test various bandpass options"""
@@ -2061,7 +2066,7 @@ def test_bandpass():
 
 
 @timer
-def test_index_key():
+def test_index_key(run_slow):
     """Test some aspects of setting non-default index_key values
     """
     nfiles = 3
@@ -2073,7 +2078,7 @@ def test_index_key():
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
-    if __name__ == '__main__':
+    if run_slow:
         logger = logging.getLogger('test_index_key')
         logger.addHandler(logging.StreamHandler(sys.stdout))
         logger.setLevel(logging.DEBUG)
@@ -2089,7 +2094,7 @@ def test_index_key():
                                 logger=logger)
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
-    if __name__ == '__main__':
+    if run_slow:
         # For nose tests skip these 3 to save some time.
         # images5 is really the hardest test, and images1 is the easiest, so those two will
         # give good diagnostics for any errors.
@@ -2188,12 +2193,12 @@ def test_index_key():
                 final = galsim.Convolve(gal, psf)
                 final.drawImage(stamp)
 
-            if __name__ == '__main__':
+            if run_slow:
                 im.write('output/test_index_key%02d_%02d.fits'%(n,i))
                 images5[n][i].write('output/test_index_key%02d_%02d_5.fits'%(n,i))
             np.testing.assert_array_equal(im.array, images1[n][i].array,
                                           "index_key parsing failed for sequential BuildFiles run")
-            if __name__ == '__main__':
+            if run_slow:
                 np.testing.assert_array_equal(im.array, images2[n][i].array,
                                               "index_key parsing failed for output.nproc > 1")
                 np.testing.assert_array_equal(im.array, images3[n][i].array,
@@ -2252,7 +2257,7 @@ def test_index_key():
 
 
 @timer
-def test_multirng():
+def test_multirng(run_slow):
     """Test using multiple rngs.
 
     This models a run where the galaxies are the same for 3 images, then a new set for the next
@@ -2265,7 +2270,7 @@ def test_multirng():
     - Multiple input fields (although tests in test_config_value.py also do this)
     - Using a non-default build_index for power_spectrum
     """
-    if __name__ == '__main__':
+    if run_slow:
         nimages = 6
         ngals = 20
         logger = logging.getLogger('test_multirng')
@@ -2336,7 +2341,7 @@ def test_multirng():
             if b.isDefined():
                 im[b] += stamp[b]
         im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
-        if __name__ == '__main__':
+        if run_slow:
             im.write('output/test_multirng%02d.fits'%n)
         np.testing.assert_array_equal(im.array, images1[n].array)
         np.testing.assert_array_equal(im.array, images2[n].array)
@@ -2375,7 +2380,7 @@ def test_multirng():
 
 
 @timer
-def test_sequential_seeds():
+def test_sequential_seeds(run_slow):
     """Test using sequential seeds for successive images.
 
     Our old (<=2.3) way of setting rng seeds involved using the nominal seed value for
@@ -2395,7 +2400,7 @@ def test_sequential_seeds():
     seeds for multiple images is completely fine.  This test confirms that.  (It fails
     for the old way of doing the seed sequence.)
     """
-    if __name__ == '__main__':
+    if run_slow:
         nimages = 6
         ngals = 20
         logger = logging.getLogger('test_sequential_seeds')
@@ -2423,6 +2428,7 @@ def test_sequential_seeds():
             for j,stampj in enumerate(all_stamps[n-1]):
                 print(i,j,stampi==stampj)
             assert stampi not in all_stamps[n-1]
+
 
 @timer
 def test_template():
@@ -2752,6 +2758,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
 
         return image
 
+
 @timer
 def test_blend():
     """Test the functionality used by the BlendSet stamp type in examples/des/blend.py.
@@ -2824,11 +2831,12 @@ def test_blend():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamp(config, obj_num=8)
 
+
 @timer
-def test_chromatic():
+def test_chromatic(run_slow):
     """Test drawing a chromatic object on an image with a bandpass
     """
-    if __name__ == '__main__':
+    if run_slow:
         bp_file = 'LSST_r.dat'
     else:
         # In nosetests, use a simple bandpass to go faster.
@@ -3088,6 +3096,7 @@ def test_chromatic():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
+
 @timer
 def test_photon_ops():
     # Test photon ops in config
@@ -3272,6 +3281,7 @@ def test_photon_ops():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
 
+
 @timer
 def test_sensor():
     # Test sensor option in config
@@ -3444,6 +3454,7 @@ def test_sensor():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'sensor', config)
 
+
 @timer
 def test_initial_image():
     # This test simulates a time series of a supernova going off near a big galaxy.
@@ -3481,5 +3492,4 @@ def test_initial_image():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

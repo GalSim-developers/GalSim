@@ -280,12 +280,12 @@ def test_meds():
 
 
 @timer
-def test_meds_config():
+def test_meds_config(run_slow):
     """
     Create a meds file from a config and compare with a manual creation.
     """
     # Some parameters:
-    if __name__ == '__main__':
+    if run_slow:
         nobj = 5
         n_per_obj = 8
     else:
@@ -756,5 +756,4 @@ def test_psf_config():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

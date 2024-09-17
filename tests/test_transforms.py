@@ -96,6 +96,7 @@ def test_smallshear():
     assert_raises(TypeError, gauss.shear, g1=0.1, g2=0.1, invalid=0.3)
     assert_raises(TypeError, gauss.shear, myShear, invalid=0.3)
 
+
 @timer
 def test_largeshear():
     """Test the application of a large shear to a Sersic profile against a known result.
@@ -203,6 +204,7 @@ def test_rotate():
 
     assert_raises(TypeError, gal.rotate)
     assert_raises(TypeError, gal.rotate, 34)
+
 
 @timer
 def test_mag():
@@ -614,7 +616,7 @@ def test_integer_shift_photon():
 
 
 @timer
-def test_flip():
+def test_flip(run_slow):
     """Test several ways to flip a profile
     """
     # The Shapelet profile has the advantage of being fast and not circularly symmetric, so
@@ -626,7 +628,7 @@ def test_flip():
         galsim.Shapelet(sigma=0.17, order=2,
                         bvec=[1.7, 0.01,0.03, 0.29, 0.33, -0.18]),
     ]
-    if __name__ == "__main__":
+    if run_slow:
         image_dir = './real_comparison_images'
         catalog_file = 'test_catalog.fits'
         rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
@@ -967,6 +969,7 @@ def test_compound():
     np.testing.assert_array_almost_equal(im3_cf.array, im3_cd.array, decimal=3)
     np.testing.assert_array_almost_equal(im5_cf.array, im5_cd.array, decimal=3)
 
+
 @timer
 def test_gsparams():
     """Test withGSParams with some non-default gsparams
@@ -1011,5 +1014,4 @@ def test_gsparams():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

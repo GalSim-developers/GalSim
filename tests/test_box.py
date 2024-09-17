@@ -27,7 +27,7 @@ imgdir = os.path.join(path, "SBProfile_comparison_images") # Directory containin
                                                            # images.
 
 @timer
-def test_box():
+def test_box(run_slow):
     """Test the generation of a specific box profile against a known result.
     """
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
@@ -81,7 +81,7 @@ def test_box():
         box = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp)
         check_basic(box, "Box with width,height = %f,%f"%(width,height))
         do_shoot(box,im,"Box with width,height = %f,%f"%(width,height))
-        if __name__ == '__main__':
+        if run_slow:
             # These are slow because they require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
@@ -118,7 +118,7 @@ def test_box():
     box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
     check_basic(box, "Sheared Box", approx_maxsb=True)
     do_shoot(box,im, "Sheared Box")
-    if __name__ == '__main__':
+    if run_slow:
         do_kvalue(box,im, "Sheared Box")
         check_pickle(box, lambda x: x.drawImage(method='no_pixel'))
         check_pickle(box)
@@ -129,7 +129,7 @@ def test_box():
     np.testing.assert_almost_equal(box.xValue(cen), box.max_sb)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
-    if __name__ == '__main__':
+    if run_slow:
         conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
         check_basic(conv, "Sheared Box convolved with pixel in real space",
                     approx_maxsb=True, scale=0.2)
@@ -317,6 +317,6 @@ def test_ne():
             galsim.TopHat(radius=1.0, gsparams=gsp)]
     check_all_diff(gals)
 
+
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

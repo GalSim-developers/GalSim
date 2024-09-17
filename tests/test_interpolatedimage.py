@@ -32,11 +32,10 @@ TESTDIR=os.path.join(path, "interpolant_comparison_files")
 KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
 KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
 
-def setup():
-    # This reference image will be used in a number of tests below, so make it at the start.
-    global final
-    global ref_image
 
+@pytest.fixture
+def ref():
+    # This reference image will be used in a number of tests below, so make it at the start.
     g1 = galsim.Gaussian(sigma = 3.1, flux=2.4).shear(g1=0.2,g2=0.1)
     g2 = galsim.Gaussian(sigma = 1.9, flux=3.1).shear(g1=-0.4,g2=0.3).shift(-0.3,0.5)
     g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
@@ -45,11 +44,14 @@ def setup():
     scale = 0.4
     # The reference image was drawn with the old convention, which is now use_true_center=False
     final.drawImage(image=ref_image, scale=scale, method='sb', use_true_center=False)
+    return final, ref_image
+
 
 @timer
-def test_roundtrip():
+def test_roundtrip(ref):
     """Test round trip from Image to InterpolatedImage back to Image.
     """
+    final, ref_image = ref
     # for each type, try to make an InterpolatedImage, and check that when we draw an image from
     # that InterpolatedImage that it is the same as the original
     ftypes = [np.float32, np.float64]
@@ -382,6 +384,7 @@ def test_interpolant():
     with assert_raises(galsim.GalSimValueError):
         q.kval(x2d)
 
+
 @timer
 def test_unit_integrals():
     # Test Interpolant.unit_integrals
@@ -548,7 +551,7 @@ def test_exceptions():
 
 
 @timer
-def test_operations_simple():
+def test_operations_simple(run_slow):
     """Simple test of operations on InterpolatedImage: shear, magnification, rotation, shifting."""
     # Make some nontrivial image that can be described in terms of sums and convolutions of
     # GSObjects.  We want this to be somewhat hard to describe, but should be at least
@@ -625,8 +628,8 @@ def test_operations_simple():
     np.testing.assert_allclose(big_im_sub.array, ref_im_sub.array, rtol=0.01)
 
     # The check_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
-    # really long time, so we only do that if __name__ == "__main__".
-    irreprable = not __name__ == "__main__"
+    # really long time, so we only do that if run_slow is True.
+    irreprable = not run_slow
     check_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
               irreprable=irreprable)
     check_pickle(test_int_im, irreprable=irreprable)
@@ -734,6 +737,7 @@ def test_operations_simple():
               irreprable=irreprable)
     check_pickle(test_int_im, irreprable=irreprable)
 
+
 @timer
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
@@ -792,7 +796,7 @@ def test_operations():
 
 
 @timer
-def test_uncorr_padding():
+def test_uncorr_padding(run_slow):
     """Test for uncorrelated noise padding of InterpolatedImage."""
     # Set up some defaults: use weird image sizes / shapes and noise variances.
     decimal_precise=5
@@ -823,7 +827,7 @@ def test_uncorr_padding():
     np.testing.assert_almost_equal(
         np.var(big_img.array), big_var_expected, decimal=decimal_precise,
         err_msg='Variance not diluted by expected amount when zero-padding')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -840,7 +844,7 @@ def test_uncorr_padding():
     np.testing.assert_almost_equal(
         np.var(big_img.array), noise_var, decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with noise')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
     else:
@@ -863,7 +867,7 @@ def test_uncorr_padding():
     np.testing.assert_array_almost_equal(
         big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce noise-padded image with same choice of seed')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -873,7 +877,7 @@ def test_uncorr_padding():
 
 
 @timer
-def test_pad_image():
+def test_pad_image(run_slow):
     """Test padding an InterpolatedImage with a pad_image."""
     decimal=2  # all are coarse, since there are slight changes from odd/even centering issues.
     noise_sigma = 1.73
@@ -925,7 +929,7 @@ def test_pad_image():
         np.testing.assert_almost_equal(
             np.mean(big_img.array**2), var_expected, decimal=decimal,
             err_msg='Variance not correct when padding with image')
-        if __name__ == '__main__':
+        if run_slow:
             check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
             check_pickle(int_im)
 
@@ -941,13 +945,13 @@ def test_pad_image():
             np.testing.assert_almost_equal(
                 np.mean(big_img.array**2), var_expected, decimal=decimal,
                 err_msg='Variance not correct after padding with image and extra noise')
-            if __name__ == '__main__':
+            if run_slow:
                 check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
                 check_pickle(int_im)
 
 
 @timer
-def test_corr_padding():
+def test_corr_padding(run_slow):
     """Test for correlated noise padding of InterpolatedImage."""
     # Set up some defaults for tests.
     decimal_precise=4
@@ -978,7 +982,7 @@ def test_corr_padding():
     big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
     np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
         err_msg='Variance not diluted by expected amount when zero-padding')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -994,7 +998,7 @@ def test_corr_padding():
     np.testing.assert_almost_equal(np.var(big_img.array), np.var(orig_img.array),
         decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with correlated noise')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -1032,7 +1036,7 @@ def test_corr_padding():
     np.testing.assert_almost_equal(np.var(big_img.array), np.var(orig_img.array),
         decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with correlated noise')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -1045,7 +1049,7 @@ def test_corr_padding():
     int_im.drawImage(big_img_2, scale=1., method='no_pixel')
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce correlated noise-padded image with same choice of seed')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im)
 
@@ -1069,7 +1073,7 @@ def test_corr_padding():
     int_im3.drawImage(big_img3, scale=1., method='no_pixel')
     np.testing.assert_equal(big_img2.array, big_img3.array,
                             err_msg='Diff ways of specifying correlated noise give diff answers')
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(int_im2, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im3, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         check_pickle(int_im2)
@@ -1077,7 +1081,7 @@ def test_corr_padding():
 
 
 @timer
-def test_realspace_conv():
+def test_realspace_conv(run_slow):
     """Test that real-space convolution of an InterpolatedImage matches the FFT result
     """
     # Note: It is not usually a good idea to use real-space convolution with an InterpolatedImage.
@@ -1101,7 +1105,7 @@ def test_realspace_conv():
     psf1 = galsim.Gaussian(flux=1, half_light_radius=0.77)
     psf_im = psf1.drawImage(scale=raw_scale, nx=raw_size, ny=raw_size, method='no_pixel')
 
-    if __name__ == "__main__":
+    if run_slow:
         interp_list = ['linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']
     else:
         interp_list = ['linear', 'cubic', 'quintic']
@@ -1151,9 +1155,10 @@ def test_realspace_conv():
 
 
 @timer
-def test_Cubic_ref():
+def test_Cubic_ref(ref):
     """Test use of Cubic interpolant against some reference values
     """
+    final, ref_image = ref
     interp = galsim.Cubic()
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
@@ -1177,9 +1182,10 @@ def test_Cubic_ref():
 
 
 @timer
-def test_Quintic_ref():
+def test_Quintic_ref(ref):
     """Test use of Quintic interpolant against some reference values
     """
+    final, ref_image = ref
     interp = galsim.Quintic()
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
@@ -1202,9 +1208,10 @@ def test_Quintic_ref():
 
 
 @timer
-def test_Lanczos5_ref():
+def test_Lanczos5_ref(ref):
     """Test use of Lanczos5 interpolant against some reference values
     """
+    final, ref_image = ref
     interp = galsim.Lanczos(5, conserve_dc=False)
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
@@ -1227,9 +1234,10 @@ def test_Lanczos5_ref():
 
 
 @timer
-def test_Lanczos7_ref():
+def test_Lanczos7_ref(ref):
     """Test use of Lanczos7 interpolant against some reference values
     """
+    final, ref_image = ref
     interp = galsim.Lanczos(7, conserve_dc=False)
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
@@ -1394,9 +1402,10 @@ def test_stepk_maxk():
 
 
 @timer
-def test_kroundtrip():
+def test_kroundtrip(ref):
     """ Test that GSObjects `a` and `b` are the same when b = InterpolatedKImage(a.drawKImage)
     """
+    final, ref_image = ref
     a = final
     kim_a = a.drawKImage()
     b = galsim.InterpolatedKImage(kim_a)
@@ -1569,7 +1578,7 @@ def test_multihdu_readin():
 
 
 @timer
-def test_ii_shoot():
+def test_ii_shoot(run_slow):
     """Test InterpolatedImage with photon shooting.  Particularly the flux of the final image.
     """
     rng = galsim.BaseDeviate(1234)
@@ -1583,7 +1592,7 @@ def test_ii_shoot():
                    'lanczos3', 'lanczos5', 'lanczos7']
     im = galsim.Image(100,100, scale=1)
     im.setCenter(0,0)
-    if __name__ == '__main__':
+    if run_slow:
         flux = 1.e6
     else:
         flux = 1.e4
@@ -1621,10 +1630,11 @@ def test_ii_shoot():
 
 
 @timer
-def test_ne():
+def test_ne(ref):
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
     """
+    final, ref_image = ref
     obj1 = galsim.InterpolatedImage(ref_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
@@ -1691,6 +1701,7 @@ def test_ne():
             galsim.InterpolatedKImage(kim, gsparams=gsp)]
     check_all_diff(gals)
 
+
 @timer
 def test_quintic_glagn():
     """This is code that was giving a seg fault.  cf. Issue 1079.
@@ -1709,6 +1720,7 @@ def test_quintic_glagn():
         image = galsim.Image(bounds=galsim.BoundsI(1391,1440,3416,3465), dtype=np.float32)
 
         gsobj.drawImage(method='phot', image=image, add_to_image=True)
+
 
 @timer
 def test_depixelize():
@@ -1841,6 +1853,7 @@ def test_depixelize():
         np.testing.assert_allclose(im6.array, im1.array, atol=1.e-2)
         print(interp,' max error = ',np.max(np.abs(im6.array-im1.array)),'  time = ',t2-t1)
 
+
 @timer
 def test_drawreal_seg_fault():
     """Test to reproduce bug report in Issue #1164 that was causing seg faults
@@ -1874,8 +1887,5 @@ def test_drawreal_seg_fault():
     np.testing.assert_array_equal(image.array, 0)
 
 
-
 if __name__ == "__main__":
-    setup()
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

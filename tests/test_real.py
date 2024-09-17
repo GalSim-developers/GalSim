@@ -367,14 +367,14 @@ def test_pickle_crg():
 
 
 @timer
-def test_crg_roundtrip():
+def test_crg_roundtrip(run_slow):
     """Test that drawing a ChromaticRealGalaxy using the HST collecting area and filter gives back
     the original image.
     """
     f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
     f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
 
-    indices = [0] if __name__ != "__main__" else list(range(len(f606w_cat)))
+    indices = [0] if not run_slow else list(range(len(f606w_cat)))
 
     for index in indices:
         orig_f606w = f606w_cat.getGalImage(index)
@@ -568,7 +568,7 @@ def test_crg_roundtrip_larger_target_psf():
 
 
 @timer
-def test_ne():
+def test_ne(run_slow):
     """ Check that inequality works as expected."""
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
@@ -603,7 +603,7 @@ def test_ne():
     # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather
     # large, so the eval(repr) checks take a long time.
     # Therefore, run them from command line, but not from pytest.
-    if __name__ == '__main__':
+    if run_slow:
         check_pickle(crg1)
         check_pickle(covspec1)
     else:
@@ -903,11 +903,11 @@ def check_crg_noise(n_sed, n_im, n_trial, tol):
 
 
 @timer
-def test_crg_noise():
+def test_crg_noise(run_slow):
     """Verify that we can propagate the noise covariance by actually measuring the covariance of
     some pure noise fields put through ChromaticRealGalaxy.
     """
-    if __name__ == '__main__':
+    if run_slow:
         check_crg_noise(2, 2, 50, tol=0.03)
         check_crg_noise(2, 3, 25, tol=0.03)
         check_crg_noise(3, 3, 25, tol=0.03)
@@ -976,5 +976,4 @@ def test_sys_share_dir():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

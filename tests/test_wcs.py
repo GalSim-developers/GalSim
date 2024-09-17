@@ -344,7 +344,7 @@ def check_world(pos1, pos2, digits, err_msg):
         np.testing.assert_almost_equal(pos1.x, pos2.x, digits, err_msg)
         np.testing.assert_almost_equal(pos1.y, pos2.y, digits, err_msg)
 
-def do_wcs_image(wcs, name, approx=False):
+def do_wcs_image(wcs, name, run_slow, approx=False):
 
     print('Start image tests for WCS '+name)
 
@@ -466,7 +466,7 @@ def do_wcs_image(wcs, name, approx=False):
                                    "Image value at center after setCenter is wrong.")
 
     # Test makeSkyImage
-    if __name__ != '__main__':
+    if not run_slow:
         # Use a smaller image to speed things up.
         im = im[galsim.BoundsI(im.xmin,im.xmin+5,im.ymin,im.ymin+5)]
     new_origin = (-134, 128)
@@ -1161,7 +1161,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
 
 
 @timer
-def test_pixelscale():
+def test_pixelscale(run_slow):
     """Test the PixelScale class
     """
     scale = 0.23
@@ -1192,7 +1192,7 @@ def test_pixelscale():
     do_local_wcs(wcs, ufunc, vfunc, 'PixelScale')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'PixelScale')
+    do_wcs_image(wcs, 'PixelScale', run_slow)
 
     # Check jacobian()
     jac = wcs.jacobian()
@@ -1271,10 +1271,11 @@ def test_pixelscale():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetWCS 3')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'OffsetWCS')
+    do_wcs_image(wcs, 'OffsetWCS', run_slow)
+
 
 @timer
-def test_shearwcs():
+def test_shearwcs(run_slow):
     """Test the ShearWCS class
     """
     scale = 0.23
@@ -1312,7 +1313,7 @@ def test_shearwcs():
     do_local_wcs(wcs, ufunc, vfunc, 'ShearWCS')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'ShearWCS')
+    do_wcs_image(wcs, 'ShearWCS', run_slow)
 
     # Check jacobian()
     jac = wcs.jacobian()
@@ -1393,11 +1394,11 @@ def test_shearwcs():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 3')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'OffsetShearWCS')
+    do_wcs_image(wcs, 'OffsetShearWCS', run_slow)
 
 
 @timer
-def test_affinetransform():
+def test_affinetransform(run_slow):
     """Test the AffineTransform class
     """
     # First a slight tweak on a simple scale factor
@@ -1520,7 +1521,7 @@ def test_affinetransform():
     do_jac_decomp(wcs, 'JacobianWCS 3')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'JacobianWCS')
+    do_wcs_image(wcs, 'JacobianWCS', run_slow)
 
     # Add both kinds of offsets
     x0 = -3
@@ -1535,7 +1536,7 @@ def test_affinetransform():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 3')
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'AffineTransform')
+    do_wcs_image(wcs, 'AffineTransform', run_slow)
 
     # Degenerate transformation should raise some errors
     degen_wcs = galsim.JacobianWCS(0.2, 0.1, 0.2, 0.1)
@@ -1593,7 +1594,7 @@ class Cubic:
 
 
 @timer
-def test_uvfunction():
+def test_uvfunction(run_slow):
     """Test the UVFunction class
     """
     # First make some that are identical to simpler WCS classes:
@@ -1663,7 +1664,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string funcs', test_pickle=True)
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'UVFunction_string')
+    do_wcs_image(wcs, 'UVFunction_string', run_slow)
 
     # Also check with inverse functions.
     det = dudx*dvdy - dudy*dvdx
@@ -1697,7 +1698,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'UVFunction_lambda')
+    do_wcs_image(wcs, 'UVFunction_lambda', run_slow)
 
     # Check basic copy and == , != for UVFunction
     wcs2 = wcs.copy()
@@ -1744,7 +1745,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic radial UVFunction', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'UVFunction_func')
+    do_wcs_image(wcs, 'UVFunction_func', run_slow)
 
     # 6. Repeat with a function object rather than a regular function.
     # Use a different `a` parameter for u and v to make things more interesting.
@@ -1756,7 +1757,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
-    do_wcs_image(wcs, 'UVFunction_object')
+    do_wcs_image(wcs, 'UVFunction_object', run_slow)
 
     # 7. Test the UVFunction that is used in demo9 to confirm that I got the
     # inverse function correct!
@@ -1794,7 +1795,7 @@ def test_uvfunction():
               "             ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))")
     wcs = galsim.UVFunction(ufuncs, vfuncs, xfuncs, yfuncs)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9, string', test_pickle=True)
-    do_wcs_image(wcs, 'UVFunction from demo9, string')
+    do_wcs_image(wcs, 'UVFunction from demo9, string', run_slow)
 
     # This version doesn't work with numpy arrays because of the math functions.
     # This provides a test of that branch of the makeSkyImage function.
@@ -1802,7 +1803,7 @@ def test_uvfunction():
     vfunc = lambda x,y : 0.17 * y * (1. + 1.e-5 * math.sqrt(x**2 + y**2))
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with math funcs', test_pickle=False)
-    do_wcs_image(wcs, 'UVFunction_math')
+    do_wcs_image(wcs, 'UVFunction_math', run_slow)
 
     # 8. A non-trivial color example
     ufunc = lambda x,y,c: (dudx + 0.1*c)*x + dudy*y
@@ -1854,8 +1855,9 @@ def test_uvfunction():
     assert_raises(ValueError, wcs.toImage, galsim.PositionD(3, 3), color=0.2)
     assert_raises(ValueError, wcs.toImage, galsim.PositionD(6, 0), color=0.2)
 
+
 @timer
-def test_radecfunction():
+def test_radecfunction(run_slow):
     """Test the RaDecFunction class
     """
     # Do a sterographic projection of the above UV functions around a given reference point.
@@ -2084,8 +2086,8 @@ def test_radecfunction():
 
     # Check that using a wcs in the context of an image works correctly
     # (Uses the last wcs2, wcs3 set in the above loops.)
-    do_wcs_image(wcs2, 'RaDecFunction')
-    do_wcs_image(wcs3, 'RaDecFunction')
+    do_wcs_image(wcs2, 'RaDecFunction', run_slow)
+    do_wcs_image(wcs3, 'RaDecFunction', run_slow)
 
     # One with invalid functions, which raise errors.  (Just for coverage really.)
     radec_func = lambda x,y: center.deproject_rad(math.sqrt(x),math.sqrt(y), projection='lambert')
@@ -2138,7 +2140,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
 
 
 @timer
-def test_astropywcs():
+def test_astropywcs(run_slow):
     """Test the AstropyWCS class
     """
     with warnings.catch_warnings():
@@ -2149,7 +2151,7 @@ def test_astropywcs():
     # These all work, but it is quite slow, so only test a few of them for the regular unit tests.
     # (1.8 seconds for 4 tags.)
     # Test all of them when running python test_wcs.py.
-    if __name__ == "__main__":
+    if run_slow:
         test_tags = ['HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'TAN-PV',
                      'TAN-FLIP', 'REGION', 'ZTF']
         # The ones that still don't work are TNX and ZPX.
@@ -2181,7 +2183,7 @@ def test_astropywcs():
 
         do_celestial_wcs(wcs, 'Astropy file '+file_name)
 
-        do_wcs_image(wcs, 'AstropyWCS_'+tag)
+        do_wcs_image(wcs, 'AstropyWCS_'+tag, run_slow)
 
     # Can also use an existing astropy.wcs.WCS instance to construct.
     # This is probably a rare use case, but could aid efficiency if you already build the
@@ -2217,10 +2219,11 @@ def test_astropywcs():
     # test and add 'ZPX' to the list of working astropy.wcs types above.
     with assert_raises(OSError):
         wcs = galsim.AstropyWCS(references['ZPX'][0], dir=dir)
-        do_wcs_image(wcs, 'AstropyWCS_ZPX')
+        do_wcs_image(wcs, 'AstropyWCS_ZPX', run_slow)
+
 
 @timer
-def test_pyastwcs():
+def test_pyastwcs(run_slow):
     """Test the PyAstWCS class
     """
     try:
@@ -2232,7 +2235,7 @@ def test_pyastwcs():
     # These all work, but it is quite slow, so only test a few of them for the regular unit tests.
     # (2.4 seconds for 6 tags.)
     # Test all of them when running python test_wcs.py.
-    if __name__ == "__main__":
+    if run_slow:
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
                       'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX', 'ZTF' ]
     else:
@@ -2266,7 +2269,7 @@ def test_pyastwcs():
         # TAN-FLIP has an error of 4mas after write and read here, which I don't really understand.
         # but it's small enough an error that I don't think it's worth worrying about further.
         approx = tag in [ 'ZPX', 'TAN-FLIP', 'ZTF' ]
-        do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
+        do_wcs_image(wcs, 'PyAstWCS_'+tag, run_slow, approx)
 
     # Can also use an existing startlink.Ast.FrameSet instance to construct.
     # This is probably a rare use case, but could aid efficiency if you already open the
@@ -2296,15 +2299,14 @@ def test_pyastwcs():
     assert_raises(TypeError, galsim.PyAstWCS, wcsinfo=wcsinfo, header='dummy')
 
 
-
 @timer
-def test_wcstools():
+def test_wcstools(run_slow):
     """Test the WcsToolsWCS class
     """
     # These all work, but it is very slow, so only test one of them for the regular unit tests.
     # (1.5 seconds for just the one tag.)
     # Test all of them when running python test_wcs.py.
-    if __name__ == "__main__":
+    if run_slow:
         # Note: TPV seems to work, but on one machine, repeated calls to xy2sky with the same
         # x,y values vary between two distinct ra,dec outputs.  I have no idea what's going on,
         # since I thought the calculation ought to be deterministic, but it clearly something
@@ -2342,7 +2344,7 @@ def test_wcstools():
 
         do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name, approx=approx)
 
-        do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
+        do_wcs_image(wcs, 'WcsToolsWCS_'+tag, run_slow)
 
     # HPX is one of the ones that WcsToolsWCS doesn't support.
     with assert_raises(galsim.GalSimError):
@@ -2360,9 +2362,8 @@ def test_wcstools():
     assert_raises(TypeError, galsim.WcsToolsWCS, file_name, header='dummy')
 
 
-
 @timer
-def test_gsfitswcs():
+def test_gsfitswcs(run_slow):
     """Test the GSFitsWCS class
     """
     # These are all relatively fast (total time for all 10 is about 1.1 seconds),
@@ -2394,7 +2395,7 @@ def test_gsfitswcs():
 
         do_celestial_wcs(wcs, 'GSFitsWCS '+file_name)
 
-        do_wcs_image(wcs, 'GSFitsWCS_'+tag)
+        do_wcs_image(wcs, 'GSFitsWCS_'+tag, run_slow)
 
     # tpv_odd.fits is a modified version to have (unsupported) odd powers of r.
     with assert_raises(galsim.GalSimNotImplementedError):
@@ -2415,6 +2416,7 @@ def test_gsfitswcs():
     assert_raises(TypeError, galsim.GSFitsWCS)
     assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
     assert_raises(ValueError, galsim.GSFitsWCS, _data=('invalid',0,0,0,0,0,0))
+
 
 @timer
 def test_inverseab_convergence():
@@ -2490,8 +2492,9 @@ def test_inverseab_convergence():
         bad = eval(str(e)[str(e).rfind('['):])
         print('as a python list: ',bad)
 
+
 @timer
-def test_tanwcs():
+def test_tanwcs(run_slow):
     """Test the TanWCS function, which returns a GSFitsWCS instance.
     """
 
@@ -2508,7 +2511,7 @@ def test_tanwcs():
     center = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 1')
-    do_wcs_image(wcs, 'TanWCS 1')
+    do_wcs_image(wcs, 'TanWCS 1', run_slow)
 
     # Next one with a flip and significant rotation and a large (u,v) offset
     dudx = 0.1432
@@ -2521,7 +2524,7 @@ def test_tanwcs():
     center = galsim.CelestialCoord(3.4 * galsim.hours, -17.9 * galsim.degrees)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 2')
-    do_wcs_image(wcs, 'TanWCS 2')
+    do_wcs_image(wcs, 'TanWCS 2', run_slow)
 
     # Check crossing ra=0.
     # Note: this worked properly even before fixing issue #1030, since GSFitsWCS keeps all
@@ -2538,7 +2541,7 @@ def test_tanwcs():
     center = galsim.CelestialCoord(359.99 * galsim.degrees, -37.9 * galsim.degrees)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 3')
-    do_wcs_image(wcs, 'TanWCS 3')
+    do_wcs_image(wcs, 'TanWCS 3', run_slow)
 
     # Finally a really crazy one that isn't remotely regular
     dudx = 0.2342
@@ -2555,14 +2558,14 @@ def test_tanwcs():
     center = galsim.CelestialCoord(-241.4 * galsim.hours, 87.9 * galsim.degrees)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 4')
-    do_wcs_image(wcs, 'TanWCS 4')
+    do_wcs_image(wcs, 'TanWCS 4', run_slow)
 
 
 @timer
-def test_fitswcs():
+def test_fitswcs(run_slow):
     """Test the FitsWCS factory function
     """
-    if __name__ == "__main__":
+    if run_slow:
         # For more thorough unit tests (when running python test_wcs.py explicitly), this
         # will test everything.  If you don't have everything installed (especially
         # PyAst, then this may fail.
@@ -2598,7 +2601,7 @@ def test_fitswcs():
             approx = tag in ['ZPX','ZTF'] and isinstance(wcs, galsim.PyAstWCS)
             do_ref(wcs, ref_list, 'FitsWCS '+tag)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
-            do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, run_slow, approx)
 
             # Should also be able to build the file just from a fits.read() call, which
             # uses FitsWCS behind the scenes.
@@ -2665,7 +2668,7 @@ def check_sphere(ra1, dec1, ra2, dec2, atol=1):
 
 
 @timer
-def test_fittedsipwcs():
+def test_fittedsipwcs(run_slow):
     """Test our ability to construct a WCS from x, y, ra, dec tuples
     """
     import astropy.io.fits as fits
@@ -2690,7 +2693,7 @@ def test_fittedsipwcs():
 
     dir = 'fits_files'
 
-    if __name__ == "__main__":
+    if run_slow:
         test_tags = all_tags
     else:
         # For pytest runs, don't bother with the crazy ones.  We really only care about
@@ -2868,7 +2871,7 @@ def test_fittedsipwcs():
     with np.testing.assert_raises(galsim.GalSimError):
         wcs = galsim.FittedSIPWCS(x[:9], y[:9], ra[:9], dec[:9], order=3)
 
-    if __name__ != "__main__":
+    if not run_slow:
         return
 
     # Finally, the ZPN fit isn't very good with a TAN projection.
@@ -2934,6 +2937,7 @@ def test_scamp():
     # I test anywhere else...
 
     do_ref(wcs, ref_list, 'Scamp FitsWCS')
+
 
 @timer
 def test_compateq():
@@ -3004,6 +3008,7 @@ def test_compateq():
     assert not galsim.wcs.compatible(affine,uv1)
     assert not galsim.wcs.compatible(affine,uv2)
     assert not galsim.wcs.compatible(affine,uv3)
+
 
 @timer
 def test_coadd():
@@ -3093,6 +3098,7 @@ def test_coadd():
     np.testing.assert_almost_equal(mom.moments_centroid.x, 24.5, decimal=2)
     np.testing.assert_almost_equal(mom.moments_centroid.y, 24.5, decimal=2)
 
+
 @timer
 def test_lowercase():
     # The WCS parsing should be insensitive to the case of the header key values.
@@ -3127,8 +3133,9 @@ def test_lowercase():
                                [0.26298, 0.00071,
                                 -0.00072, 0.26298], atol=1.e-4)
 
+
 @timer
-def test_int_args():
+def test_int_args(run_slow):
     """Test that integer arguments for various things work correctly.
     """
     # Some of these used to trigger
@@ -3170,7 +3177,7 @@ def test_int_args():
     # Before fixing #1024, this took about 0.5 sec.
     # Now it usually takes about 0.04 sec.  Testing at 0.25 seems like a reasonable midpoint.
     print('Time = ',t1-t0)
-    if __name__ == '__main__':
+    if run_slow:
         # Don't include this in regular unit tests, since it's not really something we need
         # to guarantee.  This timing estimate is appropriate for my laptop, but maybe not
         # all systems.  It also fails for pypy on GHA for some reason.
@@ -3191,7 +3198,7 @@ def test_int_args():
 
 
 @timer
-def test_razero():
+def test_razero(run_slow):
     """Test the makeSkyImage function near ra=0.
     """
     # This test reproduces the problem Chris Walter found when using the LSST WCS backend
@@ -3227,7 +3234,7 @@ def test_razero():
     assert 0 < wcs.toWorld(galsim.PositionD(9,288)).ra / galsim.degrees < 1
 
     do_celestial_wcs(wcs, 'Astropy file '+file_name)
-    do_wcs_image(wcs, 'Astropy near ra=0')
+    do_wcs_image(wcs, 'Astropy near ra=0', run_slow)
 
     # Test that the local wcs comes out right where ra crosses 0.
     image_pos = wcs.toImage(galsim.CelestialCoord(ra=0.*galsim.degrees, dec=47*galsim.degrees))
@@ -3265,9 +3272,8 @@ def test_razero():
     print('-63, 208 -> ',wcs.toWorld(galsim.PositionD(-63,208)))
 
     do_celestial_wcs(wcs, 'Astropy file '+file_name)
-    do_wcs_image(wcs, 'Astropy near pole')
+    do_wcs_image(wcs, 'Astropy near pole', run_slow)
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

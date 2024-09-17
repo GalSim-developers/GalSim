@@ -561,7 +561,7 @@ def test_silicon_area():
 
 
 @timer
-def test_sensor_wavelengths_and_angles():
+def test_sensor_wavelengths_and_angles(run_slow):
 
     print('Starting test_wavelengths_and_angles')
     sys.stdout.flush()
@@ -577,7 +577,7 @@ def test_sensor_wavelengths_and_angles():
     assigner = galsim.FRatioAngles(fratio, obscuration)
     obj = galsim.Gaussian(flux=3539, sigma=0.3)
 
-    if __name__ == "__main__":
+    if run_slow:
         bands = ['r', 'i', 'z', 'y']
     else:
         bands = ['i'] # Only test the i band for pytest
@@ -914,14 +914,14 @@ def test_treerings():
 
 
 @timer
-def test_resume():
+def test_resume(run_slow):
     """Test that the resume option for accumulate works properly.
     """
     # Note: This test is based on a script devel/lsst/treering_skybg_check.py
 
     rng = galsim.UniformDeviate(314159)
 
-    if __name__ == "__main__":
+    if run_slow:
         flux_per_pixel = 40
         nx = 200
         ny = 200
@@ -1024,12 +1024,12 @@ def test_resume():
     assert_raises(RuntimeError, sensor4.accumulate, all_photons, im1, resume=True)
 
 @timer
-def test_flat():
+def test_flat(run_slow):
     """Test building a flat field image using the Silicon class.
     """
     # Note: This test is based on a script devel/lsst/treering_flat.py
 
-    if __name__ == '__main__':
+    if run_slow:
         nx = 200
         ny = 200
         nflats = 20
@@ -1277,5 +1277,4 @@ def test_big_then_small():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)
