@@ -645,7 +645,7 @@ def test_roman_psfs(run_slow):
     # - fully chromatic PSFs with interpolation, but only interpolating between two wavelengths.
     # - achromatic PSFs.
     #
-    # We also only test pupil_bin=4,8 in nosetests runs.  Tests of pupil_bin=1,2 are done in
+    # We also only test pupil_bin=4,8 in pytest runs.  Tests of pupil_bin=1,2 are done in
     # __main__ runs.
 
     # Providing a wavelength returns achromatic PSFs
@@ -748,7 +748,7 @@ def test_roman_psfs(run_slow):
         { 'pupil_bin':8 },
     ]
     if run_slow:
-        # A few more that are too slow to run in regular nosetests
+        # A few more that are too slow to run in regular pytest
         kwargs_list.extend([
             { 'pupil_bin':1 },
             { 'pupil_bin':2 },

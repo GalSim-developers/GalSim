@@ -73,10 +73,6 @@ You can also run them with multiple jobs (e.g. for 4 jobs) by typing::
 
 You need the ``pytest-xdist`` and ``pytest-timeout`` plugins for this to work.
 
-If you prefer to use nosetests, the equivalent command is::
-
-    nosetests --processes=4 --process-timeout=60 test*.py
-
 .. note::
 
     If your system does not have ``pytest`` installed, and you do not want
