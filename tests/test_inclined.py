@@ -96,6 +96,7 @@ def get_prof(mode, *args, **kwargs):
 
     return prof
 
+
 @timer
 def test_regression():
     """Test that the inclined exponential profile matches the results from Lance Miller's code.
@@ -255,6 +256,7 @@ def test_exponential():
 
     check_basic(inc_profile, "Face-on " + mode)
 
+
 @timer
 def test_sersic():
     """ Test that InclinedSersic looks identical to a Sersic when inclination is zero.
@@ -311,6 +313,7 @@ def test_sersic():
         np.testing.assert_almost_equal(inc_profile.max_sb, sersic_profile.max_sb)
 
         check_basic(inc_profile, "Face-on " + mode)
+
 
 @timer
 def test_edge_on():
@@ -461,13 +464,12 @@ def test_sanity():
             assert(prof1a.flux > prof2.flux)
 
 
-
 @timer
-def test_k_limits():
+def test_k_limits(run_slow):
     """ Check that the maxk and stepk give reasonable results for all profiles. """
 
     test_params = inclined_sersic_regression_test_parameters
-    if __name__ == '__main__':
+    if run_slow:
         test_params += inclined_exponential_test_parameters
         test_params += inclined_sersic_test_parameters
 
@@ -525,6 +527,7 @@ def test_k_limits():
             total_flux = np.sum(test_image.array)
             assert (total_flux-contained_flux)/total_flux <= gsparams.folding_threshold
 
+
 @timer
 def test_eq_ne():
     """ Check that equality/inequality works as expected."""
@@ -578,6 +581,7 @@ def test_eq_ne():
 
     check_all_diff(diff_gals)
 
+
 @timer
 def test_pickle():
     """ Check that we can pickle it. """
@@ -599,6 +603,7 @@ def test_pickle():
         check_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
+
 
 @timer
 def test_exceptions():
@@ -667,5 +672,4 @@ def test_value_retrieval():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

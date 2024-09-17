@@ -500,7 +500,7 @@ def test_monochromatic_filter():
                         "GSObject.drawImage()")
 
 @timer
-def test_monochromatic_sed():
+def test_monochromatic_sed(run_slow):
     # Similar to the above test, but this time with a broad bandpass and a narrow sed.
 
     bandpass = galsim.Bandpass(galsim.LookupTable([500,1000], [1,1], 'linear'), wave_type='nm')
@@ -515,7 +515,7 @@ def test_monochromatic_sed():
     nstruts = 5
     aberrations = np.array([0,0,0,0, 0.02, -0.05, -0.15, -0.02, 0.13, 0.06, -0.09, 0.11])
 
-    if __name__ == '__main__':
+    if run_slow:
         wave_list = [515, 690, 900]
     else:
         wave_list = [515]
@@ -2089,7 +2089,7 @@ def test_interpolated_ChromaticObject():
 
 
 @timer
-def test_ChromaticOpticalPSF():
+def test_ChromaticOpticalPSF(run_slow):
     """Test the ChromaticOpticalPSF functionality."""
     import time
 
@@ -2174,7 +2174,7 @@ def test_ChromaticOpticalPSF():
     print("Time to initialize InterpolatedChromaticObject: {0}s".format(t5-t4))
     obj = galsim.Convolve(star, psf)
 
-    if __name__ == '__main__':
+    if run_slow:
         # This is slow, but it is worth testing the pickling of InterpolatedChromaticObjects.
         check_pickle(psf)
     else:
@@ -2304,7 +2304,7 @@ def test_ChromaticAiry():
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
 
 @timer
-def test_phot():
+def test_phot(run_slow):
     """Test photon shooting with various chromatic PSFs.
     """
     import time
@@ -2391,7 +2391,7 @@ def test_phot():
         print('fft time = ',t1-t0)
         print('im1.max,sum = ', im1.array.max(), im1.array.sum())
 
-        if __name__ == '__main__':
+        if run_slow:
             # Now the direct photon shooting method
             t0 = time.time()
             # This is the old way that photon shooting used to work.  The new way will be tested
@@ -3388,5 +3388,4 @@ def test_save_photons():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

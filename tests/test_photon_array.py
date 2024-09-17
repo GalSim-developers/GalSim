@@ -1755,10 +1755,5 @@ def test_scale_wavelength():
     check_pickle(scale_wave)
 
 
-
 if __name__ == '__main__':
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    if no_astroplan:
-        print('Skipping test_dcr_angles, since astroplan not installed.')
-        testfns.remove(test_dcr_angles)
-    runtests(testfns)
+    runtests(__file__)

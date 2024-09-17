@@ -27,6 +27,7 @@ import galsim
 import galsim.roman
 from galsim_test_helpers import *
 
+
 @timer
 def skip_roman_wcs():
     """Test the Roman WCS routines against ones provided by the Roman project office.
@@ -136,8 +137,9 @@ def skip_roman_wcs():
         np.ones(len(ra_test))*0.0001,
         err_msg='For at least one WCS, pixel areas differ from reference by >0.01%.')
 
+
 @timer
-def test_roman_wcs():
+def test_roman_wcs(run_slow):
     """Test the Roman WCS routines against the one produced by code from Chris Hirata.
     """
     # The standard against which we will compare is the output of some software provided by Chris
@@ -157,7 +159,7 @@ def test_roman_wcs():
     dec = test_data[3,:]
     pa = test_data[4,:]
     chris_sca = test_data[5,:]
-    if __name__ != "__main__":
+    if not run_slow:
         i_start = 4
         n_test = 3  # None of these 3 fail, so the nfail test is ok.
     else:
@@ -315,6 +317,7 @@ def test_roman_wcs():
     with mock.patch('galsim.roman.roman_wcs.sip_filename', 'sip_7_6_8.txt'):
         with assert_raises(OSError):
             galsim.roman.getWCS(world_pos=world_pos, date=date)
+
 
 @timer
 def test_roman_backgrounds():
@@ -488,6 +491,7 @@ def test_roman_bandpass():
     for key in nozp_bp:
         assert nozp_bp[key].zeropoint is None
 
+
 @timer
 def test_roman_nonimaging_bandpass():
     """Test the Roman non-imaging bandpasses for basic sanity.
@@ -508,6 +512,7 @@ def test_roman_nonimaging_bandpass():
     assert 'Grism_0thOrder' not in bp_imaging
     assert 'Grism_1stOrder' not in bp_imaging
     assert 'SNPrism' not in bp_imaging
+
 
 @timer
 def test_roman_detectors():
@@ -628,7 +633,7 @@ def test_roman_detectors():
 
 
 @timer
-def test_roman_psfs():
+def test_roman_psfs(run_slow):
     """Test the Roman PSF routines for reasonable behavior.
     """
     # The Roman PSF routines can take a long time under some circumstances.  For example, storing
@@ -742,7 +747,7 @@ def test_roman_psfs():
         { 'pupil_bin':4 },
         { 'pupil_bin':8 },
     ]
-    if __name__ == '__main__':
+    if run_slow:
         # A few more that are too slow to run in regular nosetests
         kwargs_list.extend([
             { 'pupil_bin':1 },
@@ -780,6 +785,7 @@ def test_roman_psfs():
     assert_raises(ValueError, galsim.roman.getPSF, 30, None)
     assert_raises(ValueError, galsim.roman.getPSF, 0, None)
     assert_raises(ValueError, galsim.roman.getPSF, 3, 'short', n_waves=10)
+
 
 @timer
 def test_roman_basic_numbers():
@@ -852,6 +858,7 @@ def test_roman_basic_numbers():
     assert galsim.roman.n_pix==ref_n_pix
     assert galsim.roman.jitter_rms==ref_jitter_rms
     assert galsim.roman.charge_diffusion==ref_charge_diffusion
+
 
 @timer
 def test_roman_psf_wcs():
@@ -948,6 +955,7 @@ def test_config_psf():
     print('psf1 = ',str(psf1))
     print('psf2 = ',str(psf2))
     assert psf1 == psf2
+
 
 @timer
 def test_config_sca():
@@ -1091,8 +1099,9 @@ def test_config_sca():
         im2 -= sky_image
         assert im1 == im2
 
+
 @timer
-def test_aberration_interpolation():
+def test_aberration_interpolation(run_slow):
     """Test the Roman aberration interpolation method inside roman.roman_psfs
     """
     # We read in pairs of conjunction points, they are on different SCAs but are physically
@@ -1159,7 +1168,7 @@ def test_aberration_interpolation():
     Z_max = np.max(aberration_array, axis=0)
     Z_range = Z_max - Z_min
 
-    if __name__ == '__main__':
+    if run_slow:
         from matplotlib import pyplot as plt
 
         world_pos = galsim.CelestialCoord(0.*galsim.degrees, 0*galsim.degrees)
@@ -1235,7 +1244,7 @@ def test_aberration_interpolation():
 
 
 @timer
-def test_roman_focal_plane():
+def test_roman_focal_plane(run_slow):
     """Test that a full focal plane has everything oriented as shown in mapping_v210503.pdf
     """
     # For this test, we mostly try to plot points on each SCA that visually reproduce
@@ -1391,7 +1400,7 @@ def test_roman_focal_plane():
         coords = [wcs[sca].toWorld(galsim.PositionD(x,y)) for x,y in numbers[sca]]
         numbers[sca] = [(c.ra.deg, c.dec.deg) for c in coords]
 
-    if __name__ == '__main__':
+    if run_slow:
         from matplotlib.figure import Figure
         from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -1438,5 +1447,4 @@ def test_roman_focal_plane():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

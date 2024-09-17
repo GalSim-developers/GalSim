@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import pytest
 import numpy as np
 import os
 
@@ -165,13 +166,13 @@ def test_sersic():
 
 
 @timer
-def test_sersic_radii():
+def test_sersic_radii(run_slow):
     """Test initialization of Sersic with different types of radius specification.
     """
     import math
     test_hlr = 1.8
 
-    if __name__ != "__main__":
+    if not run_slow:
         # If doing a pytest run, we don't actually need to do all 4 sersic n values.
         # Two should be enough to notice if there is a problem, and the full list will be tested
         # when running python test_sersic.py to try to diagnose the problem.
@@ -342,7 +343,7 @@ def test_sersic_radii():
 
 
 @timer
-def test_sersic_flux_scaling():
+def test_sersic_flux_scaling(run_slow):
     """Test flux scaling for Sersic.
     """
     # decimal point to go to for parameter value comparisons
@@ -351,7 +352,7 @@ def test_sersic_flux_scaling():
     test_flux = 17.9
     test_sersic_trunc = [0., 8.5]
 
-    if __name__ != "__main__":
+    if not run_slow:
         # If doing a pytest run, we don't actually need to do all 4 sersic n values.
         # Two should be enough to notice if there is a problem, and the full list will be tested
         # when running python test_sersic.py to try to diagnose the problem.
@@ -562,6 +563,7 @@ def test_ne():
             galsim.DeVaucouleurs(half_light_radius=1.0, gsparams=gsp)]
     check_all_diff(gals)
 
+
 @timer
 def test_near_05():
     """Test from issue #1041, where some values of n near but not exactly equal to 0.5 would
@@ -580,5 +582,4 @@ def test_near_05():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)
