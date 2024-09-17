@@ -403,7 +403,7 @@ def runtests(filename, parser=None):
     parser.add_argument('--profile', action='store_true', help='Profile tests')
     parser.add_argument('--prof_out', default=None, help="Profiler output file")
     args, unknown_args = parser.parse_known_args()
-    pytest_args = [filename] + unknown_args + ["--run_slow"]
+    pytest_args = [filename] + unknown_args + ["--run_slow", "--tb=short", "-s"]
 
     if args.profile:
         import cProfile, pstats
