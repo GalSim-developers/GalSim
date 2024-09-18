@@ -8,6 +8,7 @@ Dependency Changes
 
 - Removed an accidental implicit dependency we had on scipy in `FittedSIPWCS`. (#1253, #1305)
 
+
 API Changes
 -----------
 
@@ -25,6 +26,8 @@ Config Updates
   If you want a non-standard seed sequence, you should now put it in a list somewhere after
   the first item.  The first item will always evaluate as an integer value and create a sequence
   based on that indexed by obj_num. (#1309)
+- Added Quantity and Unit types to allow more intuitive specification of values with units
+  in the config file. (#1311)
 
 
 New Features
@@ -32,11 +35,9 @@ New Features
 
 - Added `InterpolatedChromaticObject.from_images`. (#1294, #1296)
 - Allow PosixPath instances in constructors for `Bandpass` and `SED`. (#1270, #1304)
-
-
-Performance Improvements
-------------------------
-
+- Added filter information for the Prism and Grism in the roman module. (#1307)
+- Added options to give some unitful values as an astropy Quantity rather than rely on
+  implicit units specified in the doc string. (#1311)
 
 
 Bug Fixes
