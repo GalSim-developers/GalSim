@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coord.celestial &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coord.celestial</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coord.celestial</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2013-2017 LSST Dark Energy Science Collaboration (DESC)</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy</span>
+<span class="c1"># of this software and associated documentation files (the &quot;Software&quot;), to deal</span>
+<span class="c1"># in the Software without restriction, including without limitation the rights</span>
+<span class="c1"># to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
+<span class="c1"># copies of the Software, and to permit persons to whom the Software is</span>
+<span class="c1"># furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in all</span>
+<span class="c1"># copies or substantial portions of the Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+<span class="c1"># IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
+<span class="c1"># AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
+<span class="c1"># LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
+<span class="c1"># OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
+<span class="c1"># SOFTWARE.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">_Angle</span>
+<span class="kn">from</span> <span class="nn">.angleunit</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">arcsec</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+
+<div class="viewcode-block" id="CelestialCoord"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord">[docs]</a><span class="k">class</span> <span class="nc">CelestialCoord</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class defines a position on the celestial sphere, normally given by two angles,</span>
+<span class="sd">    ``ra`` and ``dec``.</span>
+
+<span class="sd">    This class can be used to perform various calculations in spherical coordinates, such</span>
+<span class="sd">    as finding the angular distance between two points in the sky, calculating the angles in</span>
+<span class="sd">    spherical triangles, projecting from sky coordinates onto a Euclidean tangent plane, etc.</span>
+
+<span class="sd">    **Initialization:**</span>
+
+<span class="sd">        A `CelestialCoord` object is constructed from the right ascension and declination:</span>
+
+<span class="sd">            :meth:`coord.CelestialCoord.__init__`</span>
+
+<span class="sd">            &gt;&gt;&gt; c = CelestialCoord(ra=12*hours, dec=31*degrees)</span>
+<span class="sd">            &gt;&gt;&gt; print(c)</span>
+<span class="sd">            coord.CelestialCoord(3.141592653589793 radians, 0.5410520681182421 radians)</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">        A CelestialCoord has the following (read-only) attributes:</span>
+
+<span class="sd">            :ra:        The right ascension (an Angle instance)</span>
+<span class="sd">            :dec:       The declination (an Angle instance)</span>
+
+<span class="sd">            &gt;&gt;&gt; print(c.ra / degrees, c.dec / degrees)</span>
+<span class="sd">            180.0 31.0</span>
+
+<span class="sd">        In addition there is a convenience access property that returns ra and dec in radians.</span>
+
+<span class="sd">            :rad:       A tuple (ra.rad, dec.rad)</span>
+
+<span class="sd">            &gt;&gt;&gt; print(c.rad)</span>
+<span class="sd">            (3.141592653589793, 0.5410520681182421)</span>
+
+<span class="sd">    **Spherical Geometry:**</span>
+
+<span class="sd">        The basic spherical geometry operations are available to work with spherical triangles</span>
+
+<span class="sd">        For three coordinates cA, cB, cC making a spherical triangle, one can calculate the</span>
+<span class="sd">        sides and angles via:</span>
+
+<span class="sd">            | :meth:`coord.CelestialCoord.distanceTo`</span>
+<span class="sd">            | :meth:`coord.CelestialCoord.angleBetween`</span>
+
+<span class="sd">            &gt;&gt;&gt; cA = CelestialCoord(0 * degrees, 0 * degrees)</span>
+<span class="sd">            &gt;&gt;&gt; cB = CelestialCoord(0 * degrees, 10 * degrees)</span>
+<span class="sd">            &gt;&gt;&gt; cC = CelestialCoord(10 * degrees, 0 * degrees)</span>
+<span class="sd">            &gt;&gt;&gt; a = cB.distanceTo(cC)</span>
+<span class="sd">            &gt;&gt;&gt; b = cC.distanceTo(cA)</span>
+<span class="sd">            &gt;&gt;&gt; c = cA.distanceTo(cB)</span>
+<span class="sd">            &gt;&gt;&gt; print(a.deg, b.deg, c.deg)</span>
+<span class="sd">            14.106044260566366 10.0 10.0</span>
+<span class="sd">            &gt;&gt;&gt; A = cA.angleBetween(cB, cC)</span>
+<span class="sd">            &gt;&gt;&gt; B = cB.angleBetween(cC, cA)</span>
+<span class="sd">            &gt;&gt;&gt; C = cC.angleBetween(cA, cB)</span>
+<span class="sd">            &gt;&gt;&gt; print(A.deg, B.deg, C.deg)</span>
+<span class="sd">            90.0 45.43854858674231 45.43854858674231</span>
+
+
+<span class="sd">    **Projections:**</span>
+
+<span class="sd">        Local tangent plane projections of an area of the sky can be performed using the project</span>
+<span class="sd">        method:</span>
+
+<span class="sd">            :meth:`coord.CelestialCoord.project`</span>
+
+<span class="sd">            &gt;&gt;&gt; center = CelestialCoord(ra=10*hours, dec=30*degrees)</span>
+<span class="sd">            &gt;&gt;&gt; sky_coord = CelestialCoord(ra=10.5*hours, dec=31*degrees)</span>
+<span class="sd">            &gt;&gt;&gt; print(sky_coord)</span>
+<span class="sd">            coord.CelestialCoord(2.748893571891069 radians, 0.5410520681182421 radians)</span>
+<span class="sd">            &gt;&gt;&gt; u, v = center.project(sky_coord)</span>
+<span class="sd">            &gt;&gt;&gt; print(u.deg, v.deg)</span>
+<span class="sd">            -6.452371275343261 1.21794987288635</span>
+
+<span class="sd">        and back:</span>
+
+<span class="sd">            :meth:`coord.CelestialCoord.deproject`</span>
+
+<span class="sd">            &gt;&gt;&gt; sky_coord = center.deproject(u,v)</span>
+<span class="sd">            &gt;&gt;&gt; print(sky_coord)</span>
+<span class="sd">            coord.CelestialCoord(2.748893571891069 radians, 0.5410520681182421 radians)</span>
+
+<span class="sd">        where u and v are Angles and center and sky_coord are CelestialCoords.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param ra:       The right ascension.  Must be an Angle instance.</span>
+<span class="sd">        :param dec:      The declination.  Must be an Angle instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Copy constructor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span> <span class="o">=</span> <span class="n">ra</span><span class="o">.</span><span class="n">_ra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span> <span class="o">=</span> <span class="n">ra</span><span class="o">.</span><span class="n">_dec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">ra</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;ra and dec are both required&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;ra must be a coord.Angle&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dec must be a coord.Angle&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">dec</span><span class="o">/</span><span class="n">degrees</span> <span class="o">&gt;</span> <span class="mf">90.</span> <span class="ow">or</span> <span class="n">dec</span><span class="o">/</span><span class="n">degrees</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">90.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dec must be between -90 deg and +90 deg.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Normal case</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span> <span class="o">=</span> <span class="n">ra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span> <span class="o">=</span> <span class="n">dec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Indicate that x,y,z are not set yet.</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Right Ascension as an Angle&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A read-only attribute, giving the Declination as an Angle&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A convenience property, giving a tuple (ra.rad, dec.rad)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_aux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sinra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sinra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
+
+<div class="viewcode-block" id="CelestialCoord.get_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.get_xyz">[docs]</a>    <span class="k">def</span> <span class="nf">get_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            x &amp;= \\cos(dec) \\cos(ra)  \\\\</span>
+<span class="sd">            y &amp;= \\cos(dec) \\sin(ra)  \\\\</span>
+<span class="sd">            z &amp;= \\sin(dec)</span>
+
+<span class="sd">        :returns: a tuple (x,y,z)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.from_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_xyz">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_xyz</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a CelestialCoord from a given (x,y,z) position in three dimensions.</span>
+
+<span class="sd">        The 3D (x,y,z) position does not need to fall on the unit sphere.  The RA, Dec will</span>
+<span class="sd">        be inferred from the relations:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            x &amp;= r \\cos(dec) \\cos(ra)  \\\\</span>
+<span class="sd">            y &amp;= r \\cos(dec) \\sin(ra)  \\\\</span>
+<span class="sd">            z &amp;= r \\sin(dec)</span>
+
+<span class="sd">        where :math:`r` is arbitrary.</span>
+
+<span class="sd">        :param x:       The x position in 3 dimensions.  Corresponds to r cos(dec) cos(ra)</span>
+<span class="sd">        :param y:       The y position in 3 dimensions.  Corresponds to r cos(dec) sin(ra)</span>
+<span class="sd">        :param z:       The z position in 3 dimensions.  Corresponds to r sin(dec)</span>
+
+<span class="sd">        :returns: a CelestialCoord instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CelestialCoord for position (0,0,0) is undefined.&quot;</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">CelestialCoord</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_sindec</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_z</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_x</span><span class="o">*</span><span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">+</span> <span class="n">ret</span><span class="o">.</span><span class="n">_y</span><span class="o">*</span><span class="n">ret</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_sinra</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_cosra</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_sinra</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_y</span> <span class="o">/</span> <span class="n">ret</span><span class="o">.</span><span class="n">_cosdec</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_cosra</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">/</span> <span class="n">ret</span><span class="o">.</span><span class="n">_cosdec</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_ra</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_sinra</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">_cosra</span><span class="p">)</span> <span class="o">*</span> <span class="n">radians</span><span class="p">)</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_sindec</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">_cosdec</span><span class="p">)</span> <span class="o">*</span> <span class="n">radians</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.radec_to_xyz"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.radec_to_xyz">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">radec_to_xyz</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert ra, dec (in radians) to 3D x,y,z coordinates on the unit sphere.</span>
+
+<span class="sd">        The connection between (ra,dec) and (x,y,z) are given by the following formulae:</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            x &amp;= r \\cos(dec) \\cos(ra)  \\\\</span>
+<span class="sd">            y &amp;= r \\cos(dec) \\sin(ra)  \\\\</span>
+<span class="sd">            z &amp;= r \\sin(dec)</span>
+
+<span class="sd">        For a single ra,dec pair, the following are essentially equivalent:</span>
+
+<span class="sd">            &gt;&gt;&gt; ra = 12*hours/radians       # May be any angle measured</span>
+<span class="sd">            &gt;&gt;&gt; dec = 31*degrees/radians    # in radians</span>
+
+<span class="sd">            &gt;&gt;&gt; CelestialCoord.radec_to_xyz(ra, dec)</span>
+<span class="sd">            (-0.8571673007021123, 1.0497271911386187e-16, 0.5150380749100542)</span>
+
+<span class="sd">            &gt;&gt;&gt; CelestialCoord(ra * radians, dec * radians).get_xyz()</span>
+<span class="sd">            (-0.8571673007021123, 1.0497271911386187e-16, 0.5150380749100542)</span>
+
+<span class="sd">        However, the advantage of this function is that the input values may be numpy</span>
+<span class="sd">        arrays, in which case, the return values will also be numpy arrays.</span>
+
+<span class="sd">        :param ra:      The right ascension(s) in radians. May be a numpy array.</span>
+<span class="sd">        :param dec:     The declination(s) in radians. May be a numpy array.</span>
+<span class="sd">        :param r:       The distance(s) from Earth (default 1.). May be a numpy array.</span>
+
+<span class="sd">        :returns: x, y, z as a tuple.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cosdec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">cosdec</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">cosdec</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.xyz_to_radec"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.xyz_to_radec">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">xyz_to_radec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">return_r</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert 3D x,y,z coordinates to ra, dec (in radians).</span>
+
+<span class="sd">        The connection between (ra,dec) and (x,y,z) are given by the following formulae:</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            x &amp;= r \\cos(dec) \\cos(ra)  \\\\</span>
+<span class="sd">            y &amp;= r \\cos(dec) \\sin(ra)  \\\\</span>
+<span class="sd">            z &amp;= r \\sin(dec)</span>
+
+<span class="sd">        For a single (x,y,z) position, the following are essentially equivalent:</span>
+
+<span class="sd">            &gt;&gt;&gt; x = 0.839       # May be any any 3D location</span>
+<span class="sd">            &gt;&gt;&gt; y = 0.123       # Not necessarily on unit sphere</span>
+<span class="sd">            &gt;&gt;&gt; z = 0.530</span>
+
+<span class="sd">            &gt;&gt;&gt; CelestialCoord.xyz_to_radec(x, y, z)</span>
+<span class="sd">            (0.14556615088111796, 0.558616191048523)</span>
+
+<span class="sd">            &gt;&gt;&gt; c = CelestialCoord.from_xyz(x, y, z)</span>
+<span class="sd">            &gt;&gt;&gt; c.ra.rad, c.dec.rad</span>
+<span class="sd">            (0.145566150881118, 0.558616191048523)</span>
+
+<span class="sd">        However, the advantage of this function is that the input values may be numpy</span>
+<span class="sd">        arrays, in which case, the return values will also be numpy arrays.</span>
+
+<span class="sd">        :param x:       The x position(s) in 3 dimensions. May be a numpy array.</span>
+<span class="sd">        :param y:       The y position(s) in 3 dimensions. May be a numpy array.</span>
+<span class="sd">        :param z:       The z position(s) in 3 dimensions. May be a numpy array.</span>
+<span class="sd">        :param return_r: Whether to return r as well as ra, dec. (default: False)</span>
+
+<span class="sd">        :returns: ra, dec as a tuple.  Or if return_r is True, (ra, dec, r).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xy2</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Note: We don&#39;t need arctan2, since always quadrant 1 or 4.</span>
+        <span class="c1">#       Using plain arctan is slightly faster.  About 10% for the whole function.</span>
+        <span class="c1">#       However, if any points have x=y=0, then this will raise a numpy warning.</span>
+        <span class="c1">#       It still gives the right answer, but we catch and ignore the warning here.</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span><span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">z</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xy2</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">return_r</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xy2</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.normal"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.normal">[docs]</a>    <span class="k">def</span> <span class="nf">normal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the coordinate in the &quot;normal&quot; convention of having 0 &lt;= ra &lt; 24 hours.</span>
+
+<span class="sd">        This convention is not enforced on construction, so this function exists to make it</span>
+<span class="sd">        easy to convert if desired.</span>
+
+<span class="sd">        Functions such as `from_galactic` and `from_xyz` will return normal coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_CelestialCoord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_raw_dsq</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">):</span>
+        <span class="c1"># Compute the raw dsq between two coordinates.</span>
+        <span class="c1"># Both are expected to already have _set_aux() called.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">c2</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">c2</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">c2</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_raw_cross</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">):</span>
+        <span class="c1"># Compute the raw cross product between two coordinates.</span>
+        <span class="c1"># Both are expected to already have _set_aux() called.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">_y</span> <span class="o">*</span> <span class="n">c2</span><span class="o">.</span><span class="n">_z</span> <span class="o">-</span> <span class="n">c2</span><span class="o">.</span><span class="n">_y</span> <span class="o">*</span> <span class="n">c1</span><span class="o">.</span><span class="n">_z</span><span class="p">,</span>
+                <span class="n">c1</span><span class="o">.</span><span class="n">_z</span> <span class="o">*</span> <span class="n">c2</span><span class="o">.</span><span class="n">_x</span> <span class="o">-</span> <span class="n">c2</span><span class="o">.</span><span class="n">_z</span> <span class="o">*</span> <span class="n">c1</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span>
+                <span class="n">c1</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">c2</span><span class="o">.</span><span class="n">_y</span> <span class="o">-</span> <span class="n">c2</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">c1</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CelestialCoord.distanceTo"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.distanceTo">[docs]</a>    <span class="k">def</span> <span class="nf">distanceTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the great circle distance between this coord and another one.</span>
+<span class="sd">        The return value is an Angle object</span>
+
+<span class="sd">        :param coord2:      The CelestialCoord to calculate the distance to.</span>
+
+<span class="sd">        :returns: the great circle distance to ``coord2``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The easiest way to do this in a way that is stable for small separations</span>
+        <span class="c1"># is to calculate the (x,y,z) position on the unit sphere corresponding to each</span>
+        <span class="c1"># coordinate position.</span>
+        <span class="c1">#</span>
+        <span class="c1"># x = cos(dec) cos(ra)</span>
+        <span class="c1"># y = cos(dec) sin(ra)</span>
+        <span class="c1"># z = sin(dec)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord2</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="c1"># The direct distance between the two points is</span>
+        <span class="c1">#</span>
+        <span class="c1"># d^2 = (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2</span>
+        <span class="n">dsq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_dsq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dsq</span> <span class="o">&lt;</span> <span class="mf">3.99</span><span class="p">:</span>
+            <span class="c1"># (The usual case.  This formula is perfectly stable here.)</span>
+            <span class="c1"># This direct distance can then be converted to a great circle distance via</span>
+            <span class="c1">#</span>
+            <span class="c1"># sin(theta/2) = d/2</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dsq</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Points are nearly antipodes where the accuracy of this formula starts to break down.</span>
+            <span class="c1"># But in this case, the cross product provides an accurate distance.</span>
+            <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span>
+            <span class="n">crosssq</span> <span class="o">=</span> <span class="n">cx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">cy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">cz</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">crosssq</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.greatCirclePoint"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.greatCirclePoint">[docs]</a>    <span class="k">def</span> <span class="nf">greatCirclePoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a point on the great circle connecting self and coord2.</span>
+
+<span class="sd">        Two points, c1 and c2, on the unit sphere define a great circle (so long as the two points</span>
+<span class="sd">        are not either coincident or antipodal).  We can define points on this great circle by</span>
+<span class="sd">        their angle from c1, such that the angle for c2 has 0 &lt; theta2 &lt; pi.  I.e. theta increases</span>
+<span class="sd">        from 0 as the points move from c1 towards c2.</span>
+
+<span class="sd">        This function then returns the coordinate on this great circle (where c1 is ``self`` and</span>
+<span class="sd">        c2 is ``coord2``) that corresponds to the given angle ``theta``.</span>
+
+<span class="sd">        :param coord2:      Another CelestialCoord defining the great circle to use.</span>
+<span class="sd">        :param theta:       The Angle along the great circle corresponding to the desired point.</span>
+
+<span class="sd">        :returns: the corresponding CelestialCoord</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord2</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="c1"># Define u = self</span>
+        <span class="c1">#        v = coord2</span>
+        <span class="c1">#        w = (u x v) x u</span>
+        <span class="c1"># The great circle through u and v is then</span>
+        <span class="c1">#</span>
+        <span class="c1">#   R(t) = u cos(t) + w sin(t)</span>
+        <span class="c1">#</span>
+        <span class="c1"># Rather than directly calculate (u x v) x u, let&#39;s do some simplification first.</span>
+        <span class="c1"># u x v = ( uy vz - uz vy )</span>
+        <span class="c1">#         ( uz vx - ux vz )</span>
+        <span class="c1">#         ( ux vy - uy vx )</span>
+        <span class="c1"># wx = (u x v)_y uz - (u x v)_z uy</span>
+        <span class="c1">#    = (uz vx - ux vz) uz - (ux vy - uy vx) uy</span>
+        <span class="c1">#    = vx uz^2 - vz ux uz - vy ux uy + vx uy^2</span>
+        <span class="c1">#    = vx (1 - ux^2) - ux (uz vz + uy vy)</span>
+        <span class="c1">#    = vx - ux (u . v)</span>
+        <span class="c1">#    = vx - ux (1 - d^2/2)</span>
+        <span class="c1">#    = vx - ux + ux d^2/2</span>
+        <span class="c1"># wy = vy - uy + uy d^2/2</span>
+        <span class="c1"># wz = vz - uz + uz d^2/2</span>
+
+        <span class="n">dsq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_dsq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span>
+
+        <span class="c1"># These are unnormalized yet.</span>
+        <span class="n">wx</span> <span class="o">=</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">dsq</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">wy</span> <span class="o">=</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">*</span> <span class="n">dsq</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">wz</span> <span class="o">=</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="o">*</span> <span class="n">dsq</span><span class="o">/</span><span class="mf">2.</span>
+
+        <span class="c1"># Normalize</span>
+        <span class="n">wr</span> <span class="o">=</span> <span class="p">(</span><span class="n">wx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">wy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">wz</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="k">if</span> <span class="n">wr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coord2 does not define a unique great circle with self.&quot;</span><span class="p">)</span>
+        <span class="n">wx</span> <span class="o">/=</span> <span class="n">wr</span>
+        <span class="n">wy</span> <span class="o">/=</span> <span class="n">wr</span>
+        <span class="n">wz</span> <span class="o">/=</span> <span class="n">wr</span>
+
+        <span class="c1"># R(theta)</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">rx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">wx</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="n">ry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">wy</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="n">rz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">wz</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">rx</span><span class="p">,</span><span class="n">ry</span><span class="p">,</span><span class="n">rz</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_triple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the scalar triple product of the three vectors:</span>
+
+<span class="sd">                (A x C). B = sina sinb sinC</span>
+
+<span class="sd">        where C = self, A = coord2, B = coord3.  This is used by both angleBetween and area.</span>
+<span class="sd">        (Although note that the triple product is invariant to the ordering modulo a sign.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note, the scalar triple product, (AxC).B, is the determinant of the 3x3 matrix</span>
+        <span class="c1">#     [ xA yA zA ]</span>
+        <span class="c1">#     [ xC yC zC ]</span>
+        <span class="c1">#     [ xB yB zB ]</span>
+        <span class="c1"># Furthermore, it is more stable to calculate it that way than computing the cross</span>
+        <span class="c1"># product by hand and then dotting it to the other vector.</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">([</span> <span class="p">[</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_y</span><span class="p">,</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_z</span> <span class="p">],</span>
+                               <span class="p">[</span>   <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">_z</span> <span class="p">],</span>
+                               <span class="p">[</span> <span class="n">coord3</span><span class="o">.</span><span class="n">_x</span><span class="p">,</span> <span class="n">coord3</span><span class="o">.</span><span class="n">_y</span><span class="p">,</span> <span class="n">coord3</span><span class="o">.</span><span class="n">_z</span> <span class="p">]</span> <span class="p">])</span>
+
+
+    <span class="k">def</span> <span class="nf">_alt_triple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute a different triple product of the three vectors:</span>
+
+<span class="sd">                (A x C). (B x C) = sina sinb cosC</span>
+
+<span class="sd">        where C = self, A = coord2, B = coord3.  This is used by both angleBetween and area.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We can simplify (AxC).(BxC) as follows:</span>
+        <span class="c1">#     (A x C) . (B x C)</span>
+        <span class="c1">#     = (C x (BxC)) . A         Rotation of triple product with (BxC) one of the vectors</span>
+        <span class="c1">#     = ((C.C)B - (C.B)C) . A   Vector triple product identity</span>
+        <span class="c1">#     = A.B - (A.C) (B.C)       C.C = 1</span>
+        <span class="c1"># Dot products for nearby coordinates are not very accurate.  Better to use the distances</span>
+        <span class="c1"># between the points: A.B = 1 - d_AB^2/2</span>
+        <span class="c1">#     = 1 - d_AB^2/2 - (1-d_AC^2/2) (1-d_BC^2/2)</span>
+        <span class="c1">#     = d_AC^2 / 2 + d_BC^2 / 2 - d_AB^2 / 2 - d_AC^2 d_BC^2 / 4</span>
+        <span class="n">dsq_AC</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dsq_BC</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dsq_AB</span> <span class="o">=</span> <span class="p">(</span><span class="n">coord3</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">coord3</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">coord3</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">dsq_AC</span> <span class="o">+</span> <span class="n">dsq_BC</span> <span class="o">-</span> <span class="n">dsq_AB</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dsq_AC</span> <span class="o">*</span> <span class="n">dsq_BC</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CelestialCoord.angleBetween"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.angleBetween">[docs]</a>    <span class="k">def</span> <span class="nf">angleBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the open angle at the location of the current coord between ``coord2`` and ``coord3``.</span>
+
+<span class="sd">        The current coordinate along with the two other coordinates form a spherical triangle</span>
+<span class="sd">        on the sky.  This function calculates the angle between the two sides at the location of</span>
+<span class="sd">        the current coordinate.</span>
+
+<span class="sd">        Note that this returns a signed angle.  The angle is positive if the sweep direction from</span>
+<span class="sd">        ``coord2`` to ``coord3`` is counter-clockwise (as observed from Earth).  It is negative if</span>
+<span class="sd">        the direction is clockwise.</span>
+
+<span class="sd">        :param coord2:       A second CelestialCoord</span>
+<span class="sd">        :param coord3:       A third CelestialCoord</span>
+
+<span class="sd">        :returns: the angle between the great circles joining the other two coordinates to the</span>
+<span class="sd">                  current coordinate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call A = coord2, B = coord3, C = self</span>
+        <span class="c1"># Then we are looking for the angle ACB.</span>
+        <span class="c1"># If we treat each coord as a (x,y,z) vector, then we can use the following spherical</span>
+        <span class="c1"># trig identities:</span>
+        <span class="c1">#</span>
+        <span class="c1"># (A x C) . B = sina sinb sinC</span>
+        <span class="c1"># (A x C) . (B x C) = sina sinb cosC</span>
+        <span class="c1">#</span>
+        <span class="c1"># Then we can just use atan2 to find C, and atan2 automatically gets the sign right.</span>
+        <span class="c1"># And we only need 1 trig call, assuming that x,y,z are already set up, which is often</span>
+        <span class="c1"># the case.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord2</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord3</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="n">sinC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_triple</span><span class="p">(</span><span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">)</span>
+        <span class="n">cosC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_triple</span><span class="p">(</span><span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">)</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">sinC</span><span class="p">,</span> <span class="n">cosC</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">C</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.area"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.area">[docs]</a>    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the area of a spherical triangle in steradians.</span>
+
+<span class="sd">        The current coordinate along with the two other coordinates form a spherical triangle</span>
+<span class="sd">        on the sky.  This function calculates the area of that spherical triangle, which is</span>
+<span class="sd">        measured in steradians (i.e. surface area of the triangle on the unit sphere).</span>
+
+<span class="sd">        :param coord2:       A second CelestialCoord</span>
+<span class="sd">        :param coord3:       A third CelestialCoord</span>
+
+<span class="sd">        :returns: the area in steradians of the given spherical triangle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The area of a spherical triangle is defined by the &quot;spherical excess&quot;, E.</span>
+        <span class="c1"># There are several formulae for E:</span>
+        <span class="c1">#    (cf. http://en.wikipedia.org/wiki/Spherical_trigonometry#Area_and_spherical_excess)</span>
+        <span class="c1">#</span>
+        <span class="c1"># E = A + B + C - pi</span>
+        <span class="c1"># tan(E/4) = sqrt(tan(s/2) tan((s-a)/2) tan((s-b)/2) tan((s-c)/2)</span>
+        <span class="c1"># tan(E/2) = tan(a/2) tan(b/2) sin(C) / (1 + tan(a/2) tan(b/2) cos(C))</span>
+        <span class="c1">#</span>
+        <span class="c1"># We use the last formula, which is stable both for small triangles and ones that are</span>
+        <span class="c1"># nearly degenerate (which the middle formula may have trouble with).</span>
+        <span class="c1">#</span>
+        <span class="c1"># Furthermore, we can use some of the math for angleBetween and distanceTo to simplify</span>
+        <span class="c1"># this further:</span>
+        <span class="c1">#</span>
+        <span class="c1"># In angleBetween, we have formulae for sina sinb sinC and sina sinb cosC.</span>
+        <span class="c1"># In distanceTo, we have formulae for sin(a/2) and sin(b/2).</span>
+        <span class="c1">#</span>
+        <span class="c1"># Define: F = sina sinb sinC</span>
+        <span class="c1">#         G = sina sinb cosC</span>
+        <span class="c1">#         da = 2 sin(a/2)</span>
+        <span class="c1">#         db = 2 sin(b/2)</span>
+        <span class="c1">#</span>
+        <span class="c1"># tan(E/2) = sin(a/2) sin(b/2) sin(C) / (cos(a/2) cos(b/2) + sin(a/2) sin(b/2) cos(C))</span>
+        <span class="c1">#          = sin(a) sin(b) sin(C) / (4 cos(a/2)^2 cos(b/2)^2 + sin(a) sin(b) cos(C))</span>
+        <span class="c1">#          = F / (4 (1-sin(a/2)^2) (1-sin(b/2)^2) + G)</span>
+        <span class="c1">#          = F / (4-da^2) (4-db^2)/4 + G)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord2</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord3</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="n">F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_triple</span><span class="p">(</span><span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_triple</span><span class="p">(</span><span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">)</span>
+        <span class="n">dasq</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">coord2</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dbsq</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span><span class="o">-</span><span class="n">coord3</span><span class="o">.</span><span class="n">_z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">tanEo2</span> <span class="o">=</span> <span class="n">F</span> <span class="o">/</span> <span class="p">(</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="mf">4.</span><span class="o">-</span><span class="n">dasq</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">4.</span><span class="o">-</span><span class="n">dbsq</span><span class="p">)</span> <span class="o">+</span> <span class="n">G</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tanEo2</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">E</span></div>
+
+    <span class="n">_valid_projections</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;gnomonic&#39;</span><span class="p">,</span> <span class="s1">&#39;stereographic&#39;</span><span class="p">,</span> <span class="s1">&#39;lambert&#39;</span><span class="p">,</span> <span class="s1">&#39;postel&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CelestialCoord.project"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use the currect coord as the center point of a tangent plane projection to project</span>
+<span class="sd">        the ``coord2`` coordinate onto that plane.</span>
+
+<span class="sd">        This function return a tuple (u,v) in the Euclidean coordinate system defined by</span>
+<span class="sd">        a tangent plane projection around the current coordinate, with +v pointing north and</span>
+<span class="sd">        +u pointing west. (i.e. to the right on the sky if +v is up.)</span>
+
+<span class="sd">        There are currently four options for the projection, which you can specify with the</span>
+<span class="sd">        optional ``projection`` keyword argument:</span>
+
+<span class="sd">            :gnomonic: [default] uses a gnomonic projection (i.e. a projection from the center of</span>
+<span class="sd">                    the sphere, which has the property that all great circles become straight</span>
+<span class="sd">                    lines.  For more information, see</span>
+<span class="sd">                    http://mathworld.wolfram.com/GnomonicProjection.html</span>
+<span class="sd">                    This is the usual TAN projection used by most FITS images.</span>
+<span class="sd">            :stereographic: uses a stereographic proejection, which preserves angles, but</span>
+<span class="sd">                    not area.  For more information, see</span>
+<span class="sd">                    http://mathworld.wolfram.com/StereographicProjection.html</span>
+<span class="sd">            :lambert: uses a Lambert azimuthal projection, which preserves area, but not angles.</span>
+<span class="sd">                    For more information, see</span>
+<span class="sd">                    http://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html</span>
+<span class="sd">            :postel: uses a Postel equidistant proejection, which preserves distances from</span>
+<span class="sd">                    the projection point, but not area or angles.  For more information, see</span>
+<span class="sd">                    http://mathworld.wolfram.com/AzimuthalEquidistantProjection.html</span>
+
+<span class="sd">        The distance or angle errors increase with distance from the projection point of course.</span>
+
+<span class="sd">        :param coord2:      The coordinate to project onto the tangent plane.</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see above</span>
+<span class="sd">                            for other options]</span>
+
+<span class="sd">        :returns: (u,v) as Angle instances</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">coord2</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="c1"># The core calculation is done in a helper function:</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project</span><span class="p">(</span><span class="n">coord2</span><span class="o">.</span><span class="n">_cosra</span><span class="p">,</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_sinra</span><span class="p">,</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_cosdec</span><span class="p">,</span> <span class="n">coord2</span><span class="o">.</span><span class="n">_sindec</span><span class="p">,</span>
+                             <span class="n">projection</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">u</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">radians</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.project_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.project_rad">[docs]</a>    <span class="k">def</span> <span class="nf">project_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is basically identical to the project() function except that the input ``ra``, ``dec``</span>
+<span class="sd">        are given in radians rather than packaged as a CelestialCoord object and the returned</span>
+<span class="sd">        u,v are given in radians.</span>
+
+<span class="sd">        The main advantage to this is that it will work if ``ra`` and ``dec`` are NumPy arrays, in which</span>
+<span class="sd">        case the output ``u``, ``v`` will also be NumPy arrays.</span>
+
+<span class="sd">        :param ra:          The right ascension in radians to project onto the tangent plane.</span>
+<span class="sd">        :param dec:         The declination in radians to project onto the tangent plane.</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see ``project``</span>
+<span class="sd">                            docstring for other options]</span>
+
+<span class="sd">        :returns: (u,v) in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="n">cosra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">sinra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">cosdec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="n">sindec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project</span><span class="p">(</span><span class="n">cosra</span><span class="p">,</span> <span class="n">sinra</span><span class="p">,</span> <span class="n">cosdec</span><span class="p">,</span> <span class="n">sindec</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cosra</span><span class="p">,</span> <span class="n">sinra</span><span class="p">,</span> <span class="n">cosdec</span><span class="p">,</span> <span class="n">sindec</span><span class="p">,</span> <span class="n">projection</span><span class="p">):</span>
+        <span class="c1"># The equations are given at the above mathworld websites.  They are the same except</span>
+        <span class="c1"># for the definition of k:</span>
+        <span class="c1">#</span>
+        <span class="c1"># x = k cos(dec) sin(ra-ra0)</span>
+        <span class="c1"># y = k ( cos(dec0) sin(dec) - sin(dec0) cos(dec) cos(ra-ra0) )</span>
+        <span class="c1">#</span>
+        <span class="c1"># Lambert:</span>
+        <span class="c1">#   k = sqrt( 2  / ( 1 + cos(c) ) )</span>
+        <span class="c1"># Stereographic:</span>
+        <span class="c1">#   k = 2 / ( 1 + cos(c) )</span>
+        <span class="c1"># Gnomonic:</span>
+        <span class="c1">#   k = 1 / cos(c)</span>
+        <span class="c1"># Postel:</span>
+        <span class="c1">#   k = c / sin(c)</span>
+        <span class="c1"># where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)</span>
+
+        <span class="c1"># cos(dra) = cos(ra-ra0) = cos(ra0) cos(ra) + sin(ra0) sin(ra)</span>
+        <span class="n">cosdra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosra</span> <span class="o">*</span> <span class="n">cosra</span>
+        <span class="n">cosdra</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sinra</span> <span class="o">*</span> <span class="n">sinra</span>
+
+        <span class="c1"># sin(dra) = -sin(ra - ra0)</span>
+        <span class="c1"># Note: - sign here is to make +x correspond to -ra,</span>
+        <span class="c1">#       so x increases for decreasing ra.</span>
+        <span class="c1">#       East is to the left on the sky!</span>
+        <span class="c1"># sin(dra) = -cos(ra0) sin(ra) + sin(ra0) cos(ra)</span>
+        <span class="n">sindra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sinra</span> <span class="o">*</span> <span class="n">cosra</span>
+        <span class="n">sindra</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosra</span> <span class="o">*</span> <span class="n">sinra</span>
+
+        <span class="c1"># Calculate k according to which projection we are using</span>
+        <span class="n">cosc</span> <span class="o">=</span> <span class="n">cosdec</span> <span class="o">*</span> <span class="n">cosdra</span>
+        <span class="n">cosc</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span>
+        <span class="n">cosc</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span> <span class="o">*</span> <span class="n">sindec</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">cosc</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">cosc</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="mf">2.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="n">cosc</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">cosc</span><span class="p">)</span>
+            <span class="c1"># k = c / np.sin(c)</span>
+            <span class="c1"># np.sinc is defined as sin(pi x) / (pi x)</span>
+            <span class="c1"># So need to divide by pi first.</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sinc</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+        <span class="c1"># u = k * cosdec * sindra</span>
+        <span class="c1"># v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">cosdec</span> <span class="o">*</span> <span class="n">sindra</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">cosdec</span> <span class="o">*</span> <span class="n">cosdra</span>
+        <span class="n">v</span> <span class="o">*=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
+        <span class="n">v</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span> <span class="o">*</span> <span class="n">sindec</span>
+        <span class="n">u</span> <span class="o">*=</span> <span class="n">k</span>
+        <span class="n">v</span> <span class="o">*=</span> <span class="n">k</span>
+
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+
+<div class="viewcode-block" id="CelestialCoord.deproject"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.deproject">[docs]</a>    <span class="k">def</span> <span class="nf">deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the reverse process from the project() function.</span>
+
+<span class="sd">        i.e. This takes in a position (u,v) and returns the corresponding celestial</span>
+<span class="sd">        coordinate, using the current coordinate as the center point of the tangent plane</span>
+<span class="sd">        projection.</span>
+
+<span class="sd">        :param u:           The u position on the tangent plane to deproject (must be an Angle</span>
+<span class="sd">                            instance)</span>
+<span class="sd">        :param v:           The v position on the tangent plane to deproject (must be an Angle</span>
+<span class="sd">                            instance)</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see ``project``</span>
+<span class="sd">                            docstring for other options]</span>
+
+<span class="sd">        :returns: the corresponding CelestialCoord for that position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+
+        <span class="c1"># Again, do the core calculations in a helper function</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deproject</span><span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="n">radians</span><span class="p">,</span> <span class="n">v</span> <span class="o">/</span> <span class="n">radians</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">ra</span><span class="p">),</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.deproject_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.deproject_rad">[docs]</a>    <span class="k">def</span> <span class="nf">deproject_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is basically identical to the deproject() function except that the output ``ra``,</span>
+<span class="sd">        ``dec`` are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord</span>
+<span class="sd">        object and ``u`` and ``v`` are in radians rather than Angle instances.</span>
+
+<span class="sd">        The main advantage to this is that it will work if ``u`` and ``v`` are NumPy arrays, in which</span>
+<span class="sd">        case the output ``ra``, ``dec`` will also be NumPy arrays.</span>
+
+<span class="sd">        :param u:           The u position in radians on the tangent plane to deproject</span>
+<span class="sd">        :param v:           The v position in radians on the tangent plane to deproject</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see ``project``</span>
+<span class="sd">                            docstring for other options]</span>
+
+<span class="sd">        :returns: the corresponding RA, Dec in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deproject</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="p">):</span>
+        <span class="c1"># The inverse equations are also given at the same web sites:</span>
+        <span class="c1">#</span>
+        <span class="c1"># sin(dec) = cos(c) sin(dec0) + v sin(c) cos(dec0) / r</span>
+        <span class="c1"># tan(ra-ra0) = u sin(c) / (r cos(dec0) cos(c) - v sin(dec0) sin(c))</span>
+        <span class="c1">#</span>
+        <span class="c1"># where</span>
+        <span class="c1">#</span>
+        <span class="c1"># r = sqrt(u^2+v^2)</span>
+        <span class="c1"># c = tan^(-1)(r)     for gnomonic</span>
+        <span class="c1"># c = 2 tan^(-1)(r/2) for stereographic</span>
+        <span class="c1"># c = 2 sin^(-1)(r/2) for lambert</span>
+        <span class="c1"># c = r               for postel</span>
+
+        <span class="c1"># Note that we can rewrite the formulae as:</span>
+        <span class="c1">#</span>
+        <span class="c1"># sin(dec) = cos(c) sin(dec0) + v (sin(c)/r) cos(dec0)</span>
+        <span class="c1"># tan(ra-ra0) = u (sin(c)/r) / (cos(dec0) cos(c) - v sin(dec0) (sin(c)/r))</span>
+        <span class="c1">#</span>
+        <span class="c1"># which means we only need cos(c) and sin(c)/r.  For most of the projections,</span>
+        <span class="c1"># this saves us from having to take sqrt(rsq).</span>
+
+        <span class="n">rsq</span> <span class="o">=</span> <span class="n">u</span><span class="o">*</span><span class="n">u</span>
+        <span class="n">rsq</span> <span class="o">+=</span> <span class="n">v</span><span class="o">*</span><span class="n">v</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
+            <span class="c1"># c = arctan(r)</span>
+            <span class="c1"># cos(c) = 1 / sqrt(1+r^2)</span>
+            <span class="c1"># sin(c) = r / sqrt(1+r^2)</span>
+            <span class="n">cosc</span> <span class="o">=</span> <span class="n">sinc_over_r</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="n">rsq</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="c1"># c = 2 * arctan(r/2)</span>
+            <span class="c1"># Some trig manipulations reveal:</span>
+            <span class="c1"># cos(c) = (4-r^2) / (4+r^2)</span>
+            <span class="c1"># sin(c) = 4r / (4+r^2)</span>
+            <span class="n">cosc</span> <span class="o">=</span> <span class="p">(</span><span class="mf">4.</span><span class="o">-</span><span class="n">rsq</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.</span><span class="o">+</span><span class="n">rsq</span><span class="p">)</span>
+            <span class="n">sinc_over_r</span> <span class="o">=</span> <span class="mf">4.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.</span><span class="o">+</span><span class="n">rsq</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span>
+            <span class="c1"># c = 2 * arcsin(r/2)</span>
+            <span class="c1"># Some trig manipulations reveal:</span>
+            <span class="c1"># cos(c) = 1 - r^2/2</span>
+            <span class="c1"># sin(c) = r sqrt(4-r^2) / 2</span>
+            <span class="n">cosc</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">rsq</span><span class="o">/</span><span class="mf">2.</span>
+            <span class="n">sinc_over_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">4.</span><span class="o">-</span><span class="n">rsq</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rsq</span><span class="p">)</span>
+            <span class="n">cosc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">sinc_over_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sinc</span><span class="p">(</span><span class="n">r</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+        <span class="c1"># Compute sindec, tandra</span>
+        <span class="c1"># Note: more efficient to use numpy op= as much as possible to avoid temporary arrays.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="c1"># sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec</span>
+        <span class="n">sindec</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sinc_over_r</span>
+        <span class="n">sindec</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span>
+        <span class="n">sindec</span> <span class="o">+=</span> <span class="n">cosc</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
+        <span class="c1"># Remember the - sign so +dra is -u.  East is left.</span>
+        <span class="n">tandra_num</span> <span class="o">=</span> <span class="n">u</span> <span class="o">*</span> <span class="n">sinc_over_r</span>
+        <span class="n">tandra_num</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.</span>
+        <span class="c1"># tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec</span>
+        <span class="n">tandra_denom</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sinc_over_r</span>
+        <span class="n">tandra_denom</span> <span class="o">*=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
+        <span class="n">tandra_denom</span> <span class="o">+=</span> <span class="n">cosc</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span>
+
+        <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">sindec</span><span class="p">)</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">rad</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">tandra_num</span><span class="p">,</span> <span class="n">tandra_denom</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span>
+
+<div class="viewcode-block" id="CelestialCoord.jac_deproject"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.jac_deproject">[docs]</a>    <span class="k">def</span> <span class="nf">jac_deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the jacobian of the deprojection.</span>
+
+<span class="sd">        i.e. if the input position is (u,v) then the return matrix is</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            J \\equiv \\begin{bmatrix} J00 &amp; J01 \\\\ J10 &amp; J11 \\end{bmatrix}</span>
+<span class="sd">              = \\begin{bmatrix}</span>
+<span class="sd">                d\\textrm{ra}/du \\cos(\\textrm{dec}) &amp; d\\textrm{ra}/dv \\cos(\\textrm{dec})  \\\\</span>
+<span class="sd">                        d\\textrm{dec}/du             &amp;      d\\textrm{dec}/dv</span>
+<span class="sd">                 \\end{bmatrix}</span>
+
+<span class="sd">        :param u:           The u position (as an Angle instance) on the tangent plane</span>
+<span class="sd">        :param v:           The v position (as an Angle instance) on the tangent plane</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see ``project``</span>
+<span class="sd">                            docstring for other options]</span>
+
+<span class="sd">        :returns: the Jacobian as a 2x2 numpy array [[J00, J01], [J10, J11]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_deproject</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.jac_deproject_rad"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.jac_deproject_rad">[docs]</a>    <span class="k">def</span> <span class="nf">jac_deproject_rad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to ``jac_deproject``, but the inputs are in radians and may be numpy</span>
+<span class="sd">        arrays.</span>
+
+<span class="sd">        :param u:           The u position (in radians) on the tangent plane</span>
+<span class="sd">        :param v:           The v position (in radians) on the tangent plane</span>
+<span class="sd">        :param projection:  The name of the projection to be used. [default: gnomonic, see `project`</span>
+<span class="sd">                            docstring for other options]</span>
+
+<span class="sd">        :returns: the Jacobian as a 2x2 numpy array [[J00, J01], [J10, J11]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">_valid_projections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown projection: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">projection</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_deproject</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_jac_deproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">projection</span><span class="p">):</span>
+        <span class="c1"># sin(dec) = cos(c) sin(dec0) + v sin(c)/r cos(dec0)</span>
+        <span class="c1"># tan(ra-ra0) = u sin(c)/r / (cos(dec0) cos(c) - v sin(dec0) sin(c)/r)</span>
+        <span class="c1">#</span>
+        <span class="c1"># d(sin(dec)) = cos(dec) ddec = s0 dc + (v ds + s dv) c0</span>
+        <span class="c1"># dtan(ra-ra0) = sec^2(ra-ra0) dra</span>
+        <span class="c1">#              = ( (u ds + s du) A - u s (dc c0 - (v ds + s dv) s0 ) )/A^2</span>
+        <span class="c1"># where s = sin(c) / r</span>
+        <span class="c1">#       c = cos(c)</span>
+        <span class="c1">#       s0 = sin(dec0)</span>
+        <span class="c1">#       c0 = cos(dec0)</span>
+        <span class="c1">#       A = c c0 - v s s0</span>
+
+        <span class="n">rsq</span> <span class="o">=</span> <span class="n">u</span><span class="o">*</span><span class="n">u</span> <span class="o">+</span> <span class="n">v</span><span class="o">*</span><span class="n">v</span>
+        <span class="n">rsq1</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="o">+</span><span class="mf">1.e-4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">rsq2</span> <span class="o">=</span> <span class="n">u</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="mf">1.e-4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">projection</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">s</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="n">rsq</span><span class="p">)</span>
+            <span class="n">s3</span> <span class="o">=</span> <span class="n">s</span><span class="o">*</span><span class="n">s</span><span class="o">*</span><span class="n">s</span>
+            <span class="n">dcdu</span> <span class="o">=</span> <span class="n">dsdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">u</span><span class="o">*</span><span class="n">s3</span>
+            <span class="n">dcdv</span> <span class="o">=</span> <span class="n">dsdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="o">*</span><span class="n">s3</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mf">4.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.</span><span class="o">+</span><span class="n">rsq</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="n">s</span><span class="o">-</span><span class="mf">1.</span>
+            <span class="n">ssq</span> <span class="o">=</span> <span class="n">s</span><span class="o">*</span><span class="n">s</span>
+            <span class="n">dcdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">u</span> <span class="o">*</span> <span class="n">ssq</span>
+            <span class="n">dcdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span> <span class="o">*</span> <span class="n">ssq</span>
+            <span class="n">dsdu</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">dcdu</span>
+            <span class="n">dsdv</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">dcdv</span>
+        <span class="k">elif</span> <span class="n">projection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">rsq</span><span class="o">/</span><span class="mf">2.</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">4.</span><span class="o">-</span><span class="n">rsq</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+            <span class="n">dcdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">u</span>
+            <span class="n">dcdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span>
+            <span class="n">dsdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">u</span><span class="o">/</span><span class="p">(</span><span class="mf">4.</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">dsdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="o">/</span><span class="p">(</span><span class="mf">4.</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rsq</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">dcdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">u</span>
+                <span class="n">dcdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span>
+                <span class="n">dsdu</span> <span class="o">=</span> <span class="n">dsdv</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="n">r</span>
+                <span class="n">dcdu</span> <span class="o">=</span> <span class="o">-</span><span class="n">s</span><span class="o">*</span><span class="n">u</span>
+                <span class="n">dcdv</span> <span class="o">=</span> <span class="o">-</span><span class="n">s</span><span class="o">*</span><span class="n">v</span>
+                <span class="n">dsdu</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">s</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">/</span><span class="n">rsq</span>
+                <span class="n">dsdv</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">s</span><span class="p">)</span><span class="o">*</span><span class="n">v</span><span class="o">/</span><span class="n">rsq</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">s0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sindec</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cosdec</span>
+        <span class="n">sindec</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">s0</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">c0</span>
+        <span class="n">cosdec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">sindec</span><span class="o">*</span><span class="n">sindec</span><span class="p">)</span>
+        <span class="n">dddu</span> <span class="o">=</span> <span class="p">(</span> <span class="n">s0</span> <span class="o">*</span> <span class="n">dcdu</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dsdu</span> <span class="o">*</span> <span class="n">c0</span> <span class="p">)</span> <span class="o">/</span> <span class="n">cosdec</span>
+        <span class="n">dddv</span> <span class="o">=</span> <span class="p">(</span> <span class="n">s0</span> <span class="o">*</span> <span class="n">dcdv</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">dsdv</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">c0</span> <span class="p">)</span> <span class="o">/</span> <span class="n">cosdec</span>
+
+        <span class="n">tandra_num</span> <span class="o">=</span> <span class="n">u</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="n">tandra_denom</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c0</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="n">s0</span>
+        <span class="c1"># Note: A^2 sec^2(dra) = denom^2 (1 + tan^2(dra) = denom^2 + num^2</span>
+        <span class="n">A2sec2dra</span> <span class="o">=</span> <span class="n">tandra_denom</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">tandra_num</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">drdu</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span> <span class="o">*</span> <span class="n">dsdu</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">tandra_denom</span> <span class="o">-</span> <span class="n">u</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span> <span class="n">dcdu</span> <span class="o">*</span> <span class="n">c0</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dsdu</span> <span class="o">*</span> <span class="n">s0</span> <span class="p">))</span><span class="o">/</span><span class="n">A2sec2dra</span>
+        <span class="n">drdv</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span> <span class="o">*</span> <span class="n">dsdv</span> <span class="o">*</span> <span class="n">tandra_denom</span> <span class="o">-</span> <span class="n">u</span> <span class="o">*</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span> <span class="n">dcdv</span> <span class="o">*</span> <span class="n">c0</span> <span class="o">-</span> <span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">dsdv</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">s0</span> <span class="p">))</span><span class="o">/</span><span class="n">A2sec2dra</span>
+
+        <span class="n">drdu</span> <span class="o">*=</span> <span class="n">cosdec</span>
+        <span class="n">drdv</span> <span class="o">*=</span> <span class="n">cosdec</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">drdu</span><span class="p">,</span> <span class="n">drdv</span><span class="p">],</span> <span class="p">[</span><span class="n">dddu</span><span class="p">,</span> <span class="n">dddv</span><span class="p">]])</span>
+
+<div class="viewcode-block" id="CelestialCoord.precess"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.precess">[docs]</a>    <span class="k">def</span> <span class="nf">precess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_epoch</span><span class="p">,</span> <span class="n">to_epoch</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This function precesses equatorial ra and dec from one epoch to another.</span>
+<span class="sd">           It is adapted from a set of fortran subroutines based on (a) pages 30-34 of</span>
+<span class="sd">           the Explanatory Supplement to the AE, (b) Lieske, et al. (1977) A&amp;A 58, 1-16,</span>
+<span class="sd">           and (c) Lieske (1979) A&amp;A 73, 282-284.</span>
+
+<span class="sd">        :param from_epoch:  The epoch of the current coordinate</span>
+<span class="sd">        :param to_epoch:    The epoch of the returned precessed coordinate</span>
+
+<span class="sd">        :returns: a CelestialCoord object corresponding to the precessed position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">from_epoch</span> <span class="o">==</span> <span class="n">to_epoch</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="c1"># t0, t below correspond to Lieske&#39;s big T and little T</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">from_epoch</span><span class="o">-</span><span class="mf">2000.</span><span class="p">)</span><span class="o">/</span><span class="mf">100.</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">to_epoch</span><span class="o">-</span><span class="n">from_epoch</span><span class="p">)</span><span class="o">/</span><span class="mf">100.</span>
+        <span class="n">t02</span> <span class="o">=</span> <span class="n">t0</span><span class="o">*</span><span class="n">t0</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">t</span><span class="o">*</span><span class="n">t</span>
+        <span class="n">t3</span> <span class="o">=</span> <span class="n">t2</span><span class="o">*</span><span class="n">t</span>
+
+        <span class="c1"># a,b,c below correspond to Lieske&#39;s zeta_A, z_A and theta_A</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span><span class="mf">2306.2181</span> <span class="o">+</span> <span class="mf">1.39656</span><span class="o">*</span><span class="n">t0</span> <span class="o">-</span> <span class="mf">0.000139</span><span class="o">*</span><span class="n">t02</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span>
+              <span class="p">(</span><span class="mf">0.30188</span> <span class="o">-</span> <span class="mf">0.000344</span><span class="o">*</span><span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">t2</span> <span class="o">+</span> <span class="mf">0.017998</span> <span class="o">*</span> <span class="n">t3</span> <span class="p">)</span> <span class="o">*</span> <span class="n">arcsec</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span><span class="mf">2306.2181</span> <span class="o">+</span> <span class="mf">1.39656</span><span class="o">*</span><span class="n">t0</span> <span class="o">-</span> <span class="mf">0.000139</span><span class="o">*</span><span class="n">t02</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span>
+              <span class="p">(</span><span class="mf">1.09468</span> <span class="o">+</span> <span class="mf">0.000066</span><span class="o">*</span><span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">t2</span> <span class="o">+</span> <span class="mf">0.018203</span> <span class="o">*</span> <span class="n">t3</span> <span class="p">)</span> <span class="o">*</span> <span class="n">arcsec</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span><span class="mf">2004.3109</span> <span class="o">-</span> <span class="mf">0.85330</span><span class="o">*</span><span class="n">t0</span> <span class="o">-</span> <span class="mf">0.000217</span><span class="o">*</span><span class="n">t02</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span>
+              <span class="p">(</span><span class="o">-</span><span class="mf">0.42665</span> <span class="o">-</span> <span class="mf">0.000217</span><span class="o">*</span><span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">t2</span> <span class="o">-</span> <span class="mf">0.041833</span> <span class="o">*</span> <span class="n">t3</span> <span class="p">)</span> <span class="o">*</span> <span class="n">arcsec</span>
+        <span class="n">sina</span><span class="p">,</span> <span class="n">cosa</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">sinb</span><span class="p">,</span> <span class="n">cosb</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">sinc</span><span class="p">,</span> <span class="n">cosc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+
+        <span class="c1"># This is the precession rotation matrix:</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="n">cosa</span><span class="o">*</span><span class="n">cosc</span><span class="o">*</span><span class="n">cosb</span> <span class="o">-</span> <span class="n">sina</span><span class="o">*</span><span class="n">sinb</span>
+        <span class="n">yx</span> <span class="o">=</span> <span class="o">-</span><span class="n">sina</span><span class="o">*</span><span class="n">cosc</span><span class="o">*</span><span class="n">cosb</span> <span class="o">-</span> <span class="n">cosa</span><span class="o">*</span><span class="n">sinb</span>
+        <span class="n">zx</span> <span class="o">=</span> <span class="o">-</span><span class="n">sinc</span><span class="o">*</span><span class="n">cosb</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">cosa</span><span class="o">*</span><span class="n">cosc</span><span class="o">*</span><span class="n">sinb</span> <span class="o">+</span> <span class="n">sina</span><span class="o">*</span><span class="n">cosb</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="o">-</span><span class="n">sina</span><span class="o">*</span><span class="n">cosc</span><span class="o">*</span><span class="n">sinb</span> <span class="o">+</span> <span class="n">cosa</span><span class="o">*</span><span class="n">cosb</span>
+        <span class="n">zy</span> <span class="o">=</span> <span class="o">-</span><span class="n">sinc</span><span class="o">*</span><span class="n">sinb</span>
+        <span class="n">xz</span> <span class="o">=</span> <span class="n">cosa</span><span class="o">*</span><span class="n">sinc</span>
+        <span class="n">yz</span> <span class="o">=</span> <span class="o">-</span><span class="n">sina</span><span class="o">*</span><span class="n">sinc</span>
+        <span class="n">zz</span> <span class="o">=</span> <span class="n">cosc</span>
+
+        <span class="c1"># Perform the rotation:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">xx</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">+</span> <span class="n">yx</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="n">zx</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="n">xy</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">+</span> <span class="n">yy</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="n">zy</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span>
+        <span class="n">z2</span> <span class="o">=</span> <span class="n">xz</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">+</span> <span class="n">yz</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="n">zz</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span>
+
+        <span class="k">return</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.galactic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.galactic">[docs]</a>    <span class="k">def</span> <span class="nf">galactic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the longitude and latitude in galactic coordinates corresponding to this position.</span>
+
+<span class="sd">        :param epoch:       The epoch of the current coordinate. [default: 2000.]</span>
+
+<span class="sd">        :returns: the longitude and latitude as a tuple (el, b), given as Angle instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># cf. Lang, Astrophysical Formulae, page 13</span>
+        <span class="c1"># cos(b) cos(el-33) = cos(dec) cos(ra-282.25)</span>
+        <span class="c1"># cos(b) sin(el-33) = sin(dec) sin(62.6) + cos(dec) sin(ra-282.25) cos(62.6)</span>
+        <span class="c1">#            sin(b) = sin(dec) cos(62.6) - cos(dec) sin(ra-282.25) sin(62.6)</span>
+        <span class="c1">#</span>
+        <span class="c1"># Those formulae were for the 1950 epoch.  The corresponding numbers for J2000 are:</span>
+        <span class="c1"># (cf. https://arxiv.org/pdf/1010.3773.pdf)</span>
+        <span class="n">el0</span> <span class="o">=</span> <span class="mf">32.93191857</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">r0</span> <span class="o">=</span> <span class="mf">282.859481208</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">d0</span> <span class="o">=</span> <span class="mf">62.8717488056</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">sind0</span><span class="p">,</span> <span class="n">cosd0</span> <span class="o">=</span> <span class="n">d0</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+
+        <span class="n">sind</span><span class="p">,</span> <span class="n">cosd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">sinr</span><span class="p">,</span> <span class="n">cosr</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="o">-</span><span class="n">r0</span><span class="p">)</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+
+        <span class="n">cbcl</span> <span class="o">=</span> <span class="n">cosd</span><span class="o">*</span><span class="n">cosr</span>
+        <span class="n">cbsl</span> <span class="o">=</span> <span class="n">sind</span><span class="o">*</span><span class="n">sind0</span> <span class="o">+</span> <span class="n">cosd</span><span class="o">*</span><span class="n">sinr</span><span class="o">*</span><span class="n">cosd0</span>
+        <span class="n">sb</span> <span class="o">=</span> <span class="n">sind</span><span class="o">*</span><span class="n">cosd0</span> <span class="o">-</span> <span class="n">cosd</span><span class="o">*</span><span class="n">sinr</span><span class="o">*</span><span class="n">sind0</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">sb</span><span class="p">))</span>
+        <span class="n">el</span> <span class="o">=</span> <span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">cbsl</span><span class="p">,</span><span class="n">cbcl</span><span class="p">))</span> <span class="o">+</span> <span class="n">el0</span><span class="p">)</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CelestialCoord.from_galactic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_galactic">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_galactic</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given galactic coordinates</span>
+
+<span class="sd">        :param el:          The longitude in galactic coordinates (an Angle instance)</span>
+<span class="sd">        :param b:           The latitude in galactic coordinates (an Angle instance)</span>
+<span class="sd">        :param epoch:       The epoch of the returned coordinate. [default: 2000.]</span>
+
+<span class="sd">        :returns: the CelestialCoord corresponding to these galactic coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">el0</span> <span class="o">=</span> <span class="mf">32.93191857</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">r0</span> <span class="o">=</span> <span class="mf">282.859481208</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">d0</span> <span class="o">=</span> <span class="mf">62.8717488056</span> <span class="o">*</span> <span class="n">degrees</span>
+        <span class="n">sind0</span><span class="p">,</span> <span class="n">cosd0</span> <span class="o">=</span> <span class="n">d0</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+
+        <span class="n">sinb</span><span class="p">,</span> <span class="n">cosb</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">sinl</span><span class="p">,</span> <span class="n">cosl</span> <span class="o">=</span> <span class="p">(</span><span class="n">el</span><span class="o">-</span><span class="n">el0</span><span class="p">)</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">cosb</span><span class="o">*</span><span class="n">cosl</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="n">cosb</span><span class="o">*</span><span class="n">sinl</span>
+        <span class="n">z1</span> <span class="o">=</span> <span class="n">sinb</span>
+
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">x1</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">cosd0</span> <span class="o">-</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">sind0</span>
+        <span class="n">z2</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">sind0</span> <span class="o">+</span> <span class="n">z1</span> <span class="o">*</span> <span class="n">cosd0</span>
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">ra</span> <span class="o">+</span> <span class="n">r0</span><span class="p">,</span> <span class="n">temp</span><span class="o">.</span><span class="n">dec</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CelestialCoord.ecliptic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.ecliptic">[docs]</a>    <span class="k">def</span> <span class="nf">ecliptic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the longitude and latitude in ecliptic coordinates corresponding to this position.</span>
+
+<span class="sd">        The ``epoch`` parameter is used to get an accurate value for the (time-varying) obliquity of</span>
+<span class="sd">        the ecliptic.  The formulae for this are quite straightforward.  It requires just a single</span>
+<span class="sd">        parameter for the transformation, the obliquity of the ecliptic (the Earth&#39;s axial tilt).</span>
+
+<span class="sd">        :param epoch:       The epoch to be used for estimating the obliquity of the ecliptic, if</span>
+<span class="sd">                            ``date`` is None.  But if ``date`` is given, then use that to determine the</span>
+<span class="sd">                            epoch.  [default: 2000.]</span>
+<span class="sd">        :param date:        If a date is given as a python datetime object, then return the</span>
+<span class="sd">                            position in ecliptic coordinates with respect to the sun position at</span>
+<span class="sd">                            that date.  If None, then return the true ecliptic coordiantes.</span>
+<span class="sd">                            [default: None]</span>
+
+<span class="sd">        :returns: the longitude and latitude as a tuple (lambda, beta), given as Angle instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We are going to work in terms of the (x, y, z) projections.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux</span><span class="p">()</span>
+
+        <span class="c1"># Get the obliquity of the ecliptic.</span>
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">epoch</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">ep</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">ecliptic_obliquity</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+        <span class="n">sin_ep</span><span class="p">,</span> <span class="n">cos_ep</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+
+        <span class="c1"># Coordinate transformation here, from celestial to ecliptic:</span>
+        <span class="n">x_ecl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
+        <span class="n">y_ecl</span> <span class="o">=</span> <span class="n">cos_ep</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="n">sin_ep</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span>
+        <span class="n">z_ecl</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin_ep</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">+</span> <span class="n">cos_ep</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_z</span>
+
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">z_ecl</span><span class="p">))</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">_Angle</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">y_ecl</span><span class="p">,</span> <span class="n">x_ecl</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Find the sun position in ecliptic coordinates on this date.  We have to convert to</span>
+            <span class="c1"># Julian day in order to use our helper routine to find the Sun position in ecliptic</span>
+            <span class="c1"># coordinates.</span>
+            <span class="n">lam_sun</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">sun_position_ecliptic</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+            <span class="c1"># Subtract it off, to get ecliptic coordinates relative to the sun.</span>
+            <span class="n">lam</span> <span class="o">-=</span> <span class="n">lam_sun</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">lam</span><span class="o">.</span><span class="n">wrap</span><span class="p">(),</span> <span class="n">beta</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CelestialCoord.from_ecliptic"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialCoord.from_ecliptic">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_ecliptic</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mf">2000.</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a CelestialCoord from the given ecliptic coordinates</span>
+
+<span class="sd">        :param lam:         The longitude in ecliptic coordinates (an Angle instance)</span>
+<span class="sd">        :param beta:        The latitude in ecliptic coordinates (an Angle instance)</span>
+<span class="sd">        :param epoch:       The epoch to be used for estimating the obliquity of the ecliptic, if</span>
+<span class="sd">                            ``date`` is None.  But if ``date`` is given, then use that to determine the</span>
+<span class="sd">                            epoch.  [default: 2000.]</span>
+<span class="sd">        :param date:        If a date is given as a python datetime object, then return the</span>
+<span class="sd">                            position in ecliptic coordinates with respect to the sun position at</span>
+<span class="sd">                            that date.  If None, then return the true ecliptic coordiantes.</span>
+<span class="sd">                            [default: None]</span>
+
+<span class="sd">        :returns: the CelestialCoord corresponding to these ecliptic coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lam</span> <span class="o">+=</span> <span class="n">util</span><span class="o">.</span><span class="n">sun_position_ecliptic</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+        <span class="c1"># Get the (x, y, z)_ecliptic from (lam, beta).</span>
+        <span class="n">sinbeta</span><span class="p">,</span> <span class="n">cosbeta</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">sinlam</span><span class="p">,</span> <span class="n">coslam</span> <span class="o">=</span> <span class="n">lam</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">x_ecl</span> <span class="o">=</span> <span class="n">cosbeta</span><span class="o">*</span><span class="n">coslam</span>
+        <span class="n">y_ecl</span> <span class="o">=</span> <span class="n">cosbeta</span><span class="o">*</span><span class="n">sinlam</span>
+        <span class="n">z_ecl</span> <span class="o">=</span> <span class="n">sinbeta</span>
+
+        <span class="c1"># Get the obliquity of the ecliptic.</span>
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">epoch</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">ep</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">ecliptic_obliquity</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+
+        <span class="c1"># Transform to (x, y, z)_equatorial.</span>
+        <span class="n">sin_ep</span><span class="p">,</span> <span class="n">cos_ep</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
+        <span class="n">x_eq</span> <span class="o">=</span> <span class="n">x_ecl</span>
+        <span class="n">y_eq</span> <span class="o">=</span> <span class="n">cos_ep</span><span class="o">*</span><span class="n">y_ecl</span> <span class="o">-</span> <span class="n">sin_ep</span><span class="o">*</span><span class="n">z_ecl</span>
+        <span class="n">z_eq</span> <span class="o">=</span> <span class="n">sin_ep</span><span class="o">*</span><span class="n">y_ecl</span> <span class="o">+</span> <span class="n">cos_ep</span><span class="o">*</span><span class="n">z_ecl</span>
+
+        <span class="k">return</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq</span><span class="p">,</span> <span class="n">z_eq</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;coord.CelestialCoord(</span><span class="si">%r</span><span class="s1">, </span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;coord.CelestialCoord(</span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ra</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">ra</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dec</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">_CelestialCoord</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Equivalent to CeletialCoord(ra,dec), but without the normal sanity checks.</span>
+
+<span class="sd">    :param ra:       The right ascension.  Must be an Angle instance.</span>
+<span class="sd">    :param dec:      The declination.  Must be an Angle instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">CelestialCoord</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_ra</span> <span class="o">=</span> <span class="n">ra</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_dec</span> <span class="o">=</span> <span class="n">dec</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

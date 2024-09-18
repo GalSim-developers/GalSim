@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.util &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.util</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">import</span> <span class="nn">cProfile</span><span class="o">,</span> <span class="nn">pstats</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">current_process</span><span class="p">,</span> <span class="n">get_context</span><span class="p">,</span> <span class="n">cpu_count</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Empty</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">SimpleGenerator</span><span class="p">,</span> <span class="n">single_threaded</span>
+<span class="kn">from</span> <span class="nn">..random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+
+<span class="n">max_queue_size</span> <span class="o">=</span> <span class="mi">32767</span>  <span class="c1"># This is where multiprocessing.Queue starts to have trouble.</span>
+                        <span class="c1"># We make it a settable parameter here really for unit testing.</span>
+                        <span class="c1"># I don&#39;t think there is any reason for end users to want to set this.</span>
+
+<div class="viewcode-block" id="MergeConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MergeConfig">[docs]</a><span class="k">def</span> <span class="nf">MergeConfig</span><span class="p">(</span><span class="n">config1</span><span class="p">,</span> <span class="n">config2</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge config2 into config1 such that it has all the information from either config1 or</span>
+<span class="sd">    config2 including places where both input dicts have some of a field defined.</span>
+
+<span class="sd">    e.g. If config1 has image.pixel_scale, and config2 has image.noise, then the returned dict</span>
+<span class="sd">    will have both.</span>
+
+<span class="sd">    For real conflicts (the same value in both cases), config1&#39;s value takes precedence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">config2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config1</span><span class="p">:</span>
+            <span class="c1"># If this key isn&#39;t in config1 yet, just add it</span>
+            <span class="n">config1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config1</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># If they both have a key, first check if the values are dicts</span>
+            <span class="c1"># If they are, just recurse this process and merge those dicts.</span>
+            <span class="n">MergeConfig</span><span class="p">(</span><span class="n">config1</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="n">value</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise config1 takes precedence</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not merging key </span><span class="si">%s</span><span class="s2"> from the base config, since the later &quot;</span>
+                        <span class="s2">&quot;one takes precedence&quot;</span><span class="p">,</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReadYaml"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ReadYaml">[docs]</a><span class="k">def</span> <span class="nf">ReadYaml</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read in a YAML configuration file and return the corresponding dicts.</span>
+
+<span class="sd">    A YAML file is allowed to define several dicts using multiple documents. The GalSim parser</span>
+<span class="sd">    treats this as a set of multiple jobs to be done.  The first document is taken to be a &quot;base&quot;</span>
+<span class="sd">    dict that has common definitions for all the jobs.  Then each subsequent document has the</span>
+<span class="sd">    (usually small) modifications to the base dict for each job.  See demo6.yaml, demo8.yaml and</span>
+<span class="sd">    demo9.yaml in the GalSim/examples directory for example usage.</span>
+
+<span class="sd">    The return value will be a list of dicts, one dict for each job to be done.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config_file:    The name of the configuration file to read.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of config dicts</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">yaml</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">all_config</span> <span class="o">=</span> <span class="p">[</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load_all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="c1"># If there is only 1 yaml document, then it is of course used for the configuration.</span>
+    <span class="c1"># If there are multiple yaml documents, then the first one defines a common starting</span>
+    <span class="c1"># point for the later documents.</span>
+    <span class="c1"># So the configurations are taken to be:</span>
+    <span class="c1">#   all_config[0] + all_config[1]</span>
+    <span class="c1">#   all_config[0] + all_config[2]</span>
+    <span class="c1">#   all_config[0] + all_config[3]</span>
+    <span class="c1">#   ...</span>
+    <span class="c1"># See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Break off the first one if more than one:</span>
+        <span class="n">base_config</span> <span class="o">=</span> <span class="n">all_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">all_config</span> <span class="o">=</span> <span class="n">all_config</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="c1"># And merge it into each of the other dicts</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_config</span><span class="p">:</span>
+            <span class="n">MergeConfig</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">base_config</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_config</span></div>
+
+
+<div class="viewcode-block" id="ReadJson"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ReadJson">[docs]</a><span class="k">def</span> <span class="nf">ReadJson</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read in a JSON configuration file and return the corresponding dicts.</span>
+
+<span class="sd">    A JSON file only defines a single dict.  However to be parallel to the functionality of</span>
+<span class="sd">    ReadYaml, the output is a list with a single item, which is the dict defined by the JSON file.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config_file:    The name of the configuration file to read.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [config_dict]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="c1"># cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">object_pairs_hook</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+
+    <span class="c1"># JSON files only ever define a single job, but we need to return a list with this one item.</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">config</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ConvertNones"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ConvertNones">[docs]</a><span class="k">def</span> <span class="nf">ConvertNones</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert any items whose value is &#39;None&#39; to None.</span>
+
+<span class="sd">    To allow some parameters to be set to None in the config dict (e.g. in a list, where only</span>
+<span class="sd">    some values need to be None), we convert all values == &#39;None&#39; to None.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The config dict to process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="c1"># Recurse to lower levels, if any</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],(</span><span class="nb">list</span><span class="p">,</span><span class="nb">dict</span><span class="p">)):</span>
+            <span class="n">ConvertNones</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="c1"># Convert any Nones at this level</span>
+        <span class="k">elif</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="RemoveCurrent"><a class="viewcode-back" href="../../../config_process.html#galsim.config.RemoveCurrent">[docs]</a><span class="k">def</span> <span class="nf">RemoveCurrent</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keep_safe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove any &quot;current&quot; values stored in the config dict at any level.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        keep_safe:  Should current values that are marked as safe be preserved?</span>
+<span class="sd">                    [default: False]</span>
+<span class="sd">        type:       If provided, only clear the current value of objects that use this</span>
+<span class="sd">                    particular type.  [default: None, which means to remove current values</span>
+<span class="sd">                    of all types.]</span>
+<span class="sd">        index_key:  If provided, only clear the current value of objects that use this</span>
+<span class="sd">                    index_key (or start with this index_key, so obj_num also does</span>
+<span class="sd">                    obj_num_in_file).  [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># End recursion if this is not a dict.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span> <span class="k">return</span>
+
+    <span class="c1"># Recurse to lower levels, if any</span>
+    <span class="n">force</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># If lower levels removed anything, then force removal at this level as well.</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># These are our own implementation details, not the normal dict.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">force</span> <span class="o">=</span> <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">keep_safe</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">index_key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">force</span> <span class="o">=</span> <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">keep_safe</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">index_key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force</span>
+    <span class="k">if</span> <span class="n">force</span><span class="p">:</span>
+        <span class="n">keep_safe</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Delete the current_val at this level, if any</span>
+    <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">cval</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">ctype</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">cindex_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">keep_safe</span> <span class="ow">and</span> <span class="n">csafe</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">type</span><span class="p">))</span>
+                <span class="ow">and</span> <span class="p">(</span><span class="n">index_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cindex_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">index_key</span><span class="p">))):</span>
+            <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">force</span></div>
+
+<div class="viewcode-block" id="CopyConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CopyConfig">[docs]</a><span class="k">def</span> <span class="nf">CopyConfig</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If you want to use a config dict for multiprocessing, you need to deep copy</span>
+<span class="sd">    the gal, psf, and pix fields, since they cache values that are not picklable.</span>
+<span class="sd">    If you don&#39;t do the deep copy, then python balks when trying to send the updated</span>
+<span class="sd">    config dict back to the root process.  We do this a few different times, so encapsulate</span>
+<span class="sd">    the copy semantics once here.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict to copy.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a deep copy of the config dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.process</span> <span class="kn">import</span> <span class="n">top_level_fields</span><span class="p">,</span> <span class="n">rng_fields</span>
+
+    <span class="c1"># Start with a shallow copy of the regular things that aren&#39;t one of our special fields.</span>
+    <span class="c1"># Make sure not to copy the input_manager if there is one, since using it isn&#39;t thread safe.</span>
+    <span class="n">galsim_fields</span> <span class="o">=</span> <span class="n">top_level_fields</span> <span class="o">+</span> <span class="n">rng_fields</span>
+    <span class="n">config1</span> <span class="o">=</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">galsim_fields</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;_input_manager&#39;</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">recursive_copy</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="c1"># copy the given dict, skipping any current leading underscore fields.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Use type(d) rather than dict comprehension, since in python 2.7, 3.5, this may</span>
+            <span class="c1"># be an OrderedDict, and we want to preserve that.</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)([(</span><span class="n">k</span><span class="p">,</span><span class="n">recursive_copy</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">recursive_copy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+    <span class="c1"># Now copy all the regular config fields to make sure things like current don&#39;t</span>
+    <span class="c1"># get clobbered by two processes writing to the same dict.  Keep any current items</span>
+    <span class="c1"># that are already here, since they should be safe, but remove leading underscore items.</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">top_level_fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config1</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">recursive_copy</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
+
+    <span class="c1"># And deep copy any rng fields:</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">rng_fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config1</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">config1</span></div>
+
+<span class="k">class</span> <span class="nc">SafeManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;There are a few places we need a Manager object.  This one uses the &#39;fork&#39; context,</span>
+<span class="sd">    rather than whatever the default is on your system (which may be fork or may be spawn).</span>
+
+<span class="sd">    Starting in python 3.8, the spawn context started becoming more popular.  It&#39;s supposed to</span>
+<span class="sd">    be safer, but it wants to pickle a lot of things that aren&#39;t picklable, so it doesn&#39;t work.</span>
+<span class="sd">    Using this as the base class instead, should work.  And doing it it one place means that we</span>
+<span class="sd">    only have one place to change this is there is a different strategy that works better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ctx</span><span class="o">=</span><span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="GetLoggerProxy"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetLoggerProxy">[docs]</a><span class="k">def</span> <span class="nf">GetLoggerProxy</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a proxy for the given logger that can be passed into multiprocessing Processes</span>
+<span class="sd">    and used safely.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        logger:      The logger to make a copy of</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a proxy for the given logger</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="k">class</span> <span class="nc">LoggerManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
+        <span class="n">logger_generator</span> <span class="o">=</span> <span class="n">SimpleGenerator</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">LoggerManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="nb">callable</span> <span class="o">=</span> <span class="n">logger_generator</span><span class="p">)</span>
+        <span class="n">logger_manager</span> <span class="o">=</span> <span class="n">LoggerManager</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
+            <span class="n">logger_manager</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">logger_proxy</span> <span class="o">=</span> <span class="n">logger_manager</span><span class="o">.</span><span class="n">logger</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">logger_proxy</span></div>
+
+<div class="viewcode-block" id="LoggerWrapper"><a class="viewcode-back" href="../../../config_process.html#galsim.config.LoggerWrapper">[docs]</a><span class="k">class</span> <span class="nc">LoggerWrapper</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrap around a Logger object that checks whether a debug or info or warn call will</span>
+<span class="sd">    actually produce any output before calling the functions.</span>
+
+<span class="sd">    This seems like a gratuitous wrapper, and it is if the object being wrapped is a real</span>
+<span class="sd">    Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)</span>
+<span class="sd">    that would otherwise send the arguments of logger.debug(...) calls through a multiprocessing</span>
+<span class="sd">    pipe before (typically) being ignored.  Here, we check whether the call will actually</span>
+<span class="sd">    produce any output before calling the functions.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        logger:     The logger object to wrap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="n">LoggerWrapper</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">logger</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">level</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+            <span class="c1"># When multiprocessing, it is faster to check if the level is enabled locally, rather</span>
+            <span class="c1"># than communicating over the pipe to ask the base logger if it isEnabledFor a given</span>
+            <span class="c1"># level.</span>
+            <span class="c1"># If the logger is None, use more than the top logging level (CRITICAL).</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="o">+</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">getEffectiveLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">__nonzero__</span> <span class="o">=</span> <span class="fm">__bool__</span>
+
+    <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">critical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">isEnabledFor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span></div>
+
+
+<div class="viewcode-block" id="UpdateNProc"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateNProc">[docs]</a><span class="k">def</span> <span class="nf">UpdateNProc</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">ntot</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update nproc</span>
+
+<span class="sd">    - If nproc &lt; 0, set nproc to ncpu</span>
+<span class="sd">    - Make sure nproc &lt;= ntot</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nproc:      The nominal number of processes from the config dict</span>
+<span class="sd">        ntot:       The total number of files/images/stamps to do, so the maximum number of</span>
+<span class="sd">                    processes that would make sense.</span>
+<span class="sd">        config:     The configuration dict to copy.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the number of processes to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="c1"># First if nproc &lt; 0, update based on ncpu</span>
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Try to figure out a good number of processes to use</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nproc</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ncpu = </span><span class="si">%d</span><span class="s2">.&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;nproc &lt;= 0, but unable to determine number of cpus.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Caught error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using single process&quot;</span><span class="p">)</span>
+            <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Second, make sure we aren&#39;t already in a multiprocessing mode</span>
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Already multiprocessing.  Ignoring image.nproc&quot;</span><span class="p">)</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Third, pypy multiprocessing in Python 3.6 seems to be flaky with multiprocessing,</span>
+    <span class="c1"># so don&#39;t use multiple processes on that sysem.</span>
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;PyPy&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span> <span class="ow">and</span> <span class="s1">&#39;3.6&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;PyPy 3.6 multiprocessing is unreliable.  Ignoring nproc.&quot;</span><span class="p">)</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Finally, don&#39;t try to use more processes than jobs.  It wouldn&#39;t fail or anything.</span>
+    <span class="c1"># It just looks bad to have 3 images processed with 8 processes or something like that.</span>
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="n">ntot</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;There are only </span><span class="si">%d</span><span class="s2"> jobs to do.  Reducing nproc to </span><span class="si">%d</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span><span class="n">ntot</span><span class="p">))</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="n">ntot</span>
+    <span class="k">return</span> <span class="n">nproc</span></div>
+
+
+<div class="viewcode-block" id="ParseRandomSeed"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseRandomSeed">[docs]</a><span class="k">def</span> <span class="nf">ParseRandomSeed</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">seed_offset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the random_seed field, converting an integer (initial) seed value into a</span>
+<span class="sd">    Sequence.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span>
+
+    <span class="c1"># Normally, random_seed parameter is just a number, which really means to use that seed</span>
+    <span class="c1"># start a sequential sequence of seeds for each object.</span>
+    <span class="c1"># However, we allow for random_seed to be a gettable parameter, so for the</span>
+    <span class="c1"># normal case, we just convert it into a Sequence.</span>
+    <span class="c1"># We only do this for the first item in the list though.  Any items after the first</span>
+    <span class="c1"># are left as they are, so the user can do something more complicated if they want.</span>
+    <span class="k">if</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;random_seed&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Sequence&#39;</span><span class="p">):</span>
+                    <span class="c1"># Not really a deprecation, but similar.</span>
+                    <span class="c1"># Warn users of the change in behavior.</span>
+                    <span class="n">galsim_warn</span><span class="p">(</span><span class="s1">&#39;You have a custom Sequence as the (first) random_seed. &#39;</span>
+                                <span class="s1">&#39;As of GalSim version 2.6, this will be parsed as an integer &#39;</span>
+                                <span class="s1">&#39;and converted to a new sequence indexed by obj_num, &#39;</span>
+                                <span class="s1">&#39;rather than whatever sequence you have specified. &#39;</span>
+                                <span class="s1">&#39;You probably want to put your custom random_seed sequence &#39;</span>
+                                <span class="s1">&#39;as the second item in the random_seed list and use rng_num=1.&#39;</span><span class="p">)</span>
+
+            <span class="n">first</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">seed_rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
+            <span class="n">new_first</span> <span class="o">=</span> <span class="n">seed_rng</span><span class="o">.</span><span class="n">raw</span><span class="p">()</span>
+            <span class="c1"># Note: This new &quot;first&quot; seed is actually the seed value to use for anything at file or</span>
+            <span class="c1"># image scope using the obj_num of the first object in the file or image.</span>
+            <span class="c1"># Seeds for objects will start at 1 more than this.</span>
+            <span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Sequence&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;index_key&#39;</span> <span class="p">:</span> <span class="s1">&#39;obj_num&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;first&#39;</span> <span class="p">:</span> <span class="n">new_first</span><span class="p">,</span>
+                    <span class="c1"># This is out indicator that the dict has been converted from an initial</span>
+                    <span class="c1"># integer value to generate the sequence.  After the first time, we don&#39;t</span>
+                    <span class="c1"># want to redo this step.</span>
+                    <span class="s1">&#39;default&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="p">}</span>
+
+    <span class="n">index_key</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">index_key</span> <span class="o">==</span> <span class="s1">&#39;obj_num&#39;</span><span class="p">:</span>
+        <span class="c1"># The normal case</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If we are setting either the file_num or image_num rng, we need to be careful.</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;obj_num&#39;</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index_key</span>
+    <span class="n">seed</span> <span class="o">+=</span> <span class="n">seed_offset</span>
+
+    <span class="c1"># Normally, the file_num rng and the image_num rng can be the same.  So if seed</span>
+    <span class="c1"># comes out the same as what we already built, then just use the existing file_num_rng.</span>
+    <span class="k">if</span> <span class="n">index_key</span> <span class="o">==</span> <span class="s1">&#39;image_num&#39;</span> <span class="ow">and</span> <span class="n">seed</span> <span class="o">==</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num_seed&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;file_num_rng&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">seed</span><span class="p">,</span> <span class="n">rng</span></div>
+
+<div class="viewcode-block" id="PropagateIndexKeyRNGNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.PropagateIndexKeyRNGNum">[docs]</a><span class="k">def</span> <span class="nf">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">index_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng_num</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng_index_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Propagate any index_key or rng_num specification in a dict to all sub-fields</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">index_key</span><span class="p">,</span> <span class="n">rng_num</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">return</span>
+
+    <span class="k">if</span> <span class="s1">&#39;index_key&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">index_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index_key</span>
+
+    <span class="k">if</span> <span class="s1">&#39;rng_num&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">rng_num</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_num&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">rng_num</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng_num</span>
+
+    <span class="k">if</span> <span class="s1">&#39;rng_index_key&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">rng_index_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_index_key&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">rng_index_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng_index_key</span>
+
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">index_key</span><span class="p">,</span> <span class="n">rng_num</span><span class="p">,</span> <span class="n">rng_index_key</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">index_key</span><span class="p">,</span> <span class="n">rng_num</span><span class="p">,</span> <span class="n">rng_index_key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SetupConfigRNG"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigRNG">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">seed_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set up the RNG in the config dict.</span>
+
+<span class="sd">    - Setup config[&#39;image&#39;][&#39;random_seed&#39;] if necessary</span>
+<span class="sd">    - Set config[&#39;rng&#39;] and other related values based on appropriate random_seed</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        seed_offset:    An offset to use relative to what config[&#39;image&#39;][&#39;random_seed&#39;] gives.</span>
+<span class="sd">                        [default: 0]</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the seed used to initialize the RNG.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.process</span> <span class="kn">import</span> <span class="n">rng_fields</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># If we are starting a new file, clear out the existing rngs.</span>
+    <span class="n">index_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">index_key</span> <span class="o">==</span> <span class="s1">&#39;file_num&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">rng_fields</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_num_seed&#39;</span><span class="p">,</span> <span class="s1">&#39;image_num_seed&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num_seed&#39;</span><span class="p">]:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># This can be present for efficiency, since GaussianDeviates produce two values at a time,</span>
+    <span class="c1"># so it is more efficient to not create a new GaussianDeviate object each time.</span>
+    <span class="c1"># But if so, we need to remove it now.</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gd&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># All fields have a default index_key that they would normally use as well as a default</span>
+    <span class="c1"># rng_num = 0 if the random_seed is a list.  But we allow users to specify alternate values</span>
+    <span class="c1"># of index_key and/or rng_num at any level in the dict.  We want that specification to</span>
+    <span class="c1"># propagate down to lower levels from that point forward.  The easiest way to do so is to</span>
+    <span class="c1"># explicitly run through the dict once and propagate any index_key and/or rng_num fields</span>
+    <span class="c1"># to all sub-fields.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_propagated_index_key_rng_num&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Propagating any index_key or rng_num specifications&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_propagated_index_key_rng_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">or</span> <span class="s1">&#39;random_seed&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: No random_seed specified.  Using /dev/urandom&#39;</span><span class="p">,</span>
+                     <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+    <span class="c1"># Normally, there is just one random_seed and it is just an integer.  However, sometimes</span>
+    <span class="c1"># it is useful to have 2 (or more) rngs going with different seed sequences.  To enable this,</span>
+    <span class="c1"># image.random_seed is allowed to be a list, each item of which may be either an integer or</span>
+    <span class="c1"># a dict defining an integer sequence.  If it is a list, we parse each item separately</span>
+    <span class="c1"># and then put the combined results into config[&#39;rng&#39;] as a list.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;random_seed&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s1">&#39;random_seed&#39;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;random_seed = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">CleanConfig</span><span class="p">(</span><span class="n">lst</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;seed_offset = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">seed_offset</span><span class="p">)</span>
+        <span class="n">seeds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rngs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)):</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">ParseRandomSeed</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">seed_offset</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;seed </span><span class="si">%d</span><span class="s1"> = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">seed</span><span class="p">)</span>
+            <span class="n">seeds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+            <span class="n">rngs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Helpful to get this done right away, because later seeds might be based</span>
+                <span class="c1"># on a random number that uses the first rng.</span>
+                <span class="c1"># cf. test_eval_full_word in test_config_output.py.</span>
+                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rngs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rngs</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: random_seed is a list. Initializing rngs with seeds </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">seeds</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seeds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">seed</span><span class="p">,</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">ParseRandomSeed</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;random_seed&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">seed_offset</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Initializing rng with seed </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">seed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seed</span></div>
+
+
+<div class="viewcode-block" id="ParseExtendedKey"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseExtendedKey">[docs]</a><span class="k">def</span> <span class="nf">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Traverse all but the last item in an extended key and return the resulting config, key.</span>
+
+<span class="sd">    If key is an extended key like gal.items.0.ellip.e, then this will return the tuple.</span>
+<span class="sd">    (config[&#39;gal&#39;][&#39;items&#39;][0][&#39;ellip&#39;], &#39;e&#39;).</span>
+
+<span class="sd">    If key is a regular string, then is just returns the original (config, key).</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        key:        The possibly extended key.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the equivalent (config, key) where key is now a regular non-extended key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This is basically identical to the code for Dict.get(key) in catalog.py.</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span> <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">break</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="c1"># TypeError for the case where d is a float or Position2D, so d[k] is invalid.</span>
+            <span class="c1"># KeyError for the case where d is a dict, but k is not a valid key.</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to parse extended key </span><span class="si">%s</span><span class="s2">.  Field </span><span class="si">%s</span><span class="s2"> is invalid.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">k</span><span class="p">))</span> <span class="kn">from</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">k</span></div>
+
+<div class="viewcode-block" id="GetFromConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetFromConfig">[docs]</a><span class="k">def</span> <span class="nf">GetFromConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the value for the (possibly extended) key from a config dict.</span>
+
+<span class="sd">    If key is a simple string, then this is equivalent to config[key].</span>
+<span class="sd">    However, key is allowed to be a chain of keys such as &#39;gal.items.0.ellip.e&#39;, in which</span>
+<span class="sd">    case this function will return config[&#39;gal&#39;][&#39;items&#39;][0][&#39;ellip&#39;][&#39;e&#39;].</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        key:        The possibly extended key.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the value of that key from the config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="s2">&quot;Unable to parse extended key </span><span class="si">%s</span><span class="s2">.  Field </span><span class="si">%s</span><span class="s2"> is invalid.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">k</span><span class="p">))</span> <span class="kn">from</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="SetInConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetInConfig">[docs]</a><span class="k">def</span> <span class="nf">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the value of a (possibly extended) key in a config dict.</span>
+
+<span class="sd">    If key is a simple string, then this is equivalent to config[key] = value.</span>
+<span class="sd">    However, key is allowed to be a chain of keys such as &#39;gal.items.0.ellip.e&#39;, in which</span>
+<span class="sd">    case this function will set config[&#39;gal&#39;][&#39;items&#39;][0][&#39;ellip&#39;][&#39;e&#39;] = value.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict.</span>
+<span class="sd">        key:        The possibly extended key.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the value of that key from the config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="c1"># This means remove it, if it is there.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># Then d was really a list.</span>
+            <span class="c1"># This has some potentially counter-intuitive consequences, so let the user</span>
+            <span class="c1"># know about them.</span>
+            <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: Removing item </span><span class="si">%d</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">. &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">[:</span><span class="n">key</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)])</span> <span class="o">+</span>
+                               <span class="s2">&quot;Any further adjustments to this list must use the new &quot;</span><span class="o">+</span>
+                               <span class="s2">&quot;list index values, not the original indices.&quot;</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to parse extended key </span><span class="si">%s</span><span class="s2">.  Field </span><span class="si">%s</span><span class="s2"> is invalid.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">k</span><span class="p">))</span> <span class="kn">from</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="UpdateConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateConfig">[docs]</a><span class="k">def</span> <span class="nf">UpdateConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the given config dict with additional parameters/values.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict to update.</span>
+<span class="sd">        new_params:     A dict of parameters to update.  The keys of this dict may be</span>
+<span class="sd">                        chained field names, such as gal.first.dilate, which will be</span>
+<span class="sd">                        parsed to update config[&#39;gal&#39;][&#39;first&#39;][&#39;dilate&#39;].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiProcess"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MultiProcess">[docs]</a><span class="k">def</span> <span class="nf">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">job_func</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
+                 <span class="n">done_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_abort</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A helper function for performing a task using multiprocessing.</span>
+
+<span class="sd">    A note about the nomenclature here.  We use the term &quot;job&quot; to mean the job of building a single</span>
+<span class="sd">    file or image or stamp.  The output of each job is gathered into the list of results that</span>
+<span class="sd">    is returned.  A task is a collection of one or more jobs that are all done by the same</span>
+<span class="sd">    processor.  For simple cases, each task is just a single job, but for things like a Ring</span>
+<span class="sd">    test, the task needs to have the jobs for a full ring.</span>
+
+<span class="sd">    The tasks argument is a list of tasks.</span>
+<span class="sd">    Each task in that list is a list of jobs.</span>
+<span class="sd">    Each job is a tuple consisting of (kwargs, k), where kwargs is the dict of kwargs to pass to</span>
+<span class="sd">    the job_func and k is the index of this job in the full list of jobs.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nproc:          How many processes to use.</span>
+<span class="sd">        config:         The configuration dict.</span>
+<span class="sd">        job_func:       The function to run for each job.  It will be called as::</span>
+
+<span class="sd">                            result = job_func(**kwargs)</span>
+
+<span class="sd">                        where kwargs is from one of the jobs in the task list.</span>
+<span class="sd">        tasks:          A list of tasks to run.  Each task is a list of jobs, each of which is</span>
+<span class="sd">                        a tuple (kwargs, k).</span>
+<span class="sd">        item:           A string indicating what is being worked on.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        timeout:        How many seconds to allow for each task before timing out. [default: 900]</span>
+<span class="sd">        done_func:      A function to run upon completion of each job.  It will be called as::</span>
+
+<span class="sd">                            done_func(logger, proc, k, result, t)</span>
+
+<span class="sd">                        where proc is the process name, k is the index of the job, result is</span>
+<span class="sd">                        the return value of that job, and t is the time taken. [default: None]</span>
+<span class="sd">        except_func:    A function to run if an exception is encountered.  It will be called as::</span>
+
+<span class="sd">                            except_func(logger, proc, k, ex, tr)</span>
+
+<span class="sd">                        where proc is the process name, k is the index of the job that failed,</span>
+<span class="sd">                        ex is the exception caught, and tr is the traceback. [default: None]</span>
+<span class="sd">        except_abort:   Whether an exception should abort the rest of the processing.</span>
+<span class="sd">                        If False, then the returned results list will not include anything</span>
+<span class="sd">                        for the jobs that failed.  [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a list of the outputs from job_func for each job</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">worker_init_fns</span><span class="p">,</span> <span class="n">worker_initargs_fns</span>
+
+    <span class="c1"># The worker function will be run once in each process.</span>
+    <span class="c1"># It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue</span>
+    <span class="c1"># to send them back to the main process.</span>
+    <span class="c1"># The *tasks* can be made up of more than one *job*.  Each job involves calling job_func</span>
+    <span class="c1"># with the kwargs from the list of jobs.</span>
+    <span class="c1"># Each job also carries with it its index in the original list of all jobs.</span>
+    <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">):</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">current_process</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">for</span> <span class="n">init</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">):</span>
+            <span class="n">init</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c1"># The logger object passed in here is a proxy object.  This means that all the arguments</span>
+        <span class="c1"># to any logging commands are passed through the pipe to the real Logger object on the</span>
+        <span class="c1"># other end of the pipe.  This tends to produce a lot of unnecessary communication, since</span>
+        <span class="c1"># most of those commands don&#39;t actually produce any output (e.g. logger.debug(..) commands</span>
+        <span class="c1"># when the logging level is not DEBUG).  So it is helpful to wrap this object in a</span>
+        <span class="c1"># LoggerWrapper that checks whether it is worth sending the arguments back to the original</span>
+        <span class="c1"># Logger before calling the functions.</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;profile&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;profile&#39;</span><span class="p">]:</span>
+            <span class="n">pr</span> <span class="o">=</span> <span class="n">cProfile</span><span class="o">.</span><span class="n">Profile</span><span class="p">()</span>
+            <span class="n">pr</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pr</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="s1">&#39;STOP&#39;</span><span class="p">):</span>
+            <span class="k">try</span> <span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: Received job to do </span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">s, starting with </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                             <span class="n">proc</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">task</span><span class="p">),</span><span class="n">item</span><span class="p">,</span><span class="n">task</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
+                    <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logger</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">job_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">results_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">,</span> <span class="n">proc</span><span class="p">)</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">tr</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: Caught exception: </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">proc</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span><span class="n">tr</span><span class="p">)</span>
+                <span class="n">results_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">proc</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: Received STOP&#39;</span><span class="p">,</span> <span class="n">proc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pr</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+            <span class="n">pr</span><span class="o">.</span><span class="n">dump_stats</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pstats&#39;</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">sortby</span> <span class="o">=</span> <span class="s1">&#39;time&#39;</span>  <span class="c1"># Note: This is now called tottime, but time seems to be a valid</span>
+                             <span class="c1"># alias for this that is backwards compatible to older versions</span>
+                             <span class="c1"># of pstats.</span>
+            <span class="n">ps</span> <span class="o">=</span> <span class="n">pstats</span><span class="o">.</span><span class="n">Stats</span><span class="p">(</span><span class="n">pr</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">sort_stats</span><span class="p">(</span><span class="n">sortby</span><span class="p">)</span><span class="o">.</span><span class="n">reverse_order</span><span class="p">()</span>
+            <span class="n">ps</span><span class="o">.</span><span class="n">print_stats</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;*** Start profile for </span><span class="si">%s</span><span class="s2"> ***</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">*** End profile for </span><span class="si">%s</span><span class="s2"> ***&quot;</span><span class="p">,</span>
+                         <span class="n">proc</span><span class="p">,</span><span class="n">s</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span><span class="n">proc</span><span class="p">)</span>
+
+    <span class="n">njobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">task</span><span class="p">)</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using </span><span class="si">%d</span><span class="s2"> processes for </span><span class="si">%s</span><span class="s2"> processing&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">,</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">)</span>
+        <span class="n">Process</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span>
+        <span class="n">Queue</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Queue</span>
+
+        <span class="c1"># Temporarily mark that we are multiprocessing, so we know not to start another</span>
+        <span class="c1"># round of multiprocessing later.</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_nproc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nproc</span>
+
+        <span class="k">if</span> <span class="s1">&#39;profile&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;profile&#39;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting separate profiling for each of the </span><span class="si">%d</span><span class="s2"> processes.&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">)</span>
+
+        <span class="c1"># The logger is not picklable, so we need to make a proxy for it so all the</span>
+        <span class="c1"># processes can emit logging information safely.</span>
+        <span class="n">logger_proxy</span> <span class="o">=</span> <span class="n">GetLoggerProxy</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># We need to set the number of OpenMP threads to 1 during multiprocessing, otherwise</span>
+        <span class="c1"># it may spawn e.g. 64 threads in each of 64 processes, which tends to be bad.</span>
+        <span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
+
+            <span class="c1"># Send the tasks to the task_queue.</span>
+            <span class="n">ntasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ntasks</span> <span class="o">&gt;</span> <span class="n">max_queue_size</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;len(tasks) = </span><span class="si">%d</span><span class="s2"> is more than max_queue_size = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">),</span><span class="n">max_queue_size</span><span class="p">)</span>
+                <span class="n">njoin</span> <span class="o">=</span> <span class="p">(</span><span class="n">ntasks</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">max_queue_size</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">new_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">ntasks</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">njoin</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span><span class="n">job</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">njoin</span><span class="o">*</span><span class="n">k</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">njoin</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">ntasks</span><span class="p">)]</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">task</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">new_size</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">ntasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Joined in groups of </span><span class="si">%d</span><span class="s2">: new len(tasks) = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">njoin</span><span class="p">,</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="n">task_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                <span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+            <span class="c1"># Run the tasks.</span>
+            <span class="c1"># Each Process command starts up a parallel process that will keep checking the queue</span>
+            <span class="c1"># for a new task. If there is one there, it grabs it and does it. If not, it waits</span>
+            <span class="c1"># until there is one to grab. When it finds a &#39;STOP&#39;, it shuts down.</span>
+            <span class="n">results_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="n">p_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                <span class="c1"># The process name is actually the default name that Process would generate on its</span>
+                <span class="c1"># own for the first time we do this. But after that, if we start another round of</span>
+                <span class="c1"># multiprocessing, then it just keeps incrementing the numbers, rather than starting</span>
+                <span class="c1"># over at Process-1.  As far as I can tell, it&#39;s not actually spawning more</span>
+                <span class="c1"># processes, so for the sake of the logging output, we name the processes explicitly.</span>
+                <span class="n">initializers</span> <span class="o">=</span> <span class="n">worker_init_fns</span>
+                <span class="n">initargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">initargs_fn</span><span class="p">()</span> <span class="k">for</span> <span class="n">initargs_fn</span> <span class="ow">in</span> <span class="n">worker_initargs_fns</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger_proxy</span><span class="p">,</span>
+                                                 <span class="n">initializers</span><span class="p">,</span> <span class="n">initargs</span><span class="p">),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Process-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">p_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="n">raise_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># In the meanwhile, the main process keeps going.  We pull each set of images off</span>
+                <span class="c1"># of the results_queue and put them in the appropriate place in the lists.</span>
+                <span class="c1"># This loop is happening while the other processes are still working on their tasks.</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">)</span> <span class="p">]</span>
+                <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">res</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">results_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
+                        <span class="c1"># If timeout, then a queue.Empty is raised, which is pretty uninformative.</span>
+                        <span class="c1"># So reraise with a better description of what happened.</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Multiprocessing timed out waiting for a task to finish.&quot;</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;If you expect very long jobs, consider raising the value&quot;</span>
+                                     <span class="s2">&quot;of timeout.  Currently set to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">timeout</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Multiprocessing timed out&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                        <span class="c1"># res is really the exception, e</span>
+                        <span class="c1"># t is really the traceback</span>
+                        <span class="c1"># k is the index for the job that failed</span>
+                        <span class="k">if</span> <span class="n">except_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+                            <span class="n">except_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">except_abort</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                                <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                            <span class="n">raise_error</span> <span class="o">=</span> <span class="n">res</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># The normal case</span>
+                        <span class="k">if</span> <span class="n">done_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+                            <span class="n">done_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+
+            <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># I&#39;m actually not sure how to make this happen.  We do a good job of catching</span>
+                <span class="c1"># all the normal kinds of exceptions that might occur and dealing with them cleanly.</span>
+                <span class="c1"># However, if something happens that we didn&#39;t anticipate, this should make an</span>
+                <span class="c1"># attempt to clean up the task queue and worker before raising the error further.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Caught a fatal exception during multiprocessing:</span><span class="se">\n</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+                <span class="c1"># Clear any unclaimed jobs that are still in the queue</span>
+                <span class="k">while</span> <span class="ow">not</span> <span class="n">task_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># If something else gets between the empty() check and this get,</span>
+                        <span class="c1"># it will raise an Empty exception.  Ignore it.</span>
+                        <span class="n">task_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                        <span class="k">pass</span>
+                <span class="c1"># And terminate any jobs that might still be running.</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                <span class="n">raise_error</span> <span class="o">=</span> <span class="n">e</span>
+
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="c1"># Stop the processes</span>
+                <span class="c1"># Once you are done with the processes, putting nproc &#39;STOP&#39;s will stop them all.</span>
+                <span class="c1"># This is important, because the program will keep running as long as there are</span>
+                <span class="c1"># running processes, even if the main process gets to the end.  So you do want to</span>
+                <span class="c1"># make sure to add those &#39;STOP&#39;s at some point!</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Sometimes this one will hang if we timed out above.  Not sure why, but</span>
+                        <span class="c1"># the nowait seems to fix it.  And if there was a reason for put() to</span>
+                        <span class="c1"># hang, then put_nowait might raise an exception.  Ignore it.</span>
+                        <span class="n">task_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="s1">&#39;STOP&#39;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                        <span class="k">pass</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                <span class="n">task_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_nproc&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">raise_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">raise_error</span>
+
+    <span class="k">else</span> <span class="p">:</span> <span class="c1"># nproc == 1</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span> <span class="kc">None</span> <span class="p">]</span> <span class="o">*</span> <span class="n">njobs</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logger</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">job_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">done_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+                        <span class="n">done_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">)</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">tr</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">except_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># pragma: no branch</span>
+                        <span class="n">except_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">tr</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">except_abort</span><span class="p">:</span>
+                        <span class="k">raise</span>
+
+    <span class="c1"># If there are any failures, then there will still be some Nones in the results list.</span>
+    <span class="c1"># Remove them.</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<span class="n">valid_index_keys</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;obj_num_in_file&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_num&#39;</span><span class="p">,</span> <span class="s1">&#39;image_num&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num&#39;</span> <span class="p">]</span>
+
+<div class="viewcode-block" id="GetIndex"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetIndex">[docs]</a><span class="k">def</span> <span class="nf">GetIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the index to use for the current object or parameter and the index_key.</span>
+
+<span class="sd">    First check for an explicit index_key value given by the user.</span>
+<span class="sd">    Then if base[index_key] is other than obj_num, use that.</span>
+<span class="sd">    Finally, if this is a sequence, default to &#39;obj_num_in_file&#39;, otherwise &#39;obj_num&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        index, index_key</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;index_key&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">index_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_index_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid index_key.&quot;</span><span class="p">,</span> <span class="n">index_key</span><span class="p">,</span> <span class="n">valid_index_keys</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_key&#39;</span><span class="p">,</span><span class="s1">&#39;obj_num&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index_key</span> <span class="o">==</span> <span class="s1">&#39;obj_num&#39;</span> <span class="ow">and</span> <span class="n">is_sequence</span><span class="p">:</span>
+            <span class="n">index_key</span> <span class="o">=</span> <span class="s1">&#39;obj_num_in_file&#39;</span>
+
+    <span class="k">if</span> <span class="n">index_key</span> <span class="o">==</span> <span class="s1">&#39;obj_num_in_file&#39;</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="s1">&#39;obj_num&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index_key</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span></div>
+
+
+<div class="viewcode-block" id="GetRNG"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetRNG">[docs]</a><span class="k">def</span> <span class="nf">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the appropriate current rng according to whatever the current index_key is.</span>
+
+<span class="sd">    If a logger is provided, then it will emit a warning if there is no current rng setup.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict for the current item being worked on.</span>
+<span class="sd">        base:           The base configuration dict.</span>
+<span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        tag:            If given, an appropriate name for the current item to use in the</span>
+<span class="sd">                        warning message. [default: &#39;&#39;]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        either the appropriate rng for the current index_key or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;rng_index_key&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">index_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_index_key&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">index_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_index_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid rng_index_key.&quot;</span><span class="p">,</span> <span class="n">index_key</span><span class="p">,</span> <span class="n">valid_index_keys</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;GetRNG for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">index_key</span><span class="p">)</span>
+
+    <span class="n">rng_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rng_num&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rng_num</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">rng_num</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rng_num</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;rng_num must be an integer&quot;</span><span class="p">,</span> <span class="n">rng_num</span><span class="p">)</span>
+        <span class="n">rngs</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rngs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rngs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;rng_num is only allowed when image.random_seed is a list&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rng_num</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">rng_num</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rngs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;rng_num is invalid.  Must be in [0,</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rngs</span><span class="p">)))</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">rngs</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rng_num</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index_key</span> <span class="o">+</span> <span class="s1">&#39;_rng&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No index_key_rng.  Use base[rng]&quot;</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rng&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="c1"># Only report the warning the first time.</span>
+        <span class="n">rng_tag</span> <span class="o">=</span> <span class="n">tag</span> <span class="o">+</span> <span class="s1">&#39;_reported_no_rng&#39;</span>
+        <span class="k">if</span> <span class="n">rng_tag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">[</span><span class="n">rng_tag</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No base[&#39;rng&#39;] available for </span><span class="si">%s</span><span class="s2">.  Using /dev/urandom.&quot;</span><span class="p">,</span><span class="n">tag</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rng</span></div>
+
+<div class="viewcode-block" id="CleanConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CleanConfig">[docs]</a><span class="k">def</span> <span class="nf">CleanConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keep_current</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a &quot;clean&quot; config dict without any leading-underscore values</span>
+
+<span class="sd">    GalSim config dicts store a lot of ancillary information internally to help improve</span>
+<span class="sd">    efficiency.  However, some of these are actually pointers to other places in the dict, so</span>
+<span class="sd">    printing a config dict, or even what should be a small portion of one, can have infinite loops.</span>
+
+<span class="sd">    This helper function is useful when debugging config processing to strip out all of these</span>
+<span class="sd">    leading-underscore values, so that printing the dict is reasonable.</span>
+
+<span class="sd">        &gt;&gt;&gt; print(galsim.config.CleanConfig(config_dict))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span> <span class="n">k</span> <span class="p">:</span> <span class="n">CleanConfig</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">keep_current</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span>
+                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+                 <span class="ow">and</span> <span class="p">(</span><span class="n">keep_current</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;current&#39;</span><span class="p">)</span> <span class="p">}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">CleanConfig</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">keep_current</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">config</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="SetDefaultExt"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetDefaultExt">[docs]</a><span class="k">def</span> <span class="nf">SetDefaultExt</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default_ext</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set a default ext in a config &#39;file_name&#39; field if appropriate.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:         The configuration dict for the item that might need to be given</span>
+<span class="sd">                        a default &#39;ext&#39; value.</span>
+<span class="sd">        default_ext:    The default extension to set in the config dict if one is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;NumberedFile&#39;</span> <span class="ow">and</span> <span class="s1">&#39;ext&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="p">):</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;ext&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_ext</span></div>
+
+
+<span class="n">_sleep_mult</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 1 second normally, but make it a variable, so I can change it when unit testing.</span>
+<div class="viewcode-block" id="RetryIO"><a class="viewcode-back" href="../../../config_process.html#galsim.config.RetryIO">[docs]</a><span class="k">def</span> <span class="nf">RetryIO</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">ntries</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A helper function to retry I/O commands</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">itry</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">itry</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">itry</span> <span class="o">==</span> <span class="n">ntries</span><span class="p">:</span>
+                <span class="c1"># Then this was the last try.  Just re-raise the exception.</span>
+                <span class="k">raise</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;File </span><span class="si">%s</span><span class="s1">: Caught OSError: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;This is try </span><span class="si">%d</span><span class="s1">/</span><span class="si">%d</span><span class="s1">, so sleep for </span><span class="si">%d</span><span class="s1"> sec and try again.&#39;</span><span class="p">,</span>
+                               <span class="n">itry</span><span class="p">,</span><span class="n">ntries</span><span class="p">,</span><span class="n">itry</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">itry</span> <span class="o">*</span> <span class="n">_sleep_mult</span><span class="p">)</span>
+                <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+<span class="k">def</span> <span class="nf">get_cls_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the _req_params, _opt_params, _single_params, and _takes_rng definitions</span>
+<span class="sd">    from the given class (or function, but usually class).</span>
+
+<span class="sd">    This handles the defaults of empty dict or list or False as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_req_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_opt_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">single</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_single_params&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">takes_rng</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_takes_rng&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

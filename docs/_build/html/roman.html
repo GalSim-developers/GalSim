@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Roman Space Telescope Module &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="C++ Layer" href="cpp.html" />
+    <link rel="prev" title="The DES Module" href="des.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Roman Space Telescope Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-level-attributes">Module-level Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roman-functions">Roman Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.getBandpasses"><code class="docutils literal notranslate"><span class="pre">getBandpasses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.getSkyLevel"><code class="docutils literal notranslate"><span class="pre">getSkyLevel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.getPSF"><code class="docutils literal notranslate"><span class="pre">getPSF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.getWCS"><code class="docutils literal notranslate"><span class="pre">getWCS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.findSCA"><code class="docutils literal notranslate"><span class="pre">findSCA()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.allowedPos"><code class="docutils literal notranslate"><span class="pre">allowedPos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.bestPA"><code class="docutils literal notranslate"><span class="pre">bestPA()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.convertCenter"><code class="docutils literal notranslate"><span class="pre">convertCenter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.applyNonlinearity"><code class="docutils literal notranslate"><span class="pre">applyNonlinearity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.addReciprocityFailure"><code class="docutils literal notranslate"><span class="pre">addReciprocityFailure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.applyIPC"><code class="docutils literal notranslate"><span class="pre">applyIPC()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.applyPersistence"><code class="docutils literal notranslate"><span class="pre">applyPersistence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.roman.allDetectorEffects"><code class="docutils literal notranslate"><span class="pre">allDetectorEffects()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The Roman Space Telescope Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/roman.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-roman-space-telescope-module">
+<h1>The Roman Space Telescope Module<a class="headerlink" href="#the-roman-space-telescope-module" title="Permalink to this heading"></a></h1>
+<p>The galsim.roman module contains information and functionality that can be used to simulate
+images for the Roman Space Telescope.  Some of the functionality is specific to Roman per se, but
+some of the routines are more generically simulating aspects of the HgCdTe detectors, which will
+be used on Roman.  These routines might therefore be useful for simulating observations from
+other telescopes that will use these detectors.</p>
+<p>The demo script demo13.py illustrates the use of most of this functionality.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use this module, you must separately <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">galsim.roman</span></code>.  These functions are
+not automatically imported when you <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">galsim</span></code>.</p>
+</div>
+<section id="module-level-attributes">
+<h2>Module-level Attributes<a class="headerlink" href="#module-level-attributes" title="Permalink to this heading"></a></h2>
+<p>There are a number of attributes of the <code class="docutils literal notranslate"><span class="pre">galsim.roman</span></code> module, which define some numerical
+parameters related to the Roman geometry.  Some of these parameters relate to the entire
+wide-field imager.  Others, especially the return values of the functions to get the
+PSF and WCS, are specific to each SCA (Sensor Chip Assembly, the equivalent of a chip for an optical
+CCD) and therefore are indexed based on the SCA.  All SCA-related arrays are 1-indexed, i.e., the
+entry with index 0 is None and the entries from 1 to n_sca are the relevant ones.  This is
+consistent with diagrams and so on provided by the Roman project, which are 1-indexed.</p>
+<p>The NIR detectors that will be used for Roman have a different photon detection process from CCDs.
+In particular, the photon detection process begins with charge generation.  However, instead of
+being read out along columns (as for CCDs), they are read directly from each pixel.  Moreover, the
+actual quantity that is measured is technically not charge, but rather voltage.  The charge is
+inferred based on the capacitance.  To use a common language with that for CCDs, we will often refer
+to quantities measured in units of e-/pixel, but for some detector non-idealities, it is important
+to keep in mind that it is voltage that is sensed.</p>
+<dl class="simple">
+<dt>gain</dt><dd><p>The gain for all SCAs (sensor chip assemblies) is expected to be the roughly the same,
+and we currently have no information about how different they will be, so this is a
+single value rather than a list of values.  Once the actual detectors exist and have been
+characterized, it might be updated to be a dict with entries for each SCA.</p>
+</dd>
+<dt>pixel_scale</dt><dd><p>The pixel scale in units of arcsec/pixel.  This value is approximate and does not
+include effects like distortion, which are included in the WCS.</p>
+</dd>
+<dt>diameter</dt><dd><p>The telescope diameter in meters.</p>
+</dd>
+<dt>obscuration</dt><dd><p>The linear obscuration of the telescope, expressed as a fraction of the diameter.</p>
+</dd>
+<dt>collecting_area</dt><dd><dl class="simple">
+<dt>The actual collecting area after accounting for obscuration, struts, etc. in</dt><dd><p>units of cm^2.</p>
+</dd>
+</dl>
+</dd>
+<dt>exptime</dt><dd><p>The typical exposure time in units of seconds.  The number that is stored is for a
+single dither.  Each location within the survey will be observed with a total of 5-7
+dithers across 2 epochs.</p>
+</dd>
+<dt>n_dithers</dt><dd><p>The number of dithers per filter (typically 5-7, so this is currently 6 as a
+reasonable effective average).</p>
+</dd>
+<dt>dark_current</dt><dd><p>The dark current in units of e-/pix/s.</p>
+</dd>
+<dt>nonlinearity_beta</dt><dd><p>The coefficient of the (counts)^2 term in the detector nonlinearity
+function.  This will not ordinarily be accessed directly by users; instead,
+it will be accessed by the convenience function in this module that defines
+the nonlinearity function as counts_out = counts_in + beta*counts_in^2.
+Alternatively users can use the <a class="reference internal" href="#galsim.roman.applyNonlinearity" title="galsim.roman.applyNonlinearity"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyNonlinearity</span></code></a> routine,
+which already knows about the expected form of the nonlinearity in the
+detectors.</p>
+</dd>
+<dt>reciprocity_alpha</dt><dd><p>The normalization factor that determines the effect of reciprocity failure
+of the detectors for a given exposure time.  Alternatively, users can use
+the <a class="reference internal" href="#galsim.roman.addReciprocityFailure" title="galsim.roman.addReciprocityFailure"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.addReciprocityFailure</span></code></a> routine, which knows about this
+normalization factor already, and allows users to choose an exposure time or
+use the default Roman exposure time.</p>
+</dd>
+<dt>read_noise</dt><dd><p>A total of 8.5e-.  This comes from 20 e- per correlated double sampling (CDS) and a
+5 e- floor, so the CDS read noise dominates.  The source of CDS read noise is the
+noise introduced when subtracting a single pair of reads; this can be reduced by
+averaging over multiple reads.  Also, this read_noise value might be reduced
+based on improved behavior of newer detectors which have lower CDS noise.</p>
+</dd>
+<dt>thermal_backgrounds</dt><dd><p>The thermal backgrounds (in units of e-/pix/s) are based on a temperature
+of 282 K, but this plan might change in future.  The thermal backgrounds
+depend on the band, so this is not a single number; instead, it’s a
+dictionary that is accessed by the name of the optical band, e.g.,
+<code class="docutils literal notranslate"><span class="pre">galsim.roman.thermal_backgrounds['F184']</span></code> (where the names of the
+bandpasses can be obtained using the <a class="reference internal" href="#galsim.roman.getBandpasses" title="galsim.roman.getBandpasses"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getBandpasses</span></code></a> routine described
+below).</p>
+</dd>
+<dt>pupil_plane_file</dt><dd><p>There is actually a separate file for each SCA giving the pupil plane mask
+for the Roman telescope as seen from the center of each SCA.  When building
+the PSF with galsim.roman.getPSF, it will use the correct one for the given
+SCA.  However, for backwards compatibility, if anyone needs a generic image
+of the pupil plane, this file is for SCA 2, near the center of the WFC field.</p>
+</dd>
+<dt>pupil_plane_scale</dt><dd><p>The pixel scale in meters per pixel for the image in pupil_plane_file.</p>
+</dd>
+<dt>stray_light_fraction</dt><dd><p>The fraction of the sky background that is allowed to contribute as stray
+light.  Currently this is required to be &lt;10% of the background due to
+zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
+could be used to get a total background including stray light.</p>
+</dd>
+<dt>ipc_kernel</dt><dd><p>The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
+<a class="reference internal" href="#galsim.roman.applyIPC" title="galsim.roman.applyIPC"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyIPC</span></code></a>.</p>
+</dd>
+<dt>persistence_coefficients</dt><dd><p>The retention fraction of the previous eight exposures in a simple,
+linear model for persistence.</p>
+</dd>
+<dt>persistence_fermi_params</dt><dd><p>The parameters in the fermi persistence model.</p>
+</dd>
+<dt>n_sca</dt><dd><p>The number of SCAs in the focal plane.</p>
+</dd>
+<dt>n_pix_tot</dt><dd><p>Each SCA has n_pix_tot x n_pix_tot pixels.</p>
+</dd>
+<dt>n_pix</dt><dd><p>The number of pixels that are actively used.  The 4 outer rows and columns will be
+attached internally to capacitors rather than to detector pixels, and used to monitor
+bias voltage drifts.  Thus, images seen by users will be n_pix x n_pix.</p>
+</dd>
+<dt>jitter_rms</dt><dd><dl class="simple">
+<dt>The worst-case RMS jitter per axis for Roman in the current design (reality</dt><dd><p>will likely be much better than this).  Units: arcsec.</p>
+</dd>
+</dl>
+</dd>
+<dt>charge_diffusion</dt><dd><p>The per-axis sigma to use for a Gaussian representing charge diffusion for
+Roman.  Units: pixels.</p>
+</dd>
+</dl>
+<p>For example, to get the gain value, use galsim.roman.gain.  Most numbers related to the nature of
+the detectors are subject to change as further lab tests are done.</p>
+</section>
+<section id="roman-functions">
+<h2>Roman Functions<a class="headerlink" href="#roman-functions" title="Permalink to this heading"></a></h2>
+<p>This module also contains the following routines:</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#galsim.roman.getBandpasses" title="galsim.roman.getBandpasses"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getBandpasses</span></code></a></dt><dd><p>A utility to get a dictionary containing galsim.Bandpass objects for each of
+the Roman imaging bandpasses, which by default have AB zeropoints given using
+the GalSim zeropoint convention (see <a class="reference internal" href="#galsim.roman.getBandpasses" title="galsim.roman.getBandpasses"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getBandpasses</span></code></a> docstring for more details).</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.getSkyLevel" title="galsim.roman.getSkyLevel"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getSkyLevel</span></code></a></dt><dd><p>A utility to find the expected sky level due to zodiacal light at a given
+position, in a given band.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.applyNonlinearity" title="galsim.roman.applyNonlinearity"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyNonlinearity</span></code></a></dt><dd><p>A routine to apply detector nonlinearity of the type expected for Roman.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.addReciprocityFailure" title="galsim.roman.addReciprocityFailure"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.addReciprocityFailure</span></code></a></dt><dd><p>A routine to include the effects of reciprocity failure in images at
+the level expected for Roman.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.applyIPC" title="galsim.roman.applyIPC"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyIPC</span></code></a></dt><dd><p>A routine to incorporate the effects of interpixel capacitance in Roman images.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.applyPersistence" title="galsim.roman.applyPersistence"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyPersistence</span></code></a></dt><dd><p>A routine to incorporate the effects of persistence - the residual images
+from earlier exposures after resetting.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.allDetectorEffects" title="galsim.roman.allDetectorEffects"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.allDetectorEffects</span></code></a></dt><dd><p>A routine to add all sources of noise and all (implemented) detector
+effects to an image containing astronomical objects plus background.  In
+principle, users can simply use this routine instead of separately using
+the various routines like <a class="reference internal" href="#galsim.roman.applyNonlinearity" title="galsim.roman.applyNonlinearity"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.applyNonlinearity</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getPSF</span></code></a></dt><dd><p>A routine to get a chromatic representation of the PSF in a single SCA.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.getWCS" title="galsim.roman.getWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getWCS</span></code></a></dt><dd><p>A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
+and orientation angle.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.findSCA" title="galsim.roman.findSCA"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.findSCA</span></code></a></dt><dd><p>A routine that can take the WCS from <a class="reference internal" href="#galsim.roman.getWCS" title="galsim.roman.getWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getWCS</span></code></a> and some sky position, and indicate in
+which SCA that position can be found, optionally including half of the gaps between
+SCAs (to identify positions that are in the focal plane array but in the gap between SCAs).</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.allowedPos" title="galsim.roman.allowedPos"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.allowedPos</span></code></a></dt><dd><p>A routine to check whether Roman is allowed to look at a given position on a
+given date, given the constraints on orientation with respect to the sun.</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.roman.bestPA" title="galsim.roman.bestPA"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.bestPA</span></code></a></dt><dd><p>A routine to calculate the best observatory orientation angle for Roman when looking
+at a given position on a given date.</p>
+</dd>
+</dl>
+<p>Another routine that may be necessary is <a class="reference internal" href="misc.html#galsim.utilities.interleaveImages" title="galsim.utilities.interleaveImages"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.utilities.interleaveImages</span></code></a>.
+The Roman PSFs at native Roman pixel scale are undersampled. A Nyquist-sampled PSF image can be
+obtained by a two-step process:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Call the <a class="reference internal" href="#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getPSF</span></code></a> routine and convolve the PSF with the Roman pixel response
+to get the effective PSF.</p></li>
+<li><p>Draw the effective PSF onto an Image using drawImage routine, with a pixel scale lesser
+than the native pixel scale (using the ‘method=no_pixel’ option).</p></li>
+</ol>
+</div></blockquote>
+<p>However, if pixel-level effects such as nonlinearity and interpixel capacitance must be applied to
+the PSF images, then they must drawn at the native pixel scale. A Nyquist-sampled PSF image can be
+obtained in such cases by generating multiple images with offsets (a dither sequence) and then
+combining them using <a class="reference internal" href="misc.html#galsim.utilities.interleaveImages" title="galsim.utilities.interleaveImages"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.utilities.interleaveImages</span></code></a>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.getBandpasses">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">getBandpasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AB_zeropoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_thin_trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_all_bands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_bandpass.html#getBandpasses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.getBandpasses" title="Permalink to this definition"></a></dt>
+<dd><p>Utility to get a dictionary containing the Roman ST bandpasses used for imaging.</p>
+<p>This routine reads in a file containing a list of wavelengths and throughput for all Roman
+bandpasses, and uses the information in the file to create a dictionary. This file is in units
+of effective area (m^2), which includes the nominal mirror size and obscuration in each
+bandpass.  We divide these by the nominal roman.collecting_area, so the bandpass objects
+include both filter transmission losses and the obscuration differences relevant for
+each bandpass.  I.e. you should always use roman.collecting_area for the collecting area
+in any flux calculation, and the bandpass will account for the differences from this.</p>
+<p>In principle it should be possible to replace the version of the file with another one, provided
+that the format obeys the following rules:</p>
+<ul class="simple">
+<li><p>There is a column called ‘Wave’, containing the wavelengths in microns.</p></li>
+<li><p>The other columns are labeled by the name of the bandpass.</p></li>
+</ul>
+<p>The bandpasses can be either truncated or thinned before setting the zero points, by passing in
+the keyword arguments that need to get propagated through to the Bandpass.thin() and/or
+Bandpass.truncate() routines.  Or, if the user wishes to thin and truncate using the defaults
+for those two routines, they can use <code class="docutils literal notranslate"><span class="pre">default_thin_trunc=True</span></code>.  This option is the default,
+because the stored ‘official’ versions of the bandpasses cover a wide wavelength range.  So even
+if thinning is not desired, truncation is recommended.</p>
+<p>By default, the routine will set an AB zeropoint (unless <code class="docutils literal notranslate"><span class="pre">AB_zeropoint=False</span></code>).  The
+zeropoint in GalSim is defined such that the flux is 1 photon/cm^2/sec through the
+bandpass. This differs from an instrumental bandpass, which is typically defined such that the
+flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
+follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Shift zeropoint based on effective collecting area in cm^2.</span>
+<span class="n">delta_zp</span> <span class="o">=</span> <span class="mf">2.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">roman</span><span class="o">.</span><span class="n">collecting_area</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">delta_zp</span></code> will be a positive number that should be added to the GalSim zeropoints to compare
+with externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
+normalization of fluxes, the <code class="docutils literal notranslate"><span class="pre">area</span></code> kwarg to drawImage can be used to get the right
+normalization (giving it the quantity <code class="docutils literal notranslate"><span class="pre">galsim.roman.collecting_area</span></code>).</p>
+<p>This routine also loads information about sky backgrounds in each filter, to be used by the
+galsim.roman.getSkyLevel() routine.  The sky background information is saved as an attribute in
+each Bandpass object.</p>
+<p>There are some subtle points related to the filter edges, which seem to depend on the field
+angle at some level.  This is more important for the grism than for the imaging, so currently
+this effect is not included in the Roman bandpasses in GalSim.</p>
+<p>The bandpass throughput file is translated from a spreadsheet Roman_effarea_20201130.xlsx at
+<a class="reference external" href="https://roman.gsfc.nasa.gov/science/WFI_technical.html">https://roman.gsfc.nasa.gov/science/WFI_technical.html</a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">roman_bandpasses</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">roman</span><span class="o">.</span><span class="n">getBandpasses</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f184_bp</span> <span class="o">=</span> <span class="n">roman_bandpasses</span><span class="p">[</span><span class="s1">&#39;F184&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AB_zeropoint</strong> – Should the routine set an AB zeropoint before returning the bandpass?
+If False, then it is up to the user to set a zero point.  [default:
+True]</p></li>
+<li><p><strong>default_thin_trunc</strong> – Use the default thinning and truncation options?  Users who wish to
+use no thinning and truncation of bandpasses, or who want control over
+the level of thinning and truncation, should have this be False.
+[default: True]</p></li>
+<li><p><strong>include_all_bands</strong> – Should the routine include the non-imaging bands (e.g., grisms)?
+This does not implement any dispersion physics by itself.
+There is currently no estimate for the thermal background for these
+bands and they are set to zero arbitrarily.
+[default: False]</p></li>
+<li><p><strong>**kwargs</strong> – Other kwargs are passed to either <a class="reference internal" href="bandpass.html#galsim.Bandpass.thin" title="galsim.Bandpass.thin"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Bandpass.thin</span></code></a> or
+<a class="reference internal" href="bandpass.html#galsim.Bandpass.truncate" title="galsim.Bandpass.truncate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Bandpass.truncate</span></code></a> as appropriate.</p></li>
+</ul>
+</dd>
+</dl>
+<p>&#64;returns A dictionary containing bandpasses for all Roman imaging filters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.getSkyLevel">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">getSkyLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bandpass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_backgrounds.html#getSkyLevel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.getSkyLevel" title="Permalink to this definition"></a></dt>
+<dd><p>Get the expected sky level for a Roman ST observation due to zodiacal light for this bandpass
+and position.</p>
+<p>This routine requires Bandpass objects that were loaded by galsim.roman.getBandpasses().  That
+routine will have stored tables containing the sky background as a function of position on the
+sky for that bandpass.  This routine then interpolates between the values in those tables to
+arbitrary positions on the sky.</p>
+<p>The numbers that are stored in the Bandpass object <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> are background level in units of
+e-/s/arcsec^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The
+result can either be multiplied by the approximate pixel area to get e-/pix, or the result can
+be used with wcs.makeSkyImage() to make an image of the sky that properly includes the actual
+pixel area as a function of position on the detector.</p>
+<p>The source of the tables that are being interpolated is Chris Hirata’s publicly-available Roman
+exposure time calculator (ETC):</p>
+<blockquote>
+<div><p><a class="reference external" href="http://www.tapir.caltech.edu/~chirata/web/software/space-etc/">http://www.tapir.caltech.edu/~chirata/web/software/space-etc/</a></p>
+</div></blockquote>
+<p>Using the throughput files loaded into the <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> object, the calculation nominally
+returns photons/s/arcsec^2, but the input bandpasses used internally by the ETC
+code include the quantum efficiency, to effectively convert to e-/s/arcsec^2.  Note that in
+general results will depend on the adopted model for zodiacal light, and these are uncertain at
+the ~10% level. One must also better sample the integration in the zodiacal light calculation
+to match the output tables used by GalSim here.</p>
+<p>Positions should be specified with the <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> keyword, which must be a CelestialCoord
+object.  If no <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is supplied, then the routine will use a default position that
+looks sensibly away from the sun.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bandpass</strong> – A Bandpass object.</p></li>
+<li><p><strong>world_pos</strong> – A position, given as a CelestialCoord object.  If None, then the routine
+will use an ecliptic longitude of 90 degrees with respect to the sun
+position (as a fair compromise between 0 and 180), and an ecliptic latitude
+of 30 degrees with respect to the sun position (decently out of the plane
+of the Earth-sun orbit). [default: None]</p></li>
+<li><p><strong>exptime</strong> – Exposure time in seconds.  If None, use the default Roman exposure time.
+[default: None]</p></li>
+<li><p><strong>epoch</strong> – The epoch to be used for estimating the obliquity of the ecliptic when
+converting <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to ecliptic coordinates.  This keyword is only used
+if <code class="docutils literal notranslate"><span class="pre">date</span></code> is None, otherwise <code class="docutils literal notranslate"><span class="pre">date</span></code> is used to determine the <code class="docutils literal notranslate"><span class="pre">epoch</span></code>.
+[default: 2025]</p></li>
+<li><p><strong>date</strong> – The date of the observation, provided as a python datetime object.  If None,
+then the conversion to ecliptic coordinates assumes the sun is at ecliptic
+coordinates of (0,0), as it is at the vernal equinox. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the expected sky level in e-/arcsec^2.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.getPSF">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">getPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SCA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandpass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SCA_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_bin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_waves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_aberrations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_accuracy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approximate_struts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_psfs.html#getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.getPSF" title="Permalink to this definition"></a></dt>
+<dd><p>Get a single PSF for Roman ST observations.</p>
+<p>The user must provide the SCA and bandpass; the latter is used when setting up the pupil
+plane configuration and when interpolating chromatic information, if requested.</p>
+<p>This routine carries out linear interpolation of the aberrations within a given SCA, based on
+the Roman Cycle 9 specification of the aberrations as a function of focal plane
+position, more specifically from the WebbPSF data files from webbpsf-data-1.2.1.tar.gz
+downloaded from <a class="reference external" href="https://webbpsf.readthedocs.io/en/latest/installation.html#data-install">https://webbpsf.readthedocs.io/en/latest/installation.html#data-install</a>.
+The abberation file is webbpsf-data/WFI/wim_zernikes_cycle9.csv.</p>
+<p>The mask images for the Roman pupil plane are available in the same WebbPSF data files.
+There are separate files for each SCA, since the view of the spider pattern varies somewhat
+across the field of view of the wide field camera. Users usually don’t need
+to worry about any of this, as GalSim will select the correct pupil image automatically based
+on the SCA and bandpass provided.</p>
+<p>The full pupil plane images are 4096 x 4096, which use a lot of memory and are somewhat slow
+to use, so we normally bin them by a factor of 4 (resulting in 1024 x 1024 images). This
+provides enough detail for most purposes and is much faster to render than using the full pupil
+plane images.  This bin factor is a settable parameter, called <code class="docutils literal notranslate"><span class="pre">pupil_bin</span></code>.  If you want the
+more accurate, slower calculation using the full images, you can set it to 1. In the other
+direction, using pupil_bin=8 (resulting in a 512 x 512 image) still provides fairly reasonable
+results and is even faster to render.  It is not generally recommended to use higher binning
+than that, as the diffraction spikes will become noticeably degraded.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function will cache the aperture calculation, so repeated calls with the same
+SCA and bandpass should be much faster after the first call, as the pupil plane will
+already be loaded.  If you need to clear the cache for memory reasons, you may call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">roman</span><span class="o">.</span><span class="n">roman_psfs</span><span class="o">.</span><span class="n">_make_aperture</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>to recover any memory currently being used for this cache.  Of course, subsequent calls to
+<a class="reference internal" href="#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getPSF</span></code></a> will need to rebuild the aperture at that point.</p>
+</div>
+<p>The PSF that is returned by default will be oriented with respect to the SCA coordinates,
+not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
+with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
+PSF in world coordinates, which can be convolved with galaxies (that are normally described
+in world coordinates), you may pass in a <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter to this function.  This will
+project the PSF into world coordinates according to that WCS before returning it.  Otherwise,
+the return value is equivalent to using <code class="docutils literal notranslate"><span class="pre">wcs=galim.PixelScale(galsim.roman.pixel_scale)</span></code>.</p>
+<p>The calculation takes advantage of the fact that the diffraction limit and aberrations have a
+simple, understood wavelength-dependence.  (The Roman abberation data for Cycle 9 does in fact
+provide aberrations as a function of wavelength, but the deviation from the expected chromatic
+dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the
+Zernikes given on the webpage and create the files in the GalSim repository can be found in
+<code class="docutils literal notranslate"><span class="pre">devel/external/parse_roman_zernikes_1217.py</span></code>.  The resulting chromatic object can be used to
+draw into any of the Roman bandpasses, though the pupil plane configuration will only be
+correct for those bands in the same range (i.e., long- or short-wavelength bands).</p>
+<p>For applications that require very high accuracy in the modeling of the PSF, with very limited
+aliasing, you may want to lower the folding_threshold in the gsparams.  Otherwise very bright
+stars will show some reflections in the spider pattern and possibly some boxiness at the
+outskirts of the PSF.  Using <code class="docutils literal notranslate"><span class="pre">gsparams</span> <span class="pre">=</span> <span class="pre">GSParams(folding_threshold=2.e-3)</span></code> generally
+provides good results even for very bright (e.g. mag=10) stars.  In these cases, you probably
+also want to reduce <code class="docutils literal notranslate"><span class="pre">pupil_bin</span></code> somewhat from the default value of 4.</p>
+<p>By default, no additional aberrations are included above the basic design.  However, users can
+provide an optional keyword <code class="docutils literal notranslate"><span class="pre">extra_aberrations</span></code> that will be included on top of those that are
+part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
+with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
+22 (Noll convention) are simulated.  For Roman, the tolerance for additional
+aberrations was a total of 90 nanometers RMS as of mid-2015, distributed largely among coma,
+astigmatism, trefoil, and spherical aberrations (NOT defocus).  This information might serve as
+a guide for reasonable <code class="docutils literal notranslate"><span class="pre">extra_aberrations</span></code> inputs.  The reference for that number is
+an earlier Cycle 5 document:</p>
+<p><a class="reference external" href="http://roman.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf">http://roman.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf</a></p>
+<p>However, the default (non-extra) aberrations are from Cycle 7 material linked earlier in this
+docstring.</p>
+<p>Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
+find some guidelines for typical length scales of the Gaussians that can represent these
+effects, and convolve the ChromaticOpticalPSF with appropriate achromatic Gaussians.</p>
+<p>The PSFs are always defined assuming the user will specify length scales in arcsec.</p>
+<p>Users may find they do not have to call <a class="reference internal" href="#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getPSF</span></code></a> for all objects in their simulations; for a
+given SCA and position within the SCA, and a given pupil plane configuration and wavelength
+information, it should be possible to reuse the PSFs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SCA</strong> – Single value specifying the SCA for which the PSF should be
+loaded.</p></li>
+<li><p><strong>bandpass</strong> – Single string specifying the bandpass to use when defining the
+pupil plane configuration and/or interpolation of chromatic PSFs.
+You may also pass a string ‘long’ or ‘short’ for this argument, in
+which case, the correct pupil plane configuration will be used for
+long- or short-wavelength bands (F184 is long, all else is short).
+In this case, no interpolation can be used, since it is defined
+using the extent of the chosen bandpass. If <code class="docutils literal notranslate"><span class="pre">wavelength</span></code> is given,
+then bandpass may be None, which will use the short-wavelength pupil
+plane image.</p></li>
+<li><p><strong>SCA_pos</strong> – Single galsim.PositionD indicating the position within the SCA
+for which the PSF should be created. If None, the exact center of
+the SCA is chosen. [default: None]</p></li>
+<li><p><strong>pupil_bin</strong> – The binning to apply to the pupil plane image. (See discussion above.)
+[default: 4]</p></li>
+<li><p><strong>wcs</strong> – The WCS to use to project the PSF into world coordinates.
+[default: galsim.PixelScale(galsim.roman.pixel_scale)]</p></li>
+<li><p><strong>n_waves</strong> – Number of wavelengths to use for setting up interpolation of the
+chromatic PSF objects, which can lead to much faster image
+rendering.  If None, then no interpolation is used. Note that
+users who want to interpolate can always set up the interpolation
+later on even if they do not do so when calling <a class="reference internal" href="#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getPSF</span></code></a>.
+[default: None]</p></li>
+<li><p><strong>extra_aberrations</strong> – Array of extra aberrations to include in the PSF model, on top of
+those that are part of the Roman design.  These should be
+provided in units of waves at the fiducial wavelength of 1293 nm,
+as an array of length 23 with entries 4 through 22 corresponding
+to defocus through the 22nd Zernike in the Noll convention.
+[default: None]</p></li>
+<li><p><strong>wavelength</strong> – An option to get an achromatic PSF for a single wavelength, for
+users who do not care about chromaticity of the PSF.  If None,
+then the fully chromatic PSF is returned.  Alternatively the user
+should supply either (a) a wavelength in nanometers, and they
+will get achromatic OpticalPSF objects for that wavelength, or
+(b) a bandpass object, in which case they will get achromatic
+OpticalPSF objects defined at the effective wavelength of that
+bandpass.  [default: False]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams
+for details. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
+inputs).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.getWCS">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">getWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SCAs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PA_is_FPA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_wcs.html#getWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.getWCS" title="Permalink to this definition"></a></dt>
+<dd><p>This routine returns a dict containing a WCS for each of the Roman SCAs (Sensor Chip Array, the
+equivalent of a chip in an optical CCD).  The Roman SCAs are labeled 1-18, so these numbers are
+used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
+<code class="docutils literal notranslate"><span class="pre">SCAs</span></code> option.  The basic instrument parameters used to create the WCS correspond to those in
+Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
+the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.</p>
+<p>The user must specify a position for observation, at which the center of the focal plane array
+will point.  This must be supplied as a CelestialCoord <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>.  In general, only certain
+positions are observable on certain dates, and for a given position there is an optimal position
+angle for the observatory (with the solar panels pointed as directly towards the sun as
+possible).  Users who are knowledgable about these details may choose to supply a position angle
+as <code class="docutils literal notranslate"><span class="pre">PA</span></code>, either for the observatory or for the focal plane (using <code class="docutils literal notranslate"><span class="pre">PA_is_FPA</span></code> to indicate
+this).  But otherwise, the routine will simply choose the optimal position angle for a given
+date.</p>
+<p>To fully understand all possible inputs and outputs to this routine, users may wish to consult
+the diagram on the GalSim wiki,
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams">https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>world_pos</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> indicating the position to observe at the center
+of the focal plane array (FPA).  Note that if the given position is not
+observable on the given date, then the routine will raise an exception.</p></li>
+<li><p><strong>PA</strong> – A <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> representing the position angle of the observatory +Y
+axis, unless <code class="docutils literal notranslate"><span class="pre">PA_is_FPA=True</span></code>, in which case it’s the position angle of
+the FPA.  For users to do not care about this, then leaving this as None
+will result in the routine using the supplied <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to
+select the optimal orientation for the observatory.  Note that if a user
+supplies a <code class="docutils literal notranslate"><span class="pre">PA</span></code> value, the routine does not check whether this orientation
+is actually allowed.  [default: None]</p></li>
+<li><p><strong>date</strong> – The date of the observation, as a python datetime object.  If None, then the
+vernal equinox in 2025 will be used.  [default: None]</p></li>
+<li><p><strong>PA_is_FPA</strong> – If True, then the position angle that was provided was the PA of the focal
+plane array, not the observatory. [default: False]</p></li>
+<li><p><strong>SCAs</strong> – A single number or iterable giving the SCAs for which the WCS should be
+obtained.  If None, then the WCS is calculated for all SCAs.
+[default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dict of WCS objects for each SCA.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.findSCA">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">findSCA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wcs_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_border</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_wcs.html#findSCA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.findSCA" title="Permalink to this definition"></a></dt>
+<dd><p>This is a subroutine to take a dict of WCS (one per SCA) from galsim.roman.getWCS() and query
+which SCA a particular real-world coordinate would be located on.  The position (<code class="docutils literal notranslate"><span class="pre">world_pos</span></code>)
+should be specified as a galsim.CelestialCoord.  If the position is not located on any of the
+SCAs, the result will be None.  Note that if <code class="docutils literal notranslate"><span class="pre">wcs_dict</span></code> does not include all SCAs in it, then
+it’s possible the position might lie on one of the SCAs that was not included.</p>
+<p>Depending on what the user wants to do with the results, they may wish to use the
+<code class="docutils literal notranslate"><span class="pre">include_border</span></code> keyword.  This keyword determines whether or not to include an additional
+border corresponding to half of the gaps between SCAs.  For example, if a user is drawing a
+single image they may wish to only know whether a given position falls onto an SCA, and if so,
+which one (ignoring everything in the gaps).  In contrast, a user who plans to make a sequence
+of dithered images might find it most useful to know whether the position is either on an SCA or
+close enough that in a small dither sequence it might appear on the SCA at some point.  Use of
+<code class="docutils literal notranslate"><span class="pre">include_border</span></code> switches between these scenarios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wcs_dict</strong> – The dict of WCS’s output from galsim.roman.getWCS().</p></li>
+<li><p><strong>world_pos</strong> – A galsim.CelestialCoord indicating the sky position of interest.</p></li>
+<li><p><strong>include_border</strong> – If True, then include the half-border around SCA to cover the gap
+between each sensor. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an integer value of the SCA on which the position falls, or None if the position is not
+on any SCA.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.allowedPos">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">allowedPos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_wcs.html#allowedPos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.allowedPos" title="Permalink to this definition"></a></dt>
+<dd><p>This routine can be used to check whether Roman would be allowed to look at a particular
+position (<code class="docutils literal notranslate"><span class="pre">world_pos</span></code>) on a given <code class="docutils literal notranslate"><span class="pre">date</span></code>.   This is determined by the angle of this position
+relative to the Sun.</p>
+<p>In general, Roman can point at angles relative to the Sun in the range 90+/-36 degrees.
+Obviously, pointing too close to the Sun would result in overly high sky backgrounds.  It is
+less obvious why Roman cannot look at a spot directly opposite from the Sun (180 degrees on the
+sky).  The reason is that the observatory is aligned such that if the observer is looking at
+some sky position, the solar panels are oriented at 90 degrees from that position.  So it’s
+always optimal for the observatory to be pointing at an angle of 90 degrees relative to the
+Sun.  It is also permitted to look within 36 degrees of that optimal position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>world_pos</strong> – A galsim.CelestialCoord indicating the position at which the observer
+wishes to look.</p></li>
+<li><p><strong>date</strong> – A python datetime object indicating the desired date of observation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True or False, indicating whether it is permitted to look at this position on this date.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.bestPA">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">bestPA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_wcs.html#bestPA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.bestPA" title="Permalink to this definition"></a></dt>
+<dd><p>This routine determines the best position angle for the observatory for a given observation date
+and position on the sky.</p>
+<p>The best/optimal position angle is determined by the fact that the solar panels are at 90
+degrees to the position being observed, and it is best to have those facing the Sun as directly
+as possible.  Note that if a given <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is not actually observable on the given
+<code class="docutils literal notranslate"><span class="pre">date</span></code>, then this routine will return None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>world_pos</strong> – A galsim.CelestialCoord indicating the position at which the observer
+wishes to look.</p></li>
+<li><p><strong>date</strong> – A python datetime object indicating the desired date of observation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the best position angle for the observatory, as a galsim.Angle, or None if the position
+is not observable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.convertCenter">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">convertCenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SCA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PA_is_FPA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.Angle(2.42406840554768e-06,</span> <span class="pre">coord.radians)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_wcs.html#convertCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.convertCenter" title="Permalink to this definition"></a></dt>
+<dd><p>This is a simple helper routine that takes an input position <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> that is meant to
+correspond to the position of the center of an SCA, and tells where the center of the focal
+plane array should be.  The goal is to provide a position that can be used as an input to
+getWCS(), which wants the center of the focal plane array.</p>
+<p>The results of the calculation are deterministic if given a fixed position angle (PA).  If it’s
+not given one, it will try to determine the best one for this location and date, like getWCS()
+does.</p>
+<p>Because of distortions varying across the focal plane, this routine has to iteratively correct
+its initial result based on empirical tests.  The <code class="docutils literal notranslate"><span class="pre">tol</span></code> kwarg can be used to adjust how
+careful it will be, but it always does at least one iteration.</p>
+<p>To fully understand all possible inputs and outputs to this routine, users may wish to consult
+the diagram on the GalSim wiki,
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams">https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>world_pos</strong> – A galsim.CelestialCoord indicating the position to observe at the center of the
+given SCA.  Note that if the given position is not observable on
+the given date, then the routine will raise an exception.</p></li>
+<li><p><strong>SCA</strong> – A single number giving the SCA for which the center should be located at
+<code class="docutils literal notranslate"><span class="pre">world_pos</span></code>.</p></li>
+<li><p><strong>PA</strong> – galsim.Angle representing the position angle of the observatory +Y axis, unless
+<code class="docutils literal notranslate"><span class="pre">PA_is_FPA=True</span></code>, in which case it’s the position angle of the FPA.  For
+users to do not care about this, then leaving this as None will result in the
+routine using the supplied <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to select the optimal
+orientation for the observatory.  Note that if a user supplies a <code class="docutils literal notranslate"><span class="pre">PA</span></code> value,
+the routine does not check whether this orientation is actually allowed.
+[default: None]</p></li>
+<li><p><strong>date</strong> – The date of the observation, as a python datetime object.  If None, then the
+vernal equinox in 2025 will be used.  [default: None]</p></li>
+<li><p><strong>PA_is_FPA</strong> – If True, then the position angle that was provided was the PA of the focal
+plane array, not the observatory. [default: False]</p></li>
+<li><p><strong>tol</strong> – Tolerance for errors due to distortions, as a galsim.Angle.
+[default: 0.5*galsim.arcsec]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CelestialCoord object indicating the center of the focal plane array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.applyNonlinearity">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">applyNonlinearity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_detectors.html#applyNonlinearity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.applyNonlinearity" title="Permalink to this definition"></a></dt>
+<dd><p>Applies the Roman nonlinearity function to the supplied image <code class="docutils literal notranslate"><span class="pre">im</span></code>.</p>
+<p>For more information about nonlinearity, see the docstring for galsim.Image.applyNonlinearity.
+Unlike that routine, this one does not require any arguments, since it uses the nonlinearity
+function defined within the Roman module.</p>
+<p>After calling this method, the Image instance <code class="docutils literal notranslate"><span class="pre">img</span></code> is transformed to include the
+nonlinearity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> – The Image to be transformed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.addReciprocityFailure">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">addReciprocityFailure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">139.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_detectors.html#addReciprocityFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.addReciprocityFailure" title="Permalink to this definition"></a></dt>
+<dd><p>Accounts for the reciprocity failure for the Roman directors and includes it in the original
+Image <code class="docutils literal notranslate"><span class="pre">img</span></code> directly.</p>
+<p>For more information about reciprocity failure, see the docstring for
+galsim.Image.addReciprocityFailure.  Unlike that routine, this one does not need the parameters
+for reciprocity failure to be provided, though it still takes exposure time as an optional
+argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The Image to be transformed.</p></li>
+<li><p><strong>exptime</strong> – The exposure time (t) in seconds, which goes into the expression for
+reciprocity failure given in the docstring.  If None, then the routine
+will use the default Roman exposure time in galsim.roman.exptime.
+[default: 139.8]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.applyIPC">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">applyIPC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_treatment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'extend'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_detectors.html#applyIPC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.applyIPC" title="Permalink to this definition"></a></dt>
+<dd><p>Applies the effect of interpixel capacitance (IPC) to the Image instance.</p>
+<p>For more information about IPC, see the docstring for galsim.Image.applyIPC.  Unlike that
+routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel
+defined within the Roman module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The Image to be transformed.</p></li>
+<li><p><strong>edge_treatment</strong> – Specifies the method of handling edges and should be one of
+‘crop’, ‘extend’ or ‘wrap’. See galsim.Image.applyIPC docstring
+for more information.
+[default: ‘extend’]</p></li>
+<li><p><strong>fill_value</strong> – Specifies the value (including nan) to fill the edges with when
+edge_treatment is ‘crop’. If unspecified or set to ‘None’, the
+original pixel values are retained at the edges. If
+edge_treatment is not ‘crop’, then this is ignored.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.applyPersistence">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">applyPersistence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_exposures</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fermi'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_detectors.html#applyPersistence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.applyPersistence" title="Permalink to this definition"></a></dt>
+<dd><p>This method applies either of the two different persistence models: ‘linear’ and ‘fermi’.
+Slew between pointings and consecutive resets after illumination are not considered.</p>
+<dl>
+<dt>‘linear’ persistence model</dt><dd><p>Applies the persistence effect to the Image instance by adding a small fraction of the
+previous exposures (up to 8) supplied as the ‘prev_exposures’ argument.
+For more information about persistence, see <a class="reference internal" href="image_class.html#galsim.Image.applyPersistence" title="galsim.Image.applyPersistence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">galsim.Image.applyPersistence</span></code></a>.
+Unlike that routine, this one does not need the coefficients to be specified. However,
+the list of previous 8 exposures will have to be supplied. Earlier exposures, if
+supplied, will be ignored.</p>
+</dd>
+<dt>‘fermi’ persistence model</dt><dd><p>Applies the persistence effect to the Image instance by adding the accumulated persistence
+dark current of previous exposures supplied as the ‘prev_exposures’ argument.
+Unlike galsim.Image.applyPersistence, this one does not use constant coefficients but a
+fermi model plus a linear tail below half of saturation.</p>
+<p>For more info about the fermi model, see:</p>
+<p><a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/persistence/">http://www.stsci.edu/hst/wfc3/ins_performance/persistence/</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The Image to be transformed.</p></li>
+<li><p><strong>prev_exposures</strong> – List of Image instances in the order of exposures, with the recent
+exposure being the first element. In the linear model, the exposures
+exceeding the limit (8 exposures) will be ignored.</p></li>
+<li><p><strong>method</strong> – The persistence model (‘linear’ or ‘fermi’) to be applied.
+[default: ‘fermi’]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.roman.allDetectorEffects">
+<span class="sig-prename descclassname"><span class="pre">galsim.roman.</span></span><span class="sig-name descname"><span class="pre">allDetectorEffects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_exposures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">139.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/roman/roman_detectors.html#allDetectorEffects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.roman.allDetectorEffects" title="Permalink to this definition"></a></dt>
+<dd><p>This utility applies all sources of noise and detector effects for Roman that are implemented
+in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
+background), dark current, and read noise.  The detector effects that are included are
+reciprocity failure, quantization, persistence, nonlinearity, and interpixel capacitance. It
+also includes the necessary factors of gain.  In short, the user should be able to pass in an
+Image with all sources of signal (background plus astronomical objects), and the Image will be
+modified to include all subsequent steps in the image generation process for Roman that are
+implemented in GalSim. However, to include the effect of persistence, the user needs to provide
+a list of recent exposures (without the readout effects) and the routine
+returns an updated list of recent exposures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – The Image to be modified.</p></li>
+<li><p><strong>prev_exposures</strong> – List of Image instances in the order of exposures, with
+the recent exposure being the first element. [default: ()]</p></li>
+<li><p><strong>rng</strong> – An optional galsim.BaseDeviate to use for the addition of noise.  If
+None, a new one will be initialized.  [default: None]</p></li>
+<li><p><strong>exptime</strong> – The exposure time, in seconds.  If None, then the Roman default
+exposure time will be used.  [default: 139.8]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated list of previous exposures Image instances.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>prev_exposures</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="des.html" class="btn btn-neutral float-left" title="The DES Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp.html" class="btn btn-neutral float-right" title="C++ Layer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

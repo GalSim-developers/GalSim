@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.bounds &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.bounds</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.bounds</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;Bounds&#39;</span><span class="p">,</span> <span class="s1">&#39;BoundsI&#39;</span><span class="p">,</span> <span class="s1">&#39;BoundsD&#39;</span><span class="p">,</span> <span class="s1">&#39;_BoundsI&#39;</span><span class="p">,</span> <span class="s1">&#39;_BoundsD&#39;</span><span class="p">,</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span>
+
+<div class="viewcode-block" id="Bounds"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds">[docs]</a><span class="k">class</span> <span class="nc">Bounds</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for representing image bounds as 2D rectangles.</span>
+
+<span class="sd">    Bounds is a base class for two slightly different kinds of bounds:</span>
+<span class="sd">    `BoundsD` describes bounds with floating point values in x and y.</span>
+<span class="sd">    `BoundsI` described bounds with integer values in x and y.</span>
+
+<span class="sd">    The bounds are stored as four numbers in each instance, (xmin, xmax, ymin, ymax), with an</span>
+<span class="sd">    additional boolean switch to say whether or not the Bounds rectangle has been defined.  The</span>
+<span class="sd">    rectangle is undefined if the min value &gt; the max value in either direction.</span>
+
+<span class="sd">    *Initialization*:</span>
+
+<span class="sd">    A `BoundsI` or `BoundsD` instance can be initialized in a variety of ways.  The most direct is</span>
+<span class="sd">    via four scalars::</span>
+
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsD(xmin, xmax, ymin, ymax)</span>
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsI(imin, imax, jmin, jmax)</span>
+
+<span class="sd">    In the `BoundsI` example above, ``imin``, ``imax``, ``jmin`` and ``jmax`` must all be integers</span>
+<span class="sd">    to avoid a TypeError exception.</span>
+
+<span class="sd">    Another way to initialize a `Bounds` instance is using two `Position` instances, the first</span>
+<span class="sd">    for ``(xmin,ymin)`` and the second for ``(xmax,ymax)``::</span>
+
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin), galsim.PositionD(xmax, ymax))</span>
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsI(galsim.PositionI(imin, jmin), galsim.PositionI(imax, jmax))</span>
+
+<span class="sd">    In both the examples above, the I/D type of `PositionI`/`PositionD` must match that of</span>
+<span class="sd">    `BoundsI`/`BoundsD`.</span>
+
+<span class="sd">    Finally, there are a two ways to lazily initialize a bounds instance with ``xmin = xmax``,</span>
+<span class="sd">    ``ymin = ymax``, which will have an undefined rectangle and the instance method isDefined()</span>
+<span class="sd">    will return False.  The first sets ``xmin = xmax = ymin = ymax = 0``::</span>
+
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsD()</span>
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsI()</span>
+
+<span class="sd">    The second method sets both upper and lower rectangle bounds to be equal to some position::</span>
+
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin))</span>
+<span class="sd">        &gt;&gt;&gt; bounds = galsim.BoundsI(galsim.PositionI(imin, jmin))</span>
+
+<span class="sd">    Once again, the I/D type of `PositionI`/`PositionD` must match that of `BoundsI`/`BoundsD`.</span>
+
+<span class="sd">    For the latter two initializations, you would typically then add to the bounds with::</span>
+
+<span class="sd">        &gt;&gt;&gt; bounds += pos1</span>
+<span class="sd">        &gt;&gt;&gt; bounds += pos2</span>
+<span class="sd">        &gt;&gt;&gt; [etc.]</span>
+
+<span class="sd">    Then the bounds will end up as the bounding box of all the positions that were added to it.</span>
+
+<span class="sd">    You can also find the intersection of two bounds with the &amp; operator::</span>
+
+<span class="sd">        &gt;&gt;&gt; overlap = bounds1 &amp; bounds2</span>
+
+<span class="sd">    This is useful for adding one image to another when part of the first image might fall off</span>
+<span class="sd">    the edge of the other image::</span>
+
+<span class="sd">        &gt;&gt;&gt; overlap = stamp.bounds &amp; image.bounds</span>
+<span class="sd">        &gt;&gt;&gt; image[overlap] += stamp[overlap]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot instantiate the base class. &quot;</span>
+                                  <span class="s2">&quot;Use either BoundsD or BoundsI.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">Bounds</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BoundsD</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">xmin</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">xmax</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ymin</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ymax</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">Position</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Single argument to </span><span class="si">%s</span><span class="s2"> must be either a Bounds or a Position&quot;</span><span class="o">%</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">Position</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">))</span> <span class="ow">and</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">Position</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">))):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Two arguments to </span><span class="si">%s</span><span class="s2"> must be Positions&quot;</span><span class="o">%</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> takes either 1, 2, or 4 arguments (</span><span class="si">%d</span><span class="s2"> given)&quot;</span><span class="o">%</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot provide both keyword and non-keyword arguments to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;xmin&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;xmax&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ymin&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ymax&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Keyword arguments, xmin, xmax, ymin, ymax are required for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Got unexpected keyword arguments </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Bounds.area"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.area">[docs]</a>    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the area of the enclosed region.</span>
+
+<span class="sd">        The area is a bit different for integer-type `BoundsI` and float-type `BoundsD` instances.</span>
+<span class="sd">        For floating point types, it is simply ``(xmax-xmin)*(ymax-ymin)``.  However, for integer</span>
+<span class="sd">        types, we add 1 to each size to correctly count the number of pixels being described by the</span>
+<span class="sd">        bounding box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Bounds.withBorder"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.withBorder">[docs]</a>    <span class="k">def</span> <span class="nf">withBorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `Bounds` object that expands the current bounds by the specified width.</span>
+
+<span class="sd">        If two arguments are given, then these are separate dx and dy borders.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_scalar</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="s2">&quot;dx&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="n">dx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_scalar</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="s2">&quot;dy&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="o">-</span><span class="n">dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="o">+</span><span class="n">dy</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;The lower left position of the `Bounds`.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The central position of the `Bounds`.</span>
+
+<span class="sd">        For a `BoundsI`, this will return an integer `PositionI`, which will be above and/or to</span>
+<span class="sd">        the right of the true center if the x or y ranges have an even number of pixels.</span>
+
+<span class="sd">        For a `BoundsD`, this is equivalent to true_center.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;center is invalid for an undefined Bounds&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_center</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">true_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The central position of the `Bounds` as a `PositionD`.</span>
+
+<span class="sd">        This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer `BoundsI`, where</span>
+<span class="sd">        this may not necessarily be an integer `PositionI`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;true_center is invalid for an undefined Bounds&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bounds.includes"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.includes">[docs]</a>    <span class="k">def</span> <span class="nf">includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test whether a supplied ``(x,y)`` pair, `Position`, or `Bounds` lie within a defined</span>
+<span class="sd">        `Bounds` rectangle of this instance.</span>
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; bounds = galsim.BoundsD(0., 100., 0., 100.)</span>
+<span class="sd">            &gt;&gt;&gt; bounds.includes(50., 50.)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; bounds.includes(galsim.PositionD(50., 50.))</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; bounds.includes(galsim.BoundsD(-50., -50., 150., 150.))</span>
+<span class="sd">            False</span>
+
+<span class="sd">        The type of the `PositionI`/`PositionD` and `BoundsI`/`BoundsD` instances (i.e. integer or</span>
+<span class="sd">        float type) should match that of the bounds instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Bounds</span><span class="p">):</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">()</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">isDefined</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="o">.</span><span class="n">xmin</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="o">.</span><span class="n">xmax</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="o">.</span><span class="n">ymin</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Position</span><span class="p">):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="ow">and</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid argument </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">()</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;include takes at least 1 argument (0 given)&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;include takes at most 2 arguments (</span><span class="si">%d</span><span class="s2"> given)&quot;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Bounds.expand"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor_x</span><span class="p">,</span> <span class="n">factor_y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Grow the `Bounds` by the supplied factor about the center.</span>
+
+<span class="sd">        If two arguments are given, then these are separate x and y factors to</span>
+<span class="sd">        expand by.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">factor_y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">factor_y</span> <span class="o">=</span> <span class="n">factor_x</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">factor_x</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">factor_y</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BoundsI</span><span class="p">):</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">dx</span><span class="p">))</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">dy</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withBorder</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bounds.isDefined"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.isDefined">[docs]</a>    <span class="k">def</span> <span class="nf">isDefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Test whether `Bounds` rectangle is defined.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span></div>
+
+<div class="viewcode-block" id="Bounds.getXMin"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMin">[docs]</a>    <span class="k">def</span> <span class="nf">getXMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Get the value of xmin.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span></div>
+
+<div class="viewcode-block" id="Bounds.getXMax"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMax">[docs]</a>    <span class="k">def</span> <span class="nf">getXMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Get the value of xmax.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span></div>
+
+<div class="viewcode-block" id="Bounds.getYMin"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMin">[docs]</a>    <span class="k">def</span> <span class="nf">getYMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Get the value of ymin.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span></div>
+
+<div class="viewcode-block" id="Bounds.getYMax"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMax">[docs]</a>    <span class="k">def</span> <span class="nf">getYMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Get the value of ymax.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span></div>
+
+<div class="viewcode-block" id="Bounds.shift"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shift the `Bounds` instance by a supplied `Position`.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        The shift method takes either a `PositionI` or `PositionD` instance, which must match</span>
+<span class="sd">        the type of the `Bounds` instance::</span>
+
+<span class="sd">            &gt;&gt;&gt; bounds = BoundsI(1,32,1,32)</span>
+<span class="sd">            &gt;&gt;&gt; bounds = bounds.shift(galsim.PositionI(3, 2))</span>
+<span class="sd">            &gt;&gt;&gt; bounds = BoundsD(0, 37.4, 0, 49.9)</span>
+<span class="sd">            &gt;&gt;&gt; bounds = bounds.shift(galsim.PositionD(3.9, 2.1))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;delta must be a </span><span class="si">%s</span><span class="s2"> instance&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;other must be a </span><span class="si">%s</span><span class="s2"> instance&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span>
+            <span class="n">xmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+            <span class="n">ymax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">xmin</span> <span class="o">&gt;</span> <span class="n">xmax</span> <span class="ow">or</span> <span class="n">ymin</span> <span class="o">&gt;</span> <span class="n">ymax</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span>
+                <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span>
+                <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+                <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">other</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;other must be either a </span><span class="si">%s</span><span class="s2"> or a </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.</span><span class="si">%s</span><span class="s2">(xmin=</span><span class="si">%r</span><span class="s2">, xmax=</span><span class="si">%r</span><span class="s2">, ymin=</span><span class="si">%r</span><span class="s2">, ymax=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.</span><span class="si">%s</span><span class="s2">()&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.</span><span class="si">%s</span><span class="s2">(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.</span><span class="si">%s</span><span class="s2">()&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getinitargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="BoundsD"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsD">[docs]</a><span class="k">class</span> <span class="nc">BoundsD</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A `Bounds` that takes floating point values.</span>
+
+<span class="sd">    See the `Bounds` doc string for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_pos_class</span> <span class="o">=</span> <span class="n">PositionD</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_b</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BoundsD</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">),</span>
+                               <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_check_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> must be a float value&quot;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoundsI"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsI">[docs]</a><span class="k">class</span> <span class="nc">BoundsI</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A `Bounds` that takes only integer values.</span>
+
+<span class="sd">    Typically used to define the bounding box of an image.</span>
+
+<span class="sd">    See the `Bounds` doc string for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_pos_class</span> <span class="o">=</span> <span class="n">PositionI</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;BoundsI must be initialized with integer values&quot;</span><span class="p">)</span>
+        <span class="c1"># Now make sure they are all ints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_b</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> must be an integer value&quot;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BoundsI.numpyShape"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsI.numpyShape">[docs]</a>    <span class="k">def</span> <span class="nf">numpyShape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;A simple utility function to get the numpy shape that corresponds to this `Bounds` object.&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="nf">_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Remember the + 1 this time to include the pixels on both edges of the bounds.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Write it this way to make sure the integer rounding goes the same way regardless</span>
+        <span class="c1"># of whether the values are positive or negative.</span>
+        <span class="c1"># e.g. (1,10,1,10) -&gt; (6,6)</span>
+        <span class="c1">#      (-10,-1,-10,-1) -&gt; (-5,-5)</span>
+        <span class="c1"># Just up and to the right of the true center in both cases.</span>
+        <span class="k">return</span> <span class="n">_PositionI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="_BoundsD"><a class="viewcode-back" href="../../bounds.html#galsim._BoundsD">[docs]</a><span class="k">def</span> <span class="nf">_BoundsD</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `BoundsD` constructor, but skips some sanity checks and argument parsing.</span>
+<span class="sd">    This requires that the four values be float types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">BoundsD</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">BoundsD</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">xmax</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ymin</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ymax</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="_BoundsI"><a class="viewcode-back" href="../../bounds.html#galsim._BoundsI">[docs]</a><span class="k">def</span> <span class="nf">_BoundsI</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `BoundsI` constructor, but skips some sanity checks and argument parsing.</span>
+<span class="sd">    This requires that the four values be int types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">BoundsI</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xmax</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymin</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymax</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

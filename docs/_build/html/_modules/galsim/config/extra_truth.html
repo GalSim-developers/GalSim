@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.extra_truth &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.extra_truth</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.extra_truth</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="kn">import</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..catalog</span> <span class="kn">import</span> <span class="n">OutputCatalog</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">basestring</span>
+
+<span class="c1"># The truth extra output type builds an OutputCatalog with truth information about each of the</span>
+<span class="c1"># objects being built by the configuration processing.  It stores the appropriate row information</span>
+<span class="c1"># in scratch space for each stamp and then adds them in order at the end of the file processing.</span>
+<span class="c1"># This means that the stamps can be built out of order by the multiprocessing and still show</span>
+<span class="c1"># up in the correct order in the output catalog.</span>
+
+<span class="c1"># Note that the order of the column names in the output catalog is taken from</span>
+<span class="c1"># config[&#39;output&#39;][&#39;truth&#39;][&#39;columns&#39;].keys().  So if config is a regular dict, the order</span>
+<span class="c1"># of the keys is semi-arbitrary.  However, if config is an OrderedDict, the keys come out</span>
+<span class="c1"># in the order specified.  The standard galsim executable reads the config file into an</span>
+<span class="c1"># OrderedDict for precisely this reason.</span>
+
+<div class="viewcode-block" id="TruthBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_truth.TruthBuilder">[docs]</a><span class="k">class</span> <span class="nc">TruthBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build an output truth catalog with user-defined columns, typically taken from</span>
+<span class="sd">    current values of various quantities for each constructed object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The function to call at the end of building each stamp</span>
+    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;columns&#39;</span><span class="p">]</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># Then the &quot;key&quot; is actually something to be parsed in the normal way.</span>
+                <span class="c1"># Caveat: We don&#39;t know the value_type here, so we give None.  This allows</span>
+                <span class="c1"># only a limited subset of the parsing.  Usually enough for truth items, but</span>
+                <span class="c1"># not fully featured.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">basestring</span><span class="p">):</span>
+                <span class="c1"># The item can just be a constant value.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span><span class="p">:</span>
+                <span class="c1"># This can also be handled by ParseValue</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
+                <span class="c1"># Pop off an initial @ if there is one.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">base</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># str(key) handles the possibility of unicode.  In particular, this happens with</span>
+                <span class="c1"># JSON files.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">base</span><span class="p">)</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s1">&#39;types&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">types</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">types</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Type mismatch found when building truth catalog at object </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">t1</span> <span class="o">!=</span> <span class="n">t2</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> has type </span><span class="si">%s</span><span class="s2">, but previously had type </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                        <span class="n">name</span><span class="p">,</span><span class="n">t1</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span><span class="n">t2</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Type mismatch found when building truth catalog.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span>
+
+    <span class="k">def</span> <span class="nf">_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># The function to call at the end of building each file to finalize the truth catalog</span>
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="c1"># Make the OutputCatalog</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;columns&#39;</span><span class="p">]</span>
+        <span class="c1"># Note: Provide a default here, because if all items were skipped it would otherwise</span>
+        <span class="c1"># lead to a KeyError.</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;types&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">OutputCatalog</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">types</span><span class="o">=</span><span class="n">types</span><span class="p">)</span>
+
+        <span class="c1"># Add all the rows in order to the OutputCatalog</span>
+        <span class="c1"># Note: types was popped above, so only the obj_num keys are left.</span>
+        <span class="n">obj_nums</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span>
+            <span class="n">cat</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cat</span>  <span class="c1"># This becomes self.final_data</span>
+
+    <span class="c1"># Write the catalog to a file</span>
+    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="c1"># Create an HDU of the FITS binary table.</span>
+    <span class="k">def</span> <span class="nf">writeHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_data</span><span class="o">.</span><span class="n">writeFitsHdu</span><span class="p">()</span></div>
+
+<span class="c1"># Register this as a valid extra output</span>
+<span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;truth&#39;</span><span class="p">,</span> <span class="n">TruthBuilder</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

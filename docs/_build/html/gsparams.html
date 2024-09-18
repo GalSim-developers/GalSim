@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The GSParams class &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Wavelength-dependent Profiles" href="chromatic.html" />
+    <link rel="prev" title="Transformed Profiles" href="transform.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Arbitrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">The GSParams class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.GSParams"><code class="docutils literal notranslate"><span class="pre">GSParams</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.GSParams.check"><code class="docutils literal notranslate"><span class="pre">GSParams.check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.GSParams.combine"><code class="docutils literal notranslate"><span class="pre">GSParams.combine()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.GSParams.withParams"><code class="docutils literal notranslate"><span class="pre">GSParams.withParams()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="sb.html">Surface Brightness Profiles</a></li>
+      <li class="breadcrumb-item active">The GSParams class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/gsparams.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-gsparams-class">
+<h1>The GSParams class<a class="headerlink" href="#the-gsparams-class" title="Permalink to this heading"></a></h1>
+<p>As mentioned in the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> docstring, all of the various <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes take an optional
+<code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument, which can be used to specify various numbers that govern the tradeoff
+between accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
+encapsulated in a class called <a class="reference internal" href="#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.GSParams">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">GSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minimum_fft_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum_fft_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8192</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folding_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepk_minimum_hlr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxk_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kvalue_accuracy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xvalue_accuracy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">realspace_relerr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">realspace_abserr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_relerr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_abserr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shoot_accuracy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_flux_variation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.81</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_division_for_extrema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">small_fraction_of_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSParams" title="Permalink to this definition"></a></dt>
+<dd><p>GSParams stores a set of numbers that govern how a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> makes various speed/accuracy
+tradeoff decisions.</p>
+<p>All <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes can take an optional parameter named <code class="docutils literal notranslate"><span class="pre">gsparams</span></code>, which would be an
+instance of this class.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gsp</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.4</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">3.2</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One can also update the parameters for an existing object using the method
+<a class="reference internal" href="gsobject.html#galsim.GSObject.withGSParams" title="galsim.GSObject.withGSParams"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.withGSParams</span></code></a>.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All parameters have reasonable default values.  You only need to specify the ones you want
+to change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>minimum_fft_size</strong> – The minimum size of any FFT that may need to be performed.
+[default: 128]</p></li>
+<li><p><strong>maximum_fft_size</strong> – The maximum allowed size of an image for performing an FFT.  This
+is more about memory use than accuracy.  We have this maximum
+value to help prevent the user from accidentally trying to perform
+an extremely large FFT that crashes the program. Instead, GalSim
+will raise an exception indicating that the image is too large,
+which is often a sign of an error in the user’s code. However, if
+you have the memory to handle it, you can raise this limit to
+allow the calculation to happen. [default: 8192]</p></li>
+<li><p><strong>folding_threshold</strong> – This sets a maximum amount of real space folding that is allowed,
+an effect caused by the periodic nature of FFTs.  FFTs implicitly
+use periodic boundary conditions, and a profile specified on a
+finite grid in Fourier space corresponds to a real space image
+that will have some overlap with the neighboring copies of the real
+space profile.  As the step size in k increases, the spacing
+between neighboring aliases in real space decreases, increasing the
+amount of folded, overlapping flux.  <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> is used
+to set an appropriate step size in k to allow at most this
+fraction of the flux to be folded.
+This parameter is also relevant when you let GalSim decide how
+large an image to use for your object.  The image is made to be
+large enough that at most a fraction <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> of the
+total flux is allowed to fall off the edge of the image.
+[default: 5.e-3]</p></li>
+<li><p><strong>stepk_minimum_hlr</strong> – In addition to the above constraint for aliasing, also set stepk
+such that pi/stepk is at least <code class="docutils literal notranslate"><span class="pre">stepk_minimum_hlr</span></code> times the
+profile’s half-light radius (for profiles that have a well-defined
+half-light radius). [default: 5]</p></li>
+<li><p><strong>maxk_threshold</strong> – This sets the maximum amplitude of the high frequency modes in
+Fourier space that are excluded by truncating the FFT at some
+maximum k value. Lowering this parameter can help minimize the
+effect of “ringing” if you see that in your images.
+[default: 1.e-3]</p></li>
+<li><p><strong>kvalue_accuracy</strong> – This sets the accuracy of values in Fourier space. Whenever there
+is some kind of approximation to be made in the calculation of a
+Fourier space value, the error in the approximation is constrained
+to be no more than this value times the total flux.
+[default: 1.e-5]</p></li>
+<li><p><strong>xvalue_accuracy</strong> – This sets the accuracy of values in real space. Whenever there is
+some kind of approximation to be made in the calculation of a
+real space value, the error in the approximation is constrained
+to be no more than this value times the total flux.
+[default: 1.e-5]</p></li>
+<li><p><strong>table_spacing</strong> – Several profiles use lookup tables for either the Hankel transform
+(<a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a>, <a class="reference internal" href="psf.html#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a>) or the real space radial function (<a class="reference internal" href="psf.html#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a>).
+We try to estimate a good spacing between values in the lookup
+tables based on either <code class="docutils literal notranslate"><span class="pre">xvalue_accuracy</span></code> or <code class="docutils literal notranslate"><span class="pre">kvalue_accuracy</span></code> as
+appropriate. However, you may change the spacing with this
+parameter. Using <code class="docutils literal notranslate"><span class="pre">table_spacing</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will use a spacing value that
+is that much smaller than the default, which should produce more
+accurate interpolations. [default: 1]</p></li>
+<li><p><strong>realspace_relerr</strong> – This sets the relative error tolerance for real-space integration.
+[default: 1.e-4]</p></li>
+<li><p><strong>realspace_abserr</strong> – This sets the absolute error tolerance for real-space integration.
+[default: 1.e-6]
+The estimated integration error for the flux value in each pixel
+when using the real-space rendering method (either explicitly with
+<code class="docutils literal notranslate"><span class="pre">method='real_space'</span></code> or if it is triggered automatically with
+<code class="docutils literal notranslate"><span class="pre">method='auto'</span></code>) is constrained to be no larger than either
+<code class="docutils literal notranslate"><span class="pre">realspace_relerr</span></code> times the pixel flux or <code class="docutils literal notranslate"><span class="pre">realspace_abserr</span></code>
+times the object’s total flux.</p></li>
+<li><p><strong>integration_relerr</strong> – The relative error tolerance for integrations other than real-space
+rendering. [default: 1.e-6]</p></li>
+<li><p><strong>integration_abserr</strong> – The absolute error tolerance for integrations other than real-space
+rendering. [default: 1.e-8]</p></li>
+<li><p><strong>shoot_accuracy</strong> – This sets the relative accuracy on the total flux when photon
+shooting.  The photon shooting algorithm at times needs to make
+approximations, such as how high in radius it needs to sample the
+radial profile. When such approximations need to be made, it makes
+sure that the resulting fractional error in the flux will be at
+most this much. [default: 1.e-5]</p></li>
+</ul>
+</dd>
+</dl>
+<p>After construction, all of the above parameters are available as read-only attributes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GSParams.check">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSParams.check" title="Permalink to this definition"></a></dt>
+<dd><p>Checks that gsparams is either a valid GSParams instance or None.</p>
+<p>In the former case, it returns gsparams, in the latter it returns default
+(GSParams.default if no other default specified).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GSParams.combine">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsp_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.combine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSParams.combine" title="Permalink to this definition"></a></dt>
+<dd><p>Combine a list of <a class="reference internal" href="#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instances using the most restrictive parameter from each.</p>
+<p>Uses the minimum value for most parameters. For the following parameters, it uses the
+maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GSParams.withParams">
+<span class="sig-name descname"><span class="pre">withParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.withParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSParams.withParams" title="Permalink to this definition"></a></dt>
+<dd><p>Return a <a class="reference internal" href="#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> that is identical to the current one except for any keyword
+arguments given here, which supersede the current value.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="transform.html" class="btn btn-neutral float-left" title="Transformed Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chromatic.html" class="btn btn-neutral float-right" title="Wavelength-dependent Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

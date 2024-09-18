@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helper Functions and Classes &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Lookup Tables" href="table.html" />
+    <link rel="prev" title="Photon Operators" href="photon_ops.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Helper Functions and Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Helper Functions and Classes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/utilities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="helper-functions-and-classes">
+<h1>Helper Functions and Classes<a class="headerlink" href="#helper-functions-and-classes" title="Permalink to this heading"></a></h1>
+<p>We have a number of helper functions and classes that are used by various parts of the
+code base.  These may be useful to know about, since they may be useful for other projects
+that use galsim and have similar needs.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="table.html">Lookup Tables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="table.html#galsim.LookupTable"><code class="docutils literal notranslate"><span class="pre">LookupTable</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="table.html#galsim.LookupTable2D"><code class="docutils literal notranslate"><span class="pre">LookupTable2D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="table.html#galsim.table._LookupTable2D"><code class="docutils literal notranslate"><span class="pre">_LookupTable2D()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="table.html#galsim.trapz"><code class="docutils literal notranslate"><span class="pre">trapz()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html#galsim.Catalog"><code class="docutils literal notranslate"><span class="pre">Catalog</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html#galsim.OutputCatalog"><code class="docutils literal notranslate"><span class="pre">OutputCatalog</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html#galsim.Dict"><code class="docutils literal notranslate"><span class="pre">Dict</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interpolant.html">Interpolants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Interpolant"><code class="docutils literal notranslate"><span class="pre">Interpolant</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Delta"><code class="docutils literal notranslate"><span class="pre">Delta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Nearest"><code class="docutils literal notranslate"><span class="pre">Nearest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Linear"><code class="docutils literal notranslate"><span class="pre">Linear</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Cubic"><code class="docutils literal notranslate"><span class="pre">Cubic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Quintic"><code class="docutils literal notranslate"><span class="pre">Quintic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.SincInterpolant"><code class="docutils literal notranslate"><span class="pre">SincInterpolant</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html#galsim.Lanczos"><code class="docutils literal notranslate"><span class="pre">Lanczos</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fits.html#reading-fits-files">Reading FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html#writing-fits-files">Writing FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html#fits-headers">FITS Headers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integ.html">Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.int1d"><code class="docutils literal notranslate"><span class="pre">int1d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.hankel"><code class="docutils literal notranslate"><span class="pre">hankel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.IntegrationRule"><code class="docutils literal notranslate"><span class="pre">IntegrationRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.MidptRule"><code class="docutils literal notranslate"><span class="pre">MidptRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.TrapzRule"><code class="docutils literal notranslate"><span class="pre">TrapzRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.QuadRule"><code class="docutils literal notranslate"><span class="pre">QuadRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.midptRule"><code class="docutils literal notranslate"><span class="pre">midptRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.trapzRule"><code class="docutils literal notranslate"><span class="pre">trapzRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.quadRule"><code class="docutils literal notranslate"><span class="pre">quadRule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.ImageIntegrator"><code class="docutils literal notranslate"><span class="pre">ImageIntegrator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator"><code class="docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator"><code class="docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bessel.html">Bessel Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.j0"><code class="docutils literal notranslate"><span class="pre">j0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.j1"><code class="docutils literal notranslate"><span class="pre">j1()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.jv"><code class="docutils literal notranslate"><span class="pre">jv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.jn"><code class="docutils literal notranslate"><span class="pre">jn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.kv"><code class="docutils literal notranslate"><span class="pre">kv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.kn"><code class="docutils literal notranslate"><span class="pre">kn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.yv"><code class="docutils literal notranslate"><span class="pre">yv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.yn"><code class="docutils literal notranslate"><span class="pre">yn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.iv"><code class="docutils literal notranslate"><span class="pre">iv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.j0_root"><code class="docutils literal notranslate"><span class="pre">j0_root()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.jv_root"><code class="docutils literal notranslate"><span class="pre">jv_root()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.si"><code class="docutils literal notranslate"><span class="pre">si()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.ci"><code class="docutils literal notranslate"><span class="pre">ci()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.sinc"><code class="docutils literal notranslate"><span class="pre">sinc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#galsim.bessel.gammainc"><code class="docutils literal notranslate"><span class="pre">gammainc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fft.html">Fourier Transforms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fft.html#galsim.fft.fft2"><code class="docutils literal notranslate"><span class="pre">fft2()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html#galsim.fft.ifft2"><code class="docutils literal notranslate"><span class="pre">ifft2()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html#galsim.fft.rfft2"><code class="docutils literal notranslate"><span class="pre">rfft2()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html#galsim.fft.irfft2"><code class="docutils literal notranslate"><span class="pre">irfft2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="zernike.html">Zernike Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.Zernike"><code class="docutils literal notranslate"><span class="pre">Zernike</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike"><code class="docutils literal notranslate"><span class="pre">DoubleZernike</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.noll_to_zern"><code class="docutils literal notranslate"><span class="pre">noll_to_zern()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.zernikeRotMatrix"><code class="docutils literal notranslate"><span class="pre">zernikeRotMatrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.zernikeBasis"><code class="docutils literal notranslate"><span class="pre">zernikeBasis()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.zernikeGradBases"><code class="docutils literal notranslate"><span class="pre">zernikeGradBases()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.doubleZernikeBasis"><code class="docutils literal notranslate"><span class="pre">doubleZernikeBasis()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html#galsim.zernike.describe_zernike"><code class="docutils literal notranslate"><span class="pre">describe_zernike()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html#galsim.dcr.air_refractive_index_minus_one"><code class="docutils literal notranslate"><span class="pre">air_refractive_index_minus_one()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html#galsim.dcr.get_refraction"><code class="docutils literal notranslate"><span class="pre">get_refraction()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html#galsim.dcr.zenith_parallactic_angles"><code class="docutils literal notranslate"><span class="pre">zenith_parallactic_angles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html#galsim.dcr.parse_dcr_angles"><code class="docutils literal notranslate"><span class="pre">parse_dcr_angles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cd.html">Charge Deflection Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cd.html#galsim.cdmodel.BaseCDModel"><code class="docutils literal notranslate"><span class="pre">BaseCDModel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html#galsim.cdmodel.PowerLawCD"><code class="docutils literal notranslate"><span class="pre">PowerLawCD</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#decorators">Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#openmp-utilties">OpenMP Utilties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#lru-cache">LRU Cache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#context-manager-for-writing-atmosphericscreen-pickles">Context Manager for writing AtmosphericScreen pickles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#other-possibly-useful-classes">Other Possibly Useful Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#math-calculations">Math Calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#utilities-related-to-numpy-functions">Utilities Related to NumPy Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#test-suite-helper-functions-and-contexts">Test Suite Helper Functions and Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#other-helper-functions">Other Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#galsim-specific-helper-functions">GalSim-specific Helper Functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="photon_ops.html" class="btn btn-neutral float-left" title="Photon Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="table.html" class="btn btn-neutral float-right" title="Lookup Tables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

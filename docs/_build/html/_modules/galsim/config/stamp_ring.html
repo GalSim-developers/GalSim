@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.stamp_ring &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.stamp_ring</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.stamp_ring</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">StampBuilder</span><span class="p">,</span> <span class="n">RegisterStampType</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">BuildGSObject</span><span class="p">,</span> <span class="n">TransformObject</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">radians</span>
+
+<span class="c1"># This file adds stamp type Ring which builds an object once every n times, and then</span>
+<span class="c1"># rotates it in a ring for the other n-1 times per per group.</span>
+
+<div class="viewcode-block" id="RingBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.stamp_ring.RingBuilder">[docs]</a><span class="k">class</span> <span class="nc">RingBuilder</span><span class="p">(</span><span class="n">StampBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This performs the tasks necessary for building a Ring stamp type.</span>
+
+<span class="sd">    It uses the regular Basic functions for most things.</span>
+<span class="sd">    It specializes the setup, buildProfile, reject, and makeTasks functions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the initialization and setup for the Ring type.</span>
+
+<span class="sd">        Most of the work is done by SetupBasic, but we do need to check that the required parameters</span>
+<span class="sd">        are present, and also that no additional parameters are present.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the stamp field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            xsize:      The xsize of the image to build (if known).</span>
+<span class="sd">            ysize:      The ysize of the image to build (if known).</span>
+<span class="sd">            ignore:     A list of parameters that are allowed to be in config that we can</span>
+<span class="sd">                        ignore here. i.e. it won&#39;t be an error if these parameters are present.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            xsize, ysize, image_pos, world_pos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;full_rotation&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">,</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="c1"># Ignore the transformation specifications that are allowed in stamp for Ring types.</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="s1">&#39;dilate&#39;</span><span class="p">,</span> <span class="s1">&#39;dilation&#39;</span><span class="p">,</span> <span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="s1">&#39;rotation&#39;</span><span class="p">,</span> <span class="s1">&#39;scale_flux&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;magnify&#39;</span><span class="p">,</span> <span class="s1">&#39;magnification&#39;</span><span class="p">,</span> <span class="s1">&#39;shear&#39;</span><span class="p">,</span> <span class="s1">&#39;shift&#39;</span> <span class="p">]</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">num</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">num</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Attribute num for gal.type == Ring must be &gt; 0&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+
+        <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the number of items.</span>
+        <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+
+        <span class="c1"># Set the default full_rotation to pi radians</span>
+        <span class="k">if</span> <span class="s1">&#39;full_rotation&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;full_rotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">radians</span>
+
+        <span class="c1"># Now go on and do the base class setup.</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RingBuilder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">buildProfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the object to be drawn.</span>
+
+<span class="sd">        For the first item in the ring, this is the same as Basic. It stores the galaxy object</span>
+<span class="sd">        created on the first time.  Then for later stamps in the ring, it retrieves the stored</span>
+<span class="sd">        first galaxy and just rotates it before convolving by the psf.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the stamp field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.</span>
+<span class="sd">            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this</span>
+<span class="sd">                        list by the galaxy object.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the final profile</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># These have all already been checked to exist in SetupRing.</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for Ring&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">%</span> <span class="n">num</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Then we are on the first item in the ring, so make it normally.</span>
+            <span class="n">gal</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s2">&quot;The gal field must define a valid galaxy for stamp type=Ring.&quot;</span><span class="p">)</span>
+            <span class="c1"># Save the galaxy profile for next time.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">gal</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Grab the saved first galaxy.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s2">&quot;Building Ring after the first item, but no first gal stored.&quot;</span><span class="p">)</span>
+            <span class="n">gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first</span>
+            <span class="n">full_rot</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;full_rotation&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">Angle</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dtheta</span> <span class="o">=</span> <span class="n">full_rot</span> <span class="o">/</span> <span class="n">num</span>
+            <span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">index</span><span class="o">*</span><span class="n">dtheta</span><span class="p">)</span>
+
+        <span class="c1"># Apply any transformations that are given in the stamp field.</span>
+        <span class="n">gal</span> <span class="o">=</span> <span class="n">TransformObject</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Convolve</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gal</span>
+
+    <span class="k">def</span> <span class="nf">reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
+
+<span class="sd">        This is the same as base class reject for the first item in the ring.  Later items are not</span>
+<span class="sd">        checked though, since rejecting them would mess up the ring.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the stamp field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            prof:       The profile that was drawn.</span>
+<span class="sd">            psf:        The psf that was used to build the profile.</span>
+<span class="sd">            image:      The postage stamp image.  No noise is on it yet at this point.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            whether the galaxy was rejected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RingBuilder</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+
+<span class="sd">        For the Ring stamp type, we group jobs into sets of num.  If there are extra jobs that</span>
+<span class="sd">        don&#39;t fit into a full ring, the last task will be a partial ring.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the stamp field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            jobs:       A list of jobs to split up into tasks.  Each job in the list is a</span>
+<span class="sd">                        dict of parameters that includes &#39;obj_num&#39;.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;num&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Attribute num is required for type = Ring&quot;</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ntot</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">(</span><span class="n">jobs</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="n">num</span><span class="p">,</span><span class="n">ntot</span><span class="p">))</span> <span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntot</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+
+<span class="c1"># Register this as a valid stamp type</span>
+<span class="n">RegisterStampType</span><span class="p">(</span><span class="s1">&#39;Ring&#39;</span><span class="p">,</span> <span class="n">RingBuilder</span><span class="p">())</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

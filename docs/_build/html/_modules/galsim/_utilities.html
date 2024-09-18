@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim._utilities &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim._utilities</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim._utilities</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="c1"># This file is logically part of utilities.py, but to avoid circular imports, we</span>
+<span class="c1"># put a few things in here so files can import _utilties without triggering an ImportError.</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
+
+<span class="c1"># Python 2/3 compatible definition of basestring without past.builtins</span>
+<span class="c1"># (Based on this SO answer: https://stackoverflow.com/a/33699705/1332281)</span>
+<span class="n">basestring</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">u</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../misc.html#galsim.utilities.lazy_property">[docs]</a><span class="k">class</span> <span class="nc">lazy_property</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This decorator will act similarly to @property, but will be efficient for multiple access</span>
+<span class="sd">    to values that require some significant calculation.</span>
+
+<span class="sd">    It works by replacing the attribute with the computed value, so after the first access,</span>
+<span class="sd">    the property (an attribute of the class) is superseded by the new attribute of the instance.</span>
+
+<span class="sd">    Note that is should only be used for non-mutable data, since the calculation will not be</span>
+<span class="sd">    repeated if anything about the instance changes.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        @lazy_property</span>
+<span class="sd">        def slow_function_to_be_used_as_a_property(self):</span>
+<span class="sd">            x =  ...  # Some slow calculation.</span>
+<span class="sd">            return x</span>
+
+<span class="sd">    Base on an answer from http://stackoverflow.com/a/6849299</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fget</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fget</span> <span class="o">=</span> <span class="n">fget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_name</span> <span class="o">=</span> <span class="n">fget</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="doc_inherit"><a class="viewcode-back" href="../../misc.html#galsim.utilities.doc_inherit">[docs]</a><span class="k">class</span> <span class="nc">doc_inherit</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This decorator will grab a doc string from a base class version of a method.</span>
+<span class="sd">    Useful if the subclass doesn&#39;t change anything about the method API, but just has</span>
+<span class="sd">    a specialized implementation.  This lets the documentation live only in one place.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        class Base:</span>
+<span class="sd">            def some_method(self):</span>
+<span class="sd">                &quot;&quot;&quot;A nice description of the functionality</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+<span class="sd">                pass</span>
+
+<span class="sd">        class Sub(Base):</span>
+
+<span class="sd">            @doc_inherit</span>
+<span class="sd">            def some_method(self):</span>
+<span class="sd">                # Don&#39;t bother with any doc string here.</span>
+<span class="sd">                pass</span>
+
+<span class="sd">    Based on the Docstring Inheritance Decorator at:</span>
+
+<span class="sd">    https://github.com/ActiveState/code/wiki/Python_index_1</span>
+
+<span class="sd">    Although I (MJ) modified it slightly, since the original recipe there had a bug that made it</span>
+<span class="sd">    not work properly with 2 levels of sub-classing (e.g. Pixel &lt;- Box &lt;- GSObject).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mthd</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mthd</span> <span class="o">=</span> <span class="n">mthd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">mthd</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">:</span> <span class="c1"># pragma: no branch</span>
+            <span class="n">parfunc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parfunc</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parfunc</span><span class="p">,</span> <span class="s1">&#39;__doc__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span> <span class="c1"># pragma: no branch</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_with_inst</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_no_inst</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_with_inst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">):</span>
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mthd</span><span class="p">,</span> <span class="n">assigned</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;__name__&#39;</span><span class="p">,</span><span class="s1">&#39;__module__&#39;</span><span class="p">))</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mthd</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_parent_doc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_no_inst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">):</span>
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mthd</span><span class="p">,</span> <span class="n">assigned</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;__name__&#39;</span><span class="p">,</span><span class="s1">&#39;__module__&#39;</span><span class="p">))</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="c1"># pragma: no cover (without inst, this is not normally called.)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mthd</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_parent_doc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">parfunc</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">use_parent_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t find &#39;</span><span class="si">%s</span><span class="s2">&#39; in parents&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="vm">__doc__</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="isinteger"><a class="viewcode-back" href="../../misc.html#galsim.utilities.isinteger">[docs]</a><span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a value is an integer type (including np.int64, long, etc.)</span>
+
+<span class="sd">    Specifically, it checks whether value == int(value).</span>
+
+<span class="sd">    Parameter:</span>
+<span class="sd">        value:      The value to be checked whether it is an integer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the value is an integer type, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="ensure_dir"><a class="viewcode-back" href="../../misc.html#galsim.utilities.ensure_dir">[docs]</a><span class="k">def</span> <span class="nf">ensure_dir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make sure the directory for the target location exists, watching for a race condition</span>
+
+<span class="sd">    In particular check if the OS reported that the directory already exists when running</span>
+<span class="sd">    makedirs, which can happen if another process creates it before this one can</span>
+
+<span class="sd">    Parameter:</span>
+<span class="sd">        target:     The file name for which to ensure that all necessary directories exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_ERR_FILE_EXISTS</span><span class="o">=</span><span class="mi">17</span>
+    <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="k">return</span>
+
+    <span class="n">exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="c1"># check if the file now exists, which can happen if some other</span>
+            <span class="c1"># process created the directory between the os.path.exists call</span>
+            <span class="c1"># above and the time of the makedirs attempt.  This is OK</span>
+            <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">_ERR_FILE_EXISTS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span>
+
+    <span class="k">elif</span> <span class="n">exists</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;tried to make directory &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
+                      <span class="s2">&quot;but a non-directory file of that &quot;</span>
+                      <span class="s2">&quot;name already exists&quot;</span> <span class="o">%</span> <span class="nb">dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LRU_Cache"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache">[docs]</a><span class="k">class</span> <span class="nc">LRU_Cache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplified Least Recently Used Cache.</span>
+
+<span class="sd">    Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,</span>
+<span class="sd">    but added a method for dynamic resizing.  The least recently used cached item is</span>
+<span class="sd">    overwritten on a cache miss.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        user_function:  A python function to cache.</span>
+<span class="sd">        maxsize:        Maximum number of inputs to cache.  [Default: 1024]</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; def slow_function(*args) # A slow-to-evaluate python function</span>
+<span class="sd">        &gt;&gt;&gt;    ...</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; v1 = slow_function(*k1)  # Calling function is slow</span>
+<span class="sd">        &gt;&gt;&gt; v1 = slow_function(*k1)  # Calling again with same args is still slow</span>
+<span class="sd">        &gt;&gt;&gt; cache = galsim.utilities.LRU_Cache(slow_function)</span>
+<span class="sd">        &gt;&gt;&gt; v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time</span>
+<span class="sd">        &gt;&gt;&gt; v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_function</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+        <span class="c1"># Link layout:     [PREV, NEXT, KEY, RESULT]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_function</span> <span class="o">=</span> <span class="n">user_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">maxsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxsize</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">last</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">last</span> <span class="o">=</span> <span class="p">[</span><span class="n">last</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">root</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">last</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">):</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">link</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Cache hit: move link to last position</span>
+            <span class="n">link_prev</span><span class="p">,</span> <span class="n">link_next</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">link</span>
+            <span class="n">link_prev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_next</span>
+            <span class="n">link_next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">link_prev</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">last</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
+            <span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">last</span>
+            <span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="c1"># Cache miss: evaluate and insert new key/value at root, then increment root</span>
+        <span class="c1">#             so that just-evaluated value is in last position.</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_function</span><span class="p">(</span><span class="o">*</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>  <span class="c1"># re-establish root in case user_function modified it due to recursion</span>
+        <span class="n">root</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">root</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">oldroot</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">root</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">oldkey</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">root</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">oldvalue</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">cache</span><span class="p">[</span><span class="n">oldkey</span><span class="p">]</span>
+        <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">oldroot</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="LRU_Cache.resize"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache.resize">[docs]</a>    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the cache.</span>
+
+<span class="sd">        Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain</span>
+<span class="sd">        in the cache.  Decreasing the size of the cache will necessarily remove items from the</span>
+<span class="sd">        cache if the cache is already filled.  Items are removed in least recently used order.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            maxsize:    The new maximum number of inputs to cache.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">oldsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span>
+        <span class="k">if</span> <span class="n">maxsize</span> <span class="o">==</span> <span class="n">oldsize</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+            <span class="k">if</span> <span class="n">maxsize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid maxsize&quot;</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">maxsize</span> <span class="o">&lt;</span> <span class="n">oldsize</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">oldsize</span> <span class="o">-</span> <span class="n">maxsize</span><span class="p">):</span>
+                    <span class="c1"># Delete root.next</span>
+                    <span class="n">current_next_link</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">new_next_link</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">new_next_link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span>
+                    <span class="k">del</span> <span class="n">cache</span><span class="p">[</span><span class="n">current_next_link</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1">#  maxsize &gt; oldsize:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxsize</span> <span class="o">-</span> <span class="n">oldsize</span><span class="p">):</span>
+                    <span class="c1"># Insert between root and root.next</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+                    <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+                    <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
+                    <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span></div></div>
+
+
+<div class="viewcode-block" id="math_eval"><a class="viewcode-back" href="../../misc.html#galsim.utilities.math_eval">[docs]</a><span class="k">def</span> <span class="nf">math_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">other_modules</span><span class="o">=</span><span class="p">()):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate a string that may include numpy, np, or math commands.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        str:            The string to evaluate</span>
+<span class="sd">        other_modules.  Other modules in addition to numpy, np, math to import as well.</span>
+<span class="sd">                        Should be given as a list of strings.  [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Whatever the string evaluates to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import numpy&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import math&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import coord&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">other_modules</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (We don&#39;t use this.)</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
+    <span class="c1"># A few other things that show up in reprs, so useful to import here.</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray&#39;</span><span class="p">,</span>
+         <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from astropy.units import Unit&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WeakMethod"><a class="viewcode-back" href="../../misc.html#galsim.utilities.WeakMethod">[docs]</a><span class="k">class</span> <span class="nc">WeakMethod</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a method in a weakref.</span>
+
+<span class="sd">    This is useful if you want to specialize a function if certain conditions hold.</span>
+<span class="sd">    You can check those conditions and return one of several possible implementations as</span>
+<span class="sd">    a `lazy_property`.</span>
+
+<span class="sd">    Using just a normal ``weakref`` doesn&#39;t work, but this class will work.</span>
+
+<span class="sd">    From http://code.activestate.com/recipes/81253-weakmethod/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="vm">__func__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="vm">__self__</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the reference is dead, self.c() will be None, so this will raise an</span>
+            <span class="c1"># AttributeError: &#39;NoneType&#39; object has no attribute ...</span>
+            <span class="c1"># Hopefully the method itself won&#39;t raise an AttributeError for anything else.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s1">&#39;Method called on dead object&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

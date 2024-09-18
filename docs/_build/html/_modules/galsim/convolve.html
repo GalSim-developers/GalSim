@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.convolve &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.convolve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.convolve</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;Convolve&#39;</span><span class="p">,</span> <span class="s1">&#39;Convolution&#39;</span><span class="p">,</span> <span class="s1">&#39;Deconvolve&#39;</span><span class="p">,</span> <span class="s1">&#39;Deconvolution&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;AutoConvolve&#39;</span><span class="p">,</span> <span class="s1">&#39;AutoConvolution&#39;</span><span class="p">,</span> <span class="s1">&#39;AutoCorrelate&#39;</span><span class="p">,</span> <span class="s1">&#39;AutoCorrelation&#39;</span><span class="p">,</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">chromatic</span> <span class="k">as</span> <span class="n">chrom</span>
+
+<div class="viewcode-block" id="Convolve"><a class="viewcode-back" href="../../composite.html#galsim.Convolve">[docs]</a><span class="k">def</span> <span class="nf">Convolve</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.</span>
+
+<span class="sd">    This function will inspect its input arguments to decide if a `Convolution` object or a</span>
+<span class="sd">    `ChromaticConvolution` object is required to represent the convolution of surface</span>
+<span class="sd">    brightness profiles.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        args:               Unnamed args should be a list of objects to convolve.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the objects have hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to each of the components.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a `Convolution` or `ChromaticConvolution` instance as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First check for number of arguments != 0</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;At least one ChromaticObject or GSObject must be provided.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">GSObject</span><span class="p">,</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticObject</span><span class="p">)):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Single input argument must be a GSObject, ChromaticObject, &quot;</span>
+                            <span class="o">+</span> <span class="s2">&quot;or a (possibly mixed) list of them.&quot;</span><span class="p">)</span>
+    <span class="c1"># else args is already the list of objects</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticObject</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticConvolution</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Convolution</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Convolution"><a class="viewcode-back" href="../../composite.html#galsim.Convolution">[docs]</a><span class="k">class</span> <span class="nc">Convolution</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for convolving 2 or more `GSObject` instances.</span>
+
+<span class="sd">    The convolution will normally be done using discrete Fourier transforms of each of the component</span>
+<span class="sd">    profiles, multiplying them together, and then transforming back to real space.</span>
+
+<span class="sd">    There is also an option to do the convolution as integrals in real space.  To do this, use the</span>
+<span class="sd">    optional keyword argument ```real_space = True``.  Currently, the real-space integration is only</span>
+<span class="sd">    enabled for convolving 2 profiles.  (Aside from the trivial implementaion for 1 profile.)  If</span>
+<span class="sd">    you try to use it for more than 2 profiles, an exception will be raised.</span>
+
+<span class="sd">    The real-space convolution is normally slower than the DFT convolution.  The exception is if</span>
+<span class="sd">    both component profiles have hard edges, e.g. a truncated `Moffat` or `Sersic` with a `Pixel`.</span>
+<span class="sd">    In that case, the highest frequency ``maxk`` for each component is quite large since the</span>
+<span class="sd">    ringing dies off fairly slowly.  So it can be quicker to use real-space convolution instead.</span>
+<span class="sd">    Also, real-space convolution tends to be more accurate in this case as well.</span>
+
+<span class="sd">    If you do not specify either ``real_space = True`` or ``False`` explicitly, then we check if</span>
+<span class="sd">    there are 2 profiles, both of which have hard edges.  In this case, we automatically use</span>
+<span class="sd">    real-space convolution.  In all other cases, the default is not to use real-space convolution.</span>
+
+<span class="sd">    The normal way to use this class is to use the Convolve() factory function::</span>
+
+<span class="sd">        &gt;&gt;&gt; gal = galsim.Sersic(n, half_light_radius)</span>
+<span class="sd">        &gt;&gt;&gt; psf = galsim.Gaussian(sigma)</span>
+<span class="sd">        &gt;&gt;&gt; final = galsim.Convolve([gal, psf])</span>
+
+<span class="sd">    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.</span>
+<span class="sd">    ``Convolve(psf, gal)``) or as a list (e.g. ``Convolve([psf, gal])``).  Any number of objects may</span>
+<span class="sd">    be provided using either syntax.  (Well, the list has to include at least 1 item.)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        args:               Unnamed args should be a list of objects to convolve.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the objects have hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to each of the components.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+
+<span class="sd">    Note: if ``gsparams`` is unspecified (or None), then the Convolution instance will use the most</span>
+<span class="sd">    restrictive combination of parameters from each of the component objects. Normally, this means</span>
+<span class="sd">    the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few</span>
+<span class="sd">    parameters, the largest numerical value is used.  See `GSParams.combine` for details.</span>
+
+<span class="sd">    Furthermore, the gsparams used for the Convolution (either given explicitly or derived from the</span>
+<span class="sd">    components) will normally be applied to each of the components.  It doesn&#39;t usually make much</span>
+<span class="sd">    sense to apply stricter-than-normal accuracy or threshold values to one component but not</span>
+<span class="sd">    another in a Convolution, so this ensures that they all have consistent rendering behavior.</span>
+<span class="sd">    However, if you want to keep the existing gsparams of the component objects, then you may</span>
+<span class="sd">    set ``propagate_gsparams=False``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># First check for number of arguments != 0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;At least one GSObject must be provided.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">GSObject</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Single input argument must be a GSObject or list of them.&quot;</span><span class="p">)</span>
+        <span class="c1"># else args is already the list of objects</span>
+
+        <span class="c1"># Check kwargs</span>
+        <span class="c1"># real_space can be True or False (default if omitted is None), which specifies whether to</span>
+        <span class="c1"># do the convolution as an integral in real space rather than as a product in fourier</span>
+        <span class="c1"># space.  If the parameter is omitted (or explicitly given as None I guess), then</span>
+        <span class="c1"># we will usually do the fourier method.  However, if there are 2 components _and_ both of</span>
+        <span class="c1"># them have hard edges, then we use real-space convolution.</span>
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;real_space&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;gsparams&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;propagate_gsparams&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Make sure there is nothing left in the dict.</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Convolution constructor got unexpected keyword argument(s): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="c1"># Check whether to perform real space convolution...</span>
+        <span class="c1"># Start by checking if all objects have a hard edge.</span>
+        <span class="n">hard_edge</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Arguments to Convolution must be GSObjects, not </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">has_hard_edges</span><span class="p">:</span>
+                <span class="n">hard_edge</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">real_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The automatic determination is to use real_space if 2 items, both with hard edges.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">real_space</span> <span class="o">=</span> <span class="n">hard_edge</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">real_space</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span> <span class="o">!=</span> <span class="n">real_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;real_space must be a boolean&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Warn if doing DFT convolution for objects with hard edges</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">real_space</span> <span class="ow">and</span> <span class="n">hard_edge</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Doing convolution of 2 objects, both with hard edges. &quot;</span>
+                            <span class="s2">&quot;This might be more accurate and/or faster using real_space=True&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Doing convolution where all objects have hard edges. &quot;</span>
+                            <span class="s2">&quot;There might be some inaccuracies due to ringing in k-space.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">real_space</span><span class="p">:</span>
+            <span class="c1"># Can&#39;t do real space if nobj &gt; 2</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Real-space convolution of more than 2 objects is not implemented. &quot;</span>
+                            <span class="s2">&quot;Switching to DFT method.&quot;</span><span class="p">)</span>
+                <span class="n">real_space</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># Also can&#39;t do real space if any object is not analytic, so check for that.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">is_analytic_x</span><span class="p">:</span>
+                        <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;A component to be convolved is not analytic in real space. &quot;</span>
+                                    <span class="s2">&quot;Cannot use real space convolution. Switching to DFT method.&quot;</span><span class="p">)</span>
+                        <span class="n">real_space</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">break</span>
+
+        <span class="c1"># Save the construction parameters (as they are at this point) as attributes so they</span>
+        <span class="c1"># can be inspected later if necessary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span>
+
+        <span class="c1"># Figure out what gsparams to use</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If none is given, take the most restrictive combination from the obj_list.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">combine</span><span class="p">([</span><span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If something explicitly given, then use that.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+
+        <span class="c1"># Apply gsparams to all in obj_list.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="n">args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of objects being convolved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="sd">        than FFT convolution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">SBList</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">_sbp</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBConvolve</span><span class="p">(</span><span class="n">SBList</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># If one of the objects has a noise attribute, then we convolve it by the others.</span>
+        <span class="c1"># More than one is not allowed.</span>
+        <span class="n">_noise</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Unable to propagate noise in galsim.Convolution when &quot;</span>
+                                <span class="s2">&quot;multiple objects have noise attribute&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="n">_noise</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">noise</span>
+                <span class="n">others</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj2</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">obj2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">i</span> <span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">others</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">_noise</span> <span class="o">=</span> <span class="n">_noise</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">others</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">others</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">_noise</span> <span class="o">=</span> <span class="n">_noise</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">Convolve</span><span class="p">(</span><span class="n">others</span><span class="p">))</span>
+                <span class="c1"># else len == 0, so just use _noise directly.</span>
+        <span class="k">return</span> <span class="n">_noise</span>
+
+<div class="viewcode-block" id="Convolution.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.Convolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams</span>
+<span class="sd">            of each object being convolved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obj_list</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">real_space</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Convolution&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Convolution(</span><span class="si">%r</span><span class="s1">, real_space=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_list</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.Convolve(</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, real_space=True&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">:</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">maxk_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">maxk</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">maxk_list</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is approximate.  stepk ~ 2pi/R</span>
+        <span class="c1"># Assume R_final^2 = Sum(R_i^2)</span>
+        <span class="c1"># So 1/stepk^2 = 1/Sum(1/stepk_i^2)</span>
+        <span class="n">inv_stepksq_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">stepk</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">inv_stepksq_list</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_has_hard_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">has_hard_edges</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_is_axisymmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">axi_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">is_axisymmetric</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axi_list</span><span class="p">))</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_is_analytic_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_analytic_x</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">is_analytic_x</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">ax_list</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_is_analytic_k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ak_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">is_analytic_k</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">ak_list</span><span class="p">))</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cen_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">centroid</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cen_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">cen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">flux_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">flux</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">flux_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_calc_pn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pos_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">positive_flux</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="n">neg_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">negative_flux</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="n">p_net</span> <span class="o">=</span> <span class="n">pos_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_net</span> <span class="o">=</span> <span class="n">neg_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">neg_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">p_net</span><span class="p">,</span> <span class="n">n_net</span> <span class="o">=</span> <span class="n">p_net</span><span class="o">*</span><span class="n">p</span> <span class="o">+</span> <span class="n">n_net</span><span class="o">*</span><span class="n">n</span><span class="p">,</span> <span class="n">p_net</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">n_net</span><span class="o">*</span><span class="n">p</span>
+        <span class="k">return</span> <span class="n">p_net</span><span class="p">,</span> <span class="n">n_net</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_positive_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span><span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_pn</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span><span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_pn</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">n</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This one is probably the least accurate of all the estimates of maxSB.</span>
+        <span class="c1"># The calculation is based on the exact value for Gaussians.</span>
+        <span class="c1">#     maxSB = flux / 2pi sigma^2</span>
+        <span class="c1"># When convolving multiple Gaussians together, the sigma^2 values add:</span>
+        <span class="c1">#     sigma_final^2 = Sum_i sigma_i^2</span>
+        <span class="c1"># from which we can calculate</span>
+        <span class="c1">#     maxSB = flux_final / 2pi sigma_final^2</span>
+        <span class="c1"># or</span>
+        <span class="c1">#     maxSB = flux_final / Sum_i (flux_i / maxSB_i)</span>
+        <span class="c1">#</span>
+        <span class="c1"># For non-Gaussians, this procedure will tend to produce an over-estimate of the</span>
+        <span class="c1"># true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed</span>
+        <span class="c1"># more than the Gaussian does.  So this is likely to be too high, which is acceptable.</span>
+        <span class="n">area_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="n">obj</span><span class="o">.</span><span class="n">max_sb</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">area_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
+                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Cannot use real_space convolution for &gt;2 profiles&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">kv_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">kv_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="n">offset</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
+                    <span class="s2">&quot;At least one profile in </span><span class="si">%s</span><span class="s2"> does not implement real-space convolution&quot;</span><span class="o">%</span><span class="bp">self</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Cannot use real_space convolution for &gt;2 profiles&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="c1"># It may be necessary to shuffle when convolving because we do not have a</span>
+        <span class="c1"># gaurantee that the convolvee&#39;s photons are uncorrelated, e.g., they might</span>
+        <span class="c1"># both have their negative ones at the end.</span>
+        <span class="c1"># However, this decision is now made by the convolve method.</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">photons</span><span class="p">))</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="n">photons</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">im1</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">*=</span> <span class="n">im1</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbp&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span></div>
+
+
+
+<div class="viewcode-block" id="Deconvolve"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolve">[docs]</a><span class="k">def</span> <span class="nf">Deconvolve</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for deconvolving by either a `GSObject` or `ChromaticObject`.</span>
+
+<span class="sd">    This function will inspect its input argument to decide if a `Deconvolution` object or a</span>
+<span class="sd">    `ChromaticDeconvolution` object is required to represent the deconvolution by a surface</span>
+<span class="sd">    brightness profile.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to deconvolve.</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a `Deconvolution` or `ChromaticDeconvolution` instance as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticDeconvolution</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                                            <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Deconvolution</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to Deconvolve must be either a GSObject or a ChromaticObject.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Deconvolution"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolution">[docs]</a><span class="k">class</span> <span class="nc">Deconvolution</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for deconvolving a `GSObject`.</span>
+
+<span class="sd">    The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,</span>
+<span class="sd">    or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,</span>
+<span class="sd">    cannot be photon-shot using the &#39;phot&#39; method of `GSObject.drawImage` method.</span>
+
+<span class="sd">    You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more</span>
+<span class="sd">    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the</span>
+<span class="sd">    Deconvolution instance inherits the same `GSParams` as the object being deconvolved.</span>
+
+<span class="sd">    The normal way to use this class is to use the Deconvolve() factory function::</span>
+
+<span class="sd">        &gt;&gt;&gt; inv_psf = galsim.Deconvolve(psf)</span>
+<span class="sd">        &gt;&gt;&gt; deconv_gal = galsim.Convolve(inv_psf, gal)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to deconvolve.</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to Deconvolution must be a GSObject.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Save the original object as an attribute, so it can be inspected later if necessary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_acc_kvalue</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">flux</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">kvalue_accuracy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inv_min_acc_kvalue</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_acc_kvalue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">propagate_gsparams</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being deconvolved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Unable to propagate noise in galsim.Deconvolution&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Deconvolution.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.Deconvolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams</span>
+<span class="sd">            of the wrapped component object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Deconvolution</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_obj</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Deconvolution&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Deconvolution(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Deconvolve(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span>
+
+    <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">maxk</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">stepk</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_is_axisymmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">is_axisymmetric</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_is_analytic_k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">is_analytic_k</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">centroid</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">flux</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The only way to really give this any meaning is to consider it in the context</span>
+        <span class="c1"># of being part of a larger convolution with other components.  The calculation</span>
+        <span class="c1"># of maxSB for Convolve is</span>
+        <span class="c1">#     maxSB = flux_final / Sum_i (flux_i / maxSB_i)</span>
+        <span class="c1">#</span>
+        <span class="c1"># A deconvolution will contribute a -sigma^2 to the sum, so a logical choice for</span>
+        <span class="c1"># maxSB is to have flux / maxSB = -flux_adaptee / maxSB_adaptee, so its contribution</span>
+        <span class="c1"># to the Sum_i 2pi sigma^2 is to subtract its adaptee&#39;s value of sigma^2.</span>
+        <span class="c1">#</span>
+        <span class="c1"># maxSB = -flux * maxSB_adaptee / flux_adaptee</span>
+        <span class="c1">#       = -maxSB_adaptee / flux_adaptee^2</span>
+        <span class="c1">#</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">max_sb</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">flux</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="c1"># Really, for very low original kvalues, this gets very high, which can be unstable</span>
+        <span class="c1"># in the presence of noise.  So if the original value is less than min_acc_kvalue,</span>
+        <span class="c1"># we instead just return 1/min_acc_kvalue rather than the real inverse.</span>
+        <span class="n">kval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">kval</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_acc_kvalue</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_min_acc_kvalue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="n">kval</span>
+
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
+        <span class="n">do_inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_acc_kvalue</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">do_inverse</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">do_inverse</span><span class="p">]</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="o">~</span><span class="n">do_inverse</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_min_acc_kvalue</span>
+        <span class="n">kx</span><span class="p">,</span><span class="n">ky</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_pixel_centers</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># N.B. The jacobian is transposed in k space.  This is not a typo.</span>
+            <span class="n">kx</span><span class="p">,</span><span class="n">ky</span> <span class="o">=</span> <span class="p">(</span><span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">kx</span> <span class="o">+</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ky</span><span class="p">),</span> <span class="p">(</span><span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">kx</span> <span class="o">+</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ky</span><span class="p">)</span>
+        <span class="n">ksq</span> <span class="o">=</span> <span class="p">(</span><span class="n">kx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">ky</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># Set to zero outside of nominal maxk so as not to amplify high frequencies.</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">ksq</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxk</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span></div>
+
+
+<div class="viewcode-block" id="AutoConvolve"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolve">[docs]</a><span class="k">def</span> <span class="nf">AutoConvolve</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for autoconvolving either a `GSObject` or `ChromaticObject`.</span>
+
+<span class="sd">    This function will inspect its input argument to decide if a `AutoConvolution` object or a</span>
+<span class="sd">    `ChromaticAutoConvolution` object is required to represent the convolution of a surface</span>
+<span class="sd">    brightness profile with itself.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to be convolved with itself.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the object has hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a `AutoConvolution` or `ChromaticAutoConvolution` instance as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticAutoConvolution</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="n">real_space</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                                              <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AutoConvolution</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="n">real_space</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to AutoConvolve must be either a GSObject or a ChromaticObject.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AutoConvolution"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolution">[docs]</a><span class="k">class</span> <span class="nc">AutoConvolution</span><span class="p">(</span><span class="n">Convolution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for convolving a `GSObject` with itself.</span>
+
+<span class="sd">    It is equivalent in functionality to ``Convolve([obj,obj])``, but takes advantage of</span>
+<span class="sd">    the fact that the two profiles are the same for some efficiency gains.</span>
+
+<span class="sd">    The normal way to use this class is to use the AutoConvolve() factory function::</span>
+
+<span class="sd">        &gt;&gt;&gt; psf_sq = galsim.AutoConvolve(psf)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to be convolved with itself.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the object has hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This</span>
+<span class="sd">                            is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to AutoConvolution must be a GSObject.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check whether to perform real space convolution...</span>
+        <span class="c1"># Start by checking if obj has a hard edge.</span>
+        <span class="n">hard_edge</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">has_hard_edges</span>
+
+        <span class="k">if</span> <span class="n">real_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The automatic determination is to use real_space if obj has hard edges.</span>
+            <span class="n">real_space</span> <span class="o">=</span> <span class="n">hard_edge</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span> <span class="o">!=</span> <span class="n">real_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;real_space must be a boolean&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Warn if doing DFT convolution for objects with hard edges.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">real_space</span> <span class="ow">and</span> <span class="n">hard_edge</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Doing auto-convolution of object with hard edges. &quot;</span>
+                        <span class="s2">&quot;This might be more accurate and/or faster using real_space=True&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Can&#39;t do real space if object is not analytic, so check for that.</span>
+        <span class="k">if</span> <span class="n">real_space</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">is_analytic_x</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Object to be auto-convolved is not analytic in real space. &quot;</span>
+                        <span class="s2">&quot;Cannot use real space convolution. Switching to DFT method.&quot;</span><span class="p">)</span>
+            <span class="n">real_space</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Save the construction parameters (as they are at this point) as attributes so they</span>
+        <span class="c1"># can be inspected later if necessary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">propagate_gsparams</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+        <span class="c1"># So we can use Convolve methods when there is no advantage to overloading.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">]</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAutoConvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_sbp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being auto-convolved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="sd">        than FFT convolution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Unable to propagate noise in galsim.AutoConvolution&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AutoConvolution.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.AutoConvolution.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams</span>
+<span class="sd">            of the wrapped component object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">AutoConvolution</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_obj</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">real_space</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.AutoConvolution&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.AutoConvolution(</span><span class="si">%r</span><span class="s1">, real_space=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.AutoConvolve(</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, real_space=True&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">photons2</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">photons</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">photons</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">photons2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AutoCorrelate"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelate">[docs]</a><span class="k">def</span> <span class="nf">AutoCorrelate</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A function for autocorrelating either a `GSObject` or `ChromaticObject`.</span>
+
+<span class="sd">    This function will inspect its input argument to decide if a `AutoCorrelation` object or a</span>
+<span class="sd">    `ChromaticAutoCorrelation` object is required to represent the correlation of a surface</span>
+<span class="sd">    brightness profile with itself.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to be convolved with itself.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the object has hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.</span>
+<span class="sd">                            This is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        an `AutoCorrelation` or `ChromaticAutoCorrelation` instance as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">ChromaticAutoCorrelation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="n">real_space</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                                              <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AutoCorrelation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="n">real_space</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AutoCorrelation"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelation">[docs]</a><span class="k">class</span> <span class="nc">AutoCorrelation</span><span class="p">(</span><span class="n">Convolution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A special class for correlating a `GSObject` with itself.</span>
+
+<span class="sd">    It is equivalent in functionality to::</span>
+
+<span class="sd">        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])</span>
+
+<span class="sd">    but takes advantage of the fact that the two profiles are the same for some efficiency gains.</span>
+
+<span class="sd">    This class is primarily targeted for use by the `BaseCorrelatedNoise` models when convolving</span>
+<span class="sd">    with a `GSObject`.</span>
+
+<span class="sd">    The normal way to use this class is to use the `AutoCorrelate` factory function::</span>
+
+<span class="sd">        &gt;&gt;&gt; psf_sq = galsim.AutoCorrelate(psf)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to be convolved with itself.</span>
+<span class="sd">        real_space:         Whether to use real space convolution.  [default: None, which means</span>
+<span class="sd">                            to automatically decide this according to whether the object has hard</span>
+<span class="sd">                            edges.]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.</span>
+<span class="sd">                            This is normally a good idea, but there may be use cases where one</span>
+<span class="sd">                            would not want to do this. [default: True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to AutoCorrelation must be a GSObject.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check whether to perform real space convolution...</span>
+        <span class="c1"># Start by checking if obj has a hard edge.</span>
+        <span class="n">hard_edge</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">has_hard_edges</span>
+
+        <span class="k">if</span> <span class="n">real_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The automatic determination is to use real_space if obj has hard edges.</span>
+            <span class="n">real_space</span> <span class="o">=</span> <span class="n">hard_edge</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span> <span class="o">!=</span> <span class="n">real_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;real_space must be a boolean&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Warn if doing DFT convolution for objects with hard edges.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">real_space</span> <span class="ow">and</span> <span class="n">hard_edge</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Doing auto-correlation of object with hard edges. &quot;</span>
+                        <span class="s2">&quot;This might be more accurate and/or faster using real_space=True&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Can&#39;t do real space if object is not analytic, so check for that.</span>
+        <span class="k">if</span> <span class="n">real_space</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">is_analytic_x</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Object to be auto-correlated is not analytic in real space. &quot;</span>
+                        <span class="s2">&quot;Cannot use real space convolution. Switching to DFT method.&quot;</span><span class="p">)</span>
+            <span class="n">real_space</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Save the construction parameters (as they are at this point) as attributes so they</span>
+        <span class="c1"># can be inspected later if necessary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">real_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">propagate_gsparams</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+        <span class="c1"># So we can use Convolve methods when there is no advantage to overloading.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAutoCorrelate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_sbp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The original object that is being auto-correlated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this `Convolution` should be drawn using real-space convolution rather</span>
+<span class="sd">        than FFT convolution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Unable to propagate noise in galsim.AutoCorrelation&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AutoCorrelation.withGSParams"><a class="viewcode-back" href="../../composite.html#galsim.AutoCorrelation.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams</span>
+<span class="sd">            of the wrapped component object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">AutoCorrelation</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_obj</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">real_space</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.AutoCorrelation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.AutoCorrelation(</span><span class="si">%r</span><span class="s1">, real_space=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.AutoCorrelate(</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_space</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, real_space=True&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">photons2</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">photons</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+        <span class="c1"># Flip sign of (x, y) in one of the results</span>
+        <span class="n">photons2</span><span class="o">.</span><span class="n">scaleXY</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">photons</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">photons2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
+
+<span class="c1"># Put this at the bottom to avoid circular import errors.</span>
+<span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

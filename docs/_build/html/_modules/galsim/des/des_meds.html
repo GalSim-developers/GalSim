@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.des.des_meds &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.des.des_meds</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.des.des_meds</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..wcs</span> <span class="kn">import</span> <span class="n">UniformWCS</span><span class="p">,</span> <span class="n">AffineTransform</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="kn">import</span> <span class="n">writeFile</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">OutputBuilder</span><span class="p">,</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">BuildImages</span><span class="p">,</span> <span class="n">GetFinalExtraOutput</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">RegisterOutputType</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
+<span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+
+<span class="c1"># these image stamp sizes are available in MEDS format</span>
+<span class="n">BOX_SIZES</span> <span class="o">=</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span><span class="mi">48</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">192</span><span class="p">,</span><span class="mi">256</span><span class="p">]</span>
+<span class="c1"># while creating the meds file, all the data is stored in memory, and then written to disc once all</span>
+<span class="c1"># the necessary images have been created.</span>
+<span class="c1"># You can control the amound of memory used to prevent jamming your system.</span>
+<span class="n">MAX_MEMORY</span> <span class="o">=</span> <span class="mf">1e9</span>
+<span class="c1"># Maximum number of exposures allowed per galaxy (incl. coadd)</span>
+<span class="n">MAX_NCUTOUTS</span> <span class="o">=</span> <span class="mi">11</span>
+<span class="c1"># flags for unavailable data</span>
+<span class="n">EMPTY_START_INDEX</span> <span class="o">=</span> <span class="mi">9999</span>
+<span class="n">EMPTY_JAC_diag</span>    <span class="o">=</span> <span class="mi">1</span>
+<span class="n">EMPTY_JAC_offdiag</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">EMPTY_SHIFT</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="MultiExposureObject"><a class="viewcode-back" href="../../../des.html#galsim.des.MultiExposureObject">[docs]</a><span class="k">class</span> <span class="nc">MultiExposureObject</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class containing exposures for single object, along with other information.</span>
+
+<span class="sd">    The MultiExposureObject class represents multiple exposure data for a single object for the</span>
+<span class="sd">    purpose of writing the images to a MEDS file.</span>
+
+<span class="sd">    The `WriteMEDS` function can be used to write a list of MultiExposureObjects to a MEDS file.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">       images:      List of images of the object.</span>
+<span class="sd">       weight:      List of weight images. [default: None]</span>
+<span class="sd">       badpix:      List of bad pixel masks. [default: None]</span>
+<span class="sd">       seg:         List of segmentation maps. [default: None]</span>
+<span class="sd">       psf:         List of psf images. [default: None]</span>
+<span class="sd">       wcs:         List of WCS transformations. [default: None]</span>
+<span class="sd">       id:          Galaxy id. [default: 0]</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        self.images:        List of images of the object.</span>
+<span class="sd">        self.weight:        List of weight maps.</span>
+<span class="sd">        self.seg:           List of segmentation maps.</span>
+<span class="sd">        self.psf:           List of psf images.</span>
+<span class="sd">        self.wcs:           List of WCS transformations.</span>
+<span class="sd">        self.n_cutouts:     Number of exposures.</span>
+<span class="sd">        self.box_size:      Size of each exposure image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">psf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cutout_row</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutout_col</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="c1"># Check that images is valid</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">images</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;images should be a list&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;no cutouts in this object&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+
+        <span class="c1"># Check that the box sizes are valid</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Must be square&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span>
+                                       <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BOX_SIZES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Size must be in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
+                                       <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">BOX_SIZES</span><span class="p">)),</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+
+        <span class="c1"># The others are optional, but if given, make sure they are ok.</span>
+        <span class="k">for</span> <span class="n">lst</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">isim</span> <span class="ow">in</span> <span class="p">(</span> <span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="p">(</span><span class="n">badpix</span><span class="p">,</span> <span class="s1">&#39;badpix&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                                 <span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="s1">&#39;seg&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="p">(</span><span class="n">wcs</span><span class="p">,</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> should be a list&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is the wrong length&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">isim</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
+                        <span class="n">im1</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="n">im2</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">im2</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
+                                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%d</span><span class="s2">] has the wrong shape.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">im1</span><span class="p">)</span>
+
+        <span class="c1"># The PSF images don&#39;t have to be the same shape as the main images.</span>
+        <span class="c1"># But make sure all psf images are square and the same shape</span>
+        <span class="k">if</span> <span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;PSF array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Must be square&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BOX_SIZES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;PSF array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Size must be in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">BOX_SIZES</span><span class="p">)),</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">psf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;PSF images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># Check that wcs are Uniform and convert them to AffineTransforms in case they aren&#39;t.</span>
+        <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wcs</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UniformWCS</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;wcs list should contain UniformWCS objects&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AffineTransform</span><span class="p">):</span>
+                    <span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">affine</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span> <span class="n">im</span><span class="o">.</span><span class="n">view</span><span class="p">()</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">images</span> <span class="p">]</span>
+        <span class="c1"># Convert to 0-based images as preferred by meds.</span>
+        <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+            <span class="c1"># Note: making the list of views above means this won&#39;t change the originals.</span>
+            <span class="n">im</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psf_box_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psf_box_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># If weight is not provided, create something sensible.</span>
+        <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="p">[</span><span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
+
+        <span class="c1"># If badpix is provided, combine it into the weight image.</span>
+        <span class="k">if</span> <span class="n">badpix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">badpix</span><span class="p">)):</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">badpix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span> <span class="o">!=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="c1"># If seg is not provided, use all 1&#39;s.</span>
+        <span class="k">if</span> <span class="n">seg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seg</span> <span class="o">=</span> <span class="n">seg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seg</span> <span class="o">=</span> <span class="p">[</span><span class="n">ImageI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
+
+        <span class="c1"># If wcs is not provided, get it from the images.</span>
+        <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">im</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">affine</span><span class="p">(</span><span class="n">image_pos</span><span class="o">=</span><span class="n">im</span><span class="o">.</span><span class="n">true_center</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="p">]</span>
+
+        <span class="c1"># Normally you would supply cutout_row/cutout_col, since we can&#39;t usually</span>
+        <span class="c1"># assume objects are centered on the stamp. If not supplied, set them to</span>
+        <span class="c1"># the wcs origin (here that is the center of the stamp).</span>
+        <span class="k">if</span> <span class="n">cutout_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cutout_row</span> <span class="o">=</span> <span class="n">cutout_row</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cutout_row</span> <span class="o">=</span> <span class="p">[</span> <span class="n">w</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="p">]</span>
+        <span class="k">if</span> <span class="n">cutout_col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cutout_col</span> <span class="o">=</span> <span class="n">cutout_col</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cutout_col</span> <span class="o">=</span> <span class="p">[</span> <span class="n">w</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="p">]</span>
+
+        <span class="c1"># psf is not required, so leave it as None if not provided.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span></div>
+
+
+<div class="viewcode-block" id="WriteMEDS"><a class="viewcode-back" href="../../../des.html#galsim.des.WriteMEDS">[docs]</a><span class="k">def</span> <span class="nf">WriteMEDS</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Writes a MEDS file from a list of `MultiExposureObject` instances.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">       obj_list:    List of `MultiExposureObject` instances</span>
+<span class="sd">       file_name:   Name of meds file to be written</span>
+<span class="sd">       clobber:     Setting ``clobber=True`` when ``file_name`` is given will silently overwrite</span>
+<span class="sd">                    existing files. [default True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># initialise the catalog</span>
+    <span class="n">cat</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;box_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ncutout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;start_row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudrow&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudcol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdrow&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdcol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;orig_start_row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;orig_start_col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_box_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_start_row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># initialise the image vectors</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># initialise the image vector index</span>
+    <span class="n">n_vec</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">psf_n_vec</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># get number of objects</span>
+    <span class="n">n_obj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj_list</span><span class="p">)</span>
+
+    <span class="c1"># loop over objects</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">obj_list</span><span class="p">:</span>
+
+        <span class="c1"># initialise the start indices for each image</span>
+        <span class="n">start_rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_START_INDEX</span>
+        <span class="n">psf_start_rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_START_INDEX</span>
+        <span class="n">dudrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_JAC_diag</span>
+        <span class="n">dudcol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_JAC_offdiag</span>
+        <span class="n">dvdrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_JAC_offdiag</span>
+        <span class="n">dvdcol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_JAC_diag</span>
+        <span class="n">cutout_row</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_SHIFT</span>
+        <span class="n">cutout_col</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MAX_NCUTOUTS</span><span class="p">)</span><span class="o">*</span><span class="n">EMPTY_SHIFT</span>
+        <span class="c1"># get the number of cutouts (exposures)</span>
+        <span class="n">n_cutout</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">n_cutouts</span>
+
+        <span class="c1"># append the catalog for this object</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;box_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">box_size</span><span class="p">)</span>
+        <span class="c1"># TODO: If the config defines a world position, get the right ra, dec here.</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ncutout&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_cutout</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_box_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">psf_box_size</span><span class="p">)</span>
+
+        <span class="c1"># loop over cutouts</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cutout</span><span class="p">):</span>
+
+            <span class="c1"># assign the start row to the end of image vector</span>
+            <span class="n">start_rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_vec</span>
+            <span class="n">psf_start_rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">psf_n_vec</span>
+            <span class="c1"># update n_vec to point to the end of image vector</span>
+            <span class="n">n_vec</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">psf_n_vec</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+            <span class="c1"># append the image vectors</span>
+            <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">seg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+            <span class="c1"># append cutout_row/col</span>
+            <span class="n">cutout_row</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">cutout_row</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">cutout_col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">cutout_col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="c1"># append the Jacobian</span>
+            <span class="c1"># col == x</span>
+            <span class="c1"># row == y</span>
+            <span class="n">dudcol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dudx</span>
+            <span class="n">dudrow</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dudy</span>
+            <span class="n">dvdcol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dvdx</span>
+            <span class="n">dvdrow</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dvdy</span>
+
+            <span class="c1"># check if we are running out of memory</span>
+            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_MEMORY</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
+                    <span class="s2">&quot;Running out of memory &gt; </span><span class="si">%1.0f</span><span class="s2">GB - you can increase the limit by changing &quot;</span>
+                    <span class="s2">&quot;galsim.des_meds.MAX_MEMORY&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">MAX_MEMORY</span><span class="o">/</span><span class="mf">1.e9</span><span class="p">))</span>
+
+        <span class="c1"># update the start rows fields in the catalog</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;start_row&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start_rows</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_start_row&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psf_start_rows</span><span class="p">)</span>
+
+        <span class="c1"># add cutout_row/col</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_row&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cutout_row</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_col&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cutout_col</span><span class="p">)</span>
+
+        <span class="c1"># add lists of Jacobians</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudrow&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dudrow</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudcol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dudcol</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdrow&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dvdrow</span><span class="p">)</span>
+        <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdcol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dvdcol</span><span class="p">)</span>
+
+    <span class="c1"># concatenate list to one big vector</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">])</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">])</span>
+    <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">])</span>
+
+    <span class="c1"># get the primary HDU</span>
+    <span class="n">primary</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">()</span>
+
+    <span class="c1"># second hdu is the object_data</span>
+    <span class="c1"># cf. https://github.com/esheldon/meds/wiki/MEDS-Format</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span>             <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>       <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">,</span>         <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>       <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span>             <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">]</span>       <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span>            <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">]</span>      <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;box_size&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;box_size&#39;</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ncutout&#39;</span><span class="p">,</span>        <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ncutout&#39;</span><span class="p">]</span>  <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;file_id&#39;</span><span class="p">,</span>        <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">K&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">n_obj</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;start_row&#39;</span><span class="p">,</span>      <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">K&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;start_row&#39;</span><span class="p">]))</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;orig_row&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">MAX_NCUTOUTS</span><span class="p">]</span><span class="o">*</span><span class="n">n_obj</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;orig_col&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">MAX_NCUTOUTS</span><span class="p">]</span><span class="o">*</span><span class="n">n_obj</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;orig_start_row&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">K&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">MAX_NCUTOUTS</span><span class="p">]</span><span class="o">*</span><span class="n">n_obj</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;orig_start_col&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">K&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">MAX_NCUTOUTS</span><span class="p">]</span><span class="o">*</span><span class="n">n_obj</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;cutout_row&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_row&#39;</span><span class="p">])</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;cutout_col&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;cutout_col&#39;</span><span class="p">])</span>     <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dudrow&#39;</span><span class="p">,</span>         <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudrow&#39;</span><span class="p">])</span>   <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dudcol&#39;</span><span class="p">,</span>         <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dudcol&#39;</span><span class="p">])</span>   <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dvdrow&#39;</span><span class="p">,</span>         <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdrow&#39;</span><span class="p">])</span>   <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dvdcol&#39;</span><span class="p">,</span>         <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">D&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;dvdcol&#39;</span><span class="p">])</span>   <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psf_box_size&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_box_size&#39;</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psf_start_row&#39;</span><span class="p">,</span>  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">K&#39;</span> <span class="o">%</span> <span class="n">MAX_NCUTOUTS</span><span class="p">,</span>
+                               <span class="n">array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;psf_start_row&#39;</span><span class="p">]))</span> <span class="p">)</span>
+
+
+    <span class="c1"># Depending on the version of pyfits, one of these should work:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">object_data</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">object_data</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;object_data&#39;</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">object_data</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">new_table</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">ColDefs</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
+        <span class="n">object_data</span><span class="o">.</span><span class="n">update_ext_name</span><span class="p">(</span><span class="s1">&#39;object_data&#39;</span><span class="p">)</span>
+
+    <span class="c1"># third hdu is image_info</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image_path&#39;</span><span class="p">,</span>  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image_ext&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                     <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;weight_path&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;weight_ext&#39;</span><span class="p">,</span>  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                     <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;seg_path&#39;</span><span class="p">,</span>    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;seg_ext&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                     <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;bmask_path&#39;</span><span class="p">,</span>  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;bmask_ext&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                     <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;bkg_path&#39;</span><span class="p">,</span>    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;bkg_ext&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                     <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image_id&#39;</span><span class="p">,</span>    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>                    <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image_flags&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>                    <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;magzp&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;E&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mf">30.</span><span class="p">]</span>                   <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;scale&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;E&#39;</span><span class="p">,</span>      <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">]</span>                    <span class="p">))</span>
+    <span class="c1"># TODO: Not sure if this is right!</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;position_offset&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;D&#39;</span><span class="p">,</span>  <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">]</span>                    <span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">image_info</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">image_info</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;image_info&#39;</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">image_info</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">new_table</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">ColDefs</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
+        <span class="n">image_info</span><span class="o">.</span><span class="n">update_ext_name</span><span class="p">(</span><span class="s1">&#39;image_info&#39;</span><span class="p">)</span>
+
+    <span class="c1"># fourth hdu is metadata</span>
+    <span class="c1"># default values?</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;magzp_ref&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;E&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mf">30.</span><span class="p">]</span>                   <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DESDATA&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;cat_file&#39;</span><span class="p">,</span>      <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_image_id&#39;</span><span class="p">,</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_file&#39;</span><span class="p">,</span>    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_hdu&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_seg_hdu&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_srclist&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coadd_wt_hdu&#39;</span><span class="p">,</span>  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coaddcat_file&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;coaddseg_file&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;cutout_file&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A256&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generated_by_galsim&#39;</span><span class="p">]</span> <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;max_boxsize&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A3&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-1&#39;</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;medsconf&#39;</span><span class="p">,</span>      <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A3&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>                   <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;min_boxsize&#39;</span><span class="p">,</span>   <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;A2&#39;</span><span class="p">,</span>   <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;-1&#39;</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;se_badpix_hdu&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;se_hdu&#39;</span><span class="p">,</span>        <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;se_wt_hdu&#39;</span><span class="p">,</span>     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;seg_hdu&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psf_hdu&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;sky_hdu&#39;</span><span class="p">,</span>       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;fake_coadd_seg&#39;</span><span class="p">,</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>    <span class="n">array</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">]</span>                  <span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;metadata&#39;</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">new_table</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">ColDefs</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">update_ext_name</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">)</span>
+
+    <span class="c1"># rest of HDUs are image vectors</span>
+    <span class="n">image_cutouts</span>   <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span> <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;image_cutouts&#39;</span><span class="p">)</span>
+    <span class="n">weight_cutouts</span>  <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span> <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;weight_cutouts&#39;</span><span class="p">)</span>
+    <span class="n">seg_cutouts</span>     <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span> <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span>   <span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;seg_cutouts&#39;</span><span class="p">)</span>
+
+    <span class="n">hdu_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">primary</span><span class="p">,</span>
+        <span class="n">object_data</span><span class="p">,</span>
+        <span class="n">image_info</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="p">,</span>
+        <span class="n">image_cutouts</span><span class="p">,</span>
+        <span class="n">weight_cutouts</span><span class="p">,</span>
+        <span class="n">seg_cutouts</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">psf_cutouts</span>     <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span> <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;psf&#39;</span><span class="p">)</span>
+        <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psf_cutouts</span><span class="p">)</span>
+
+    <span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">))</span></div>
+
+
+<span class="c1"># Make the class that will</span>
+<div class="viewcode-block" id="MEDSBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a><span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class lets you use the `MultiExposureObject` very simply as a special ``output``</span>
+<span class="sd">    type when using config processing.</span>
+
+<span class="sd">    It requires the use of ``galsim.des`` in the config files ``modules`` section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MEDSBuilder.buildImages"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.buildImages">[docs]</a>    <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a meds file as specified in config.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">           config:      The configuration dict for the output field.</span>
+<span class="sd">           base:        The base configuration dict.</span>
+<span class="sd">           file_num:    The current file_num.</span>
+<span class="sd">           image_num:   The current image_num.</span>
+<span class="sd">           obj_num:     The current obj_num.</span>
+<span class="sd">           ignore:      A list of parameters that are allowed to be in config that we can ignore</span>
+<span class="sd">                        here.</span>
+<span class="sd">           logger:      If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           A list of MultiExposureObjects.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Single&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;Single&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;MEDS files are not compatible with image type </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
+
+        <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;nobjects&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;nstamps_per_object&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="n">opt</span>  <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;first_id&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;file_name&#39;</span><span class="p">,</span> <span class="s1">&#39;dir&#39;</span><span class="p">,</span> <span class="s1">&#39;nfiles&#39;</span> <span class="p">]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span><span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_id</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;first_id&#39;</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">)</span>
+
+        <span class="n">nobjects</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nobjects&#39;</span><span class="p">]</span>
+        <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">]</span>
+        <span class="n">ntot</span> <span class="o">=</span> <span class="n">nobjects</span> <span class="o">*</span> <span class="n">nstamps_per_object</span>
+
+        <span class="n">main_images</span> <span class="o">=</span> <span class="n">BuildImages</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="n">image_num</span><span class="p">,</span>  <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># grab list of offsets for cutout_row/cutout_col.</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="c1"># cutout_row/col is the stamp center (**with the center of the first pixel</span>
+        <span class="c1"># being (0,0)**) + offset</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mf">0.5</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">main_images</span><span class="p">]</span>
+        <span class="n">cutout_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span><span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span><span class="n">offsets</span><span class="p">)]</span>
+        <span class="n">cutout_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span><span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span><span class="n">offsets</span><span class="p">)]</span>
+
+        <span class="n">weight_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;badpix&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">badpix_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;badpix&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">badpix_images</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">psf_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="n">obj_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobjects</span><span class="p">):</span>
+            <span class="n">k1</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">nstamps_per_object</span>
+            <span class="n">k2</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">nstamps_per_object</span>
+            <span class="k">if</span> <span class="n">badpix_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bpk</span> <span class="o">=</span> <span class="n">badpix_images</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bpk</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">MultiExposureObject</span><span class="p">(</span><span class="n">images</span> <span class="o">=</span> <span class="n">main_images</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">],</span>
+                                      <span class="n">weight</span> <span class="o">=</span> <span class="n">weight_images</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">],</span>
+                                      <span class="n">badpix</span> <span class="o">=</span> <span class="n">bpk</span><span class="p">,</span>
+                                      <span class="n">psf</span> <span class="o">=</span> <span class="n">psf_images</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">],</span>
+                                      <span class="nb">id</span> <span class="o">=</span> <span class="n">first_id</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                                      <span class="n">cutout_row</span> <span class="o">=</span> <span class="n">cutout_rows</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">],</span>
+                                      <span class="n">cutout_col</span> <span class="o">=</span> <span class="n">cutout_cols</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k2</span><span class="p">])</span>
+            <span class="n">obj_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">obj_list</span></div>
+
+<div class="viewcode-block" id="MEDSBuilder.writeFile"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.writeFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a file.  In this case a MEDS file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            data:           The data to write.  Here, this is a list of `MultiExposureObject`.</span>
+<span class="sd">            file_name:      The file_name to write to.</span>
+<span class="sd">            config:         The configuration dict for the output field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">WriteMEDS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MEDSBuilder.getNImages"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.getNImages">[docs]</a>    <span class="k">def</span> <span class="nf">getNImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># This gets called before starting work on the file, so we can use this opportunity</span>
+        <span class="c1"># to make sure that weight and psf processing are turned on.</span>
+        <span class="c1"># We just add these as empty dicts, so there is no hdu or file_name parameter, which</span>
+        <span class="c1"># means they won&#39;t actually output anything, but the images will be built, so we can use</span>
+        <span class="c1"># them in BuildMEDS above.</span>
+        <span class="k">if</span> <span class="s1">&#39;weight&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s1">&#39;psf&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># We use an extra output type to get the offsets of objects in stamps.</span>
+        <span class="c1"># It doesn&#39;t need any parameters.  Just getting its name into the config dict is sufficient.</span>
+        <span class="k">if</span> <span class="s1">&#39;meds_get_offset&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
+
+        <span class="n">nobjects</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">ntot</span> <span class="o">=</span> <span class="n">nobjects</span> <span class="o">*</span> <span class="n">nstamps_per_object</span>
+        <span class="k">return</span> <span class="n">ntot</span></div></div>
+
+<span class="c1"># This extra output type simply saves the values of the image offsets when an</span>
+<span class="c1"># object is drawn into the stamp.</span>
+<div class="viewcode-block" id="OffsetBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a><span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This &quot;extra&quot; output builder saves the stamp offset values for later use.</span>
+
+<span class="sd">    It is used as a ``meds_get_offset`` field in the ``output`` section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The function to call at the end of building each stamp</span>
+<div class="viewcode-block" id="OffsetBuilder.processStamp"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.processStamp">[docs]</a>    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
+        <span class="n">stamp</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span></div>
+
+    <span class="c1"># The function to call at the end of building each file to finalize the truth catalog</span>
+<div class="viewcode-block" id="OffsetBuilder.finalize"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">offsets_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">obj_nums</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
+            <span class="n">offsets_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">offsets_list</span></div></div>
+
+<span class="c1"># Register these</span>
+<span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;MEDS&#39;</span><span class="p">,</span> <span class="n">MEDSBuilder</span><span class="p">())</span>
+<span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">OffsetBuilder</span><span class="p">())</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

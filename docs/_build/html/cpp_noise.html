@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noise-related Functionality &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Photons and Sensor Effects" href="cpp_photon.html" />
+    <link rel="prev" title="Positions and Bounds" href="cpp_bounds.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Noise-related Functionality</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c-random-deviates">C++ Random Deviates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-correlated-noise">C++ Correlated Noise</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cpp.html">C++ Layer</a></li>
+      <li class="breadcrumb-item active">Noise-related Functionality</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_noise.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="noise-related-functionality">
+<h1>Noise-related Functionality<a class="headerlink" href="#noise-related-functionality" title="Permalink to this heading"></a></h1>
+<section id="c-random-deviates">
+<h2>C++ Random Deviates<a class="headerlink" href="#c-random-deviates" title="Permalink to this heading"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviateE">
+<span id="_CPPv3N6galsim11BaseDeviateE"></span><span id="_CPPv2N6galsim11BaseDeviateE"></span><span id="galsim::BaseDeviate"></span><span class="target" id="classgalsim_1_1_base_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BaseDeviate</span></span></span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Base class for all the various Deviates. </p>
+<p>This holds the essential random number generator that all the other classes use.</p>
+<p>All deviates have three constructors that define different ways of setting up the random number generator.</p>
+<p>1) Only the arguments particular to the derived class (e.g. mean and sigma for <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">GaussianDeviate</span></a>). In this case, a new random number generator is created and it is seeded using the computer’s microsecond counter.</p>
+<p>2) Using a particular seed as the first argument to the constructor. This will also create a new random number generator, but seed it with the provided value.</p>
+<p>3) Passing another <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> as the first arguemnt to the constructor. This will make the new Deviate share the same underlying random number generator with the other Deviate. So you can make one Deviate (of any type), and seed it with a particular deterministic value. Then if you pass that Deviate to any other one you make, they will all be using the same rng and have a particular deterministic series of values. (It doesn’t have to be the first one &amp;#8212; any one you’ve made later can also be used to seed a new one.)</p>
+<p>There is not much you can do with something that is only known to be a <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> rather than one of the derived classes other than construct it and change the seed, and use it as an argument to pass to other Deviate constructors. </p>
+<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_binomial_deviate"><span class="std std-ref">galsim::BinomialDeviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_chi2_deviate"><span class="std std-ref">galsim::Chi2Deviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_gamma_deviate"><span class="std std-ref">galsim::GammaDeviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">galsim::GaussianDeviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_poisson_deviate"><span class="std std-ref">galsim::PoissonDeviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_uniform_deviate"><span class="std std-ref">galsim::UniformDeviate</span></a>, <a class="reference internal" href="#classgalsim_1_1_weibull_deviate"><span class="std std-ref">galsim::WeibullDeviate</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate11BaseDeviateEl">
+<span id="_CPPv3N6galsim11BaseDeviate11BaseDeviateEl"></span><span id="_CPPv2N6galsim11BaseDeviate11BaseDeviateEl"></span><span id="galsim::BaseDeviate::BaseDeviate__l"></span><span class="target" id="classgalsim_1_1_base_deviate_1a27bcdd4b35a75ac1d6d664735195f417"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BaseDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate11BaseDeviateEl" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct and seed a new <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a>, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lseed</strong> – <strong>[in]</strong> A long-integer seed for the RNG. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate11BaseDeviateERK11BaseDeviate">
+<span id="_CPPv3N6galsim11BaseDeviate11BaseDeviateERK11BaseDeviate"></span><span id="_CPPv2N6galsim11BaseDeviate11BaseDeviateERK11BaseDeviate"></span><span id="galsim::BaseDeviate::BaseDeviate__BaseDeviateCR"></span><span class="target" id="classgalsim_1_1_base_deviate_1a074f9323cbfd474ac0ecadbd1ca3fe52"></span><span class="sig-name descname"><span class="n"><span class="pre">BaseDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviate11BaseDeviateERK11BaseDeviate" title="galsim::BaseDeviate::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate11BaseDeviateERK11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a>, sharing the random number generator with rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate11BaseDeviateEPKc">
+<span id="_CPPv3N6galsim11BaseDeviate11BaseDeviateEPKc"></span><span id="_CPPv2N6galsim11BaseDeviate11BaseDeviateEPKc"></span><span id="galsim::BaseDeviate::BaseDeviate__cCP"></span><span class="target" id="classgalsim_1_1_base_deviate_1aa8b7aa437de29e7d8178b1fe0014c078"></span><span class="sig-name descname"><span class="n"><span class="pre">BaseDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate11BaseDeviateEPKc" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviateD0Ev">
+<span id="_CPPv3N6galsim11BaseDeviateD0Ev"></span><span id="_CPPv2N6galsim11BaseDeviateD0Ev"></span><span id="galsim::BaseDeviate::~BaseDeviate"></span><span class="target" id="classgalsim_1_1_base_deviate_1adf6c50fc180a67b30e399d3627b18e05"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~BaseDeviate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviateD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Destructor. </p>
+<p>Only deletes the underlying RNG if this is the last one using it. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate9serializeEv">
+<span id="_CPPv3N6galsim11BaseDeviate9serializeEv"></span><span id="_CPPv2N6galsim11BaseDeviate9serializeEv"></span><span id="galsim::BaseDeviate::serialize"></span><span class="target" id="classgalsim_1_1_base_deviate_1aec66a9bd30c113fe00f95cb165f203cd"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">serialize</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate9serializeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>return a serialization string for this <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a></p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate9duplicateEv">
+<span id="_CPPv3N6galsim11BaseDeviate9duplicateEv"></span><span id="_CPPv2N6galsim11BaseDeviate9duplicateEv"></span><span id="galsim::BaseDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_base_deviate_1a24ad76f1ae74197b900cb4abbaf93dc6"></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim11BaseDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim11BaseDeviate13duplicate_ptrEv"></span><span id="galsim::BaseDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_base_deviate_1af58df39d40aeeccf79ca86f783e98dd7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+<p>This is usually the version you want when working in C++. It is a virtual function so it resolves to the right function call a compile time, but the return value is always a shared_ptr&lt;BaseDeviate&gt;.</p>
+<p>I couldn’t figure out how to have only one of these two nearly identical bits of functionality work both in Python and C++ to do what we want. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate4reprEv">
+<span id="_CPPv3N6galsim11BaseDeviate4reprEv"></span><span id="_CPPv2N6galsim11BaseDeviate4reprEv"></span><span id="galsim::BaseDeviate::repr"></span><span class="target" id="classgalsim_1_1_base_deviate_1ab329c75c3112f9c7e925301ef67bde43"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">repr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate4reprEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return a string that can act as the repr in python. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate3strEv">
+<span id="_CPPv3N6galsim11BaseDeviate3strEv"></span><span id="_CPPv2N6galsim11BaseDeviate3strEv"></span><span id="galsim::BaseDeviate::str"></span><span class="target" id="classgalsim_1_1_base_deviate_1a80e6898883248a94a2ef4a9b6d2b9dd2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">str</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate3strEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return a string that can act as the str in python. </p>
+<p>For this we use the same thing as the repr, but omit the (verbose!) seed parameter. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate4seedEl">
+<span id="_CPPv3N6galsim11BaseDeviate4seedEl"></span><span id="_CPPv2N6galsim11BaseDeviate4seedEl"></span><span id="galsim::BaseDeviate::seed__l"></span><span class="target" id="classgalsim_1_1_base_deviate_1a4f50e24d2d3c73e10fc5d7a3ae7308ee"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">seed</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate4seedEl" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Re-seed the PRNG using specified seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<p>
+Note that this will reseed all Deviates currently sharing the RNG with this one. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lseed</strong> – <strong>[in]</strong> A long-integer seed for the RNG.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate5resetEl">
+<span id="_CPPv3N6galsim11BaseDeviate5resetEl"></span><span id="_CPPv2N6galsim11BaseDeviate5resetEl"></span><span id="galsim::BaseDeviate::reset__l"></span><span class="target" id="classgalsim_1_1_base_deviate_1a467ee386aebd84bb837c016718e8c6ec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate5resetEl" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Like seed(lseed), but severs the relationship between other Deviates. </p>
+<p>Other Deviates that had been using the same RNG will be unaffected, while this Deviate will obtain a fresh RNG seed according to lseed. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate5resetERK11BaseDeviate">
+<span id="_CPPv3N6galsim11BaseDeviate5resetERK11BaseDeviate"></span><span id="_CPPv2N6galsim11BaseDeviate5resetERK11BaseDeviate"></span><span id="galsim::BaseDeviate::reset__BaseDeviateCR"></span><span class="target" id="classgalsim_1_1_base_deviate_1a83d16e67974cfc43d3b9afddeae2cd3f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">dev</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate5resetERK11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Make this object share its random number generator with another Deviate. </p>
+<p>It discards whatever rng it had been using and starts sharing the one held by dev. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim11BaseDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim11BaseDeviate10clearCacheEv"></span><span id="galsim::BaseDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_base_deviate_1a8a0fc520933ed8ce5a80fe1396cea553"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache of the rng object. </p>
+<p>Sometimes this is required to get two sequences synced up if the other one is reseeded. e.g. <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">GaussianDeviate</span></a> generates two deviates at a time for efficiency, so if you don’t do this, and there is still an internal cached value, you’ll get that rather than a new one generated with the new seed.</p>
+<p>As far as I know, <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">GaussianDeviate</span></a> is the only one to require this, but just in case something changes about how boost implements any of these deviates, I overload the virtual function for all of them and call the distribution’s <a class="reference internal" href="#classgalsim_1_1_base_deviate_1a467ee386aebd84bb837c016718e8c6ec"><span class="std std-ref">reset()</span></a> method. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate7discardEi">
+<span id="_CPPv3N6galsim11BaseDeviate7discardEi"></span><span id="_CPPv2N6galsim11BaseDeviate7discardEi"></span><span id="galsim::BaseDeviate::discard__i"></span><span class="target" id="classgalsim_1_1_base_deviate_1a627a0f44a93de5313b42c49143a00e2f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discard</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate7discardEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Discard some number of values from the random number generator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate3rawEv">
+<span id="_CPPv3N6galsim11BaseDeviate3rawEv"></span><span id="_CPPv2N6galsim11BaseDeviate3rawEv"></span><span id="galsim::BaseDeviate::raw"></span><span class="target" id="classgalsim_1_1_base_deviate_1aca2320b2f5b80caead4ddda97c121568"></span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">raw</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate3rawEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get a random value in its raw form as a long integer. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviateclEv">
+<span id="_CPPv3N6galsim11BaseDeviateclEv"></span><span id="_CPPv2N6galsim11BaseDeviateclEv"></span><span id="galsim::BaseDeviate::call-operator"></span><span class="target" id="classgalsim_1_1_base_deviate_1a56d45ced1fcc88f5a9b9fec70f845e05"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">()</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviateclEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<p>This is invalid for a <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> object that is not a derived class. However, we don’t make it pure virtual, since we want to be able to make <a class="reference internal" href="#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> objects as a direct way to define a common seed for other Deviates. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate9generate1Ev">
+<span id="_CPPv3N6galsim11BaseDeviate9generate1Ev"></span><span id="_CPPv2N6galsim11BaseDeviate9generate1Ev"></span><span id="galsim::BaseDeviate::generate1"></span><span class="target" id="classgalsim_1_1_base_deviate_1a95f3224c4406c5e4cc819064bf884f41"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate8generateExPd">
+<span id="_CPPv3N6galsim11BaseDeviate8generateExPd"></span><span id="_CPPv2N6galsim11BaseDeviate8generateExPd"></span><span id="galsim::BaseDeviate::generate__l-l.doubleP"></span><span class="target" id="classgalsim_1_1_base_deviate_1a83e42c86abf7c7a657f577ec1b83abdb"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate8generateExPd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw N new random numbers from the distribution and save the values in an array. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The number of values to draw </p></li>
+<li><p><strong>data</strong> – The array into which to write the values </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11BaseDeviate11addGenerateExPd">
+<span id="_CPPv3N6galsim11BaseDeviate11addGenerateExPd"></span><span id="_CPPv2N6galsim11BaseDeviate11addGenerateExPd"></span><span id="galsim::BaseDeviate::addGenerate__l-l.doubleP"></span><span class="target" id="classgalsim_1_1_base_deviate_1a112895a35e4bce108205f5f235d47d40"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addGenerate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11BaseDeviate11addGenerateExPd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw N new random numbers from the distribution and add them to the values in an array. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The number of values to draw </p></li>
+<li><p><strong>data</strong> – The array into which to add the values </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviateE">
+<span id="_CPPv3N6galsim14UniformDeviateE"></span><span id="_CPPv2N6galsim14UniformDeviateE"></span><span id="galsim::UniformDeviate"></span><span class="target" id="classgalsim_1_1_uniform_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UniformDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pseudo-random number generator with uniform distribution in interval [0.,1.). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate14UniformDeviateEl">
+<span id="_CPPv3N6galsim14UniformDeviate14UniformDeviateEl"></span><span id="_CPPv2N6galsim14UniformDeviate14UniformDeviateEl"></span><span id="galsim::UniformDeviate::UniformDeviate__l"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1a640bc8b9a931a94143f4459b327adfa2"></span><span class="sig-name descname"><span class="n"><span class="pre">UniformDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate14UniformDeviateEl" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct and seed a new <a class="reference internal" href="#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a>, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lseed</strong> – <strong>[in]</strong> A long-integer seed for the RNG. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate14UniformDeviateERK11BaseDeviate">
+<span id="_CPPv3N6galsim14UniformDeviate14UniformDeviateERK11BaseDeviate"></span><span id="_CPPv2N6galsim14UniformDeviate14UniformDeviateERK11BaseDeviate"></span><span id="galsim::UniformDeviate::UniformDeviate__BaseDeviateCR"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1a57fc76e8fa7f667304bed43750dabd26"></span><span class="sig-name descname"><span class="n"><span class="pre">UniformDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate14UniformDeviateERK11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a>, sharing the random number generator with rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate14UniformDeviateERK14UniformDeviate">
+<span id="_CPPv3N6galsim14UniformDeviate14UniformDeviateERK14UniformDeviate"></span><span id="_CPPv2N6galsim14UniformDeviate14UniformDeviateERK14UniformDeviate"></span><span id="galsim::UniformDeviate::UniformDeviate__UniformDeviateCR"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1a6ce631ce7c04536d4f76d12eb5225430"></span><span class="sig-name descname"><span class="n"><span class="pre">UniformDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14UniformDeviate14UniformDeviateERK14UniformDeviate" title="galsim::UniformDeviate::UniformDeviate"><span class="n"><span class="pre">UniformDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate14UniformDeviateERK14UniformDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate14UniformDeviateEPKc">
+<span id="_CPPv3N6galsim14UniformDeviate14UniformDeviateEPKc"></span><span id="_CPPv2N6galsim14UniformDeviate14UniformDeviateEPKc"></span><span id="galsim::UniformDeviate::UniformDeviate__cCP"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1acd0269c1aff44868f5cb6b9d40551e93"></span><span class="sig-name descname"><span class="n"><span class="pre">UniformDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate14UniformDeviateEPKc" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate9duplicateEv">
+<span id="_CPPv3N6galsim14UniformDeviate9duplicateEv"></span><span id="_CPPv2N6galsim14UniformDeviate9duplicateEv"></span><span id="galsim::UniformDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1a0a073fa071ff251a38d18f089a666246"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="n"><span class="pre">UniformDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim14UniformDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim14UniformDeviate13duplicate_ptrEv"></span><span id="galsim::UniformDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1a4509a2e31729c5f83d7a76407adfae2c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate9generate1Ev">
+<span id="_CPPv3N6galsim14UniformDeviate9generate1Ev"></span><span id="_CPPv2N6galsim14UniformDeviate9generate1Ev"></span><span id="galsim::UniformDeviate::generate1"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1ab6b54eb7318a0f8def7f1370420efa49"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A uniform deviate in the interval [0.,1.) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14UniformDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim14UniformDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim14UniformDeviate10clearCacheEv"></span><span id="galsim::UniformDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_uniform_deviate_1ac9428f58c9b4bde6c290ff11da07a685"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14UniformDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviateE">
+<span id="_CPPv3N6galsim15GaussianDeviateE"></span><span id="_CPPv2N6galsim15GaussianDeviateE"></span><span id="galsim::GaussianDeviate"></span><span class="target" id="classgalsim_1_1_gaussian_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GaussianDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pseudo-random number generator with Gaussian distribution. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate15GaussianDeviateEldd">
+<span id="_CPPv3N6galsim15GaussianDeviate15GaussianDeviateEldd"></span><span id="_CPPv2N6galsim15GaussianDeviate15GaussianDeviateEldd"></span><span id="galsim::GaussianDeviate::GaussianDeviate__l.double.double"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1acc97bdb9e3fa95245b1fa4e6cf4a20b3"></span><span class="sig-name descname"><span class="n"><span class="pre">GaussianDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sigma</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate15GaussianDeviateEldd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Gaussian-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use. </p></li>
+<li><p><strong>mean</strong> – <strong>[in]</strong> Mean of the output distribution </p></li>
+<li><p><strong>sigma</strong> – <strong>[in]</strong> Standard deviation of the distribution </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate15GaussianDeviateERK11BaseDeviatedd">
+<span id="_CPPv3N6galsim15GaussianDeviate15GaussianDeviateERK11BaseDeviatedd"></span><span id="_CPPv2N6galsim15GaussianDeviate15GaussianDeviateERK11BaseDeviatedd"></span><span id="galsim::GaussianDeviate::GaussianDeviate__BaseDeviateCR.double.double"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a025da4ce95612429bbacf50ee3ede8a2"></span><span class="sig-name descname"><span class="n"><span class="pre">GaussianDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sigma</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate15GaussianDeviateERK11BaseDeviatedd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Gaussian-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>mean</strong> – <strong>[in]</strong> Mean of the output distribution </p></li>
+<li><p><strong>sigma</strong> – <strong>[in]</strong> Standard deviation of the distribution </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate15GaussianDeviateERK15GaussianDeviate">
+<span id="_CPPv3N6galsim15GaussianDeviate15GaussianDeviateERK15GaussianDeviate"></span><span id="_CPPv2N6galsim15GaussianDeviate15GaussianDeviateERK15GaussianDeviate"></span><span id="galsim::GaussianDeviate::GaussianDeviate__GaussianDeviateCR"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a775887eebb3e9594186c26ee32e39f53"></span><span class="sig-name descname"><span class="n"><span class="pre">GaussianDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim15GaussianDeviate15GaussianDeviateERK15GaussianDeviate" title="galsim::GaussianDeviate::GaussianDeviate"><span class="n"><span class="pre">GaussianDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate15GaussianDeviateERK15GaussianDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate15GaussianDeviateEPKcdd">
+<span id="_CPPv3N6galsim15GaussianDeviate15GaussianDeviateEPKcdd"></span><span id="_CPPv2N6galsim15GaussianDeviate15GaussianDeviateEPKcdd"></span><span id="galsim::GaussianDeviate::GaussianDeviate__cCP.double.double"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a769297726fa047f7740a1b4c5269a7b0"></span><span class="sig-name descname"><span class="n"><span class="pre">GaussianDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sigma</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate15GaussianDeviateEPKcdd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">GaussianDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate9duplicateEv">
+<span id="_CPPv3N6galsim15GaussianDeviate9duplicateEv"></span><span id="_CPPv2N6galsim15GaussianDeviate9duplicateEv"></span><span id="galsim::GaussianDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a9f6f62102ea545ee1c0e08144f09f105"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim15GaussianDeviateE" title="galsim::GaussianDeviate"><span class="n"><span class="pre">GaussianDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_gaussian_deviate"><span class="std std-ref">GaussianDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim15GaussianDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim15GaussianDeviate13duplicate_ptrEv"></span><span id="galsim::GaussianDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a2510837b56e8d535f2807a7992e9e514"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate9generate1Ev">
+<span id="_CPPv3N6galsim15GaussianDeviate9generate1Ev"></span><span id="_CPPv2N6galsim15GaussianDeviate9generate1Ev"></span><span id="galsim::GaussianDeviate::generate1"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1ad1725a51eac5f31163dde54430fa7744"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Gaussian deviate with current mean and sigma </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate7getMeanEv">
+<span id="_CPPv3N6galsim15GaussianDeviate7getMeanEv"></span><span id="_CPPv2N6galsim15GaussianDeviate7getMeanEv"></span><span id="galsim::GaussianDeviate::getMean"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a03c91202c223207cf04f61701a7c9b67"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getMean</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate7getMeanEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution mean. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mean of distribution </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate8getSigmaEv">
+<span id="_CPPv3N6galsim15GaussianDeviate8getSigmaEv"></span><span id="_CPPv2N6galsim15GaussianDeviate8getSigmaEv"></span><span id="galsim::GaussianDeviate::getSigma"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a2d6ba6f4227c2e83948a094c63e09274"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getSigma</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate8getSigmaEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution standard deviation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Standard deviation of distribution </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate7setMeanEd">
+<span id="_CPPv3N6galsim15GaussianDeviate7setMeanEd"></span><span id="_CPPv2N6galsim15GaussianDeviate7setMeanEd"></span><span id="galsim::GaussianDeviate::setMean__double"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a44170072ecfb1eef0d5275239f0c0e28"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setMean</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate7setMeanEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution mean. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mean</strong> – <strong>[in]</strong> New mean for distribution </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate8setSigmaEd">
+<span id="_CPPv3N6galsim15GaussianDeviate8setSigmaEd"></span><span id="_CPPv2N6galsim15GaussianDeviate8setSigmaEd"></span><span id="galsim::GaussianDeviate::setSigma__double"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1ae3e00a8651fd2f35df012a524fda238b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setSigma</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sigma</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate8setSigmaEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution standard deviation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sigma</strong> – <strong>[in]</strong> New standard deviation for distribution. Behavior for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim15GaussianDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim15GaussianDeviate10clearCacheEv"></span><span id="galsim::GaussianDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a0002d86b46124f59fb474076533d199d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+<p>This one is definitely required, since _normal generates two deviates at a time and stores one for later. So this clears that out when necessary. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15GaussianDeviate20generateFromVarianceExPd">
+<span id="_CPPv3N6galsim15GaussianDeviate20generateFromVarianceExPd"></span><span id="_CPPv2N6galsim15GaussianDeviate20generateFromVarianceExPd"></span><span id="galsim::GaussianDeviate::generateFromVariance__l-l.doubleP"></span><span class="target" id="classgalsim_1_1_gaussian_deviate_1a8a2d6c56e6169ba2936766a9bd150dbf"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generateFromVariance</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15GaussianDeviate20generateFromVarianceExPd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Replace data with Gaussian draws using the existing data as the variances. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The number of values to draw </p></li>
+<li><p><strong>data</strong> – The array with the given variances to replace with Gaussian draws. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviateE">
+<span id="_CPPv3N6galsim15BinomialDeviateE"></span><span id="_CPPv2N6galsim15BinomialDeviateE"></span><span id="galsim::BinomialDeviate"></span><span class="target" id="classgalsim_1_1_binomial_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BinomialDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A Binomial deviate for N trials each of probability p. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate15BinomialDeviateElid">
+<span id="_CPPv3N6galsim15BinomialDeviate15BinomialDeviateElid"></span><span id="_CPPv2N6galsim15BinomialDeviate15BinomialDeviateElid"></span><span id="galsim::BinomialDeviate::BinomialDeviate__l.i.double"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a31457136735cacda1903d77676f14b8c"></span><span class="sig-name descname"><span class="n"><span class="pre">BinomialDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate15BinomialDeviateElid" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new binomial-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use </p></li>
+<li><p><strong>N</strong> – <strong>[in]</strong> Number of “coin flips” per trial </p></li>
+<li><p><strong>p</strong> – <strong>[in]</strong> Probability of success per coin flip. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate15BinomialDeviateERK11BaseDeviateid">
+<span id="_CPPv3N6galsim15BinomialDeviate15BinomialDeviateERK11BaseDeviateid"></span><span id="_CPPv2N6galsim15BinomialDeviate15BinomialDeviateERK11BaseDeviateid"></span><span id="galsim::BinomialDeviate::BinomialDeviate__BaseDeviateCR.i.double"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a38cc13c0145938b10eec24f88439ed1c"></span><span class="sig-name descname"><span class="n"><span class="pre">BinomialDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate15BinomialDeviateERK11BaseDeviateid" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new binomial-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>N</strong> – <strong>[in]</strong> Number of “coin flips” per trial </p></li>
+<li><p><strong>p</strong> – <strong>[in]</strong> Probability of success per coin flip. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate15BinomialDeviateERK15BinomialDeviate">
+<span id="_CPPv3N6galsim15BinomialDeviate15BinomialDeviateERK15BinomialDeviate"></span><span id="_CPPv2N6galsim15BinomialDeviate15BinomialDeviateERK15BinomialDeviate"></span><span id="galsim::BinomialDeviate::BinomialDeviate__BinomialDeviateCR"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a0298c9b640bb760228bdad0a5deb58a5"></span><span class="sig-name descname"><span class="n"><span class="pre">BinomialDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim15BinomialDeviate15BinomialDeviateERK15BinomialDeviate" title="galsim::BinomialDeviate::BinomialDeviate"><span class="n"><span class="pre">BinomialDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate15BinomialDeviateERK15BinomialDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate15BinomialDeviateEPKcid">
+<span id="_CPPv3N6galsim15BinomialDeviate15BinomialDeviateEPKcid"></span><span id="_CPPv2N6galsim15BinomialDeviate15BinomialDeviateEPKcid"></span><span id="galsim::BinomialDeviate::BinomialDeviate__cCP.i.double"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a6570c4f9611befee2e6ab60229b8d0f1"></span><span class="sig-name descname"><span class="n"><span class="pre">BinomialDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate15BinomialDeviateEPKcid" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_binomial_deviate"><span class="std std-ref">BinomialDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate9duplicateEv">
+<span id="_CPPv3N6galsim15BinomialDeviate9duplicateEv"></span><span id="_CPPv2N6galsim15BinomialDeviate9duplicateEv"></span><span id="galsim::BinomialDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a49bd98d4dfa49ac2ff08fb041d08ca1a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim15BinomialDeviateE" title="galsim::BinomialDeviate"><span class="n"><span class="pre">BinomialDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_binomial_deviate"><span class="std std-ref">BinomialDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim15BinomialDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim15BinomialDeviate13duplicate_ptrEv"></span><span id="galsim::BinomialDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1afe0cbef6e95a3b65797fec99e908e47a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate9generate1Ev">
+<span id="_CPPv3N6galsim15BinomialDeviate9generate1Ev"></span><span id="_CPPv2N6galsim15BinomialDeviate9generate1Ev"></span><span id="galsim::BinomialDeviate::generate1"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a664aee400007093a309a673c425f3225"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A binomial deviate with current N and p </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate4getNEv">
+<span id="_CPPv3N6galsim15BinomialDeviate4getNEv"></span><span id="_CPPv2N6galsim15BinomialDeviate4getNEv"></span><span id="galsim::BinomialDeviate::getN"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1aa01d58eea6f6cfc8b025029fc051e539"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getN</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate4getNEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Report current value of N. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Current value of N </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate4getPEv">
+<span id="_CPPv3N6galsim15BinomialDeviate4getPEv"></span><span id="_CPPv2N6galsim15BinomialDeviate4getPEv"></span><span id="galsim::BinomialDeviate::getP"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a2eb299b07d3987545347d83294156523"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getP</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate4getPEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Report current value of p. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Current value of p </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate4setNEi">
+<span id="_CPPv3N6galsim15BinomialDeviate4setNEi"></span><span id="_CPPv2N6galsim15BinomialDeviate4setNEi"></span><span id="galsim::BinomialDeviate::setN__i"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1aa311c5b69cba5547094d5799d0fbe6ce"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setN</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate4setNEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reset value of N. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>N</strong> – <strong>[in]</strong> New value of N </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate4setPEd">
+<span id="_CPPv3N6galsim15BinomialDeviate4setPEd"></span><span id="_CPPv2N6galsim15BinomialDeviate4setPEd"></span><span id="galsim::BinomialDeviate::setP__double"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a7d7fe7f17f5c07a3070db27c89036634"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setP</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate4setPEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reset value of p. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>p</strong> – <strong>[in]</strong> New value of p </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim15BinomialDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim15BinomialDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim15BinomialDeviate10clearCacheEv"></span><span id="galsim::BinomialDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_binomial_deviate_1a5521be446124dd4a1789d9f5d5e034e6"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15BinomialDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviateE">
+<span id="_CPPv3N6galsim14PoissonDeviateE"></span><span id="_CPPv2N6galsim14PoissonDeviateE"></span><span id="galsim::PoissonDeviate"></span><span class="target" id="classgalsim_1_1_poisson_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PoissonDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A Poisson deviate with specified mean. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate14PoissonDeviateEld">
+<span id="_CPPv3N6galsim14PoissonDeviate14PoissonDeviateEld"></span><span id="_CPPv2N6galsim14PoissonDeviate14PoissonDeviateEld"></span><span id="galsim::PoissonDeviate::PoissonDeviate__l.double"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a0935c435514623a6bd87f2068057f8bf"></span><span class="sig-name descname"><span class="n"><span class="pre">PoissonDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate14PoissonDeviateEld" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Poisson-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use </p></li>
+<li><p><strong>mean</strong> – <strong>[in]</strong> Mean of the output distribution </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate14PoissonDeviateERK11BaseDeviated">
+<span id="_CPPv3N6galsim14PoissonDeviate14PoissonDeviateERK11BaseDeviated"></span><span id="_CPPv2N6galsim14PoissonDeviate14PoissonDeviateERK11BaseDeviated"></span><span id="galsim::PoissonDeviate::PoissonDeviate__BaseDeviateCR.double"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a251db48855fcc1abb9a4e7fe4eafc30d"></span><span class="sig-name descname"><span class="n"><span class="pre">PoissonDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate14PoissonDeviateERK11BaseDeviated" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Poisson-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>mean</strong> – <strong>[in]</strong> Mean of the output distribution </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate14PoissonDeviateERK14PoissonDeviate">
+<span id="_CPPv3N6galsim14PoissonDeviate14PoissonDeviateERK14PoissonDeviate"></span><span id="_CPPv2N6galsim14PoissonDeviate14PoissonDeviateERK14PoissonDeviate"></span><span id="galsim::PoissonDeviate::PoissonDeviate__PoissonDeviateCR"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a247c8726647f7ed5607001cac6ba5fb8"></span><span class="sig-name descname"><span class="n"><span class="pre">PoissonDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14PoissonDeviate14PoissonDeviateERK14PoissonDeviate" title="galsim::PoissonDeviate::PoissonDeviate"><span class="n"><span class="pre">PoissonDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate14PoissonDeviateERK14PoissonDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate14PoissonDeviateEPKcd">
+<span id="_CPPv3N6galsim14PoissonDeviate14PoissonDeviateEPKcd"></span><span id="_CPPv2N6galsim14PoissonDeviate14PoissonDeviateEPKcd"></span><span id="galsim::PoissonDeviate::PoissonDeviate__cCP.double"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1ae581652b4b9b387968d977114c874bef"></span><span class="sig-name descname"><span class="n"><span class="pre">PoissonDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate14PoissonDeviateEPKcd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_poisson_deviate"><span class="std std-ref">PoissonDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate9generate1Ev">
+<span id="_CPPv3N6galsim14PoissonDeviate9generate1Ev"></span><span id="_CPPv2N6galsim14PoissonDeviate9generate1Ev"></span><span id="galsim::PoissonDeviate::generate1"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a6ceb3cfb40ed09f4e1f8e9be102fe1c1"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Poisson deviate with current mean </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate9duplicateEv">
+<span id="_CPPv3N6galsim14PoissonDeviate9duplicateEv"></span><span id="_CPPv2N6galsim14PoissonDeviate9duplicateEv"></span><span id="galsim::PoissonDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a9610af35f327b83332622e1505aa7b09"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14PoissonDeviateE" title="galsim::PoissonDeviate"><span class="n"><span class="pre">PoissonDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_poisson_deviate"><span class="std std-ref">PoissonDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim14PoissonDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim14PoissonDeviate13duplicate_ptrEv"></span><span id="galsim::PoissonDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a9896d6db4f293d84b7f62ec1a9303846"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate7getMeanEv">
+<span id="_CPPv3N6galsim14PoissonDeviate7getMeanEv"></span><span id="_CPPv2N6galsim14PoissonDeviate7getMeanEv"></span><span id="galsim::PoissonDeviate::getMean"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a95a0d149c8b0539985c02c801a3bb9d9"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getMean</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate7getMeanEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Report current distribution mean. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Current mean value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate7setMeanEd">
+<span id="_CPPv3N6galsim14PoissonDeviate7setMeanEd"></span><span id="_CPPv2N6galsim14PoissonDeviate7setMeanEd"></span><span id="galsim::PoissonDeviate::setMean__double"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1affa0f5041ddd3e9275e0ffcbd5c16084"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setMean</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mean</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate7setMeanEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reset distribution mean. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mean</strong> – <strong>[in]</strong> New mean value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim14PoissonDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim14PoissonDeviate10clearCacheEv"></span><span id="galsim::PoissonDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1ab2501758dbf4afc70264c49837e4a074"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14PoissonDeviate23generateFromExpectationExPd">
+<span id="_CPPv3N6galsim14PoissonDeviate23generateFromExpectationExPd"></span><span id="_CPPv2N6galsim14PoissonDeviate23generateFromExpectationExPd"></span><span id="galsim::PoissonDeviate::generateFromExpectation__l-l.doubleP"></span><span class="target" id="classgalsim_1_1_poisson_deviate_1a06140e9feb9ce102b15b3123288f5af3"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generateFromExpectation</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14PoissonDeviate23generateFromExpectationExPd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Replace data with Poisson draws using the existing data as the expectation value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The number of values to draw </p></li>
+<li><p><strong>data</strong> – The array with the given data to replace with Poisson draws. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviateE">
+<span id="_CPPv3N6galsim14WeibullDeviateE"></span><span id="_CPPv2N6galsim14WeibullDeviateE"></span><span id="galsim::WeibullDeviate"></span><span class="target" id="classgalsim_1_1_weibull_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WeibullDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A Weibull-distributed deviate with shape parameter a and scale parameter b. </p>
+<p>The Weibull distribution is related to a number of other probability distributions; in particular, it interpolates between the exponential distribution (a=1) and the Rayleigh distribution (a=2). See <a class="reference external" href="http://en.wikipedia.org/wiki/Weibull_distribution">http://en.wikipedia.org/wiki/Weibull_distribution</a> (a=k and b=lambda in the notation adopted in the Wikipedia article). The Weibull distribution is a real valued distribution producing deviates &gt;= 0. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate14WeibullDeviateEldd">
+<span id="_CPPv3N6galsim14WeibullDeviate14WeibullDeviateEldd"></span><span id="_CPPv2N6galsim14WeibullDeviate14WeibullDeviateEldd"></span><span id="galsim::WeibullDeviate::WeibullDeviate__l.double.double"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a73dfcd4dc2bbf604ef6d855971e5612a"></span><span class="sig-name descname"><span class="n"><span class="pre">WeibullDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate14WeibullDeviateEldd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Weibull-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use </p></li>
+<li><p><strong>a</strong> – <strong>[in]</strong> Shape parameter of the output distribution, must be &gt; 0. </p></li>
+<li><p><strong>b</strong> – <strong>[in]</strong> Scale parameter of the distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate14WeibullDeviateERK11BaseDeviatedd">
+<span id="_CPPv3N6galsim14WeibullDeviate14WeibullDeviateERK11BaseDeviatedd"></span><span id="_CPPv2N6galsim14WeibullDeviate14WeibullDeviateERK11BaseDeviatedd"></span><span id="galsim::WeibullDeviate::WeibullDeviate__BaseDeviateCR.double.double"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a7ddeb74bf62187e399eb5115b78e2b49"></span><span class="sig-name descname"><span class="n"><span class="pre">WeibullDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate14WeibullDeviateERK11BaseDeviatedd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Weibull-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>a</strong> – <strong>[in]</strong> Shape parameter of the output distribution, must be &gt; 0. </p></li>
+<li><p><strong>b</strong> – <strong>[in]</strong> Scale parameter of the distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate14WeibullDeviateERK14WeibullDeviate">
+<span id="_CPPv3N6galsim14WeibullDeviate14WeibullDeviateERK14WeibullDeviate"></span><span id="_CPPv2N6galsim14WeibullDeviate14WeibullDeviateERK14WeibullDeviate"></span><span id="galsim::WeibullDeviate::WeibullDeviate__WeibullDeviateCR"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a581744b97d8e1cfbfce1eca41ea0f0dd"></span><span class="sig-name descname"><span class="n"><span class="pre">WeibullDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14WeibullDeviate14WeibullDeviateERK14WeibullDeviate" title="galsim::WeibullDeviate::WeibullDeviate"><span class="n"><span class="pre">WeibullDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate14WeibullDeviateERK14WeibullDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate14WeibullDeviateEPKcdd">
+<span id="_CPPv3N6galsim14WeibullDeviate14WeibullDeviateEPKcdd"></span><span id="_CPPv2N6galsim14WeibullDeviate14WeibullDeviateEPKcdd"></span><span id="galsim::WeibullDeviate::WeibullDeviate__cCP.double.double"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a200a20c6c2a36223b5da74c4a7445f83"></span><span class="sig-name descname"><span class="n"><span class="pre">WeibullDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate14WeibullDeviateEPKcdd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_weibull_deviate"><span class="std std-ref">WeibullDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate9duplicateEv">
+<span id="_CPPv3N6galsim14WeibullDeviate9duplicateEv"></span><span id="_CPPv2N6galsim14WeibullDeviate9duplicateEv"></span><span id="galsim::WeibullDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1af3c0c00d7458a5ab7cf0c8338b07d47b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim14WeibullDeviateE" title="galsim::WeibullDeviate"><span class="n"><span class="pre">WeibullDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_weibull_deviate"><span class="std std-ref">WeibullDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim14WeibullDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim14WeibullDeviate13duplicate_ptrEv"></span><span id="galsim::WeibullDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a4fda30c3e400259f23f550e818faf0b5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate9generate1Ev">
+<span id="_CPPv3N6galsim14WeibullDeviate9generate1Ev"></span><span id="_CPPv2N6galsim14WeibullDeviate9generate1Ev"></span><span id="galsim::WeibullDeviate::generate1"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1af35f3658cb57e69ee3014e8d94ef3c7d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Weibull deviate with current shape k and scale lam. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate4getAEv">
+<span id="_CPPv3N6galsim14WeibullDeviate4getAEv"></span><span id="_CPPv2N6galsim14WeibullDeviate4getAEv"></span><span id="galsim::WeibullDeviate::getA"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a0463e3b157a3d5adb5dde9cbdfa295f4"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getA</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate4getAEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution shape parameter a. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Shape parameter a of distribution. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate4getBEv">
+<span id="_CPPv3N6galsim14WeibullDeviate4getBEv"></span><span id="_CPPv2N6galsim14WeibullDeviate4getBEv"></span><span id="galsim::WeibullDeviate::getB"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a85e7238a66561c925135e47a6663d28e"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getB</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate4getBEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution scale parameter b. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Scale parameter b of distribution. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate4setAEd">
+<span id="_CPPv3N6galsim14WeibullDeviate4setAEd"></span><span id="_CPPv2N6galsim14WeibullDeviate4setAEd"></span><span id="galsim::WeibullDeviate::setA__double"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a1d26367743e04b8c96ff7bfbbdc363e8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setA</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate4setAEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution shape parameter a. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>a</strong> – <strong>[in]</strong> New shape parameter for distribution. Behaviour for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate4setBEd">
+<span id="_CPPv3N6galsim14WeibullDeviate4setBEd"></span><span id="_CPPv2N6galsim14WeibullDeviate4setBEd"></span><span id="galsim::WeibullDeviate::setB__double"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a722e178ddffcc7523e50ef719d055661"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setB</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate4setBEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution scale parameter b. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>b</strong> – <strong>[in]</strong> New scale parameter for distribution. Behavior for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim14WeibullDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim14WeibullDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim14WeibullDeviate10clearCacheEv"></span><span id="galsim::WeibullDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_weibull_deviate_1a26e1ac3e41be514ebef28592cdb4b9f1"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim14WeibullDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviateE">
+<span id="_CPPv3N6galsim12GammaDeviateE"></span><span id="_CPPv2N6galsim12GammaDeviateE"></span><span id="galsim::GammaDeviate"></span><span class="target" id="classgalsim_1_1_gamma_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GammaDeviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A Gamma-distributed deviate with shape parameter k and scale parameter theta. </p>
+<p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Gamma_distribution">http://en.wikipedia.org/wiki/Gamma_distribution</a>. (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.) The Gamma distribution is a real valued distribution producing deviates &gt;= 0. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate12GammaDeviateEldd">
+<span id="_CPPv3N6galsim12GammaDeviate12GammaDeviateEldd"></span><span id="_CPPv2N6galsim12GammaDeviate12GammaDeviateEldd"></span><span id="galsim::GammaDeviate::GammaDeviate__l.double.double"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1af2198d5e1f6704a49220b979df15cd84"></span><span class="sig-name descname"><span class="n"><span class="pre">GammaDeviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">theta</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate12GammaDeviateEldd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Gamma-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use. </p></li>
+<li><p><strong>k</strong> – <strong>[in]</strong> Shape parameter of the output distribution, must be &gt; 0. </p></li>
+<li><p><strong>theta</strong> – <strong>[in]</strong> Scale parameter of the distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate12GammaDeviateERK11BaseDeviatedd">
+<span id="_CPPv3N6galsim12GammaDeviate12GammaDeviateERK11BaseDeviatedd"></span><span id="_CPPv2N6galsim12GammaDeviate12GammaDeviateERK11BaseDeviatedd"></span><span id="galsim::GammaDeviate::GammaDeviate__BaseDeviateCR.double.double"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a1039dc21b4147d5636b9a862d3fdf348"></span><span class="sig-name descname"><span class="n"><span class="pre">GammaDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">theta</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate12GammaDeviateERK11BaseDeviatedd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Gamma-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>k</strong> – <strong>[in]</strong> Shape parameter of the output distribution, must be &gt; 0. </p></li>
+<li><p><strong>theta</strong> – <strong>[in]</strong> Scale parameter of the distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate12GammaDeviateERK12GammaDeviate">
+<span id="_CPPv3N6galsim12GammaDeviate12GammaDeviateERK12GammaDeviate"></span><span id="_CPPv2N6galsim12GammaDeviate12GammaDeviateERK12GammaDeviate"></span><span id="galsim::GammaDeviate::GammaDeviate__GammaDeviateCR"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a67e609e63a7d9f008b27360b13eb20d3"></span><span class="sig-name descname"><span class="n"><span class="pre">GammaDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim12GammaDeviate12GammaDeviateERK12GammaDeviate" title="galsim::GammaDeviate::GammaDeviate"><span class="n"><span class="pre">GammaDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate12GammaDeviateERK12GammaDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate12GammaDeviateEPKcdd">
+<span id="_CPPv3N6galsim12GammaDeviate12GammaDeviateEPKcdd"></span><span id="_CPPv2N6galsim12GammaDeviate12GammaDeviateEPKcdd"></span><span id="galsim::GammaDeviate::GammaDeviate__cCP.double.double"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a06fc304db27837c7ddb90fd136a29bbf"></span><span class="sig-name descname"><span class="n"><span class="pre">GammaDeviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">theta</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate12GammaDeviateEPKcdd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_gamma_deviate"><span class="std std-ref">GammaDeviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate9duplicateEv">
+<span id="_CPPv3N6galsim12GammaDeviate9duplicateEv"></span><span id="_CPPv2N6galsim12GammaDeviate9duplicateEv"></span><span id="galsim::GammaDeviate::duplicate"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1ac0f06e276a7081040f787fa035934d38"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim12GammaDeviateE" title="galsim::GammaDeviate"><span class="n"><span class="pre">GammaDeviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_gamma_deviate"><span class="std std-ref">GammaDeviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim12GammaDeviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim12GammaDeviate13duplicate_ptrEv"></span><span id="galsim::GammaDeviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1ab4265b2dd49887adc357db3a3a3f4c7d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate9generate1Ev">
+<span id="_CPPv3N6galsim12GammaDeviate9generate1Ev"></span><span id="_CPPv2N6galsim12GammaDeviate9generate1Ev"></span><span id="galsim::GammaDeviate::generate1"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a718551528c968ddceb9ac9cd253e410d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Gamma deviate with current shape k and scale theta. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate4getKEv">
+<span id="_CPPv3N6galsim12GammaDeviate4getKEv"></span><span id="_CPPv2N6galsim12GammaDeviate4getKEv"></span><span id="galsim::GammaDeviate::getK"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a07e783faed50cb546a301fe4a7d5d752"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getK</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate4getKEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution shape parameter k. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Shape parameter k of distribution. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate8getThetaEv">
+<span id="_CPPv3N6galsim12GammaDeviate8getThetaEv"></span><span id="_CPPv2N6galsim12GammaDeviate8getThetaEv"></span><span id="galsim::GammaDeviate::getTheta"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1aa9cd9dd4b22094de65512eab5c2257ba"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getTheta</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate8getThetaEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution scale parameter theta. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Scale parameter theta of distribution. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate4setKEd">
+<span id="_CPPv3N6galsim12GammaDeviate4setKEd"></span><span id="_CPPv2N6galsim12GammaDeviate4setKEd"></span><span id="galsim::GammaDeviate::setK__double"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a88bcae49f3e44ff7768ba343c7ace11d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setK</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate4setKEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution shape parameter k. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>k</strong> – <strong>[in]</strong> New shape parameter for distribution. Behaviour for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate8setThetaEd">
+<span id="_CPPv3N6galsim12GammaDeviate8setThetaEd"></span><span id="_CPPv2N6galsim12GammaDeviate8setThetaEd"></span><span id="galsim::GammaDeviate::setTheta__double"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a335a311f54e8379e14a169366683bc09"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setTheta</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">theta</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate8setThetaEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution scale parameter theta. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>theta</strong> – <strong>[in]</strong> New scale parameter for distribution. Behavior for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim12GammaDeviate10clearCacheEv">
+<span id="_CPPv3N6galsim12GammaDeviate10clearCacheEv"></span><span id="_CPPv2N6galsim12GammaDeviate10clearCacheEv"></span><span id="galsim::GammaDeviate::clearCache"></span><span class="target" id="classgalsim_1_1_gamma_deviate_1a85dfd67b69e6fe515d5846416bcb1afd"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12GammaDeviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2DeviateE">
+<span id="_CPPv3N6galsim11Chi2DeviateE"></span><span id="_CPPv2N6galsim11Chi2DeviateE"></span><span id="galsim::Chi2Deviate"></span><span class="target" id="classgalsim_1_1_chi2_deviate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Chi2Deviate</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><a class="headerlink" href="#_CPPv4N6galsim11Chi2DeviateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A Chi^2-distributed deviate with degrees-of-freedom parameter n. </p>
+<p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Chi-squared_distribution">http://en.wikipedia.org/wiki/Chi-squared_distribution</a> (although note that in the Boost random routine this class calls the notation is k=n for the number of degrees of freedom). The Chi^2 distribution is a real valued distribution producing deviates &gt;= 0. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate11Chi2DeviateEld">
+<span id="_CPPv3N6galsim11Chi2Deviate11Chi2DeviateEld"></span><span id="_CPPv2N6galsim11Chi2Deviate11Chi2DeviateEld"></span><span id="galsim::Chi2Deviate::Chi2Deviate__l.double"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1a2383f4ae3e05ac9688ac5f9f5c73ef7f"></span><span class="sig-name descname"><span class="n"><span class="pre">Chi2Deviate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lseed</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate11Chi2DeviateEld" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Chi^2-distributed RNG, using the provided value as seed. </p>
+<p>If lseed == 0, this means to use a random seed from the system: either /dev/urandom if possible, or the time of day otherwise. Note that in the latter case, the microsecond counter is the seed, so BaseDeviates constructed in rapid succession may not be independent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lseed</strong> – <strong>[in]</strong> Seed to use </p></li>
+<li><p><strong>n</strong> – <strong>[in]</strong> Number of degrees of freedom for the output distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate11Chi2DeviateERK11BaseDeviated">
+<span id="_CPPv3N6galsim11Chi2Deviate11Chi2DeviateERK11BaseDeviated"></span><span id="_CPPv2N6galsim11Chi2Deviate11Chi2DeviateERK11BaseDeviated"></span><span id="galsim::Chi2Deviate::Chi2Deviate__BaseDeviateCR.double"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1a2e1f41816106cec6f6651f65158fc6a1"></span><span class="sig-name descname"><span class="n"><span class="pre">Chi2Deviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate11Chi2DeviateERK11BaseDeviated" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new Chi^2-distributed RNG, sharing the random number generator with rhs. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> Other deviate with which to share the RNG </p></li>
+<li><p><strong>n</strong> – <strong>[in]</strong> Number of degrees of freedom for the output distribution, must be &gt; 0. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate11Chi2DeviateERK11Chi2Deviate">
+<span id="_CPPv3N6galsim11Chi2Deviate11Chi2DeviateERK11Chi2Deviate"></span><span id="_CPPv2N6galsim11Chi2Deviate11Chi2DeviateERK11Chi2Deviate"></span><span id="galsim::Chi2Deviate::Chi2Deviate__Chi2DeviateCR"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1a5486c50b1200759c06f47faaea49075c"></span><span class="sig-name descname"><span class="n"><span class="pre">Chi2Deviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11Chi2Deviate11Chi2DeviateERK11Chi2Deviate" title="galsim::Chi2Deviate::Chi2Deviate"><span class="n"><span class="pre">Chi2Deviate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate11Chi2DeviateERK11Chi2Deviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a copy that shares the RNG with rhs. </p>
+<p>Note: the default constructed op= function will do the same thing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate11Chi2DeviateEPKcd">
+<span id="_CPPv3N6galsim11Chi2Deviate11Chi2DeviateEPKcd"></span><span id="_CPPv2N6galsim11Chi2Deviate11Chi2DeviateEPKcd"></span><span id="galsim::Chi2Deviate::Chi2Deviate__cCP.double"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1ae3dd3ca62d6f875ecd06889caea0ab64"></span><span class="sig-name descname"><span class="n"><span class="pre">Chi2Deviate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">str_c</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate11Chi2DeviateEPKcd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classgalsim_1_1_chi2_deviate"><span class="std std-ref">Chi2Deviate</span></a> from a serialization string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate9duplicateEv">
+<span id="_CPPv3N6galsim11Chi2Deviate9duplicateEv"></span><span id="_CPPv2N6galsim11Chi2Deviate9duplicateEv"></span><span id="galsim::Chi2Deviate::duplicate"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1a7503e051204c57e6834c2d599d38da10"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11Chi2DeviateE" title="galsim::Chi2Deviate"><span class="n"><span class="pre">Chi2Deviate</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate9duplicateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a duplicate of this <a class="reference internal" href="#classgalsim_1_1_chi2_deviate"><span class="std std-ref">Chi2Deviate</span></a> object. </p>
+<p>Both this and the returned duplicate will produce identical sequences of values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate13duplicate_ptrEv">
+<span id="_CPPv3N6galsim11Chi2Deviate13duplicate_ptrEv"></span><span id="_CPPv2N6galsim11Chi2Deviate13duplicate_ptrEv"></span><span id="galsim::Chi2Deviate::duplicate_ptr"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1ac48a7f644b8d402fb95582deb760544e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">duplicate_ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate13duplicate_ptrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a pointer to a duplicate of this object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate9generate1Ev">
+<span id="_CPPv3N6galsim11Chi2Deviate9generate1Ev"></span><span id="_CPPv2N6galsim11Chi2Deviate9generate1Ev"></span><span id="galsim::Chi2Deviate::generate1"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1ad318e1c912a3f93dcce5f1c18456fd04"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">generate1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate9generate1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Draw a new random number from the distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Chi^2 deviate with current degrees-of-freedom parameter n. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate4getNEv">
+<span id="_CPPv3N6galsim11Chi2Deviate4getNEv"></span><span id="_CPPv2N6galsim11Chi2Deviate4getNEv"></span><span id="galsim::Chi2Deviate::getN"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1abc59517f36ca2a6817dc148e1056089a"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getN</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate4getNEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current distribution degrees-of-freedom parameter n. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Degrees-of-freedom parameter n of distribution. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate4setNEd">
+<span id="_CPPv3N6galsim11Chi2Deviate4setNEd"></span><span id="_CPPv2N6galsim11Chi2Deviate4setNEd"></span><span id="galsim::Chi2Deviate::setN__double"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1aac6872a2862ec12e40cefdadeb7b150d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setN</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate4setNEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set current distribution degrees-of-freedom parameter n. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – <strong>[in]</strong> New degrees-of-freedom parameter n for distribution. Behaviour for non-positive value is undefined. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11Chi2Deviate10clearCacheEv">
+<span id="_CPPv3N6galsim11Chi2Deviate10clearCacheEv"></span><span id="_CPPv2N6galsim11Chi2Deviate10clearCacheEv"></span><span id="galsim::Chi2Deviate::clearCache"></span><span class="target" id="classgalsim_1_1_chi2_deviate_1ac6255abd1341758cec51cb805f9e2f83"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearCache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Chi2Deviate10clearCacheEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clear the internal cache. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="c-correlated-noise">
+<h2>C++ Correlated Noise<a class="headerlink" href="#c-correlated-noise" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim25calculateCovarianceMatrixER9ImageViewIdERK9SBProfileRK6BoundsIiEd">
+<span id="_CPPv3N6galsim25calculateCovarianceMatrixER9ImageViewIdERK9SBProfileRK6BoundsIiEd"></span><span id="_CPPv2N6galsim25calculateCovarianceMatrixER9ImageViewIdERK9SBProfileRK6BoundsIiEd"></span><span id="galsim::calculateCovarianceMatrix__ImageView:double:R.SBProfileCR.Bounds:i:CR.double"></span><span class="target" id="namespacegalsim_1a344c1b7a5e5855e554eea89567629b8e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">calculateCovarianceMatrix</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">cov</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim9SBProfileE" title="galsim::SBProfile"><span class="n"><span class="pre">SBProfile</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">sbp</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="n"><span class="pre">Bounds</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bounds</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim25calculateCovarianceMatrixER9ImageViewIdERK9SBProfileRK6BoundsIiEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return, as a square Image, a noise covariance matrix between every element in an Image with supplied <code class="docutils literal notranslate"><span class="pre">bounds</span></code> and pixel scale <code class="docutils literal notranslate"><span class="pre">dx</span></code> for a correlation function represented as an <a class="reference internal" href="cpp_sb.html#classgalsim_1_1_s_b_profile"><span class="std std-ref">SBProfile</span></a>. </p>
+<p>The matrix is symmetric, and therefore only the upper triangular elements are actually written into. The rest are initialized and remain as zero.</p>
+<p>For an example of this function in use, see <code class="docutils literal notranslate"><span class="pre">galsim/correlatednoise.py</span></code>. </p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_bounds.html" class="btn btn-neutral float-left" title="Positions and Bounds" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_photon.html" class="btn btn-neutral float-right" title="Photons and Sensor Effects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

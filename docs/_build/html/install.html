@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation Instructions &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing With Pip" href="install_pip.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation Instructions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install_pip.html">Installing With Pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install_conda.html">Installing With Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-example-scripts">Running example scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation Instructions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/install.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation-instructions">
+<h1>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this heading"></a></h1>
+<p>GalSim is a Python module that has much of its implementation in C++ for
+improved computational efficiency.
+It is regularly tested on Python versions 3.7, 3.8, and 3.9 on both linux
+and mac os.</p>
+<p>It also seems to work on PyPy (both via conda-forge and the GitHub Actions
+setup), although we don’t consider this an officially supported system.
+If you use GalSim with PyPy and experience any problems, we would appreciate
+hearing about them.  Please open an issue describing any problems you find.</p>
+<p>System requirements: GalSim currently only supports Linux and Mac OSX.
+Possibly other POSIX-compliant systems, but we specifically do not
+currently support Windows.</p>
+<p>The usual way to install GalSim is now (starting with version 2.0) simply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>which will install the latest official release of GalSim.
+For complete details, see <a class="reference internal" href="install_pip.html#installing-with-pip"><span class="std std-ref">Installing With Pip</span></a>.</p>
+<p>Another option If you use Anaconda Python is to use <code class="docutils literal notranslate"><span class="pre">conda</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>For more information, see <a class="reference internal" href="install_conda.html#installing-with-conda"><span class="std std-ref">Installing With Conda</span></a>.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install_pip.html">Installing With Pip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_conda.html">Installing With Conda</a></li>
+</ul>
+</div>
+<section id="running-tests">
+<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this heading"></a></h2>
+<p>The simplest way to run our test suite by typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">test</span>
+</pre></div>
+</div>
+<p>This should run all the Python-layer tests with pytest and also compile and
+run the C++ test suite.</p>
+<p>There are a number of packages that are used by the tests, but which are not
+required for GalSim installation and running.  These should be installed
+automatically by the above command, but you can install them manually via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">test_requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>(As usually, you may need to add either <code class="docutils literal notranslate"><span class="pre">sudo</span></code> or <code class="docutils literal notranslate"><span class="pre">--user</span></code>.)</p>
+<p>By default, the tests will run in parallel using the pytest plugins
+<code class="docutils literal notranslate"><span class="pre">pytest-xdist</span></code> and <code class="docutils literal notranslate"><span class="pre">pytest-timeout</span></code> (to manage how much time each test is
+allowed to run).  If you want to run the Python tests in serial instead,
+you can do this via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">test</span> <span class="o">-</span><span class="n">j1</span>
+</pre></div>
+</div>
+<p>You can also use this to modify how many jobs will be spawned for running the
+tests.</p>
+<p>Or, you can run the Python tests yourself in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> directory by typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="n">test</span><span class="o">*.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You can also run them with multiple jobs (e.g. for 4 jobs) by typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="o">-</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span> <span class="o">--</span><span class="n">timeout</span><span class="o">=</span><span class="mi">60</span> <span class="n">test</span><span class="o">*.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You need the <code class="docutils literal notranslate"><span class="pre">pytest-xdist</span></code> and <code class="docutils literal notranslate"><span class="pre">pytest-timeout</span></code> plugins for this to work.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your system does not have <code class="docutils literal notranslate"><span class="pre">pytest</span></code> installed, and you do not want
+to install it, you can run all the Python tests with the script <code class="docutils literal notranslate"><span class="pre">run_all_tests</span></code>
+in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> directory. If this finishes without an error, then all the tests
+have passed.  However, note that this script runs more tests than our normal
+test run using <code class="docutils literal notranslate"><span class="pre">pytest</span></code>, so it may take quite a while to finish.  (The “all” in
+the file name means run <strong>all</strong> the tests including the slow ones that we normally
+skip.)</p>
+</div>
+</section>
+<section id="running-example-scripts">
+<h2>Running example scripts<a class="headerlink" href="#running-example-scripts" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">examples</span></code> directory has a series of demo scripts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">demo1</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">demo2</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>These can be considered a tutorial on getting up to speed with GalSim. Reading
+through these in order will introduce you to how to use most of the features of
+GalSim in Python.  To run these scripts, type (e.g.):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">demo1</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>There are also a corresponding set of config files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span><span class="p">,</span> <span class="n">demo2</span><span class="o">.</span><span class="n">yaml</span><span class="p">,</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>These files can be run using the executable <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, and will produce the
+same output images as the Python scripts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<p>They are also well commented, and can be considered a parallel tutorial for
+learning the config file usage of GalSim.</p>
+<p>All demo scripts are designed to be run in the <code class="docutils literal notranslate"><span class="pre">GalSim/examples</span></code> directory.
+Some of them access files in subdirectories of the <code class="docutils literal notranslate"><span class="pre">examples</span></code> directory, so they
+would not work correctly from other locations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install_pip.html" class="btn btn-neutral float-right" title="Installing With Pip" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

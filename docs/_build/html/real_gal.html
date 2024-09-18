@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>“Real” Galaxies &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Composite Profiles" href="composite.html" />
+    <link rel="prev" title="Phase-screen PSFs" href="phase_psf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Arbitrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">“Real” Galaxies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#individual-real-galaxies">Individual Real Galaxies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.RealGalaxy"><code class="docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.RealGalaxyCatalog"><code class="docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#realistic-scene">Realistic Scene</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.COSMOSCatalog"><code class="docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.GalaxySample"><code class="docutils literal notranslate"><span class="pre">GalaxySample</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#downloading-the-cosmos-catalog">Downloading the COSMOS Catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsc-postage-stamp-data">HSC Postage Stamp Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="sb.html">Surface Brightness Profiles</a></li>
+      <li class="breadcrumb-item active">“Real” Galaxies</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/real_gal.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="real-galaxies">
+<h1>“Real” Galaxies<a class="headerlink" href="#real-galaxies" title="Permalink to this heading"></a></h1>
+<section id="individual-real-galaxies">
+<h2>Individual Real Galaxies<a class="headerlink" href="#individual-real-galaxies" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> class uses images of galaxies from real astrophysical data (e.g. the Hubble Space
+Telescope), along with a PSF model of the optical properties of the telescope that took these
+images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A
+description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS,
+540, 1518), although note that the details of the implementation in Section 7 of that work are not
+relevant to the more recent software used here.</p>
+<p>The <a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> class stores all required information about a real galaxy simulation
+training sample and accompanying PSF model.
+This modelling requires external data for the galaxy images and PSF models, which is read into a
+<a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> object from FITS files. An example catalog of 100 real galaxies is in the
+repository itself at</p>
+<blockquote>
+<div><p>GalSim/examples/data/real_galaxy_catalog_23.5_example.fits</p>
+</div></blockquote>
+<p>For access to larger catalogs of objects, see <a class="reference internal" href="#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a> below.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.RealGalaxy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RealGalaxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real_galaxy_catalog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_pad_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class describing real galaxies from some training dataset.  Its underlying implementation
+uses a Convolution instance of an <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> (for the observed galaxy) with a
+<a class="reference internal" href="transform.html#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a> of another <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> (for the PSF).</p>
+<p>This class uses a catalog describing galaxies in some training data (for more details, see the
+<a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> documentation) to read in data about realistic galaxies that can be used for
+simulations based on those galaxies.  Also included in the class is additional information that
+might be needed to make or interpret the simulations, e.g., the noise properties of the training
+data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
+passbands, and/or parametric representations, should use the COSMOSGalaxy class.</p>
+<p>Because RealGalaxy involves a <a class="reference internal" href="transform.html#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a>, <code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">'phot'</span></code> is unavailable for the
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> function, and it is essential that users convolve each RealGalaxy with a
+PSF that is at least as large as the original HST PSF (stored as an attribute) before rendering
+any images.  This is necessary to eliminate noise that was amplified due to deconvolution of the
+HST PSF.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real_galaxy</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxy</span><span class="p">(</span><span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This initializes <code class="docutils literal notranslate"><span class="pre">real_galaxy</span></code> with three <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> objects (one for the deconvolved
+galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
+keywords for choosing a galaxy; exactly one must be set.</p>
+<p>Note that tests suggest that for optimal balance between accuracy and speed, <code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code>
+and <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> should be kept at their default values.  The user should be aware that
+significant inaccuracy can result from using other combinations of these parameters; more
+details can be found in <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>, especially table 1, and in comment
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621">https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621</a> and the following
+comments.</p>
+<p>If you don’t set a flux, the flux of the returned object will be the flux of the original
+HST data, scaled to correspond to a 1 second HST exposure (though see the <code class="docutils literal notranslate"><span class="pre">area_norm</span></code>
+parameter below, and also caveats related to using the <code class="docutils literal notranslate"><span class="pre">flux</span></code> parameter).  If you want a flux
+appropriate for a longer exposure, or for a telescope with a different collecting area than HST,
+you can either renormalize the object with the <code class="docutils literal notranslate"><span class="pre">flux_rescale</span></code> parameter, or by using the
+<code class="docutils literal notranslate"><span class="pre">exptime</span></code> and <code class="docutils literal notranslate"><span class="pre">area</span></code> parameters to <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p>
+<p>Note that RealGalaxy objects use arcsec for the units of their linear dimension.  If you
+are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
+the resulting object with <code class="docutils literal notranslate"><span class="pre">gal.dilate(galsim.arcsec</span> <span class="pre">/</span> <span class="pre">scale_unit)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>real_galaxy_catalog</strong> – A <a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> object with basic information about where to
+find the data, etc.</p></li>
+<li><p><strong>index</strong> – Index of the desired galaxy in the catalog. [One of <code class="docutils literal notranslate"><span class="pre">index</span></code>,
+<code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
+<li><p><strong>id</strong> – Object ID for the desired galaxy in the catalog. [One of <code class="docutils literal notranslate"><span class="pre">index</span></code>,
+<code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
+<li><p><strong>random</strong> – If True, then select a random galaxy from the catalog.  If the
+catalog has a ‘weight’ associated with it to allow for correction of
+selection effects in which galaxies were included, the ‘weight’
+factor is used to remove those selection effects rather than
+selecting a completely random object.
+[One of <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
+<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
+(may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> or None) and to use in generating
+any noise field when padding. [default: None]</p></li>
+<li><p><strong>x_interpolant</strong> – Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance or a string indicating which
+real-space interpolant should be used.  Options are ‘nearest’,
+‘sinc’, ‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should
+be the integer order to use. [default: galsim.Quintic()]</p></li>
+<li><p><strong>k_interpolant</strong> – Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance or a string indicating which
+k-space interpolant should be used.  Options are ‘nearest’, ‘sinc’,
+‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the
+integer order to use.  We strongly recommend leaving this parameter
+at its default value; see text above for details.
+[default: galsim.Quintic()]</p></li>
+<li><p><strong>flux</strong> – Total flux, if None then original flux in image is adopted without
+change.  Note that, technically, this parameter sets the flux of the
+postage stamp image and not the flux of the contained galaxy.
+These two values will be strongly correlated when the signal-to-
+noise ratio of the galaxy is large, but may be considerably
+different if the flux of the galaxy is small with respect to the
+noise variations in the postage stamp.  To avoid complications with
+faint galaxies, consider using the flux_rescale parameter.
+[default: None]</p></li>
+<li><p><strong>flux_rescale</strong> – Flux rescaling factor; if None, then no rescaling is done.  Either
+<code class="docutils literal notranslate"><span class="pre">flux</span></code> or <code class="docutils literal notranslate"><span class="pre">flux_rescale</span></code> may be set, but not both.
+[default: None]</p></li>
+<li><p><strong>pad_factor</strong> – Factor by which to pad the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> when creating the
+<a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>.  We strongly recommend leaving this parameter
+at its default value; see text above for details.  [default: 4]</p></li>
+<li><p><strong>noise_pad_size</strong> – If provided, the image will be padded out to this size (in arcsec)
+with the noise specified in the real galaxy catalog. This is
+important if you are planning to whiten the resulting image.  You
+should make sure that the padded image is larger than the postage
+stamp onto which you are drawing this object.
+[default: None]</p></li>
+<li><p><strong>area_norm</strong> – Area in cm^2 by which to normalize the flux of the returned object.
+When area_norm=1 (the default), drawing with <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>
+keywords exptime=1 and area=1 will simulate an image with the
+appropriate number of counts for a 1 second exposure with the
+original telescope/camera (e.g., with HST when using the COSMOS
+catalog).
+If you would rather explicitly specify the collecting area of the
+telescope when using <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> with a <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a>,
+then you should set area_norm equal to the collecting area of the
+source catalog telescope when creating the <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> (e.g.,
+area_norm=45238.93416 for HST).  [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>logger</strong> – A logger object for output of progress statements if the user wants
+them.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxy.makeFromImage">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">makeFromImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PSF</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy.makeFromImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxy.makeFromImage" title="Permalink to this definition"></a></dt>
+<dd><p>Create a <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> directly from image, PSF, and noise description.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the galaxy you want to simulate.</p></li>
+<li><p><strong>PSF</strong> – <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> representing the PSF of the galaxy image.  Note that this PSF
+should include the response of the pixel convolution.</p></li>
+<li><p><strong>xi</strong> – <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object characterizing the noise correlations in the input
+image.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxy.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxy.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<p>You may either provide a <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or one or more named parameters as keyword arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The latter style will leave all non-named parameters at their current
+values. It only updates the named parameters to the given values.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RealGalaxyCatalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog" title="Permalink to this definition"></a></dt>
+<dd><p>Class containing a catalog with information about real galaxy training data.</p>
+<p>The RealGalaxyCatalog class reads in and stores information about a specific training sample of
+realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
+one directory; they could be individual files, or multiple HDUs of the same file.  Currently
+there is no functionality that lets this be a FITS data cube, because we assume that the object
+postage stamps will in general need to be different sizes depending on the galaxy size.</p>
+<p>Note that when simulating galaxies based on HST but using either realistic or parametric galaxy
+models, the COSMOSCatalog class may be more useful.  It allows the imposition of selection
+criteria and other subtleties that are more difficult to impose with RealGalaxyCatalog.</p>
+<p>While you could create your own catalog to use with this class, the typical use cases would
+be to use one of the catalogs that we have created and distributed.  There are three such
+catalogs currently, which can be use with one of the following initializations:</p>
+<ol class="arabic">
+<li><p>A small example catalog is distributed with the GalSim distribution.  This catalog only
+has 100 galaxies, so it is not terribly useful as a representative galaxy population.
+But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
+in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
+initialize with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">(</span><span class="s1">&#39;real_galaxy_catalog_23.5_example.fits&#39;</span><span class="p">,</span>
+<span class="go">                                   dir=&#39;path/to/GalSim/examples/data&#39;)</span>
+</pre></div>
+</div>
+</li>
+<li><p>There are two larger catalogs based on HST observations of the COSMOS field with around
+26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is
+a subset of the latter.) For information about how to download these catalogs, see the
+RealGalaxy Data Download Page on the GalSim Wiki:</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data">https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data</a></p>
+<p>Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
+the tarball.  To use one of these catalogs, you would initialize with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">(</span><span class="s1">&#39;real_galaxy_catalog_23.5.fits&#39;</span><span class="p">,</span>
+<span class="go">                                   dir=&#39;path/to/download/directory&#39;)</span>
+</pre></div>
+</div>
+</li>
+<li><p>There is a catalog containing a random subsample of the HST COSMOS images with a limiting
+magnitude of F814W=25.2.  More information about downloading these catalogs can be found on
+the RealGalaxy Data Download page linked above.</p></li>
+<li><p>Finally, we provide a program that will download the large COSMOS sample for you and
+put it in the $PREFIX/share/galsim directory of your installation path.  The program is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim_download_cosmos</span>
+</pre></div>
+</div>
+<p>which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+this program to download the COSMOS catalog, then you can use it with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>GalSim knows the location of the installation share directory, so it will automatically
+look for it there.</p>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The file containing the catalog. [default: None, which will look for the
+F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+exception if the catalog is not there telling you to run
+galsim_download_cosmos.]</p></li>
+<li><p><strong>sample</strong> – A keyword argument that can be used to specify the sample to use, i.e.,
+“23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be
+specified.
+[default: None, which results in the same default as <code class="docutils literal notranslate"><span class="pre">file_name=None</span></code>.]</p></li>
+<li><p><strong>dir</strong> – The directory containing the catalog, image, and noise files, or symlinks to
+them. [default: None]</p></li>
+<li><p><strong>preload</strong> – Whether to preload the header information.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>, the bulk of
+the I/O time is in the constructor.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>, there is
+approximately the same total I/O time (assuming you eventually use most of
+the image files referenced in the catalog), but it is spread over the
+various calls to <a class="reference internal" href="#galsim.RealGalaxyCatalog.getGalImage" title="galsim.RealGalaxyCatalog.getGalImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getGalImage</span></code></a> and <a class="reference internal" href="#galsim.RealGalaxyCatalog.getPSFImage" title="galsim.RealGalaxyCatalog.getPSFImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getPSFImage</span></code></a>.  [default: False]</p></li>
+<li><p><strong>logger</strong> – An optional logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getBandpass">
+<span class="sig-name descname"><span class="pre">getBandpass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getBandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getBandpass" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> object for the catalog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getGalImage">
+<span class="sig-name descname"><span class="pre">getGalImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getGalImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getGalImage" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the galaxy at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getIndexForID">
+<span class="sig-name descname"><span class="pre">getIndexForID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getIndexForID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getIndexForID" title="Permalink to this definition"></a></dt>
+<dd><p>Internal function to find which index number corresponds to the value ID in the ident
+field.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getNoise">
+<span class="sig-name descname"><span class="pre">getNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getNoise" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the noise correlation function at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as a <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getNoiseProperties">
+<span class="sig-name descname"><span class="pre">getNoiseProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getNoiseProperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getNoiseProperties" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the components needed to make the noise correlation function at index <code class="docutils literal notranslate"><span class="pre">i</span></code>.
+Specifically, the noise image (or None), the pixel_scale, and the noise variance,
+as a tuple (im, scale, var).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getPSF">
+<span class="sig-name descname"><span class="pre">getPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getPSF" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the PSF at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getPSFImage">
+<span class="sig-name descname"><span class="pre">getPSFImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getPSFImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getPSFImage" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the PSF at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.preload">
+<span class="sig-name descname"><span class="pre">preload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.preload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.preload" title="Permalink to this definition"></a></dt>
+<dd><p>Preload the files into memory.</p>
+<p>There are memory implications to this, so we don’t do this by default.  However, it can be
+a big speedup if memory isn’t an issue.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="realistic-scene">
+<h2>Realistic Scene<a class="headerlink" href="#realistic-scene" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> class is also based on the above <a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a>, and has functionality
+for defining a “sky scene”, i.e., a galaxy sample with reasonable properties that can then be
+placed throughout a large image.  It can simulate either <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> objects using the HST images
+or parametric models based on those images.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, this only includes routines for making a COSMOS-based galaxy sample, but it could be
+expanded to include star samples as well.</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.COSMOSCatalog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">COSMOSCatalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#COSMOSCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.COSMOSCatalog" title="Permalink to this definition"></a></dt>
+<dd><p>A class representing a random subsample of galaxies from the COSMOS sample with F814W&lt;25.2
+(default), or alternatively the entire sample with F814W&lt;23.5.</p>
+<p>Depending on the keyword arguments, particularly <code class="docutils literal notranslate"><span class="pre">use_real</span></code>, the catalog may be able to
+generate real galaxies, parametric galaxies, or both.  To use this with either type of
+galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data">https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data</a></p>
+<p>option (1) for more information.  Note that if you want to make real galaxies you need to
+download and store the full tarball with all galaxy images, whereas if you want to make
+parametric galaxies you only need the catalog real_galaxy_catalog_25.2_fits.fits (and the
+selection file real_galaxy_catalog_25.2_selection.fits if you want to place cuts on the
+postage stamp quality) and can delete the galaxy and PSF image files.</p>
+<p>Finally, we provide a program that will download the large COSMOS sample for you and
+put it in the $PREFIX/share/galsim directory of your installation path.  The program is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim_download_cosmos</span>
+</pre></div>
+</div>
+<p>which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+this program to download the COSMOS catalog, then you can use it with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">COSMOSCatalog</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>GalSim knows the location of the installation share directory, so it will automatically
+look for it there.</p>
+<p>In addition to the option of specifying catalog names, this class also accepts a keyword
+argument <code class="docutils literal notranslate"><span class="pre">sample</span></code> that can be used to switch between the samples with limiting magnitudes of
+23.5 and 25.2.</p>
+<p>After getting the catalogs, there is a method makeGalaxy() that can make a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>
+corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
+<a class="reference internal" href="#galsim.GalaxySample.makeGalaxy" title="galsim.GalaxySample.makeGalaxy"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GalaxySample.makeGalaxy</span></code></a> for more information.  As an interesting application and example of
+the usage of these routines, consider the following code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im_size</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pix_scale</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;wfc_F814W.dat.gz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bandpass</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Bandpass</span><span class="p">(</span><span class="n">bp_file</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;ang&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">thin</span><span class="p">()</span><span class="o">.</span><span class="n">withZeropoint</span><span class="p">(</span><span class="mf">25.94</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cosmos_cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">COSMOSCatalog</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">OpticalPSF</span><span class="p">(</span><span class="n">diam</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mf">1000.</span><span class="p">)</span> <span class="c1"># bigger than HST F814W PSF.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">real_gal_list</span> <span class="o">=</span> <span class="n">cosmos_cat</span><span class="o">.</span><span class="n">makeGalaxy</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="s1">&#39;real&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">noise_pad_size</span><span class="o">=</span><span class="n">im_size</span><span class="o">*</span><span class="n">pix_scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">param_gal_list</span> <span class="o">=</span> <span class="n">cosmos_cat</span><span class="o">.</span><span class="n">makeGalaxy</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="s1">&#39;parametric&#39;</span><span class="p">,</span> <span class="n">chromatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">real_gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">real_gal_list</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">psf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">param_gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">param_gal_list</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">psf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_real</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">im_size</span><span class="p">,</span> <span class="n">im_size</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_param</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">im_size</span><span class="p">,</span> <span class="n">im_size</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">real_gal</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im_real</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">pix_scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">param_gal</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">im_param</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">pix_scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_real</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;im_real_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_param</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;im_param_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
+lower resolution than in COSMOS, with a real image and its parametric representation for each of
+those objects.</p>
+<p>When using the ‘real’ rather than ‘parametric’ option, please read the documentation for the
+<a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> class for additional caveats about the available drawing methods and
+the need to convolve with a suitable PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The file containing the catalog. [default: None, which will look for the
+F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+exception if the catalog is not there telling you to run
+galsim_download_cosmos.]</p></li>
+<li><p><strong>sample</strong> – A keyword argument that can be used to specify the sample to use, i.e.,
+“23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be
+specified.  [default: None, which results in the same default as
+<code class="docutils literal notranslate"><span class="pre">file_name=None</span></code>.]</p></li>
+<li><p><strong>dir</strong> – The directory with the catalog file and, if making realistic galaxies,
+the image and noise files (or symlinks to them). [default: None, which
+will look in $PREFIX/share/galsim.]</p></li>
+<li><p><strong>preload</strong> – Keyword that is only used for real galaxies, not parametric ones, to
+choose whether to preload the header information.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>,
+the bulk of the I/O time is in the constructor.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>,
+there is approximately the same total I/O time (assuming you eventually
+use most of the image files referenced in the catalog), but it is spread
+over the calls to makeGalaxy().  [default: False]</p></li>
+<li><p><strong>use_real</strong> – Enable the use of realistic galaxies?  [default: True]
+If this parameter is False, then <code class="docutils literal notranslate"><span class="pre">makeGalaxy(gal_type='real')</span></code> will
+not be allowed, and there will be a (modest) decrease in RAM and time
+spent on I/O when initializing the COSMOSCatalog. If the real
+catalog is not available for some reason, it will still be possible to
+make parametric images.</p></li>
+<li><p><strong>exclusion_level</strong> – <p>Level of additional cuts to make on the galaxies based on the quality
+of postage stamp definition and/or parametric fit quality [beyond the
+minimal cuts imposed when making the catalog - see Mandelbaum et
+al. (2012, MNRAS, 420, 1518) for details].  Options:</p>
+<ul>
+<li><p>”none”: No cuts.</p></li>
+<li><p>”bad_stamp”: Apply cuts to eliminate galaxies that have failures in
+postage stamp definition.  These cuts may also eliminate a small
+subset of the good postage stamps as well.</p></li>
+<li><p>”bad_fits”: Apply cuts to eliminate galaxies that have failures in the
+parametric fits.  These cuts may also eliminate a small
+subset of the good parametric fits as well.</p></li>
+<li><p>”marginal”: Apply the above cuts, plus ones that eliminate some more
+marginal cases.</p></li>
+</ul>
+<p>[default: “marginal”]</p>
+</p></li>
+<li><p><strong>min_hlr</strong> – Exclude galaxies whose fitted half-light radius is smaller than this
+value (in arcsec).  [default: 0, meaning no limit]</p></li>
+<li><p><strong>max_hlr</strong> – Exclude galaxies whose fitted half-light radius is larger than this
+value (in arcsec).  [default: 0, meaning no limit]</p></li>
+<li><p><strong>min_flux</strong> – Exclude galaxies whose fitted flux is smaller than this value.
+[default: 0, meaning no limit]</p></li>
+<li><p><strong>max_flux</strong> – Exclude galaxies whose fitted flux is larger than this value.
+[default: 0, meaning no limit]</p></li>
+<li><p><strong>exptime</strong> – <p>The exposure time (in seconds) to assume when creating galaxies.
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">processed</span> <span class="n">COSMOS</span> <span class="n">ACS</span><span class="o">/</span><span class="n">HST</span> <span class="n">science</span> <span class="n">images</span> <span class="n">have</span> <span class="n">units</span> <span class="n">of</span>
+<span class="n">counts</span><span class="o">/</span><span class="n">second</span><span class="p">;</span> <span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="n">they</span> <span class="n">have</span> <span class="n">an</span> <span class="n">effective</span> <span class="n">exposure</span> <span class="n">time</span> <span class="n">of</span> <span class="mi">1</span>
+<span class="n">second</span> <span class="ow">in</span> <span class="n">terms</span> <span class="n">of</span> <span class="n">their</span> <span class="n">flux</span> <span class="n">levels</span><span class="o">.</span> <span class="n">The</span> <span class="n">default</span> <span class="n">value</span>
+<span class="n">corresponds</span> <span class="n">to</span> <span class="n">a</span> <span class="mi">1</span> <span class="n">second</span> <span class="n">exposure</span> <span class="n">on</span> <span class="n">HST</span><span class="p">,</span> <span class="n">which</span> <span class="n">will</span> <span class="n">match</span>
+<span class="n">these</span> <span class="n">processed</span> <span class="n">images</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>[default: 1]</p>
+</p></li>
+<li><p><strong>area</strong> – The effective collecting area (in cm^2) to assume when creating
+galaxies. [default: None, which means to use the original HST
+collecting area = pi/4 * 240**2 * (1.-0.33**2)]</p></li>
+</ul>
+</dd>
+</dl>
+<p>After construction, the following attributes are available:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nobjects</strong> – The number of objects in the catalog</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.GalaxySample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">GalaxySample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orig_exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orig_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclusion_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'marginal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hlr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hlr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sn_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mask_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_use_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample" title="Permalink to this definition"></a></dt>
+<dd><p>A class representing a random subsample of galaxies from an arbitrary deep survey.</p>
+<p>Depending on the keyword arguments, particularly <code class="docutils literal notranslate"><span class="pre">use_real</span></code>, a <a class="reference internal" href="#galsim.GalaxySample" title="galsim.GalaxySample"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalaxySample</span></code></a> may be able to
+generate real galaxies, parametric galaxies, or both.</p>
+<p>The original version of this functionality is now in the subclass <a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a>, which
+specializes to HST observations of the COSMOS field.  <a class="reference internal" href="#galsim.GalaxySample" title="galsim.GalaxySample"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalaxySample</span></code></a> is a generalization of
+that, which works for arbitrary data sets, although the user is responsible for building
+the appropriate input files to use with it.</p>
+<p>Unlike <a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a>, which has easy options for picking out one of the two galaxy subsets
+that are available for download using <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>, for this class you need to
+manually specify the file name.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalaxySample</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other than this difference, the functionality of this class is the same as <a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a>.
+See the documentation of that function for more detail.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The file containing the catalog.</p></li>
+<li><p><strong>dir</strong> – The directory with the catalog file and, if making realistic galaxies,
+the image and noise files (or symlinks to them). [default: None, which
+will look in $PREFIX/share/galsim.]</p></li>
+<li><p><strong>preload</strong> – Keyword that is only used for real galaxies, not parametric ones, to
+choose whether to preload the header information.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>,
+the bulk of the I/O time is in the constructor.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>,
+there is approximately the same total I/O time (assuming you eventually
+use most of the image files referenced in the catalog), but it is spread
+over the calls to makeGalaxy().  [default: False]</p></li>
+<li><p><strong>orig_exptime</strong> – The exposure time (in seconds) of the original observations.
+[default: 1]</p></li>
+<li><p><strong>orig_area</strong> – The effective collecting area (in cm^2) of the original observations.
+[default: 1]</p></li>
+<li><p><strong>use_real</strong> – Enable the use of realistic galaxies?  [default: True]
+If this parameter is False, then <code class="docutils literal notranslate"><span class="pre">makeGalaxy(gal_type='real')</span></code> will
+not be allowed, and there will be a (modest) decrease in RAM and time
+spent on I/O when initializing the COSMOSCatalog. If the real
+catalog is not available for some reason, it will still be possible to
+make parametric images.</p></li>
+<li><p><strong>exclusion_level</strong> – <p>Level of additional cuts to make on the galaxies based on the quality
+of postage stamp definition and/or parametric fit quality [beyond the
+minimal cuts imposed when making the catalog - see Mandelbaum et
+al. (2012, MNRAS, 420, 1518) for details].  Options:</p>
+<ul>
+<li><p>”none”: No cuts.</p></li>
+<li><p>”bad_stamp”: Apply cuts to eliminate galaxies that have failures in
+postage stamp definition.  These cuts may also eliminate a small
+subset of the good postage stamps as well.</p></li>
+<li><p>”bad_fits”: Apply cuts to eliminate galaxies that have failures in the
+parametric fits.  These cuts may also eliminate a small
+subset of the good parametric fits as well.</p></li>
+<li><p>”marginal”: Apply the above cuts, plus ones that eliminate some more
+marginal cases.</p></li>
+</ul>
+<p>Use of “bad_stamp” or “marginal” requires a <code class="docutils literal notranslate"><span class="pre">CATALOG_selection.fits</span></code>
+file (where CATALOG is <code class="docutils literal notranslate"><span class="pre">file_name</span></code> without the “.fits” extension).
+[default: “none”]</p>
+</p></li>
+<li><p><strong>min_hlr</strong> – Exclude galaxies whose fitted half-light radius is smaller than this
+value (in arcsec).  [default: 0, meaning no limit]</p></li>
+<li><p><strong>max_hlr</strong> – Exclude galaxies whose fitted half-light radius is larger than this
+value (in arcsec).  [default: 0, meaning no limit]</p></li>
+<li><p><strong>min_flux</strong> – Exclude galaxies whose fitted flux is smaller than this value.
+[default: 0, meaning no limit]</p></li>
+<li><p><strong>max_flux</strong> – Exclude galaxies whose fitted flux is larger than this value.
+[default: 0, meaning no limit]</p></li>
+<li><p><strong>cut_ratio</strong> – For the “bad_stamp” exclusions, cut out any stamps with average
+adjacent pixels larger than this fraction of the peak pixel count.
+[default: 0.8]</p></li>
+<li><p><strong>sn_limit</strong> – For the “bad_stamp” exclusions, cut out any stamps with estimated
+S/N for an elliptical Gaussian less than this limit. [default: 10.]</p></li>
+<li><p><strong>min_mask_dist</strong> – For the “bad_stamp” exclusions, remove any stamps that have some
+masked pixels closer to the center than this minimum distance
+(in pixels). [default: 10]</p></li>
+<li><p><strong>exptime</strong> – The exposure time (in seconds) to assume when creating galaxies.
+[default: None, which means to use orig_exptime]</p></li>
+<li><p><strong>area</strong> – The effective collecting area (in cm^2) to assume when creating
+galaxies. [default: None, which means to use orig_area]</p></li>
+</ul>
+</dd>
+</dl>
+<p>After construction, the following attributes are available:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nobjects</strong> – The number of objects in the sample</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.canMakeReal">
+<span class="sig-name descname"><span class="pre">canMakeReal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.canMakeReal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.canMakeReal" title="Permalink to this definition"></a></dt>
+<dd><p>Is it permissible to call makeGalaxy with gal_type=’real’?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.getParametricRecord">
+<span class="sig-name descname"><span class="pre">getParametricRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.getParametricRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.getParametricRecord" title="Permalink to this definition"></a></dt>
+<dd><p>Get the parametric record for a given index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.getRealParams">
+<span class="sig-name descname"><span class="pre">getRealParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.getRealParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.getRealParams" title="Permalink to this definition"></a></dt>
+<dd><p>Get the parameters needed to make a <a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> for a given index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.getValue">
+<span class="sig-name descname"><span class="pre">getValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.getValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.getValue" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value in the parametric catalog at the given key and index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.makeGalaxy">
+<span class="sig-name descname"><span class="pre">makeGalaxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gal_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromatic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_pad_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sersic_prec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.makeGalaxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.makeGalaxy" title="Permalink to this definition"></a></dt>
+<dd><p>Routine to construct one or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances corresponding to the catalog entry
+with a particular index or indices.</p>
+<p>The flux of the galaxy corresponds to a 1 second exposure time with the Hubble Space
+Telescope.  Users who wish to simulate F814W images with a different telescope and an
+exposure time longer than 1 second should multiply by that exposure time, and by the square
+of the ratio of the effective diameter of their telescope compared to that of HST.
+(Effective diameter may differ from the actual diameter if there is significant
+obscuration.)  See demo11.py for an example that explicitly takes this normalization into
+account.</p>
+<p>Due to the adopted flux normalization, drawing into an image with the COSMOS bandpass,
+zeropoint of 25.94, and pixel scale should give the right pixel values to mimic the actual
+COSMOS science images.  The COSMOS science images that we use are normalized to a count rate
+of 1 second, which is why there is no need to rescale to account for the COSMOS exposure
+time.</p>
+<p>There is an option to make chromatic objects (<code class="docutils literal notranslate"><span class="pre">chromatic=True</span></code>); however, it is important
+to bear in mind that we do not actually have spatially-resolved color information for these
+galaxies, so this keyword can only be True if we are using parametric galaxies.  Even then,
+we simply do the most arbitrary thing possible, which is to assign bulges an elliptical
+<a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, disks a disk-like <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, and <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> galaxies with intermediate values of n some
+intermediate <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.  We assume that the photometric redshift is the correct redshift for
+these galaxies (which is a good assumption for COSMOS 30-band photo-z for these bright
+galaxies).  For the given <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> and redshift, we then normalize to give the right (observed)
+flux in F814W.  Note that for a mock “deep” sample, the redshift distributions of the
+galaxies would be modified, which is not included here.</p>
+<p>For this chromatic option, it is still the case that the output flux normalization is
+appropriate for the HST effective telescope diameter and a 1 second exposure time, so users
+who are simulating another scenario should account for this.</p>
+<p>Note that the returned objects use arcsec for the units of their linear dimension.  If you
+are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
+the resulting object with <code class="docutils literal notranslate"><span class="pre">gal.dilate(galsim.arcsec</span> <span class="pre">/</span> <span class="pre">scale_unit)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – Index of the desired galaxy in the catalog for which a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>
+should be constructed.  You may also provide a list or array of
+indices, in which case a list of objects is returned. If None,
+then a random galaxy (or more: see n_random kwarg) is chosen,
+correcting for catalog-level selection effects if weights are
+available. [default: None]</p></li>
+<li><p><strong>gal_type</strong> – Either ‘real’ or ‘parametric’.  This determines which kind of
+galaxy model is made. [If catalog was loaded with <code class="docutils literal notranslate"><span class="pre">use_real=False</span></code>,
+then this defaults to ‘parametric’, and in fact ‘real’ is
+not allowed.  If catalog was loaded with <code class="docutils literal notranslate"><span class="pre">use_real=True</span></code>, then
+this defaults to ‘real’.]</p></li>
+<li><p><strong>chromatic</strong> – Make this a chromatic object, or not?  [default: False]</p></li>
+<li><p><strong>noise_pad_size</strong> – For realistic galaxies, the size of region to pad with noise,
+in arcsec.  [default: 5, an arbitrary, but not completely
+ridiculous choice.]</p></li>
+<li><p><strong>deep</strong> – Modify fluxes and sizes of galaxies from the F814W&lt;23.5 sample in
+order to roughly simulate an F814W&lt;25 sample but with higher S/N, as
+in GREAT3? [default: False]  Note that this keyword will be ignored
+(except for issuing a warning) if the input catalog already
+represents the F814W&lt;25.2 sample.</p></li>
+<li><p><strong>sersic_prec</strong> – The desired precision on the Sersic index n in parametric galaxies.
+GalSim is significantly faster if it gets a smallish number of
+Sersic values, so it can cache some of the calculations and use
+them again the next time it gets a galaxy with the same index.
+If <code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> is 0.0, then use the exact value of index n from
+the catalog.  But if it is &gt;0, then round the index to that
+precision.  [default: 0.05]</p></li>
+<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
+(may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> or None) and to use in generating
+any noise field when padding.  [default: None]</p></li>
+<li><p><strong>n_random</strong> – The number of random galaxies to build, if ‘index’ is None.
+[default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> depending on the value of <code class="docutils literal notranslate"><span class="pre">chromatic</span></code>,
+or a list of them if <code class="docutils literal notranslate"><span class="pre">index</span></code> is an iterable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.GalaxySample.selectRandomIndex">
+<span class="sig-name descname"><span class="pre">selectRandomIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_n_rng_calls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/galaxy_sample.html#GalaxySample.selectRandomIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GalaxySample.selectRandomIndex" title="Permalink to this definition"></a></dt>
+<dd><p>Routine to select random indices out of the catalog.  This routine does a weighted random
+selection with replacement (i.e., there is no guarantee of uniqueness of the selected
+indices).  Weighting uses the weight factors available in the catalog, if any; these weights
+are typically meant to remove any selection effects in the catalog creation process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_random</strong> – Number of random indices to return. [default: 1]</p></li>
+<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
+(may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> or None). [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A single index if n_random==1 or a NumPy array containing the randomly-selected
+indices if n_random&gt;1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="downloading-the-cosmos-catalog">
+<h2>Downloading the COSMOS Catalog<a class="headerlink" href="#downloading-the-cosmos-catalog" title="Permalink to this heading"></a></h2>
+<p>A set of ~56 000 real galaxy images with I&lt;23.5, or another set of ~87 000 with I&lt;25.2, with
+original PSFs, can be downloaded from Zenodo:</p>
+<p><a class="reference external" href="https://zenodo.org/record/3242143">https://zenodo.org/record/3242143</a></p>
+<p>The tar ball for the I&lt;23.5 sample (<code class="docutils literal notranslate"><span class="pre">COSMOS_23.5_training_sample.tar.gz</span></code>) is roughly 4 GB and
+contains catalogs and images with a README. The tar ball for the I&lt;25.2 sample
+(<code class="docutils literal notranslate"><span class="pre">COSMOS_25.2_training_sample.tar.gz</span></code>) is of similar size and format.</p>
+<p>GalSim also comes with a script <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code> that downloads the I&lt;23.5 sample.
+It works with both samples, with the I&lt;25.2 sample being the default but with keyword arguments
+to choose between the two:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>usage: galsim_download_cosmos [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [--save]
+                              [-d DIR] [-s {23.5,25.2}] [--nolink]
+
+This program will download the COSMOS RealGalaxy catalog and images and place
+them in the GalSim share directory so they can be used as the default files
+for the RealGalaxyCatalog class. See https://github.com/GalSim-
+developers/GalSim/wiki/RealGalaxy%20Data for more details about the files
+being downloaded.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Integer verbosity level: min=0, max=3 [default=2]
+  -f, --force           Force overwriting the current file if one exists
+  -q, --quiet           Don&#39;t ask about re-downloading an existing file.
+                        (implied by verbosity=0)
+  -u, --unpack          Re-unpack the tar file if not downloading
+  --save                Save the tarball after unpacking.
+  -d DIR, --dir DIR     Install into an alternate directory and link from the
+                        share/galsim directory
+  -s {23.5,25.2}, --sample {23.5,25.2}
+                        Flux limit for sample to download; either 23.5 or 25.2
+  --nolink              Don&#39;t link to the alternate directory from
+                        share/galsim
+
+Note: The unpacked files total almost 6 GB in size!
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code> program will put the downloaded files into a subdirectory
+of the <code class="docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code> directory.  (cf. <a class="reference internal" href="shared.html#shared-data"><span class="std std-ref">Shared Data</span></a>)
+This is normally convenient for access, since classes such as <a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> and
+<a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> will look in this directory automatically for you.  However, if you
+reinstall GalSim, everything in this directory will be removed and overwritten.
+Therefore, we normally recommend using the <code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">DIR</span></code> option to place the downloaded
+files into another location.  E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim_download_cosmos</span> <span class="o">-</span><span class="n">d</span> <span class="o">~/</span><span class="n">share</span>
+</pre></div>
+</div>
+<p>It will still be required to rerun this after reinstalling GalSim, but it will notice that
+you already have the files downloaded and merely update the symbolic link.</p>
+</div>
+<p>Instructions for how to download a copy of the GREAT3 data are found at</p>
+<p><a class="reference external" href="https://github.com/barnabytprowe/great3-public#how-to-get-the-data">https://github.com/barnabytprowe/great3-public#how-to-get-the-data</a></p>
+</section>
+<section id="hsc-postage-stamp-data">
+<h2>HSC Postage Stamp Data<a class="headerlink" href="#hsc-postage-stamp-data" title="Permalink to this heading"></a></h2>
+<p>The HST postage stamp data from</p>
+<p><a class="reference external" href="http://adsabs.harvard.edu/abs/2017arXiv171000885M">http://adsabs.harvard.edu/abs/2017arXiv171000885M</a></p>
+<p>which includes studies of the impact of blending on shear estimation in HSC, was released as part
+of the HSC survey’s second incremental data release. The sample is larger than the above, goes to
+the depth of COSMOS, and does not have nearby objects masked.</p>
+<p>The links to download it and the instructions on its use are at</p>
+<p><a class="reference external" href="https://hsc-release.mtk.nao.ac.jp/doc/index.php/weak-lensing-simulation-catalog-pdr1/">https://hsc-release.mtk.nao.ac.jp/doc/index.php/weak-lensing-simulation-catalog-pdr1/</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="phase_psf.html" class="btn btn-neutral float-left" title="Phase-screen PSFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="composite.html" class="btn btn-neutral float-right" title="Composite Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

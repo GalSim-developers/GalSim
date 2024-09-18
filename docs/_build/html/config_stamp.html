@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Stamp Field &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Image Field" href="config_image.html" />
+    <link rel="prev" title="Config Objects" href="config_objects.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Stamp Field</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stamp-field-attributes">Stamp Field Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stamp-types">Stamp Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-stamp-types">Custom Stamp Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.StampBuilder"><code class="docutils literal notranslate"><span class="pre">StampBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.stamp_ring.RingBuilder"><code class="docutils literal notranslate"><span class="pre">RingBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#photon-operators-list">Photon Operators List</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.PhotonOpBuilder"><code class="docutils literal notranslate"><span class="pre">PhotonOpBuilder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterPhotonOpType"><code class="docutils literal notranslate"><span class="pre">RegisterPhotonOpType()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Config Stamp Field</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_stamp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-stamp-field">
+<h1>Config Stamp Field<a class="headerlink" href="#config-stamp-field" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field defines some properties about how to draw the postage-stamp images of each
+object.  It is often unneccessary to explicitly include this top-level field.  The default
+<code class="docutils literal notranslate"><span class="pre">stamp</span></code> type, called ‘Basic’, is often what you want.</p>
+<section id="stamp-field-attributes">
+<h2>Stamp Field Attributes<a class="headerlink" href="#stamp-field-attributes" title="Permalink to this heading"></a></h2>
+<p>Some attributes that are allowed for all stamp types are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">draw_method</span></code> = <em>str_value</em> (default = ‘auto’)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘auto’  The default is normally equivalent to ‘fft’.  However, if the object being rendered is simple (no convolution) and has hard edges (e.g. a Box or a truncated Moffat or Sersic), then it will switch to ‘real_space’, since that is often both faster and more accurate in these cases (due to ringing in Fourier space).</p></li>
+<li><p>‘fft’  This method will convolve by the pixel (as well as convolving the galaxy and PSF if you have both) using a fast Fourier transform.</p></li>
+<li><p>‘real_space’  This uses real-space integration to integrate over the pixel. This is only possible if there is only _either_ a PSF or galaxy, not both.  Also, it cannot involve a Convolution internally.  If GalSim is unable to do the real-space integration, this will revert to ‘fft’.</p></li>
+<li><p>‘phot’  Use photon shooting, which treats the profile as a probability distribution, draws photons from that distribution, and then “shoots” them at the image.  The flux of each photon is added to whichever pixel it hits.  This automatically handles the integration over the pixel, but it cannot be used with Deconvolutions (including RealGalaxy objects) and the result will necessarily have Poisson noise from the finite number of photons being shot.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> = <em>float_value</em> (optional)  If the image is sky noise dominated, then it is efficient to stop shooting photons when the photon noise of the galaxy is much less than the sky noise. This parameter specifies how much extra noise, as a fraction of the sky noise, is permissible in any pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_photons</span></code> = <em>int_value</em> (optional; default is to assume the object flux is given in photons and use that) Specifies the total number of photons to shoot as a hard, fixed number.  If both <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> and <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> are specified in the options, <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> is ignored and a warning is generated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">poisson_flux</span></code> = <em>bool_value</em> (default = True, unless <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> is given, in which case the default is False) Whether to allow the total object flux to vary according to Poisson statistics for the number of photons being shot.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘no_pixel’  This will not integrate the flux over the pixel response.  Rather, it just samples the surface brightness distribution at the pixel centers and multiplies by the pixel area.  This is appropriate if the PSF already has the pixel response included (e.g. from an observed image of a PSF).</p></li>
+<li><p>‘sb’  This is similar to ‘no_pixel’, except that the image values will simply be the sampled surface brightness, not multiplied by the pixel area.  This does not correspond to any real observing scenario, but it could be useful if you want to view the surface brightness profile of an object directly, without including the pixel integration.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">offset</span></code> = <em>pos_value</em> (optional) An offset in chip coordinates (i.e. pixel units) to apply when drawing the object on the postage stamp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gsparams</span></code> = <em>dict</em> (optional) A dict of (non-default) GSParams items that you want applied to the constructed object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> = <em>int_value</em> (default = 0) How many times to retry the construction of a GSObject if there is any kind of failure.  For example, you might have a random shear value that technically may come back with <span class="math notranslate nohighlight">\(|g| &gt; 1\)</span>, but it should be very rare.  So you might set it to retry once or twice in that case.  If this is &gt; 0, then after a failure, the code will try again up to this many times.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skip_failures</span></code> = <em>bool_value</em> (default = False) Whether to skip an object if some aspect of the processing failes (i.e. an exception is raised). This is similar in spirit to the above <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code>, but more appropriate when the input is not a random value that sometimes causes problems, but rather an input catalog that might have invalid values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = <em>pos_value</em> or <em>sky_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed) The position in world coordinates at which to center the object.  This is often defined in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field, but it can be overridden in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed) The position on the full image at which to center the object.  This is often defined in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field, but it can be overridden in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.  Note: the object is always centered as nearly as possible on the postage stamp being drawn (unless an explicit <code class="docutils literal notranslate"><span class="pre">offset</span></code> is given), but the <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> determines where in the larger image this stamp is placed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> = <em>sky_value</em> (default = <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>) Normally this is just <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>, but if you are using a Euclidean WCS, then this allows for the ability to specify a location on the sky in case some other type needs it for a calculation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default = False)  Skip this stamp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quick_skip</span></code> = <em>bool_value</em> (default = False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obj_rng</span></code> = <em>bool_value</em> (default = True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">photon_ops</span></code>  See <a class="reference internal" href="#photon-operators-list"><span class="std std-ref">Photon Operators List</span></a> below.</p></li>
+</ul>
+</section>
+<section id="stamp-types">
+<h2>Stamp Types<a class="headerlink" href="#stamp-types" title="Permalink to this heading"></a></h2>
+<p>The default stamp type is ‘Basic’, which constructs a galaxy object based on the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field
+(if present) and a PSF object from the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field (again, if present), convolves them
+together, and draws the object onto a postage stamp.  This is often what you need, but
+there is also a ‘Ring’ type, and you can define your own custom <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type if you want
+to customize any aspect of the stamp-building process.</p>
+<ul>
+<li><p>‘Basic’ The postage stamp contains a single <code class="docutils literal notranslate"><span class="pre">gal</span></code> object convolved by a <code class="docutils literal notranslate"><span class="pre">psf</span></code> object, assuming both fields are given.  If only one of the two is given, that one is drawn.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> = <em>int_value</em> (optional)  If you want square postage stamps for each object (common), you just need to set this one value and the images will be <code class="docutils literal notranslate"><span class="pre">size</span></code> x <code class="docutils literal notranslate"><span class="pre">size</span></code>. The default is for GalSim to automatically determine a good size for the image that will encompass most of the flux of the object, but note that the <code class="docutils literal notranslate"><span class="pre">image</span></code> type may define the stamp size (e.g. ‘Tiled’), in which case that will be used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xsize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">size</span></code>)  If you want non-square postage stamps, you can specify <code class="docutils literal notranslate"><span class="pre">xsize</span></code> and <code class="docutils literal notranslate"><span class="pre">ysize</span></code> separately instead. It is an error for only one of them to be non-zero.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ysize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">size</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_flux_frac</span></code> = <em>float_value</em> (optional) If the rendered stamp (before noise is applied) has less than this fraction of the nominal flux of the object, reject it and start over (presumably choosing new random values for size, flux, etc.).  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio (using the optimal matched filter definition of S/N, measured using the signal on the stamp before noise is applied) is less than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio is higher than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> = <em>bool_value</em> (optional) If this evaluates to true, then reject the current stamp and start over.  Typically, this would be a custom function that would perform some measurement on the pre-noise image.
+See <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a> for an examples of such a custom function.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Ring’ Generate galaxies in a ring for a ring test. (Use num=2 to get pairs of 90 degree rotated galaxies.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>, <code class="docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">ysize</span></code> = <em>int_value</em> (optional) Same meaning as for ‘Basic’ type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (required)  How many objects to include in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">full_rotation</span></code> = <em>angle_value</em> (default = 180 degrees)  What angle should be spanned by the full rotation?  The default of 180 degrees is appropriate for the typical case of a rotationally symmetric galaxy (e.g. a sheared Exponential), but if the <code class="docutils literal notranslate"><span class="pre">first</span></code> profile does not have rotational symmetry, then you probably want to set this to 360 degrees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to num-1)  Which item in the Ring is this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_flux_frac</span></code> = <em>float_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_snr</span></code> = <em>float_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_snr</span></code> = <em>float_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> = <em>bool_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shear</span></code> = <em>shear_value</em> (optional) Shear the galaxy profile by a given shear.  Normally <code class="docutils literal notranslate"><span class="pre">shear</span></code> goes in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field.  But for ring simulations, where we rotate the base galaxy by some amount, one typically wants the shear to be applied after the rotation.  So any <code class="docutils literal notranslate"><span class="pre">shear</span></code> (or other transformation) item that is in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field is applied <em>before</em> the ring rotation.  Then any <code class="docutils literal notranslate"><span class="pre">shear</span></code> (or again, any other transformation) that is in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field is applied <em>after</em> the ring rotation.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="custom-stamp-types">
+<h2>Custom Stamp Types<a class="headerlink" href="#custom-stamp-types" title="Permalink to this heading"></a></h2>
+<p>To define your own stamp type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a class that will be used
+to build the stamp.</p>
+<p>The class should be a subclass of <a class="reference internal" href="#galsim.config.StampBuilder" title="galsim.config.StampBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.StampBuilder</span></code></a>, which is the class used for
+the default ‘Basic’ type.  There are a number of class methods, and you only need to override
+the ones for which you want different behavior than that of the ‘Basic’ type.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">StampBuilder</span></span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building stamp images of individual objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.
+It also includes the implementation of the default stamp type: Basic.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.addNoise">
+<span class="sig-name descname"><span class="pre">addNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.addNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.addNoise" title="Permalink to this definition"></a></dt>
+<dd><p>Add the sky level and the noise to the stamp.</p>
+<dl class="simple">
+<dt>Note: This only gets called if the image type requests that the noise be added to each</dt><dd><p>stamp individually, rather than to the full image and the end.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image</strong> – The current image.</p></li>
+<li><p><strong>current_var</strong> – The current noise variance present in the image already.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the new values of image, current_var</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.applySNRScale">
+<span class="sig-name descname"><span class="pre">applySNRScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.applySNRScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.applySNRScale" title="Permalink to this definition"></a></dt>
+<dd><p>Apply the scale_factor from getSNRScale to the image and profile.</p>
+<p>The default implementaion just multiplies each of them, but if prof is not a regular
+GSObject, then you might need to do something different.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The current image.</p></li>
+<li><p><strong>prof</strong> – The profile that was drawn.</p></li>
+<li><p><strong>scale_factor</strong> – The factor by which to scale both image and prof.</p></li>
+<li><p><strong>method</strong> – The method used by drawImage.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>image, prof  (after being properly scaled)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.buildPSF">
+<span class="sig-name descname"><span class="pre">buildPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildPSF" title="Permalink to this definition"></a></dt>
+<dd><p>Build the PSF object.</p>
+<p>For the Basic stamp type, this builds a PSF from the base[‘psf’] dict, if present,
+else returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>gsparams</strong> – A dict of kwargs to use for a GSParams.  More may be added to this
+list by the galaxy object.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the PSF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.buildProfile">
+<span class="sig-name descname"><span class="pre">buildProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildProfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildProfile" title="Permalink to this definition"></a></dt>
+<dd><p>Build the surface brightness profile (a GSObject) to be drawn.</p>
+<p>For the Basic stamp type, this builds a galaxy from the base[‘gal’] dict and convolves
+it with the psf (if given).  If either the psf or the galaxy is None, then the other one
+is returned as is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>psf</strong> – The PSF, if any.  This may be None, in which case, no PSF is convolved.</p></li>
+<li><p><strong>gsparams</strong> – A dict of kwargs to use for a GSParams.  More may be added to this
+list by the galaxy object.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the final profile</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.draw">
+<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.draw" title="Permalink to this definition"></a></dt>
+<dd><p>Draw the profile on the postage stamp image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prof</strong> – The profile to draw.</p></li>
+<li><p><strong>image</strong> – The image onto which to draw the profile (which may be None).</p></li>
+<li><p><strong>method</strong> – The method to use in drawImage.</p></li>
+<li><p><strong>offset</strong> – The offset to apply when drawing.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the resulting image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.getDrawMethod">
+<span class="sig-name descname"><span class="pre">getDrawMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getDrawMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.getDrawMethod" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the draw method to use.</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.
+&#64;param logger       A logger object to log progress.</p>
+<p>&#64;returns method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.getOffset">
+<span class="sig-name descname"><span class="pre">getOffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getOffset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.getOffset" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the offset to use.</p>
+<p>The base class version adds the stamp_offset, which comes from calculations related to
+world_pos and image_pos, to the field stamp.offset if any.</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.
+&#64;param logger       A logger object to log progress.</p>
+<p>&#64;returns offset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.getSNRScale">
+<span class="sig-name descname"><span class="pre">getSNRScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSNRScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSNRScale" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the factor by which to rescale the image based on a desired S/N level.</p>
+<dl class="simple">
+<dt>Note: The default implementation does this for the gal or psf field, so if a custom</dt><dd><p>stamp builder uses some other way to get the profiles, this method should
+probably be overridden.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The current image.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>scale_factor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.getSkip">
+<span class="sig-name descname"><span class="pre">getSkip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSkip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSkip" title="Permalink to this definition"></a></dt>
+<dd><p>Initial check of whether to skip this object based on the stamp.skip field.</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.
+&#64;param logger       A logger object to log progress.</p>
+<p>&#64;returns skip</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.locateStamp">
+<span class="sig-name descname"><span class="pre">locateStamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ysize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.locateStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.locateStamp" title="Permalink to this definition"></a></dt>
+<dd><p>Determine where and how large the stamp should be.</p>
+<p>The base class version does the followin:</p>
+<ul class="simple">
+<li><p>If given, set base[‘stamp_xsize’] = xsize</p></li>
+<li><p>If given, set base[‘stamp_ysize’] = ysize</p></li>
+<li><p>If only image_pos or world_pos is given, compute the other from base[‘wcs’]</p></li>
+<li><p>Set base[‘index_pos’] = image_pos</p></li>
+<li><p>Set base[‘world_pos’] = world_pos</p></li>
+<li><p>Calculate the appropriate value of the center of the stamp, to be used with the
+command: stamp_image.setCenter(stamp_center).  Save this as base[‘stamp_center’]</p></li>
+<li><p>Calculate the appropriate offset for the position of the object from the center of
+the stamp due to just the fractional part of the image position, not including
+any base[‘stamp’][‘offset’] item that may be present in the base dict.
+Save this as base[‘stamp_offset’]</p></li>
+</ul>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.
+&#64;param xsize        The size of the stamp in the x-dimension. [may be 0 if unknown]
+&#64;param ysize        The size of the stamp in the y-dimension. [may be 0 if unknown]
+&#64;param image_pos    The position of the stamp in image coordinates. [may be None]
+&#64;param world_pos    The position of the stamp in world coordinates. [may be None]
+&#64;param logger       A logger object to log progress.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.makeStamp">
+<span class="sig-name descname"><span class="pre">makeStamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ysize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeStamp" title="Permalink to this definition"></a></dt>
+<dd><p>Make the initial empty postage stamp image, if possible.</p>
+<p>If we don’t know xsize, ysize, return None, in which case the stamp will be created
+automatically by the drawImage command based on the natural size of the profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>xsize</strong> – The xsize of the image to build (if known).</p></li>
+<li><p><strong>ysize</strong> – The ysize of the image to build (if known).</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.makeTasks">
+<span class="sig-name descname"><span class="pre">makeTasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeTasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeTasks" title="Permalink to this definition"></a></dt>
+<dd><p>Turn a list of jobs into a list of tasks.</p>
+<p>For the Basic stamp type, there is just one job per task, so the tasks list is just:</p>
+<blockquote>
+<div><p>tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>jobs</strong> – A list of jobs to split up into tasks.  Each job in the list is a
+dict of parameters that includes ‘obj_num’.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of tasks</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.quickSkip">
+<span class="sig-name descname"><span class="pre">quickSkip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.quickSkip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.quickSkip" title="Permalink to this definition"></a></dt>
+<dd><p>Check whether this object should be skipped before doing any work.</p>
+<p>The base class looks for stamp.quick_skip and returns True if it is preset and
+evaluates to True.</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.</p>
+<p>&#64;returns skip</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.reject">
+<span class="sig-name descname"><span class="pre">reject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.reject" title="Permalink to this definition"></a></dt>
+<dd><p>Check to see if this object should be rejected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>prof</strong> – The profile that was drawn.</p></li>
+<li><p><strong>psf</strong> – The psf that was used to build the profile.</p></li>
+<li><p><strong>image</strong> – The postage stamp image.  No noise is on it yet at this point.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>whether to reject this object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset some aspects of the config dict so the object can be rebuilt after rejecting the
+current object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ysize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.setup" title="Permalink to this definition"></a></dt>
+<dd><p>Do the initialization and setup for building a postage stamp.</p>
+<p>In the base class, we check for and parse the appropriate size and position values in
+config (aka base[‘stamp’] or base[‘image’].</p>
+<p>Values given in base[‘stamp’] take precedence if these are given in both places (which
+would be confusing, so probably shouldn’t do that, but there might be a use case where it
+would make sense).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>xsize</strong> – The xsize of the image to build (if known).</p></li>
+<li><p><strong>ysize</strong> – The ysize of the image to build (if known).</p></li>
+<li><p><strong>ignore</strong> – A list of parameters that are allowed to be in config that we can
+ignore here. i.e. it won’t be an error if these parameters are present.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>xsize, ysize, image_pos, world_pos</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.setupRNG">
+<span class="sig-name descname"><span class="pre">setupRNG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setupRNG"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.setupRNG" title="Permalink to this definition"></a></dt>
+<dd><p>Setup the RNG for this object.</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.updateOrigin">
+<span class="sig-name descname"><span class="pre">updateOrigin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateOrigin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateOrigin" title="Permalink to this definition"></a></dt>
+<dd><p>Update the image origin to be centered at the right place</p>
+<p>&#64;param config       The configuration dict for the stamp field.
+&#64;param base         The base configuration dict.
+&#64;param image        The postage stamp image.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.updateSkip">
+<span class="sig-name descname"><span class="pre">updateSkip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateSkip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateSkip" title="Permalink to this definition"></a></dt>
+<dd><p>Before drawing the profile, see whether this object can be trivially skipped.</p>
+<p>The base method checks if the object is completely off the main image, so the
+intersection bounds will be undefined.  In this case, don’t bother drawing the
+postage stamp for this object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prof</strong> – The profile to draw.</p></li>
+<li><p><strong>image</strong> – The image onto which to draw the profile (which may be None).</p></li>
+<li><p><strong>method</strong> – The method to use in drawImage.</p></li>
+<li><p><strong>offset</strong> – The offset to apply when drawing.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>whether to skip drawing this object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.StampBuilder.whiten">
+<span class="sig-name descname"><span class="pre">whiten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.whiten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.StampBuilder.whiten" title="Permalink to this definition"></a></dt>
+<dd><p>If appropriate, whiten the resulting image according to the requested noise profile
+and the amount of noise originally present in the profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prof</strong> – The profile to draw.</p></li>
+<li><p><strong>image</strong> – The image onto which to draw the profile.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the variance of the resulting whitened (or symmetrized) image.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being used for running the
+simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict that defines the stamp
+being built, which would typically be <code class="docutils literal notranslate"><span class="pre">base['stamp']</span></code>.</p>
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute that triggers the use of this Builder object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterStampType</span><span class="p">(</span><span class="s1">&#39;CustomStamp&#39;</span><span class="p">,</span> <span class="n">CustomStampBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Note that we register an instance of the class, not the class itself.  This opens up the
+possibility of having multiple stamp types use the same class instantiated with different
+initialization parameters.  This is not used by the GalSim stamp types, but there may be use
+cases where it would be useful for custom stamp types.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_stamp.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_stamp</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_stamp</span></code>,
+which will read your file and execute the registration command to add the builder to the list
+of valid stamp types.</p>
+<p>Then you can use this as a valid stamp type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">stamp</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomStamp</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For examples of custom stamps, see</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a></p></li>
+</ul>
+<p>which use custom stamp types <code class="docutils literal notranslate"><span class="pre">Blend</span></code> and <code class="docutils literal notranslate"><span class="pre">BlendSet</span></code> defined in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/blend.py"><code class="file docutils literal notranslate"><span class="pre">blend.py</span> </code></a>.</p>
+<p>It may also be helpful to look at the GalSim implementation of the include <code class="docutils literal notranslate"><span class="pre">Ring</span></code> type:
+(click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> link):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.stamp_ring.RingBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.stamp_ring.</span></span><span class="sig-name descname"><span class="pre">RingBuilder</span></span><a class="reference internal" href="_modules/galsim/config/stamp_ring.html#RingBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.stamp_ring.RingBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.config.StampBuilder" title="galsim.config.stamp.StampBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">StampBuilder</span></code></a></p>
+<p>This performs the tasks necessary for building a Ring stamp type.</p>
+<p>It uses the regular Basic functions for most things.
+It specializes the setup, buildProfile, reject, and makeTasks functions.</p>
+</dd></dl>
+
+</section>
+<section id="photon-operators-list">
+<h2>Photon Operators List<a class="headerlink" href="#photon-operators-list" title="Permalink to this heading"></a></h2>
+<p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, there are a number of operators you can apply to the
+photon array before accumulating the photons on the sensor.  You can specify these using
+<code class="docutils literal notranslate"><span class="pre">photon_ops</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.  This directive should be a list of dicts, each
+specifying a <a class="reference internal" href="photon_ops.html#galsim.PhotonOp" title="galsim.PhotonOp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonOp</span></code></a> in the order in which the operators should be applied to the photons.</p>
+<p>The photon operator types defined by GalSim are:</p>
+<ul>
+<li><p>‘WavelengthSampler’ assigns wavelengths to the photons based on an SED and the current Bandpass.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sed</span></code> = <em>SED</em> (required)  The SED to use.  To use the galaxy SED (which would be typical),
+you can use <code class="docutils literal notranslate"><span class="pre">&#64;gal.sed</span></code> for this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> = <em>int_value</em> (optional)  The number of points <a class="reference internal" href="deviate.html#galsim.DistDeviate" title="galsim.DistDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistDeviate</span></code></a> should use for its
+interpolation table.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FRatioAngles’ assigns incidence angles (in terms of their tangent, dxdz and dydz) to the
+photons randomly given an f/ratio and an obscuration.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fratio</span></code> = <em>float_vale</em> (required)  The f/ratio of the telescope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0.0)  The linear dimension of the central
+obscuration as a fraction of the aperture size.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘PhotonDCR’ adjusts the positions of the photons according to the effect of differential
+chromatic refraction in the atmosphere.  There are several ways one can define the
+parallactic angle needed to compute the DCR effect.  One of the following is required.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> alone, implicitly taking <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> along with either <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field or using a
+<a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> so GalSim can determine the sky position from the image coordinates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> and <code class="docutils literal notranslate"><span class="pre">latitude</span></code> along with either <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field or using a
+<a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> so GalSim can determine the sky position from the image coordinates.</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_wavelength</span></code> = <em>float_value</em> (required)  The wavelength (in nm) for the fiducial
+photon positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> = <em>str_value</em> (default = ‘arcsec’)  The scale unit for the photon positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> = <em>float_value</em> (default = 0.0)  A power law index for wavelength-dependent
+seeing.  This should only be used if doing a star-only simulation.  It is not correct when
+drawing galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> = <em>angle_value</em> (optional; see above) the angle from the object to zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> = <em>angle_value</em> (option; see above) the parallactic angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> = <em>sky_value</em> (optional; see above) the celestial coordinates of the zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> = <em>angle_value</em> (optional; see above) the local hour angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latitude</span></code> = <em>angle_value</em> (optional; see above) the latitude of the telescope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pressure</span></code> = <em>float_value</em> or <em>quantity_value</em> (default = 69.328) the pressure in kPa.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">temperature</span></code> = <em>float_value</em> or <em>quantity_value</em> (default = 293.15) the temperature in Kelvin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2O_pressure</span></code> = <em>float_value</em> or <em>quantity_value</em> (default = 1.067) the water vapor pressure in kPa.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FocusDepth’ adjusts the positions of the photons at the surface of the sensor to account for
+the nominal focus being either above or below the sensor surface.  The depth value is typically
+negative, since the best focus is generally somewhere in the bulk of the sensor (although for
+short wavelengths it is often very close to the surface).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">depth</span></code> = <em>float_value</em> (required)  The distance (in pixels) above the surface where the photons are
+nominally in focus.  A negative value means the focus in below the surface of the sensor.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Refraction’ adjusts the incidence angles to account for refraction at the surface of the
+sensor.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<blockquote>
+<div><p>If this is combined with FocusDepth, then the order of the two operators is important.
+If FocusDepth is before Refraction, then the depth refers to the distance the sensor
+would need to move for the bundle to be in focus at the surface.
+If FocusDepth is after Refraction, then the depth refers to the physical distance
+below the surface of the sensor where the photons actually come to a focus.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index_ratio</span></code> = <em>float_value</em> (required) The ratio of the index of refraction of the
+sensor material to that of the air.</p></li>
+</ul>
+</div>
+</li>
+<li><p>‘PupilImageSampler’ assigns pupil positions to the photons randomly given an image of the
+pupil plane.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">diam</span></code> = <em>float_value</em> (required) The diameter of the pupil aperture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code> = <em>float_value</em> (optional).  The wavelength in nanometers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">circular_pupil</span></code> = <em>bool_value</em> (default = True) Whether the pupil should be circular (True, the default) or square (False).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0) The linear dimension of a central obscuration as a fraction of the pupil linear dimension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oversampling</span></code> = <em>float_value</em> (default = 1.5) How much oversampling of the internal image is needed relative to the Nyquist scale of the corresponding Airy profile.  The more aberrated the PSF, the higher this needs to be.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> = <em>float_value</em> (default = 1.5) How much padding to put around the edge of the internal image of the PSF.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nstruts</span></code> = <em>int_value</em> (default = 0) How many support struts to include.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_thick</span></code> = <em>float_value</em> (default = 0.05) How thick the struts should be as a fraction of the pupil diameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_angle</span></code> = <em>angle_value</em> (default = 0 degrees) The counter-clockwise angle between the vertical and one of the struts.  The rest will be spaced equally from there.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> = <em>str_value</em> (optional) Instead of using strut-related parameters to define the pupil plane geometry, you can use this parameter to specify a file-name containing an image of the pupil plane.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_angle</span></code> = <em>angle_value</em> (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_scale</span></code> = <em>float_value</em> (optional) Sampling interval in meters to use for the pupil plane array.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_size</span></code> = <em>float_value</em> (optional) Size in meters to use for the pupil plane array.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li></li>
+<li><p>‘PupilAnnulusSampler’ assigns pupil positions to the photons randomly within an annular
+entrance pupil.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">R_outer</span></code> = <em>float_value</em> (required) The outer radius of the pupil annulus in meters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">R_inner</span></code> = <em>float_value</em> (default = 0) The inner radius in meters.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘TimeSampler’ gives the photons random time values uniformly within some interval.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t0</span></code> = <em>float_value</em> (default = 0) The nominal start time of the observation in seconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exptime</span></code> = <em>float_value</em> (default = 0) The exposure time in seconds.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom <a class="reference internal" href="photon_ops.html#galsim.PhotonOp" title="galsim.PhotonOp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonOp</span></code></a> type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.PhotonOpBuilder" title="galsim.config.PhotonOpBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.PhotonOpBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.PhotonOpBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">PhotonOpBuilder</span></span><a class="reference internal" href="_modules/galsim/config/photon_ops.html#PhotonOpBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.PhotonOpBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A base class for building PhotonOp objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.PhotonOpBuilder.buildPhotonOp">
+<span class="sig-name descname"><span class="pre">buildPhotonOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/photon_ops.html#PhotonOpBuilder.buildPhotonOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.PhotonOpBuilder.buildPhotonOp" title="Permalink to this definition"></a></dt>
+<dd><p>Build the PhotonOp based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the PhotonOp</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the constructed PhotonOp object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;CustomPhotonOp&#39;</span><span class="p">,</span> <span class="n">CustomPhotonOpBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterPhotonOpType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterPhotonOpType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_op_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/photon_ops.html#RegisterPhotonOpType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterPhotonOpType" title="Permalink to this definition"></a></dt>
+<dd><p>Register a photon_op type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>photon_op_type</strong> – The name of the config type to register</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the PhotonOp object.  It should
+be an instance of a subclass of PhotonOpBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the PhotonOp builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_photon_op</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid photon operator type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">stamp</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">photon_ops</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomPhotonOp</span>
+<span class="w">            </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_objects.html" class="btn btn-neutral float-left" title="Config Objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_image.html" class="btn btn-neutral float-right" title="Config Image Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

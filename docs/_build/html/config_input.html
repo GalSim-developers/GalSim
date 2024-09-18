@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Input Field &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Output Field" href="config_output.html" />
+    <link rel="prev" title="Config Image Field" href="config_image.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Input Field</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-types">Input Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-input-types">Custom Input Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.InputLoader"><code class="docutils literal notranslate"><span class="pre">InputLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterInputType"><code class="docutils literal notranslate"><span class="pre">RegisterInputType()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_cosmos.SampleLoader"><code class="docutils literal notranslate"><span class="pre">SampleLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_cosmos._BuildCOSMOSGalaxy"><code class="docutils literal notranslate"><span class="pre">_BuildCOSMOSGalaxy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_nfw.NFWLoader"><code class="docutils literal notranslate"><span class="pre">NFWLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_nfw._GenerateFromNFWHaloShear"><code class="docutils literal notranslate"><span class="pre">_GenerateFromNFWHaloShear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_nfw._GenerateFromNFWHaloMagnification"><code class="docutils literal notranslate"><span class="pre">_GenerateFromNFWHaloMagnification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader"><code class="docutils literal notranslate"><span class="pre">PowerSpectrumLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear"><code class="docutils literal notranslate"><span class="pre">_GenerateFromPowerSpectrumShear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification"><code class="docutils literal notranslate"><span class="pre">_GenerateFromPowerSpectrumMagnification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_real._BuildRealGalaxy"><code class="docutils literal notranslate"><span class="pre">_BuildRealGalaxy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.input_real._BuildRealGalaxyOriginal"><code class="docutils literal notranslate"><span class="pre">_BuildRealGalaxyOriginal()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Config Input Field</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_input.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-input-field">
+<h1>Config Input Field<a class="headerlink" href="#config-input-field" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">input</span></code> field indicates where to find any files that you want to use in building the images
+or how to set up any objects that require initialization.</p>
+<section id="input-types">
+<h2>Input Types<a class="headerlink" href="#input-types" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">input</span></code> fields defined by GalSim are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">catalog</span></code> defines an input catalog that has values for each object.  Connected with ‘Catalog’ value type described in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a>.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The name of the file with the input catalog.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)  The directory the file is in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_type</span></code> = <em>str_value</em> (default = automatically determined from extension of <code class="docutils literal notranslate"><span class="pre">file_name</span></code>) Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘ascii’ Read from an ASCII file.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">comments</span></code> = <em>str_value</em> (default = ‘#’) The character used to indicate the start of a comment in an ASCII catalog.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘fits’ Read from a FITS binary table.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (default = 1) Which hdu to use within the FITS file.  Note: 0 means the primary HDU, the first extension is 1.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> defines an input dictionary, such as a YAML or JSON file.  Connected with ‘Dict’ value type described in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a>.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The name of the dictionary file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)  The directory the file is in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_type</span></code> = <em>str_value</em> (default = automatically determined from extension of <code class="docutils literal notranslate"><span class="pre">file_name</span></code>) Valid options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘yaml’ Read from a YAML file.</p></li>
+<li><p>‘json’ Read from a JSON file.</p></li>
+<li><p>‘pickle’ Read from a python pickle file.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">key_split</span></code> = <em>str_value</em> (default = ‘.’)  For specifying keys below the first level of the dictionary, use this string to split the key value into multiple strings.  e.g. If <code class="docutils literal notranslate"><span class="pre">key_split</span></code> = ‘.’ (the default) then <code class="docutils literal notranslate"><span class="pre">key</span> <span class="pre">:</span> <span class="pre">galaxy_constants.redshift</span></code> would be parsed as <code class="docutils literal notranslate"><span class="pre">dict['galaxy_constants']['redshift']</span></code>.  Usually ‘.’ is an intuitive choice, but if some of your key names have a ‘.’ in them, then this would not work correctly, so you should pick something else.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fits_header</span></code> lets you read from the header section of a FITS file.  Connected with ‘FitsHeader’ value type described in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required) The name of the FITS file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’) The directory the file is in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdu</span></code> = <em>int_value</em> (optional) Which HDU to read from the input file.  Default is 0 (the primary HDU), unless the compression implies that the first extension should be used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compression</span></code> = <em>str_value</em> (optional) The kind of compression if any.  The default is to base the compression on the file extension.  e.g. ‘blah.fits.fz’ implies Rice compression.  But it can also be specified explicitly.  Supported values are ‘none’, ‘rice’, ‘gzip’, ‘bzip2’, ‘gzip_tile’, ‘hcompress’, ‘plio’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">text_file</span></code> = <em>bool_value</em> (default = False) Whether the input file is actually a text file, rather than a binary FITS file.  Normally the file is taken to be a FITS file, but if this is True, then it will read it as a text file containing the header information, such as the .head file output from SCamp.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">real_catalog</span></code> defines a catalog of real galaxy images.  Connected with ‘RealGalaxy’ profile described in <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">Config Objects</span></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (optional)  The name of the file with the input catalog.  If omitted, it will try to use the standard catalog in the $PREFIX/share/galsim directory.  You can download the COSMOS catalog to that directory with the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample</span></code> = <em>str_value</em> (optional)  A string that can be used to specify the sample to use, either “23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be specified.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (optional)  The directory the file is in (along with related image and noise files).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preload</span></code> = <em>bool_value</em> (default = False)  Whether to preload all the header information from the catalog fits file into memory at the start.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>, the bulk of the I/O time happens at the start of the processing.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>, there is approximately the same total I/O time (assuming you eventually use most of the image files referenced in the catalog), but it is spread over the various RealGalaxy objects that get built.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cosmos_catalog</span></code> defines an input catalog that has values for each object.  Connected with ‘COSMOSCatalog’ profile described in <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">Config Objects</span></a>.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (optional)  The name of the file with the input catalog.  If omitted, it will try to use the standard catalog in the $PREFIX/share/galsim directory.  You can download the COSMOS catalog to that directory with the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample</span></code> = <em>str_value</em> (optional)  A string that can be used to specify the sample to use, either “23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be specified.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (optional)  The directory the file is in (along with related image and noise files).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preload</span></code> = <em>bool_value</em> (default = False)  Whether to preload all the header information from the catalog fits file into memory at the start.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>, the bulk of the I/O time happens at the start of the processing.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>, there is approximately the same total I/O time (assuming you eventually use most of the image files referenced in the catalog), but it is spread over the various RealGalaxy objects that get built.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_real</span></code> = <em>bool_value</em> (default = True)  Whether load the RealGalaxy catalog.  If this is True, you can request either real or parametric galaxies from the catalog.  But if you are only going to use parametric galaxies, then you may set this to False, and it will not bother to load the real galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exclusion_level</span></code> = <em>str_value</em> (default=’marginal’) Level of additional cuts to make on the galaxies based on the quality of postage stamp definition and/or parametric fit quality [beyond the minimal cuts imposed when making the catalog - see Mandelbaum et al. (2012, MNRAS, 420, 1518) for details].  Valid options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“none”: No cuts.</p></li>
+<li><p>“bad_stamp”: Apply cuts to eliminate galaxies that have failures in postage stamp definition.  These cuts may also eliminate a small subset of the good postage stamps as well.</p></li>
+<li><p>“bad_fits”: Apply cuts to eliminate galaxies that have failures in the parametric fits.  These cuts may also eliminate a small subset of the good parametric fits as well.</p></li>
+<li><p>“marginal”: Apply the above cuts, plus ones that eliminate some more marginal cases.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_hlr</span></code> <em>float_value</em> (optional) Exclude galaxies whose fitted half-light radius is smaller than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_hlr</span></code> <em>float_value</em> (optional) Exclude galaxies whose fitted half-light radius is larger than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_flux</span></code> <em>float_value</em> (optional) Exclude galaxies whose fitted flux is smaller than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_flux</span></code> <em>float_value</em> (optional) Exclude galaxies whose fitted flux is larger than this value (in arcsec).</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">galaxy_sample</span></code> is a generalization of <code class="docutils literal notranslate"><span class="pre">cosmos_catalog</span></code> that provides similar functionality for arbitrary input sample catalogs.  Connected with ‘SampleGalaxy’ profile described in <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">Config Objects</span></a>.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The name of the file with the input catalog.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (optional)  The directory the file is in (along with related image and noise files).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preload</span></code> = <em>bool_value</em> (default = False)  Whether to preload all the header information from the catalog fits file into memory at the start.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>, the bulk of the I/O time happens at the start of the processing.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>, there is approximately the same total I/O time (assuming you eventually use most of the image files referenced in the catalog), but it is spread over the various RealGalaxy objects that get built.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_exptime</span></code> = <em>float_value</em> (default = 1.)  The exposure time (in seconds) of the original observations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_area</span></code> = <em>float_value</em> (default = 1.)  The effective collecting area (in cm^2) of the original observations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_real</span></code> = <em>bool_value</em> (default = True)  Whether load the RealGalaxy catalog.  If this is True, you can request either real or parametric galaxies from the catalog.  But if you are only going to use parametric galaxies, then you may set this to False, and it will not bother to load the real galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exclusion_level</span></code> = <em>str_value</em> (default=’none’) Level of additional cuts to make on the galaxies based on the quality of postage stamp definition and/or parametric fit quality.  Valid options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“none”: No cuts.</p></li>
+<li><p>“bad_stamp”: Apply cuts to eliminate galaxies that have failures in postage stamp definition.  These cuts may also eliminate a small subset of the good postage stamps as well.</p></li>
+<li><p>“bad_fits”: Apply cuts to eliminate galaxies that have failures in the parametric fits.  These cuts may also eliminate a small subset of the good parametric fits as well.</p></li>
+<li><p>“marginal”: Apply the above cuts, plus ones that eliminate some more marginal cases.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_hlr</span></code> = <em>float_value</em> (optional) Exclude galaxies whose fitted half-light radius is smaller than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_hlr</span></code> = <em>float_value</em> (optional) Exclude galaxies whose fitted half-light radius is larger than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_flux</span></code> = <em>float_value</em> (optional) Exclude galaxies whose fitted flux is smaller than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_flux</span></code> = <em>float_value</em> (optional) Exclude galaxies whose fitted flux is larger than this value (in arcsec).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cut_ratio</span></code> = <em>float_value</em> (optional) For the “bad_stamp” exclusions, cut out any stamps with average adjacent pixels larger than this fraction of the peak pixel count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sn_limit</span></code> = <em>float_value</em> (default = 10.) For the “bad_stamp” exclusions, cut out any stamps with estimated S/N for an elliptical Gaussian less than this limit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_mask_dist</span></code> = <em>float_value</em> (default = 10.) For the “bad_stamp” exclusions, remove any stamps that have some masked pixels closer to the center than this minimum distance (in pixels).</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nfw_halo</span></code> defines an NFW halo.  Connected with ‘NFWHaloShear’ and ‘NFWHaloMagnification’ value types described in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mass</span></code> = <em>float_value</em> (required)  The mass of the halo in units of (Msolar / h).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conc</span></code> = <em>float_value</em> (required)  The concentration parameter, defined as the virial radius / scale radius.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (required)  The redshift of the halo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">halo_pos</span></code> = <em>pos_value</em> (default = 0,0)  The position of the halo in world coordinates relative to the origin of the world coordinate system. (Typically you would want to to set <code class="docutils literal notranslate"><span class="pre">wcs.origin</span></code> to ‘center’ to get the halo in the center of the image.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omega_m</span></code> = <em>float_value</em> (default = 1 - <code class="docutils literal notranslate"><span class="pre">omega_lam</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omega_lam</span></code> = <em>float_value</em> (default = 1 - <code class="docutils literal notranslate"><span class="pre">omega_m</span></code> or 0.7 if neither is specified)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">power_spectrum</span></code> defines a lensing power spectrum.  Connected with ‘PowerSpectrumShear’ and ‘PowerSpectrumMagnification’ value types described in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> = <em>str_value</em> (at least one of <code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> and <code class="docutils literal notranslate"><span class="pre">b_power_function</span></code> is required)  A string describing the function of k to use for the E-mode power function.  e.g. <code class="docutils literal notranslate"><span class="pre">'k**2'</span></code>.  Alternatively, it may be a file name from which a tabulated power spectrum is read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b_power_function</span></code> = <em>str_value</em> (at least one of <code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> and <code class="docutils literal notranslate"><span class="pre">b_power_function</span></code> is required)  A string describing the function of k to use for the B-mode power function.  e.g. <code class="docutils literal notranslate"><span class="pre">'k**2'</span></code>. Alternatively, it may be a file name from which a tabulated power spectrum is read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta2</span></code> = <em>bool_value</em> (default = False)  Whether the function is really Delta^2(k) = k^2 P(k)/2pi rather than P(k).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">units</span></code> = <em>str_value</em>  (default = ‘arcsec’)  The appropriate units for k^-1.  The default is to use our canonical units, arcsec, for all position variables.  However, power spectra are often more appropriately defined in terms of radians, so that can be specified here to let GalSim handle the units conversion.  Other choices are arcmin or degrees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> = <em>float_value</em>  (required for ‘Scattered’ image type, automatic for ‘Tiled’)  The distance between grid points on which the power spectrum shears are instantiated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolant</span></code> = <em>str_value</em> (default = ‘Linear’)  What to use for interpolating between pixel centers.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’, ‘Quintic’, ‘Sinc’, or ‘LanczosN’, where the ‘N’ after ‘Lanczos’ should be replaced with the integer order to use for the Lanczos filter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ngrid</span></code> = <em>int_value</em> (optional) The number of grid points to use.  The default is to use image_size * scale / grid_spacing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">center</span></code> = <em>pos_value</em> (optional) The center point of the grid.  The default is to use the image center.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>str_value</em> (optional) If set, the power spectrum will only be computed when this index changed.  E.g. if <code class="docutils literal notranslate"><span class="pre">index</span></code> is ‘file_num’, then it will only update with each new file, not with each image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variance</span></code> = <em>float_value</em> (optional) If set, rescale the overall variance of the generated shears to this value.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_image</span></code> specifies an initial image (read from an FITS file) to draw onto, rather than create a new blank image.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required) The name fo the file with the desired initial image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)  The directory the file is in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read_header</span></code> = <em>bool_value</em> (default = False)  Whether to read the header as well.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>Another feature of the <code class="docutils literal notranslate"><span class="pre">input</span></code> field is that it may optionally be a list.  So you can have multiple input catalogs for instance; one for object parameters and one for overall image parameters perhaps.  When using values with the type ‘InputCatalog’, you would specify which catalog to use with <code class="docutils literal notranslate"><span class="pre">num</span></code>.  If you only have a single item for one of the inputs, you can omit the <code class="docutils literal notranslate"><span class="pre">num</span></code> parameter when you are using it.</p>
+</section>
+<section id="custom-input-types">
+<h2>Custom Input Types<a class="headerlink" href="#custom-input-types" title="Permalink to this heading"></a></h2>
+<p>To define your own input type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a class that will be used
+to load whatever information you want loaded:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyInputData</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that knows how to load some information from a file or maybe build some</span>
+<span class="sd">    structure in advance that will be used repeatedly in the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Next you need to write a Loader class that is a subclass of <a class="reference internal" href="#galsim.config.InputLoader" title="galsim.config.InputLoader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.InputLoader</span></code></a>,
+which the config code will use to build your input object with the right initialization kwargs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.InputLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">InputLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Define how to load a particular input type.</p>
+<p>The base class is often sufficient for simple types, but you may derive from it and
+override some of the functions to deal with special handling requirements.</p>
+<p>The loader object defines a few attributes that will be used by the processing framework,
+so any derived class should make sure to define them as well.</p>
+<dl>
+<dt>init_func</dt><dd><p>The class or function that will be used to build the input object.</p>
+</dd>
+<dt>has_nobj</dt><dd><p>Whether the object can be used to automatically determine the number of
+objects to build for a given file or image.  For example, a galsim.Catalog has
+a specific number of rows in it.  In many cases, you will just want to run
+through the whole catalog for each output file.  So the number of objects to
+build will just be the number of objects in the input catalog. [default: False]</p>
+<p>If this is True, the constructed input object must have a <code class="docutils literal notranslate"><span class="pre">getNObjects()</span></code>
+method.  The constructor may (if practical) only load enough to figure out
+how many objects there are.  Other attributes may use lazy properties to delay
+finishing the read if that is efficient.</p>
+<p>It may optionally also have a <code class="docutils literal notranslate"><span class="pre">getApproxNObjects()</span></code> method, which may
+return an approximate estimate of the number of objects.  This is used for the
+initial calculation of what object numbers to use for each file/image, and it
+is generally acceptable if this is an over-estimate, even a pretty egregious
+over-estimate if necessary.</p>
+</dd>
+<dt>file_scope</dt><dd><p>Whether the input object might be relevant at file scope when the file and
+image is initially being set up. [default: False]</p>
+<p>If this is False, then the input object won’t be loaded until after the
+initial file setup.  For example, you might store the file names you want
+to use for the output files in a YAML file, which you plan to read in as a
+dict input object. Thus, dict is our canonical example of an input type for
+which this parameter should be True.</p>
+</dd>
+<dt>takes_logger</dt><dd><p>Whether the input object has a logger attribute.  If so, and a proxy is being
+used, then the logger will be replaced with a logger proxy. [default: False]</p>
+</dd>
+<dt>use_proxy</dt><dd><p>Whether to use a proxy for commicating between processes.  This is normally
+necessary whenever multiprocessing is being used, but there are cases where it
+is not necessary and just slows things down.  [default: True]</p>
+</dd>
+<dt>worker_init</dt><dd><p>One way to avoid using a proxy is to follow the shared memory model decsribed
+in the doc string of <a class="reference internal" href="phase_psf.html#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>.  This mode uses a global dict, which
+is initialized for each worker at the start of multi-processing.  To use this
+method, one needs to provide an initialization function that gets run when
+each worker starts.  [default: None]</p>
+</dd>
+<dt>worker_initargs</dt><dd><p>A function to provide the necessary arguments to worker_init. [default: None]
+This is required whenever worker_init is not None.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.InputLoader.getKwargs">
+<span class="sig-name descname"><span class="pre">getKwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.getKwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader.getKwargs" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the config dict and return the kwargs needed to build the input object.</p>
+<p>The default implementation looks for special class attributes called:</p>
+<dl class="simple">
+<dt>_req_params</dt><dd><p>A dict of required parameters and their types.</p>
+</dd>
+<dt>_opt_params</dt><dd><p>A dict of optional parameters and their types.</p>
+</dd>
+<dt>_single_params</dt><dd><p>A list of dicts of parameters such that one and only one of
+parameter in each dict is required.</p>
+</dd>
+<dt>_takes_rng</dt><dd><p>A bool value saying whether an rng object is required.</p>
+</dd>
+</dl>
+<p>See galsim.Catalog for an example of a class that sets these attributes.</p>
+<p>In addition to the kwargs, we also return a bool value, safe, that indicates whether
+the constructed object will be safe to keep around for multiple files (True) of if
+it will need to be rebuilt for each output file (False).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The config dict for this input item</p></li>
+<li><p><strong>base</strong> – The base config dict</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>kwargs, safe</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.InputLoader.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader.initialize" title="Permalink to this definition"></a></dt>
+<dd><p>Do any global setup for input objects right after they are loaded.</p>
+<p>In the base class, this function does not do anything. It can be used to do
+things like load an input object and then assign it to an eval variable in the
+base configuration dictionary.</p>
+<p>When writing this method, remember that the entries in input objs are set to
+<code class="docutils literal notranslate"><span class="pre">None</span></code> initially. This can cause problems for some operations on them and so
+you may want to test for this condition with code like
+<code class="docutils literal notranslate"><span class="pre">all(iobj</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">None</span> <span class="pre">for</span> <span class="pre">iobj</span> <span class="pre">in</span> <span class="pre">input_objs)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_objs</strong> – The (current) list of input objects.</p></li>
+<li><p><strong>num</strong> – The entry in the list that was loaded.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.InputLoader.setupImage">
+<span class="sig-name descname"><span class="pre">setupImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.setupImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader.setupImage" title="Permalink to this definition"></a></dt>
+<dd><p>Do any necessary setup at the start of each image.</p>
+<p>In the base class, this function does not do anything.  But see PowerSpectrumLoader
+for an example that does require some setup at the start of each image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_obj</strong> – The input object to use</p></li>
+<li><p><strong>config</strong> – The configuration dict for the input type</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.config.InputLoader.useProxy">
+<span class="sig-name descname"><span class="pre">useProxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.useProxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.InputLoader.useProxy" title="Permalink to this definition"></a></dt>
+<dd><p>Return whether to use a proxy for the input object.</p>
+<p>The default behavior is to return self.use_proxy, which is set by the constructor
+parameters.  But if you want to decide whether to use a proxy based on something
+in the config dict, you can override this and decide at run time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>The main thing you might want to override is the <a class="reference internal" href="#galsim.config.InputLoader.getKwargs" title="galsim.config.InputLoader.getKwargs"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">galsim.config.InputLoader.getKwargs</span></code></a> function
+to determine what kwargs you
+want to pass to your initialization function or class based on the parameters in the config dict.
+The base class, <a class="reference internal" href="#galsim.config.InputLoader" title="galsim.config.InputLoader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.InputLoader</span></code></a> uses special class attributes, which most GalSim classes
+have defined (for precisely this purpose).  If you want to follow that same model, and there is no
+special setup to do at the start of each image, then you can just use the <code class="docutils literal notranslate"><span class="pre">InputLoader</span></code> itself
+rather than defining your own subclass.</p>
+<p>In either case, in your Python module, you need to register this function with some name,
+which will be the name of the attribute in the <code class="docutils literal notranslate"><span class="pre">input</span></code> field that triggers the use of this
+Loader object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;CustomInput&#39;</span><span class="p">,</span> <span class="n">CustomInputLoader</span><span class="p">(</span><span class="n">MyInputData</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;CustomInput&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">MyInputData</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterInputType">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterInputType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#RegisterInputType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterInputType" title="Permalink to this definition"></a></dt>
+<dd><p>Register an input type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_type</strong> – The name of the type in config[‘input’]</p></li>
+<li><p><strong>loader</strong> – A loader object to use for loading in the input object.
+It should be an instance of InputLoader or a subclass thereof.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>In the above functions, the <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being
+used for running the simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict
+that defines the object being built, which would in this case be <code class="docutils literal notranslate"><span class="pre">base['input']['CustomInput']</span></code>.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_input.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_input</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_input</span></code>,
+which will read your file and execute the registration command to add the builder to the list
+of valid input types.</p>
+<p>Then you can use this as a valid value type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">input</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">CustomInput</span><span class="p">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>For examples of custom inputs, see <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/des_wcs.py"><code class="file docutils literal notranslate"><span class="pre">des_wcs.py</span> </code></a>,
+which is used by <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a>.</p>
+<p>Also <a class="reference internal" href="des.html#the-des-module"><span class="std std-ref">The DES Module</span></a> uses custom inputs for the <a class="reference internal" href="des.html#galsim.des.DES_PSFEx" title="galsim.des.DES_PSFEx"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_PSFEx</span></code></a> and <a class="reference internal" href="des.html#galsim.des.DES_Shapelet" title="galsim.des.DES_Shapelet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_Shapelet</span></code></a> object types, which are used by <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.6/examples/des/draw_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">draw_psf.yaml</span> </code></a>.</p>
+<p>It may also be helpful to look at the GalSim implementation of our various included input types
+(click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.input_cosmos.SampleLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.input_cosmos.</span></span><span class="sig-name descname"><span class="pre">SampleLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#SampleLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_cosmos.SampleLoader" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_cosmos._BuildCOSMOSGalaxy">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_cosmos.</span></span><span class="sig-name descname"><span class="pre">_BuildCOSMOSGalaxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#_BuildCOSMOSGalaxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_cosmos._BuildCOSMOSGalaxy" title="Permalink to this definition"></a></dt>
+<dd><p>Build a COSMOS galaxy using the cosmos_catalog input item.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.input_nfw.NFWLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.input_nfw.</span></span><span class="sig-name descname"><span class="pre">NFWLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#NFWLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_nfw.NFWLoader" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_nfw._GenerateFromNFWHaloShear">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_nfw.</span></span><span class="sig-name descname"><span class="pre">_GenerateFromNFWHaloShear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloShear" title="Permalink to this definition"></a></dt>
+<dd><p>Return a shear calculated from an NFWHalo object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_nfw._GenerateFromNFWHaloMagnification">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_nfw.</span></span><span class="sig-name descname"><span class="pre">_GenerateFromNFWHaloMagnification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloMagnification" title="Permalink to this definition"></a></dt>
+<dd><p>Return a magnification calculated from an NFWHalo object.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.config.input_powerspectrum.PowerSpectrumLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.config.input_powerspectrum.</span></span><span class="sig-name descname"><span class="pre">PowerSpectrumLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_nobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_initargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#PowerSpectrumLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_powerspectrum.</span></span><span class="sig-name descname"><span class="pre">_GenerateFromPowerSpectrumShear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear" title="Permalink to this definition"></a></dt>
+<dd><p>Return a shear calculated from a PowerSpectrum object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_powerspectrum.</span></span><span class="sig-name descname"><span class="pre">_GenerateFromPowerSpectrumMagnification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification" title="Permalink to this definition"></a></dt>
+<dd><p>Return a magnification calculated from a PowerSpectrum object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_real._BuildRealGalaxy">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_real.</span></span><span class="sig-name descname"><span class="pre">_BuildRealGalaxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RealGalaxy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxy" title="Permalink to this definition"></a></dt>
+<dd><p>Build a RealGalaxy from the real_catalog input item.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.input_real._BuildRealGalaxyOriginal">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.input_real.</span></span><span class="sig-name descname"><span class="pre">_BuildRealGalaxyOriginal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxyOriginal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxyOriginal" title="Permalink to this definition"></a></dt>
+<dd><p>Return the original image from a RealGalaxy using the real_catalog input item.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_image.html" class="btn btn-neutral float-left" title="Config Image Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_output.html" class="btn btn-neutral float-right" title="Config Output Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

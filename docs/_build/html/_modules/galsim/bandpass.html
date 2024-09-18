@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.bandpass &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.bandpass</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.bandpass</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;Bandpass&#39;</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PosixPath</span>
+
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span><span class="p">,</span> <span class="n">_LookupTable</span>
+<span class="kn">from</span> <span class="nn">._utilities</span> <span class="kn">import</span> <span class="n">WeakMethod</span><span class="p">,</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+
+<div class="viewcode-block" id="Bandpass"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass">[docs]</a><span class="k">class</span> <span class="nc">Bandpass</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple bandpass object, which models the transmission fraction of incident light as a</span>
+<span class="sd">    function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and</span>
+<span class="sd">    refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.</span>
+<span class="sd">    Bandpasses representing individual components may be combined through the ``*`` operator to form</span>
+<span class="sd">    a new Bandpass object representing the composite optical path.</span>
+
+<span class="sd">    Bandpasses are callable, returning dimensionless throughput as a function of wavelength in nm.</span>
+
+<span class="sd">    Bandpasses are immutable; all transformative methods return *new* Bandpasses, and leave their</span>
+<span class="sd">    originating Bandpasses unaltered.</span>
+
+<span class="sd">    Bandpasses require ``blue_limit`` and ``red_limit`` attributes, which may either be explicitly</span>
+<span class="sd">    set at initialization, or are inferred from the initializing `LookupTable` or 2-column file.</span>
+
+<span class="sd">    Outside of the wavelength interval between ``blue_limit`` and ``red_limit``, the throughput is</span>
+<span class="sd">    returned as zero, regardless of the ``throughput`` input parameter.</span>
+
+<span class="sd">    Bandpasses may be multiplied by other Bandpasses, functions, scalars, or `SED` instances.</span>
+<span class="sd">    The product of a Bandpass with an `SED` is a new `SED`.</span>
+
+<span class="sd">    The Bandpass effective wavelength is stored in the python property ``effective_wavelength``. We</span>
+<span class="sd">    use throughput-weighted average wavelength (which is independent of any `SED`) as our</span>
+<span class="sd">    definition for effective wavelength.</span>
+
+<span class="sd">    For Bandpasses defined using a `LookupTable`, a numpy.array of wavelengths, ``wave_list``,</span>
+<span class="sd">    defining the table is maintained.  Bandpasses defined as products of two other Bandpasses will</span>
+<span class="sd">    define their ``wave_list`` as the union of multiplicand ``wave_list`` values, although limited</span>
+<span class="sd">    to the range between the new product ``blue_limit`` and ``red_limit``.  (This implementation</span>
+<span class="sd">    detail may affect the choice of integrator used to draw a `ChromaticObject`.)</span>
+
+<span class="sd">    The input parameter, throughput, may be one of several possible forms:</span>
+
+<span class="sd">    1. a regular python function (or an object that acts like a function)</span>
+<span class="sd">    2. a `LookupTable`</span>
+<span class="sd">    3. a file from which a `LookupTable` can be read in</span>
+<span class="sd">    4. a string which can be evaluated to a function of ``wave`` via</span>
+<span class="sd">       ``eval(&#39;lambda wave : &#39;+throughput)``, e.g.::</span>
+
+<span class="sd">            throughput = &#39;0.8 + 0.2 * (wave-800)&#39;</span>
+
+<span class="sd">    The argument of ``throughput`` will be the wavelength in units specified by ``wave_type``. (See</span>
+<span class="sd">    below.) The output should be the dimensionless throughput at that wavelength.  (Note we use</span>
+<span class="sd">    ``wave`` rather than ``lambda``, since ``lambda`` is a python reserved word.)</span>
+
+<span class="sd">    The argument ``wave_type`` specifies the units to assume for wavelength and must be one of</span>
+<span class="sd">    &#39;nm&#39;, &#39;nanometer&#39;, &#39;nanometers&#39;, &#39;A&#39;, &#39;Ang&#39;, &#39;Angstrom&#39;, or &#39;Angstroms&#39;, or an astropy</span>
+<span class="sd">    distance unit.  (For the string values, case is unimportant.)  If given as floats, blue_limit</span>
+<span class="sd">    and red_limit are taken to be in these units as well.  (If given as an astropy Quantity, then</span>
+<span class="sd">    the units are taken directly and converted to ``wave_type``.)</span>
+
+<span class="sd">    Note that the ``wave_type`` parameter does not propagate into other methods of Bandpass.</span>
+<span class="sd">    For instance, `Bandpass.__call__` assumes its input argument is in nanometers.</span>
+
+<span class="sd">    Finally, a Bandpass may have zeropoint attribute, which is a float used to convert flux</span>
+<span class="sd">    (in photons/s/cm^2) to magnitudes::</span>
+
+<span class="sd">        mag = -2.5*log10(flux) + zeropoint</span>
+
+<span class="sd">    You can either set the zeropoint at initialization, or via the `withZeropoint` method.  Note</span>
+<span class="sd">    that the zeropoint attribute does not propagate if you get a new Bandpass by multiplying or</span>
+<span class="sd">    dividing an old Bandpass.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        throughput:     Function defining the throughput at each wavelength.  See above for</span>
+<span class="sd">                        valid options for this parameter.</span>
+<span class="sd">        wave_type:      The units to use for the wavelength argument of the ``throughput``</span>
+<span class="sd">                        function. See above for details.</span>
+<span class="sd">        blue_limit:     Hard cut off of bandpass on the blue side. [default: None, but required</span>
+<span class="sd">                        if throughput is not a `LookupTable` or file.  See above.]</span>
+<span class="sd">        red_limit:      Hard cut off of bandpass on the red side. [default: None, but required</span>
+<span class="sd">                        if throughput is not a `LookupTable` or file.  See above.]</span>
+<span class="sd">        zeropoint:      Set the zero-point for this Bandpass.  Here, this can only be a float</span>
+<span class="sd">                        value.  See the method `withZeropoint` for other options for how to</span>
+<span class="sd">                        set this using a particular spectrum (AB, Vega, etc.) [default: None]</span>
+<span class="sd">        interpolant:    If reading from a file, what interpolant to use. [default: &#39;linear&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">throughput</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">zeropoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Note that `_wave_list` acts as a private construction variable that overrides the way that</span>
+        <span class="c1"># `wave_list` is normally constructed (see `Bandpass.__mul__` below)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span> <span class="o">=</span> <span class="n">throughput</span>  <span class="c1"># Save this for pickling.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="n">_tp</span>              <span class="c1"># This will normally become orig_tp turned into an actual</span>
+                                    <span class="c1"># function (see _initialize_tp()), although in some cases,</span>
+                                    <span class="c1"># it can be supplied directly as a constructor argument.</span>
+
+        <span class="c1"># Parse the various options for wave_type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wave_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">wave_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="s1">&#39;nanometer&#39;</span><span class="p">,</span> <span class="s1">&#39;nanometers&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="k">elif</span> <span class="n">wave_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;ang&#39;</span><span class="p">,</span> <span class="s1">&#39;angstrom&#39;</span><span class="p">,</span> <span class="s1">&#39;angstroms&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;Angstrom&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">=</span> <span class="mf">10.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid wave_type.&quot;</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="s1">&#39;Angstrom&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span> <span class="o">=</span> <span class="n">wave_type</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+                <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="o">-</span><span class="mf">10.</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">2.e-15</span><span class="p">:</span>  <span class="c1"># This doesn&#39;t come out exactly 10.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;Angstrom&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">=</span> <span class="mf">10.</span>
+            <span class="k">except</span> <span class="n">units</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
+                <span class="c1"># Unlike in SED, we require a distance unit for wave_type</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid wave_type.  Must be a distance.&quot;</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">blue_limit</span> <span class="o">=</span> <span class="n">blue_limit</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">red_limit</span> <span class="o">=</span> <span class="n">red_limit</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">blue_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">red_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">blue_limit</span> <span class="o">&gt;=</span> <span class="n">red_limit</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;blue_limit must be less than red_limit&quot;</span><span class="p">,</span>
+                                   <span class="n">blue_limit</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">=</span> <span class="n">blue_limit</span> <span class="c1"># These may change as we go through this.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">=</span> <span class="n">red_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span> <span class="o">=</span> <span class="n">zeropoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span> <span class="o">=</span> <span class="n">interpolant</span>
+
+        <span class="c1"># Convert string input into a real function (possibly a LookupTable)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_tp</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">_wave_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Manual override!  Be careful!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">=</span> <span class="n">_wave_list</span>
+            <span class="c1"># This also means that red_limit and blue_limit are already set correctly.</span>
+            <span class="c1"># Don&#39;t change them.</span>
+            <span class="c1">#assert self.blue_limit is not None</span>
+            <span class="c1">#assert self.red_limit is not None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setup_func</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Account for wave_factor in wavelength limits</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+
+        <span class="c1"># Assign blue and red limits of bandpass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;red_limit and blue_limit are required if throughput is not a LookupTable.&quot;</span><span class="p">,</span>
+                    <span class="n">blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">throughput</span><span class="o">=</span><span class="n">throughput</span><span class="p">)</span>
+
+        <span class="c1"># Sanity check blue/red limit and create self.wave_list</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">getArgs</span><span class="p">())</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+            <span class="c1"># Make sure that blue_limit and red_limit are within LookupTable region of support.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_min</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Cannot set blue_limit to be less than throughput x_min&quot;</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">&gt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_max</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Cannot set red_limit to be greater than throughput x_max&quot;</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span>
+            <span class="c1"># Remove any values that are outside the limits</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span>
+                                                           <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span> <span class="p">]</span>
+            <span class="c1"># Make sure that blue_limit and red_limit are part of wave_list.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_func</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_setup_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_func_trivial</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_func_factor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_func_trivial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_func_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_tp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Turn the input tp into a real function self._tp.</span>
+        <span class="c1"># The function cannot be pickled, so will need to do this in setstate as well as init.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="p">(</span><span class="n">basestring</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">)):</span>
+            <span class="n">isfile</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">check_share_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="s1">&#39;bandpasses&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">isfile</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                        <span class="s2">&quot;red_limit and blue_limit are required if throughput is not a LookupTable.&quot;</span><span class="p">,</span>
+                        <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">throughput</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+                <span class="n">test_wave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">math_eval</span><span class="p">(</span><span class="s1">&#39;lambda wave : &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+                    <span class="n">test_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">(</span><span class="n">test_wave</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;String throughput must either be a valid filename or something that &quot;</span>
+                        <span class="s2">&quot;can eval to a function of wave.</span><span class="se">\n</span><span class="s2"> Caught error: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_value</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The given throughput function did not return a valid &quot;</span>
+                        <span class="s2">&quot;number at test wavelength </span><span class="si">%s</span><span class="s2">: got </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">test_wave</span><span class="p">,</span> <span class="n">test_value</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># Watch out for 4 types of `other`:</span>
+        <span class="c1"># 1.  SED: delegate to SED.__mul__(bandpass)</span>
+        <span class="c1"># 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.</span>
+        <span class="c1"># 3.  Callable: return a Bandpass</span>
+        <span class="c1"># 4.  Scalar: return a Bandpass</span>
+
+        <span class="c1"># Delegate SED * Bandpass to SED.__mul__:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SED</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Bandpass * Bandpass -&gt; Bandpass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">):</span>
+            <span class="n">wave_list</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">combine_wave_list</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">zeropoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">)</span>
+
+        <span class="c1"># Product of Bandpass with generic callable or scalar is a rescaled Bandpass.</span>
+        <span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="c1"># If other is not a function, then there is no loss of accuracy by applying the</span>
+            <span class="c1"># factor directly to the LookupTable, if that&#39;s what we are using.</span>
+            <span class="c1"># Make sure to keep the same properties about the table, wave_type.</span>
+            <span class="n">wave_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">getArgs</span><span class="p">()</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">[</span> <span class="n">val</span> <span class="o">*</span> <span class="n">other</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">getVals</span><span class="p">()</span> <span class="p">]</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_log</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">f_log</span><span class="p">,</span>
+                             <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span>
+
+        <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">other</span>
+
+    <span class="c1"># Doesn&#39;t check for divide by zero, so be careful.</span>
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># Watch out for 4 types of `other`:</span>
+        <span class="c1"># 1.  SED: prohibit.</span>
+        <span class="c1"># 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.</span>
+        <span class="c1"># 3.  Callable: return a Bandpass</span>
+        <span class="c1"># 4.  Scalar: return a Bandpass</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SED</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot divide Bandpass by SED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Bandpass / Bandpass -&gt; Bandpass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">):</span>
+            <span class="n">wave_list</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">combine_wave_list</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="n">other</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">zeropoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">)</span>
+
+        <span class="c1"># Quotient of Bandpass with generic callable or scalar is a rescaled Bandpass.</span>
+        <span class="n">wave_type</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="n">other</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="c1"># If other is not a function, then there is no loss of accuracy by applying the</span>
+            <span class="c1"># factor directly to the LookupTable, if that&#39;s what we are using.</span>
+            <span class="c1"># Make sure to keep the same properties about the table, wave_type.</span>
+            <span class="n">wave_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">getArgs</span><span class="p">()</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">[</span> <span class="n">val</span> <span class="o">/</span> <span class="n">other</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">getVals</span><span class="p">()</span> <span class="p">]</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">x_log</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">f_log</span><span class="p">,</span>
+                             <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="n">other</span>
+
+        <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
+
+    <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+<div class="viewcode-block" id="Bandpass.__call__"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dimensionless throughput of bandpass at given wavelength in nanometers.</span>
+
+<span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
+<span class="sd">        attributes, the throughput is assumed to be zero.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            wave:       Wavelength in nanometers. (Either a scalar or a numpy array)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the dimensionless throughput.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wave</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">wave</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">and</span> <span class="n">wave</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">wave</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wgood</span> <span class="o">=</span> <span class="p">(</span><span class="n">wave</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">wave</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">wave</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">wgood</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">wave</span><span class="p">[</span><span class="n">wgood</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">effective_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The effective wavelength of the `Bandpass`.</span>
+
+<span class="sd">        An alias for ``self.calculateEffectiveWavelength()``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateEffectiveWavelength</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Bandpass.calculateEffectiveWavelength"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.calculateEffectiveWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">calculateEffectiveWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate, store, and return the effective wavelength for this bandpass.</span>
+
+<span class="sd">        We define the effective wavelength as the throughput-weighted average wavelength, which is</span>
+<span class="sd">        SED-independent.  Units are nanometers.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            precise:    Optionally use a more precise integration method when the bandpass uses</span>
+<span class="sd">                        a `LookupTable` rather than the normal trapezoid rule. [default: False]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_effective_wavelength&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">precise</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">precise</span><span class="p">:</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">integrate_product</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span><span class="n">w</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
+                                                 <span class="n">x_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">)</span>
+                <span class="n">denom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+                <span class="n">denom</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_effective_wavelength</span> <span class="o">=</span> <span class="n">num</span> <span class="o">/</span> <span class="n">denom</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_effective_wavelength</span></div>
+
+<div class="viewcode-block" id="Bandpass.withZeropoint"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.withZeropoint">[docs]</a>    <span class="k">def</span> <span class="nf">withZeropoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeropoint</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign a zeropoint to this `Bandpass`.</span>
+
+<span class="sd">        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes::</span>
+
+<span class="sd">            mag = -2.5*log10(flux) + zeropoint</span>
+
+<span class="sd">        Note that the zeropoint attribute does not propagate if you get a new `Bandpass` by</span>
+<span class="sd">        multiplying or dividing an old `Bandpass`.</span>
+
+<span class="sd">        The ``zeropoint`` argument can take a variety of possible forms:</span>
+
+<span class="sd">        1. a number, which will be the zeropoint</span>
+<span class="sd">        2. a `galsim.SED`.  In this case, the zeropoint is set such that the magnitude of the</span>
+<span class="sd">           supplied `SED` through the `Bandpass` is 0.0</span>
+<span class="sd">        3. the string &#39;AB&#39;.  In this case, use an AB zeropoint.</span>
+<span class="sd">        4. the string &#39;Vega&#39;.  Use a Vega zeropoint.</span>
+<span class="sd">        5. the string &#39;ST&#39;.  Use a HST STmag zeropoint.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            zeropoint:      See above for valid input options</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            new `Bandpass` with zeropoint set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert `zeropoint` from str to galsim.SED.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zeropoint</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">zeropoint</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;AB&#39;</span><span class="p">:</span>
+                <span class="n">AB_source</span> <span class="o">=</span> <span class="mf">3631e-23</span> <span class="c1"># 3631 Jy in units of erg/s/Hz/cm^2</span>
+                <span class="n">sed</span> <span class="o">=</span> <span class="n">SED</span><span class="p">(</span><span class="k">lambda</span> <span class="n">wave</span><span class="p">:</span> <span class="n">AB_source</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">flux_type</span><span class="o">=</span><span class="s1">&#39;fnu&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">zeropoint</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;ST&#39;</span><span class="p">:</span>
+                <span class="c1"># Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints</span>
+                <span class="n">ST_flambda</span> <span class="o">=</span> <span class="mf">3.63e-8</span> <span class="c1"># erg/s/cm^2/nm</span>
+                <span class="n">sed</span> <span class="o">=</span> <span class="n">SED</span><span class="p">(</span><span class="k">lambda</span> <span class="n">wave</span><span class="p">:</span> <span class="n">ST_flambda</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">flux_type</span><span class="o">=</span><span class="s1">&#39;flambda&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">zeropoint</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;VEGA&#39;</span><span class="p">:</span>
+                <span class="c1"># Use vega spectrum for SED</span>
+                <span class="n">vegafile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s2">&quot;SEDs&quot;</span><span class="p">,</span> <span class="s2">&quot;vega.txt&quot;</span><span class="p">)</span>
+                <span class="n">sed</span> <span class="o">=</span> <span class="n">SED</span><span class="p">(</span><span class="n">vegafile</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">flux_type</span><span class="o">=</span><span class="s1">&#39;flambda&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized Zeropoint string.&quot;</span><span class="p">,</span> <span class="n">zeropoint</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="s1">&#39;AB&#39;</span><span class="p">,</span> <span class="s1">&#39;ST&#39;</span><span class="p">,</span> <span class="s1">&#39;VEGA&#39;</span><span class="p">))</span>
+            <span class="n">zeropoint</span> <span class="o">=</span> <span class="n">sed</span>
+
+        <span class="c1"># Convert `zeropoint` from galsim.SED to float</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zeropoint</span><span class="p">,</span> <span class="n">SED</span><span class="p">):</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="n">zeropoint</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">zeropoint</span> <span class="o">=</span> <span class="mf">2.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+
+        <span class="c1"># Should be a float now (or maybe an int).  If not, raise an exception.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zeropoint</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                   <span class="s2">&quot;Don&#39;t know how to handle zeropoint of type: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">zeropoint</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
+                        <span class="n">zeropoint</span><span class="o">=</span><span class="n">zeropoint</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
+                        <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bandpass.truncate"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.truncate">[docs]</a>    <span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_throughput</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">preserve_zp</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a bandpass with its wavelength range truncated.</span>
+
+<span class="sd">        This function truncate the range of the bandpass either explicitly (with ``blue_limit`` or</span>
+<span class="sd">        ``red_limit`` or both) or automatically, just trimming off leading and trailing wavelength</span>
+<span class="sd">        ranges where the relative throughput is less than some amount (``relative_throughput``).</span>
+
+<span class="sd">        This second option using relative_throughput is only available for bandpasses initialized</span>
+<span class="sd">        with a `LookupTable` or from a file, not when using a regular python function or a string</span>
+<span class="sd">        evaluation.</span>
+
+<span class="sd">        This function does not remove any intermediate wavelength ranges, but see thin() for</span>
+<span class="sd">        a method that can thin out the intermediate values.</span>
+
+<span class="sd">        When truncating a bandpass that already has an assigned zeropoint, there are several</span>
+<span class="sd">        possibilities for what should happen to the new (returned) bandpass by default.  If red</span>
+<span class="sd">        and/or blue limits are given, then the new bandpass will have no assigned zeropoint because</span>
+<span class="sd">        it is difficult to predict what should happen if the bandpass is being arbitrarily</span>
+<span class="sd">        truncated.  If ``relative_throughput`` is given, often corresponding to low-level truncation</span>
+<span class="sd">        that results in little change in observed quantities, then the new bandpass is assigned the</span>
+<span class="sd">        same zeropoint as the original.  This default behavior is called &#39;auto&#39;.  The user can also</span>
+<span class="sd">        give boolean True or False values.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            blue_limit:             Truncate blue side of bandpass at this wavelength in nm.</span>
+<span class="sd">                                    [default: None]</span>
+<span class="sd">            red_limit:              Truncate red side of bandpass at this wavelength in nm.</span>
+<span class="sd">                                    [default: None]</span>
+<span class="sd">            relative_throughput:    Truncate leading or trailing wavelengths that are below</span>
+<span class="sd">                                    this relative throughput level.  (See above for details.)</span>
+<span class="sd">                                    Either ``blue_limit`` and/or ``red_limit`` should be supplied,</span>
+<span class="sd">                                    or ``relative_throughput`` should be supplied -- but</span>
+<span class="sd">                                    ``relative_throughput`` should not be combined with one of the</span>
+<span class="sd">                                    limits.</span>
+<span class="sd">                                    [default: None]</span>
+<span class="sd">            preserve_zp:            If True, the new truncated `Bandpass` will be assigned the same</span>
+<span class="sd">                                    zeropoint as the original.  If False, the new truncated</span>
+<span class="sd">                                    `Bandpass` will have a zeropoint of None. If &#39;auto&#39;, the new</span>
+<span class="sd">                                    truncated `Bandpass` will have the same zeropoint as the</span>
+<span class="sd">                                    original when truncating using ``relative_throughput``, but</span>
+<span class="sd">                                    will have a zeropoint of None when truncating using</span>
+<span class="sd">                                    &#39;blue_limit&#39; and/or &#39;red_limit&#39;.  [default: &#39;auto&#39;]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the truncated `Bandpass`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Enforce the choice of a single mode of truncation.</span>
+        <span class="k">if</span> <span class="n">relative_throughput</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">blue_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">red_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;Truncate using relative_throughput or red/blue_limit, not both!&quot;</span><span class="p">,</span>
+                    <span class="n">blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span>
+                    <span class="n">relative_throughput</span><span class="o">=</span><span class="n">relative_throughput</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preserve_zp</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">relative_throughput</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">preserve_zp</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span> <span class="n">preserve_zp</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Check for weird input</span>
+        <span class="k">if</span> <span class="n">preserve_zp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">preserve_zp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized input for preserve_zp.&quot;</span><span class="p">,</span><span class="n">preserve_zp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">blue_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blue_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">blue_limit</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Supplied blue_limit may not be bluer than the original.&quot;</span><span class="p">,</span>
+                                       <span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">red_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">red_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">red_limit</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Supplied red_limit may not be redder than the original.&quot;</span><span class="p">,</span>
+                                       <span class="n">red_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
+
+        <span class="n">wave_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">relative_throughput</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="n">tp</span> <span class="o">&gt;=</span> <span class="n">tp</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">*</span><span class="n">relative_throughput</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+                <span class="n">blue_limit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">wave</span><span class="p">[</span><span class="n">w</span><span class="p">]),</span> <span class="n">blue_limit</span><span class="p">])</span>
+                <span class="n">red_limit</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">wave</span><span class="p">[</span><span class="n">w</span><span class="p">]),</span> <span class="n">red_limit</span><span class="p">])</span>
+            <span class="n">wave_list</span> <span class="o">=</span> <span class="n">wave_list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">wave_list</span> <span class="o">&gt;=</span> <span class="n">blue_limit</span><span class="p">,</span>
+                                                 <span class="n">wave_list</span> <span class="o">&lt;=</span> <span class="n">red_limit</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">relative_throughput</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Can only truncate with relative_throughput argument if throughput is &quot;</span>
+                <span class="s2">&quot;a LookupTable&quot;</span><span class="p">,</span> <span class="n">relative_throughput</span><span class="o">=</span><span class="n">relative_throughput</span><span class="p">,</span> <span class="n">throughput</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preserve_zp</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">,</span>
+                            <span class="n">zeropoint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
+                            <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">,</span>
+                            <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
+                            <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bandpass.thin"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+             <span class="n">preserve_zp</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Thin out the internal wavelengths of a `Bandpass` that uses a `LookupTable`.</span>
+
+<span class="sd">        If the bandpass was initialized with a `LookupTable` or from a file (which internally</span>
+<span class="sd">        creates a `LookupTable`), this function removes tabulated values while keeping the integral</span>
+<span class="sd">        over the set of tabulated values still accurate to the given relative error.</span>
+
+<span class="sd">        That is, the integral of the bandpass function is preserved to a relative precision</span>
+<span class="sd">        of ``rel_err``, while eliminating as many internal wavelength values as possible.  This</span>
+<span class="sd">        process will usually help speed up integrations using this bandpass.  You should weigh</span>
+<span class="sd">        the speed improvements against your fidelity requirements for your particular use</span>
+<span class="sd">        case.</span>
+
+<span class="sd">        By default, this routine will preserve the zeropoint of the original bandpass by assigning</span>
+<span class="sd">        it to the new thinned bandpass.  The justification for this choice is that when using an AB</span>
+<span class="sd">        zeropoint, a typical optical bandpass, and the default thinning ``rel_err`` value, the</span>
+<span class="sd">        zeropoint for the new and thinned bandpasses changes by 10^-6.  However, if you are thinning</span>
+<span class="sd">        a lot, and/or want to do extremely precise tests, you can set ``preserve_zp=False`` and then</span>
+<span class="sd">        recalculate the zeropoint after thinning.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            rel_err:        The relative error allowed in the integral over the throughput</span>
+<span class="sd">                            function. [default: 1.e-4]</span>
+<span class="sd">            trim_zeros:     Remove redundant leading and trailing points where f=0?  (The last</span>
+<span class="sd">                            leading point with f=0 and the first trailing point with f=0 will</span>
+<span class="sd">                            be retained).  Note that if both trim_leading_zeros and</span>
+<span class="sd">                            preserve_range are True, then the only the range of ``x`` *after*</span>
+<span class="sd">                            zero trimming is preserved.  [default: True]</span>
+<span class="sd">            preserve_range: Should the original range (``blue_limit`` and ``red_limit``) of the</span>
+<span class="sd">                            `Bandpass` be preserved? (True) Or should the ends be trimmed to</span>
+<span class="sd">                            include only the region where the integral is significant? (False)</span>
+<span class="sd">                            [default: True]</span>
+<span class="sd">            fast_search:    If set to True, then the underlying algorithm will use a</span>
+<span class="sd">                            relatively fast O(N) algorithm to select points to include in the</span>
+<span class="sd">                            thinned approximation.  If set to False, then a slower O(N^2)</span>
+<span class="sd">                            algorithm will be used.  We have found that the slower algorithm</span>
+<span class="sd">                            tends to yield a thinned representation that retains fewer samples</span>
+<span class="sd">                            while still meeting the relative error requirement, and may also</span>
+<span class="sd">                            be somewhat more robust when computing an `SED` flux through</span>
+<span class="sd">                            a `Bandpass` when a significant fraction of the integrated flux</span>
+<span class="sd">                            passes through low throughput bandpass light leaks.</span>
+<span class="sd">                            [default: True]</span>
+<span class="sd">            preserve_zp:    If True, the new thinned `Bandpass` will be assigned the same</span>
+<span class="sd">                            zeropoint as the original.  If False, the new thinned `Bandpass`</span>
+<span class="sd">                            will have a zeropoint of None. [default: True]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the thinned `Bandpass`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">interpolant</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">)</span>
+                           <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
+            <span class="n">newx</span><span class="p">,</span> <span class="n">newf</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">thin_tabulated_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="n">rel_err</span><span class="p">,</span>
+                                                         <span class="n">trim_zeros</span><span class="o">=</span><span class="n">trim_zeros</span><span class="p">,</span>
+                                                         <span class="n">preserve_range</span><span class="o">=</span><span class="n">preserve_range</span><span class="p">,</span>
+                                                         <span class="n">fast_search</span><span class="o">=</span><span class="n">fast_search</span><span class="p">,</span>
+                                                         <span class="n">interpolant</span><span class="o">=</span><span class="n">interpolant</span><span class="p">)</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="n">_LookupTable</span><span class="p">(</span><span class="n">newx</span><span class="p">,</span> <span class="n">newf</span><span class="p">,</span> <span class="n">interpolant</span><span class="p">)</span>
+            <span class="n">blue_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">newx</span><span class="p">)</span>
+            <span class="n">red_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">newx</span><span class="p">)</span>
+            <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">newx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">preserve_zp</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span>
+                                <span class="n">zeropoint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_tp</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">wave_factor</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">zeropoint</span> <span class="ow">and</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Cache this in case self._orig_tp or self.wave_list is long.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Bandpass&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.Bandpass(</span><span class="si">%r</span><span class="s1">, wave_type=</span><span class="si">%r</span><span class="s1">, blue_limit=</span><span class="si">%r</span><span class="s1">, red_limit=</span><span class="si">%r</span><span class="s1">, zeropoint=</span><span class="si">%r</span><span class="s1">, &#39;</span>
+                <span class="s1">&#39;interpolant=</span><span class="si">%r</span><span class="s1">, _wave_list=array(</span><span class="si">%r</span><span class="s1">))&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">orig_tp</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_tp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
+            <span class="n">orig_tp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Bandpass(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;_tp&#39;</span><span class="p">],</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;_tp&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="k">if</span> <span class="s1">&#39;_tp&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># If _tp is already set, this is will just set func.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_tp</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_func</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

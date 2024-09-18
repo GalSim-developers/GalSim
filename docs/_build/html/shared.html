@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Data &mdash; GalSim 2.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Revision History" href="history.html" />
+    <link rel="prev" title="Math" href="cpp_math.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Shared Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#galsim.meta_data.share_dir"><code class="docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-sed-files">Shared SED files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-bandpass-files">Shared Bandpass files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-sensor-models">Shared Sensor models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-hst-noise-model">Shared HST noise model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-roman-st-files">Shared Roman ST files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-cosmos-files">Shared COSMOS files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Shared Data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/shared.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="shared-data">
+<h1>Shared Data<a class="headerlink" href="#shared-data" title="Permalink to this heading"></a></h1>
+<p>GalSim includes some ancillary data along with the installed code.  They are installed in
+the sub-directory <code class="docutils literal notranslate"><span class="pre">share</span></code> wherever your GalSim module is installed.</p>
+<p>The location of these files are given by the variable</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="galsim.meta_data.share_dir">
+<span class="sig-prename descclassname"><span class="pre">galsim.meta_data.</span></span><span class="sig-name descname"><span class="pre">share_dir</span></span><a class="headerlink" href="#galsim.meta_data.share_dir" title="Permalink to this definition"></a></dt>
+<dd><p>The installed location of your <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normally, the installation process will write a file called <code class="docutils literal notranslate"><span class="pre">meta_data.py</span></code> which sets
+the above variable automatically to the installation directory on your machine.</p>
+<p>However, if you install into a temporary location and then move the entire galsim directory to
+a different location, this will not have the correct location.  (It will instead be set to the
+temporary location.)  If you do this, you should define an environment variable,
+GALSIM_SHARE_DIR, to the correct location of the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  Alternatively, you can
+set the value of <a class="reference internal" href="#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> by hand in any Python programs that might need
+it.</p>
+</div>
+<p>Usually, you do not need to use the <a class="reference internal" href="#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> variable directly.  Routines
+that open files that might be in the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory will automatically prepend this directory
+name to the given file name when trying to open the file.</p>
+<p>The following files are distributed in the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  In each case, we provide the
+command you would typically use to load the file with the appropriate GalSim class or function.</p>
+<section id="shared-sed-files">
+<h2>Shared SED files<a class="headerlink" href="#shared-sed-files" title="Permalink to this heading"></a></h2>
+<dl>
+<dt>vega.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('vega.txt',</span> <span class="pre">wave_type='nm',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Specrum of the star Vega (aka Alpha Lyra), derived from HST CALSPEC data.
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/observatory/crds/calspec.html">http://www.stsci.edu/hst/observatory/crds/calspec.html</a>
+Filename: alpha_lyr_mod_001.fits
+Clipped on the red side at 2200 nm
+Units converted to nm and erg/s/cm^2/nm.</p>
+</dd>
+<dt>CWW_E_ext.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_E_ext.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>E SED of Coleman, Wu, and Weedman (1980)
+Extended below 1400 A and beyond 10000 A by
+Bolzonella, Miralles, and Pello (2000) using evolutionary models
+of Bruzual and Charlot (1993)</p>
+<p>Obtained from ZPHOT code at</p>
+<p><a class="reference external" href="http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz">http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz</a></p>
+<p>Truncated to wavelengths less than 22050 Angstroms, and thinned by
+galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+with fast_search=False.  See devel/modules/getSEDs.py for details.</p>
+</dd>
+<dt>CWW_E_ext_more.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_E_ext_more.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Same as CWW_E_ext.sed, but thinned to a relative error of 1.e-3</p>
+</dd>
+<dt>CWW_Im_ext.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_Im_ext.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Im SED of Coleman, Wu, and Weedman (1980)
+Extended below 1400 A and beyond 10000 A by
+Bolzonella, Miralles, and Pello (2000) using evolutionary models
+of Bruzual and Charlot (1993)</p>
+<p>Obtained from ZPHOT code at
+‘<a class="reference external" href="http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz">http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz</a>’</p>
+<p>Truncated to wavelengths less than 22050 Angstroms, and thinned by
+galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+with fast_search=False.  See devel/modules/getSEDs.py for details.</p>
+</dd>
+<dt>CWW_Im_ext_more.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_Im_ext_more.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Same as CWW_Im_ext.sed, but thinned to a relative error of 1.e-3</p>
+</dd>
+<dt>CWW_Sbc_ext.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_Sbc_ext.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Sbc SED of Coleman, Wu, and Weedman (1980)
+Extended below 1400 A and beyond 10000 A by
+Bolzonella, Miralles, and Pello (2000) using evolutionary models
+of Bruzual and Charlot (1993)</p>
+<p>Obtained from ZPHOT code at
+‘<a class="reference external" href="http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz">http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz</a>’</p>
+<p>Truncated to wavelengths less than 22050 Angstroms, and thinned by
+galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+with fast_search=False.  See devel/modules/getSEDs.py for details.</p>
+</dd>
+<dt>CWW_Sbc_ext_more.sed</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('CWW_Sbc_ext_more.sed',</span> <span class="pre">wave_type='A',</span> <span class="pre">flux_type='flam')</span></code></p>
+<p>Same as CWW_Sbc_ext.sed, but thinned to a relative error of 1.e-3</p>
+</dd>
+</dl>
+<p>For more details about how the above files were generated, see the script:</p>
+<blockquote>
+<div><p>GalSim/devel/getSEDs.py</p>
+</div></blockquote>
+</section>
+<section id="shared-bandpass-files">
+<h2>Shared Bandpass files<a class="headerlink" href="#shared-bandpass-files" title="Permalink to this heading"></a></h2>
+<dl>
+<dt>ACS_wfc_F435W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F435W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>ACS wfc_F435W total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F435W.dat">http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F435W.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>ACS_wfc_F606W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F606W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>ACS wfc_F606W total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F606W.dat">http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F606W.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>ACS_wfc_F775W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F775W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>ACS wfc_F775W total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F775W.dat">http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F775W.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>ACS_wfc_F814W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F814W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>ACS wfc_F814W total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F814W.dat">http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F814W.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>ACS_wfc_F850LP.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F850LP.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>ACS wfc_F850LP total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F850LP.dat">http://www.stsci.edu/hst/acs/analysis/throughputs/tables/wfc_F850LP.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_u.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_u.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST u-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_u.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_u.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_g.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_g.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST g-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_g.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_g.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_r.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_r.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST r-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_r.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_r.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_i.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_i.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST i-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_i.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_i.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_z.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_z.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST z-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_z.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_z.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>LSST_y.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('LSST_y.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>LSST Y-band total throughput at airmass 1.2
+File taken from <a class="reference external" href="https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_y.dat">https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_y.dat</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>WFC3_uvis_F275W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('WFC_uvis_F275W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>WFC3 UVIS f275w total throughput
+Average of UVIS1 and UVIS2 throughputs, from files
+<a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f275w.UVIS1.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f275w.UVIS1.tab</a>
+<a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f275w.UVIS2.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f275w.UVIS2.tab</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>WFC3_uvis_F336W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('WFC_uvis_F336W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>WFC3 UVIS f336w total throughput
+Average of UVIS1 and UVIS2 throughputs, from files
+<a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f336w.UVIS1.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f336w.UVIS1.tab</a>
+<a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f336w.UVIS2.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f336w.UVIS2.tab</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>WFC3_ir_F105W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('WFC_ir_F105W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>WFC3 IR f105w total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f105w.IR.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f105w.IR.tab</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>WFC3_ir_F125W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('WFC_ir_F125W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>WFC3 IR f125w total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f125w.IR.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f125w.IR.tab</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+<dt>WFC3_ir_F160W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('WFC_ir_F160W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
+<p>WFC3 IR f160w total throughput
+File taken from <a class="reference external" href="http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f160w.IR.tab">http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_Tables/f160w.IR.tab</a></p>
+<p>Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+with fast_search=False.</p>
+</dd>
+</dl>
+<p>For more details about how the above files were generated, see the scripts:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>GalSim/devel/getLSSTBandpass.py</p></li>
+<li><p>GalSim/devel/getACSBandpass.py</p></li>
+<li><p>GalSim/devel/getWFC3Bandpass.py</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="shared-sensor-models">
+<h2>Shared Sensor models<a class="headerlink" href="#shared-sensor-models" title="Permalink to this heading"></a></h2>
+<dl>
+<dt>lsst_itl_8</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SiliconSensor('lsst_itl_8')</span></code></p>
+<p>The ITL sensor being used for LSST, using 8 points along each side of the
+pixel boundaries.</p>
+</dd>
+<dt>lsst_itl_32</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SiliconSensor('lsst_itl_32')</span></code></p>
+<p>The ITL sensor being used for LSST, using 32 points along each side of the
+pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)</p>
+</dd>
+<dt>lsst_etv_32</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SiliconSensor('lsst_etv_32')</span></code></p>
+<p>The ETV sensor being used for LSST, using 32 points along each side of the
+pixel boundaries.  (This file is still somewhat preliminary and may be
+updated in the future.)</p>
+</dd>
+</dl>
+</section>
+<section id="shared-hst-noise-model">
+<h2>Shared HST noise model<a class="headerlink" href="#shared-hst-noise-model" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>acs_I_unrot_sci_20_cf.fits</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.getCOSMOSNoise()</span></code></p>
+</dd>
+</dl>
+</section>
+<section id="shared-roman-st-files">
+<h2>Shared Roman ST files<a class="headerlink" href="#shared-roman-st-files" title="Permalink to this heading"></a></h2>
+<dl>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_01.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(1,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 1</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_02.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(2,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 2</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_03.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(3,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 3</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_04.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(4,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 4</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_05.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(5,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 5</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_06.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(6,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 6</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_07.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(7,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 7</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_08.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(8,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 8</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_09.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(9,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 9</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_10.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(10,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 10</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_11.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(11,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 11</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_12.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(12,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 12</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_13.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(13,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 13</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_14.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(14,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 14</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_15.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(15,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 15</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_16.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(16,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 16</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_17.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(17,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 17</p>
+</dd>
+<dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_18.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(18,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman PSF information for SCA 18</p>
+</dd>
+<dt>Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(sca,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman Pupil Mask for the shorter wavelength bandpasses.
+Relevant for bands Z087, Y106, J129, and H158</p>
+</dd>
+<dt>Roman_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(sca,</span> <span class="pre">bandpass)</span></code></p>
+<p>Roman Pupil Mask for the longer wavelength bandpasses.
+Relevant for bands F184 and W149</p>
+</dd>
+<dt>afta_throughput.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getBandpasses()</span></code></p>
+<p>Roman throughputs for all the Roman bands in a single file.</p>
+</dd>
+<dt>sip_7_6_8.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getWCS(world_pos)</span></code></p>
+<p>Roman ST WCS information for all SCAs.</p>
+</dd>
+</dl>
+</section>
+<section id="shared-cosmos-files">
+<h2>Shared COSMOS files<a class="headerlink" href="#shared-cosmos-files" title="Permalink to this heading"></a></h2>
+<p>These files are not shipped with GalSim, but can be installed into the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory
+by the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.  See <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a> for details.</p>
+<dl>
+<dt>COSMOS_25.2_training_sample</dt><dd><div class="line-block">
+<div class="line">Use <code class="docutils literal notranslate"><span class="pre">galsim.RealGalaxyCatalog(sample=25.2)</span></code></div>
+<div class="line">Or <code class="docutils literal notranslate"><span class="pre">galsim.COSMOSCatalog(sample=25.2)</span></code></div>
+</div>
+<p>Download with <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span> <span class="pre">-s</span> <span class="pre">25.2</span></code></p>
+<p>A directory containing files for creating a <a class="reference internal" href="real_gal.html#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> or a <a class="reference internal" href="real_gal.html#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> using the
+F814W &lt; 25.2 sample.</p>
+</dd>
+<dt>COSMOS_23.5_training_sample</dt><dd><div class="line-block">
+<div class="line">Use <code class="docutils literal notranslate"><span class="pre">galsim.RealGalaxyCatalog(sample=23.5)</span></code></div>
+<div class="line">Or <code class="docutils literal notranslate"><span class="pre">galsim.COSMOSCatalog(sample=23.5)</span></code></div>
+</div>
+<p>Download with <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span> <span class="pre">-s</span> <span class="pre">23.5</span></code></p>
+<p>A directory containing files for creating a <a class="reference internal" href="real_gal.html#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> or a <a class="reference internal" href="real_gal.html#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> using the
+F814W &lt; 23.5 sample.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_math.html" class="btn btn-neutral float-left" title="Math" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="history.html" class="btn btn-neutral float-right" title="Revision History" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
