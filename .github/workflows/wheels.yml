@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: "*manylinux*"
           CIBW_ARCHS: auto64
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: "*musllinux*"
           CIBW_ARCHS: auto64
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: "*macosx*"
           CIBW_ARCHS: auto64
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/setup-python@v5
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: "*macosx*"
           CIBW_ARCHS: arm64
