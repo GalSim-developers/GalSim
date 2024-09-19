@@ -66,6 +66,8 @@ jobs:
           CIBW_ARCHS: auto64
           CIBW_SKIP: cp36* cp37* pp*
           CIBW_BEFORE_ALL: brew install fftw || true
+          CIBW_ENVIRONMENT: >-
+            MACOSX_DEPLOYMENT_TARGET=13.0
 
       - uses: actions/upload-artifact@v4
         with:
@@ -94,6 +96,7 @@ jobs:
             CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
             PATH="/opt/homebrew/opt/llvm/bin:$PATH"
             FFTW_DIR="/opt/homebrew/lib"
+            MACOSX_DEPLOYMENT_TARGET=14.0
 
       - uses: actions/upload-artifact@v4
         with:
