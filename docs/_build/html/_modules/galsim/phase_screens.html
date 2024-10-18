@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_screens &mdash; GalSim 2.6.0 documentation</title>
+  <title>galsim.phase_screens &mdash; GalSim 2.6.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -478,7 +478,8 @@
         <span class="k">with</span> <span class="n">acquire_lock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">acquired</span><span class="p">:</span>
             <span class="c1"># If this can&#39;t acquire the lock, just timeout and return -- don&#39;t hang.</span>
             <span class="c1"># (This seems to happen occasionally, but apparently only here in __del__.)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">acquired</span><span class="p">:</span> <span class="k">return</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">acquired</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">return</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">-=</span> <span class="mi">1</span>
             <span class="c1"># Normally, shareKey is present, but on final cleanup, we have no control over</span>
