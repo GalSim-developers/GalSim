@@ -47,3 +47,9 @@ Bug Fixes
 - Fixed a bug in `DoubleZernike` to handle integer arguments. (#1283, #1303)
 - Fixed a bug in `ChromaticConvolution` when one of the items is a simple `GSObject`
   and the other has an inseparable SED. (#1302, #1306)
+
+
+Changes from 2.6.0 to 2.6.1
+---------------------------
+
+- Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)
