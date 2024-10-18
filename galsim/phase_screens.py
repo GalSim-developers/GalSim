@@ -386,7 +386,8 @@ class AtmosphericScreen:
         with acquire_lock(self._objDict['lock'], timeout=3) as acquired:
             # If this can't acquire the lock, just timeout and return -- don't hang.
             # (This seems to happen occasionally, but apparently only here in __del__.)
-            if not acquired: return
+            if not acquired:  # pragma: no cover
+                return
 
             self._objDict['refcount'].value -= 1
             # Normally, shareKey is present, but on final cleanup, we have no control over
