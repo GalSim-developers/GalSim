@@ -294,16 +294,15 @@ class Convolution(GSObject):
 
     @lazy_property
     def _maxk(self):
-        maxk_list = [obj.maxk for obj in self.obj_list]
-        return np.min(maxk_list)
+        return min(obj.maxk for obj in self.obj_list)
 
     @lazy_property
     def _stepk(self):
         # This is approximate.  stepk ~ 2pi/R
         # Assume R_final^2 = Sum(R_i^2)
         # So 1/stepk^2 = 1/Sum(1/stepk_i^2)
-        inv_stepksq_list = [obj.stepk**(-2) for obj in self.obj_list]
-        return np.sum(inv_stepksq_list)**(-0.5)
+        inv_stepksq = sum(obj.stepk**(-2) for obj in self.obj_list)
+        return (inv_stepksq)**(-0.5)
 
     @lazy_property
     def _has_hard_edges(self):
@@ -311,23 +310,20 @@ class Convolution(GSObject):
 
     @lazy_property
     def _is_axisymmetric(self):
-        axi_list = [obj.is_axisymmetric for obj in self.obj_list]
-        return bool(np.all(axi_list))
+        return all(obj.is_axisymmetric for obj in self.obj_list)
 
     @lazy_property
     def _is_analytic_x(self):
         if len(self.obj_list) == 1:
             return self.obj_list[0].is_analytic_x
         elif self.real_space and len(self.obj_list) == 2:
-            ax_list = [obj.is_analytic_x for obj in self.obj_list]
-            return bool(np.all(ax_list))
+            return all(obj.is_analytic_x for obj in self.obj_list)
         else:
             return False
 
     @lazy_property
     def _is_analytic_k(self):
-        ak_list = [obj.is_analytic_k for obj in self.obj_list]
-        return bool(np.all(ak_list))
+        return all(obj.is_analytic_k for obj in self.obj_list)
 
     @lazy_property
     def _centroid(self):
@@ -377,8 +373,8 @@ class Convolution(GSObject):
         # For non-Gaussians, this procedure will tend to produce an over-estimate of the
         # true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed
         # more than the Gaussian does.  So this is likely to be too high, which is acceptable.
-        area_list = [obj.flux / obj.max_sb for obj in self.obj_list]
-        return self.flux / np.sum(area_list)
+        area = sum(obj.flux / obj.max_sb for obj in self.obj_list)
+        return self.flux / area
 
     def _xValue(self, pos):
         if len(self.obj_list) == 1:
