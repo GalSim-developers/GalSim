@@ -1279,7 +1279,7 @@ namespace galsim {
         assert(N>=0);
         checkReadyToShoot();
         /* The pixel coordinates are stored by cumulative absolute flux in
-         * a C++ standard-libary set, so the inversion is done with a binary
+         * a C++ standard-library set, so the inversion is done with a binary
          * search tree.  There are no doubt speed gains available from sorting the
          * pixels by flux, and somehow weighting the tree search to the elements holding
          * the most flux.  But I'm doing it the simplest way right now.
