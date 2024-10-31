@@ -2490,6 +2490,29 @@ def test_phot(run_slow):
     with assert_raises(galsim.GalSimRangeError):
         obj2.drawImage(bp2, image=im5, method='phot', rng=rng, n_photons=10)
 
+@timer
+def test_low_flux_phot():
+    """ Check that objects with 0 realized flux don't have problems.
+    """
+
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+    sed = galsim.SED('vega.txt', 'nm', 'flambda').thin(rel_err=1.e-2)
+    sed = sed.withFlux(1.e-5, bandpass)
+
+    base_psf = galsim.Gaussian(fwhm=0.7)
+    psf = galsim.ChromaticAtmosphere(
+        base_psf,
+        700,
+        alpha=-0.3,
+        zenith_angle=0 * galsim.degrees,
+        parallactic_angle=0 * galsim.degrees,
+    )
+
+    observed = galsim.Convolve(psf, sed * galsim.Exponential(half_light_radius=0.3))
+    rng = galsim.BaseDeviate(1234)
+    image = observed.drawImage(nx=53, ny=53, bandpass=bandpass, method="phot", rng=rng)
+    np.testing.assert_array_equal(image.array, 0.)
+
 
 @timer
 def test_chromatic_fiducial_wavelength():
