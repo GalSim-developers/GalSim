@@ -2152,6 +2152,7 @@ class GSObject:
 
         # Make n_photons an integer.
         iN = int(n_photons + 0.5)
+        g = g if iN > 0 else 1.  # g=0 can cause trouble in places, so avoid it.
 
         return iN, g
 
