@@ -281,6 +281,7 @@ namespace galsim {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         double fluxPerPhoton = _flux/N;
+        // # pragma omp parallel for
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
 #ifdef USE_COS_SIN

@@ -21,6 +21,7 @@ __all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles',
             'PupilImageSampler', 'PupilAnnulusSampler', 'TimeSampler',
             'ScaleFlux', 'ScaleWavelength' ]
 
+import cupyx as cpx
 import numpy as np
 import astropy.units as u
 
@@ -117,9 +118,9 @@ class PhotonArray:
     ):
         # Only x, y, flux are built by default, since these are always required.
         # The others we leave as None unless/until they are needed.
-        self._x = np.zeros(N, dtype=float)
-        self._y = np.zeros(N, dtype=float)
-        self._flux = np.zeros(N, dtype=float)
+        self._x = cpx.zeros_pinned(N, dtype=float)
+        self._y = cpx.zeros_pinned(N, dtype=float)
+        self._flux = cpx.zeros_pinned(N, dtype=float)
         self._dxdz = None
         self._dydz = None
         self._wave = None
@@ -693,7 +694,45 @@ class PhotonArray:
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError(
                 "Attempting to PhotonArray::addTo an Image with undefined Bounds")
-        return self._pa.addTo(image._image)
+        import time
+        if False:
+            t1 = time.time()
+            tmp = self._pa.addTo(image._image)
+            t2 = time.time()
+            print("Time to C++ addTo ", t2-t1)
+            return tmp
+        else:
+            import cupy as cp
+
+            t1 = time.time()
+            x_cupy = cp.asarray(self._x)
+            y_cupy = cp.asarray(self._y)
+            flux_cupy = cp.asarray(self._flux)
+            t2 = time.time()
+            image_array_cupy = cp.asarray(image.array)
+            t3 = time.time()
+            ix_cupy = cp.floor(x_cupy + 0.5).astype(int)
+            iy_cupy = cp.floor(y_cupy + 0.5).astype(int)
+            t7 = time.time()
+            is_x_in_bounds = (ix_cupy < image.bounds.xmax) & (ix_cupy > image.bounds.xmin)
+            is_y_in_bounds = (iy_cupy < image.bounds.ymax) & (iy_cupy > image.bounds.ymin)
+            is_in_bounds = is_x_in_bounds & is_y_in_bounds
+            t4 = time.time()
+            image_array_cupy[ix_cupy[is_in_bounds], iy_cupy[is_in_bounds]] += flux_cupy[is_in_bounds]
+            t5 = time.time()
+            cp.asnumpy(image_array_cupy, out=image.array)
+            t6 = time.time()
+
+            print("Time for x,y,flux to cp array: ", t2-t1)
+            print("Time for image to cp array: ", t3-t2)
+            print("Time for floor: ", t7-t3)
+            print("Time for iadd: ", t5-t4)
+            print("Time for image to np array: ", t6-t5)
+            print("Time for bounds check: ", t4-t7)
+            print("Time for cupy addTo: ", t6-t1)
+
+            return flux_cupy[is_in_bounds].sum()
+
 
     @classmethod
     def makeFromImage(cls, image, max_flux=1., rng=None):

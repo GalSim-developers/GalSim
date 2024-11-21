@@ -172,7 +172,27 @@ class Gaussian(GSObject):
         self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
     def _shoot(self, photons, rng):
-        self._sbp.shoot(photons._pa, rng._rng)
+        import cupy as cp
+        import time
+        if False:
+            t1 = time.time()
+            self._sbp.shoot(photons._pa, rng._rng)
+            t2 = time.time()
+            print("Time take for C++ shoot: ", t2-t1)
+        else:
+            t1 = time.time()
+            x_cupy = self.sigma * cp.random.randn(len(photons))
+            y_cupy = self.sigma * cp.random.randn(len(photons))
+            photons.flux[:] = self.flux / len(photons)
+            t2 = time.time()
+            cp.asnumpy(x_cupy, out=photons._x)
+            cp.asnumpy(y_cupy, out=photons._y)
+            t3 = time.time()
+            print("Time taken for cupy shooting: ", t2-t1)
+            print("Time take for GPU to CPU transfer: ", t3-t2)
+
+        # photons._x.__array_interface__ = photons.x.__cuda_array_interface__
+        # photons._y.__array_interface__ = photons.y.__cuda_array_interface__
 
     def _drawKImage(self, image, jac=None):
         _jac = 0 if jac is None else jac.__array_interface__['data'][0]
