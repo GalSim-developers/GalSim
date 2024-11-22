@@ -2915,6 +2915,28 @@ def test_fittedsipwcs(run_slow):
     fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
     assert header['CTYPE1'] == 'RA---ARC-SIP'
 
+@timer
+def test_fittedsipwcs_singular():
+    # This test is in response to a case in imsim where the FittedSIPWCS could hit a
+    # singular matrix error in the solver.
+
+    data = np.load('input/singular.npz')
+    x = data['x']
+    y = data['y']
+    ra = data['ra']
+    dec = data['dec']
+
+    wcs = galsim.FittedSIPWCS(x, y, ra, dec, order=3)
+
+    # Mostly the test is that that doesn't throw a SingularMatrix exceptions,
+    # but let's test for accuracy.
+    print('wcs = ',wcs)
+
+    test_ra, test_dec = wcs.xyToradec(x, y, units='radians')
+
+    np.testing.assert_allclose(test_ra, ra, rtol=1.e-6)
+    np.testing.assert_allclose(test_dec, dec, rtol=1.e-6)
+
 
 @timer
 def test_scamp():

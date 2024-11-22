@@ -1877,7 +1877,11 @@ def least_squares(fun, x0, args=(), kwargs={}, max_iter=1000, tol=1e-9, lambda_i
 
         # Levenberg-Marquardt adjustment
         A = JTJ + lambda_ * np.eye(len(JTJ))
-        delta_params = np.linalg.solve(A, JTr)
+        try:
+            delta_params = np.linalg.solve(A, JTr)
+        except np.linalg.LinAlgError:
+            lambda_ *= 2
+            continue
 
         new_params = params - delta_params
         new_residuals = fun(new_params, *args, **kwargs)
