@@ -3,6 +3,11 @@ Changes from v2.5 to v2.6
 
 We currently support Python 3.7 through 3.12.
 
+A complete list of all new features and changes is given below.
+`Relevant PRs and Issues,
+<https://github.com/GalSim-developers/GalSim/milestone/23?closed=1>`_
+whose issue numbers are listed below for the relevant items.
+
 Dependency Changes
 ------------------
 
@@ -53,3 +58,12 @@ Changes from 2.6.0 to 2.6.1
 ---------------------------
 
 - Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)
+
+
+Changes from 2.6.1 to 2.6.2
+---------------------------
+
+- Fixed a bug that could cause errors when drawing some chromatic profiles with photon shooting
+  if the realized flux is zero. (#1317)
+- Fixed a bug that could occasionally cause singular matrix exceptions in the new
+  `FittedSIPWCS` solver. (#1319)
