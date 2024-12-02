@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Values &mdash; GalSim 2.6.1 documentation</title>
+  <title>Config Values &mdash; GalSim 2.6.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -146,8 +146,8 @@ have been designating using the following italic names:</p>
 <li><p><em>pos_value</em> corresponds to a GalSim <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance.  See <a class="reference internal" href="#pos-value"><span class="std std-ref">pos_value</span></a></p></li>
 <li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
 <li><p><em>table_value</em> corresponds to a GalSim <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> instance.  See <a class="reference internal" href="#table-value"><span class="std std-ref">table_value</span></a></p></li>
-<li><p><em>quantity_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v6.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code></a> instance.  See <a class="reference internal" href="#quantity-value"><span class="std std-ref">quantity_value</span></a></p></li>
-<li><p><em>unit_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v6.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></a> instance.  See <a class="reference internal" href="#unit-value"><span class="std std-ref">unit_value</span></a></p></li>
+<li><p><em>quantity_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code></a> instance.  See <a class="reference internal" href="#quantity-value"><span class="std std-ref">quantity_value</span></a></p></li>
+<li><p><em>unit_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></a> instance.  See <a class="reference internal" href="#unit-value"><span class="std std-ref">unit_value</span></a></p></li>
 </ul>
 <p>Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim <em>angle_value</em> and <em>pos_value</em> also have
@@ -998,11 +998,11 @@ ordinates.</p></li>
 </section>
 <section id="quantity-value">
 <h2>quantity_value<a class="headerlink" href="#quantity-value" title="Permalink to this heading"></a></h2>
-<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> values, which are a combination of a float and a unit (specifically, an <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a>).</p>
+<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> values, which are a combination of a float and a unit (specifically, an <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a>).</p>
 <p>Options are:</p>
 <ul>
-<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> value (e.g. ‘8.7*u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
-<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> (e.g. ‘8.7 m’)</p></li>
+<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> value (e.g. ‘8.7*u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
+<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> (e.g. ‘8.7 m’)</p></li>
 <li><p>A dict with:</p>
 <blockquote>
 <div><ul>
@@ -1029,11 +1029,11 @@ ordinates.</p></li>
 </section>
 <section id="unit-value">
 <h2>unit_value<a class="headerlink" href="#unit-value" title="Permalink to this heading"></a></h2>
-<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> values.</p>
+<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
-<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> value (e.g. ‘u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
-<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v6.1)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> (e.g. ‘m’)</p></li>
+<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> value (e.g. ‘u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
+<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> (e.g. ‘m’)</p></li>
 <li><p>A dict with:</p>
 <blockquote>
 <div><ul>

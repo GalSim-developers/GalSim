@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.utilities &mdash; GalSim 2.6.1 documentation</title>
+  <title>galsim.utilities &mdash; GalSim 2.6.2 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -1969,7 +1969,11 @@
 
         <span class="c1"># Levenberg-Marquardt adjustment</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">JTJ</span> <span class="o">+</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">JTJ</span><span class="p">))</span>
-        <span class="n">delta_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">JTr</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">delta_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">JTr</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+            <span class="n">lambda_</span> <span class="o">*=</span> <span class="mi">2</span>
+            <span class="k">continue</span>
 
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">params</span> <span class="o">-</span> <span class="n">delta_params</span>
         <span class="n">new_residuals</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">new_params</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

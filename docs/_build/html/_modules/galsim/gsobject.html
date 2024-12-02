@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsobject &mdash; GalSim 2.6.1 documentation</title>
+  <title>galsim.gsobject &mdash; GalSim 2.6.2 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -2244,6 +2244,7 @@
 
         <span class="c1"># Make n_photons an integer.</span>
         <span class="n">iN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_photons</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">g</span> <span class="k">if</span> <span class="n">iN</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.</span>  <span class="c1"># g=0 can cause trouble in places, so avoid it.</span>
 
         <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span></div>
 

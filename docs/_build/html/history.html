@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.6.1 documentation</title>
+  <title>Revision History &mdash; GalSim 2.6.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -73,6 +73,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changes-from-2-6-0-to-2-6-1">Changes from 2.6.0 to 2.6.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changes-from-2-6-1-to-2-6-2">Changes from 2.6.1 to 2.6.2</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
@@ -129,6 +130,9 @@
 <section id="changes-from-v2-5-to-v2-6">
 <h2>Changes from v2.5 to v2.6<a class="headerlink" href="#changes-from-v2-5-to-v2-6" title="Permalink to this heading"></a></h2>
 <p>We currently support Python 3.7 through 3.12.</p>
+<p>A complete list of all new features and changes is given below.
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/milestone/23?closed=1">Relevant PRs and Issues,</a>
+whose issue numbers are listed below for the relevant items.</p>
 <section id="dependency-changes">
 <h3>Dependency Changes<a class="headerlink" href="#dependency-changes" title="Permalink to this heading"></a></h3>
 <ul class="simple">
@@ -179,6 +183,15 @@ and the other has an inseparable SED. (#1302, #1306)</p></li>
 <h3>Changes from 2.6.0 to 2.6.1<a class="headerlink" href="#changes-from-2-6-0-to-2-6-1" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)</p></li>
+</ul>
+</section>
+<section id="changes-from-2-6-1-to-2-6-2">
+<h3>Changes from 2.6.1 to 2.6.2<a class="headerlink" href="#changes-from-2-6-1-to-2-6-2" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fixed a bug that could cause errors when drawing some chromatic profiles with photon shooting
+if the realized flux is zero. (#1317)</p></li>
+<li><p>Fixed a bug that could occasionally cause singular matrix exceptions in the new
+<a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a> solver. (#1319)</p></li>
 </ul>
 </section>
 </section>
