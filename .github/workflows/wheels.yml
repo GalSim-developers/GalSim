@@ -96,7 +96,7 @@ jobs:
             CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
             PATH="/opt/homebrew/opt/llvm/bin:$PATH"
             FFTW_DIR="/opt/homebrew/lib"
-            MACOSX_DEPLOYMENT_TARGET=14.0
+            MACOSX_DEPLOYMENT_TARGET=14.7
 
       - uses: actions/upload-artifact@v4
         with:
