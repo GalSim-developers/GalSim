@@ -67,3 +67,8 @@ Changes from 2.6.1 to 2.6.2
   if the realized flux is zero. (#1317)
 - Fixed a bug that could occasionally cause singular matrix exceptions in the new
   `FittedSIPWCS` solver. (#1319)
+
+Changes from 2.6.2 to 2.6.3
+---------------------------
+
+- Fixed a bug in the object centering when drawing with nx, ny and center. (#1322, #1323)
