@@ -1225,8 +1225,8 @@ class GSObject:
         elif nx is not None and ny is not None:
             b = BoundsI(1,nx,1,ny)
             if center is not None:
-                b = b.shift(_PositionI(np.floor(center.x+0.5)-b.center.x,
-                                       np.floor(center.y+0.5)-b.center.y))
+                b = b.shift(_PositionI(np.floor(center.x+0.5-b.true_center.x),
+                                       np.floor(center.y+0.5-b.true_center.y)))
             return b
         elif bounds is not None and bounds.isDefined():
             return bounds

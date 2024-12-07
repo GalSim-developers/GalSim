@@ -1688,5 +1688,38 @@ def test_direct_scale():
     assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
     assert_raises(ValueError, obj.makePhot, n_photons=-20)
 
+def test_center():
+    # This test is in response to issue #1322, where it was found that giving nx,ny with center
+    # would not always center the object at the right location.
+    # This test is essentially the test proposed in that issue, which showed the bug.
+
+    def compute_centroid(img):
+        x, y = img.get_pixel_centers()
+        flux = img.array
+        xcen = np.sum(x * flux) / np.sum(flux)
+        ycen = np.sum(y * flux) / np.sum(flux)
+        return galsim.PositionD(xcen, ycen)
+
+    wcs = galsim.PixelScale(0.2)
+    gal = galsim.Gaussian(fwhm=0.9)
+    sizes = [50,51]
+    offsets = [-1.0, -0.63, -0.5, -0.12, 0., 0.33, 0.5, 0.78, 1.0]
+    for xsize in sizes:
+        for ysize in sizes:
+            for x_center_offset in offsets:
+                for y_center_offset in offsets:
+                    print(xsize,ysize,x_center_offset,y_center_offset)
+                    center = galsim.PositionD(
+                        xsize//2 + x_center_offset,
+                        ysize//2 + y_center_offset,
+                    )
+                    im = gal.drawImage(nx=xsize, ny=ysize, wcs=wcs, center=center)
+                    centroid = compute_centroid(im)
+                    print('  center = ', center)
+                    print('  centroid = ', centroid)
+                    np.testing.assert_allclose(centroid.x, center.x, atol=1e-4, rtol=0)
+                    np.testing.assert_allclose(centroid.y, center.y, atol=1e-4, rtol=0)
+
+
 if __name__ == "__main__":
     runtests(__file__)
