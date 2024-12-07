@@ -1164,6 +1164,7 @@ class GSObject:
                         "Must set either both or neither of nx, ny", nx=nx, ny=ny)
                 image = Image(nx, ny, dtype=dtype)
                 if center is not None:
+                    # Note: this needs to match the corresponding calculation in _get_new_bounds
                     image.shift(_PositionI(np.floor(center.x+0.5-image.true_center.x),
                                            np.floor(center.y+0.5-image.true_center.y)))
             else:
