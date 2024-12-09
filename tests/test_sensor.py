@@ -25,6 +25,10 @@ from unittest import mock
 import galsim
 from galsim_test_helpers import *
 
+# The timing tests can be unreliable in environments with other processes running at the
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 
 @timer
 def test_simple():
@@ -1010,7 +1014,8 @@ def test_resume(run_slow):
                                    decimal=5)
     print('Time with resume = ',t_resume)
     print('Time without resume = ',t_no_resume)
-    assert t_resume < t_no_resume
+    if test_timing:
+        assert t_resume < t_no_resume
 
     # The resume path should be exactly the same as doing all the photons at once.
     sensor3.accumulate(all_photons, im3)

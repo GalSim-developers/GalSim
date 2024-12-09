@@ -27,6 +27,10 @@ from unittest import mock
 import galsim
 from galsim_test_helpers import *
 
+# The timing tests can be unreliable in environments with other processes running at the
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 
 # These positions will be used a few times below, so define them here.
 # One of the tests requires that the last pair are integers, so don't change that.
@@ -3199,10 +3203,10 @@ def test_int_args(run_slow):
     # Before fixing #1024, this took about 0.5 sec.
     # Now it usually takes about 0.04 sec.  Testing at 0.25 seems like a reasonable midpoint.
     print('Time = ',t1-t0)
-    if run_slow:
+    if test_timing:
         # Don't include this in regular unit tests, since it's not really something we need
         # to guarantee.  This timing estimate is appropriate for my laptop, but maybe not
-        # all systems.  It also fails for pypy on GHA for some reason.
+        # all systems.
         assert t1-t0 < 0.25
 
     posi = galsim.PositionI(5,6)

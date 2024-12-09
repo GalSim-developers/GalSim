@@ -29,6 +29,10 @@ pp_file = 'sample_pupil_rolled.fits'
 
 theta0 = (0*galsim.arcmin, 0*galsim.arcmin)
 
+# The timing tests can be unreliable in environments with other processes running at the
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 
 @timer
 def test_aperture():
@@ -1018,7 +1022,8 @@ def test_speedup():
     psf.drawImage(method='phot', n_photons=1e3)
     t1 = time.time()
     print("Time for geometric approximation draw: {:6.4f}s".format(t1-t0))
-    assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
+    if test_timing:
+        assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 
 @timer

@@ -32,6 +32,9 @@ TESTDIR=os.path.join(path, "interpolant_comparison_files")
 KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
 KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
 
+# The timing tests can be unreliable in environments with other processes running at the
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
 
 @pytest.fixture
 def ref():
@@ -1785,21 +1788,21 @@ def test_depixelize():
     # Second time with the same size image is much faster, since uses a cache.
     nopix_image2 = im1.depixelize(x_interpolant=interp)
     t8 = time.time()
-    if platform.python_implementation() != 'PyPy':
+    if test_timing and platform.python_implementation() != 'PyPy':
         # PyPy timings can be fairly arbitrary at times.
         assert t8-t7 < (t3-t2)/5
 
     # Even if the image is different.
     nopix_image3 = im4.depixelize(x_interpolant=interp)
     t9 = time.time()
-    if platform.python_implementation() != 'PyPy':
+    if test_timing and platform.python_implementation() != 'PyPy':
         assert t9-t8 < (t3-t2)/5
 
     # But not if you clear the cache.
     galsim.Image.clear_depixelize_cache()
     nopix_image4 = im4.depixelize(x_interpolant=interp)
     t10 = time.time()
-    if platform.python_implementation() != 'PyPy':
+    if test_timing and platform.python_implementation() != 'PyPy':
         assert t10-t9 > (t3-t2)/5
 
     print('times:')
