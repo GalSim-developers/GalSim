@@ -49,6 +49,7 @@ __all__ = [
     "Profile",
     "galsim_backend",
     "is_jax_galsim",
+    "pytest",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
