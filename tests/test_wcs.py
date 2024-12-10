@@ -2940,7 +2940,7 @@ def test_fittedsipwcs_singular():
     # This test is in response to a case in imsim where the FittedSIPWCS could hit a
     # singular matrix error in the solver.
 
-    data = np.load('input/singular.npz')
+    data = np.load(os.path.join(os.path.dirname(__file__), 'input/singular.npz'))
     x = data['x']
     y = data['y']
     ra = data['ra']
