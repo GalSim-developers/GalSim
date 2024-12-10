@@ -50,6 +50,8 @@ __all__ = [
     "galsim_backend",
     "is_jax_galsim",
     "pytest",
+    "run_slow",
+    "runtests",
 ]
 
 # This file has some helper functions that are used by tests from multiple files to help
