@@ -19,6 +19,7 @@
 __all__ = [ 'VonKarman' ]
 
 import numpy as np
+import astropy.units as u
 
 from . import _galsim
 from .gsobject import GSObject
@@ -69,12 +70,14 @@ class VonKarman(GSObject):
         though, then you can pass the do_delta=True argument to the VonKarman initializer.
 
     Parameters:
-        lam:                Wavelength in nanometers.
-        r0:                 Fried parameter at specified wavelength ``lam`` in meters.  Exactly one
-                            of r0 and r0_500 should be specified.
-        r0_500:             Fried parameter at 500 nm in meters.  Exactly one of r0 and r0_500
-                            should be specified.
-        L0:                 Outer scale in meters.  [default: 25.0]
+        lam:                Wavelength, either as an astropy Quantity or a float in nanometers.
+        r0:                 Fried parameter at specified wavelength ``lam``, either as an astropy
+                            Quantity or a float in meters. Exactly one of r0 and r0_500 should be
+                            specified.
+        r0_500:             Fried parameter at 500 nm, either as an astropy Quantity or a float in
+                            meters. Exactly one of r0 and r0_500 should be specified.
+        L0:                 Outer scale, either as an astropy Quantity or a float in meters.
+                            [default: 25.0 m]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         scale_unit:         Units assumed when drawing this profile or evaluating xValue, kValue,
                             etc.  Should be a `galsim.AngleUnit` or a string that can be used to
@@ -102,9 +105,17 @@ class VonKarman(GSObject):
                             keyword.  [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
     """
-    _req_params = { "lam" : float }
-    _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }
-    _single_params = [ { "r0" : float, "r0_500" : float } ]
+    _req_params = { "lam" : (float, u.Quantity) }
+    _opt_params = {
+        "L0" : (float, u.Quantity),
+        "flux" : float,
+        "scale_unit" : str,
+        "do_delta" : bool
+    }
+    _single_params = [ {
+        "r0" : (float, u.Quantity),
+        "r0_500" : (float, u.Quantity)
+    } ]
 
     _has_hard_edges = False
     _is_axisymmetric = True
@@ -113,6 +124,15 @@ class VonKarman(GSObject):
 
     def __init__(self, lam, r0=None, r0_500=None, L0=25.0, flux=1, scale_unit=arcsec,
                  force_stepk=0.0, do_delta=False, suppress_warning=False, gsparams=None):
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(r0, u.Quantity):
+            r0 = r0.to_value(u.m)
+        if isinstance(r0_500, u.Quantity):
+            r0_500 = r0_500.to_value(u.m)
+        if isinstance(L0, u.Quantity):
+            L0 = L0.to_value(u.m)
+
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
         if L0 > 1e10:

@@ -19,6 +19,7 @@
 
 //#define DEBUGLOGGING
 
+#include <fstream>
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
@@ -35,9 +36,21 @@
 // xdbg requires verbose_level >= 2
 // xxdbg requires verbose_level >= 3
 //
-// If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
+// If DEBUGLOGGING is not defined, the all three becomes just `if (false) (*dbgout)`,
 // so the compiler parses the statement fine, but trivially optimizes the code away,
 // so there is no efficiency hit from leaving them in the code.
+
+#ifndef DEBUGLOGGING
+// Apparently not all compilers optimize away the if (false) (*dbgout) lines.
+// That can cause errors when linking.  cf. #1313.
+// This fixes the problem by providing an actual dbgout object that doesn't write anything.
+std::ostream* make_global_dbgout() {
+    static std::ofstream dbgout_ofstream;
+    dbgout_ofstream.setstate(std::ios_base::badbit);
+    return &dbgout_ofstream;
+}
+std::ostream* dbgout = make_global_dbgout();
+#endif
 
 namespace galsim {
 

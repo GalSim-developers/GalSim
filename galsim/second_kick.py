@@ -18,6 +18,8 @@
 
 __all__ = [ 'SecondKick' ]
 
+import astropy.units as u
+
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
@@ -71,9 +73,9 @@ class SecondKick(GSObject):
         Peterson et al.  2015  ApJSS  vol. 218
 
     Parameters:
-        lam:            Wavelength in nanometers
-        r0:             Fried parameter in meters.
-        diam:           Aperture diameter in meters.
+        lam:            Wavelength, either as an astropy Quantity or a float in nanometers.
+        r0:             Fried parameter, either as an astropy Quantity or a float in meters.
+        diam:           Aperture diameter, either as an astropy Quantity or a float in nanmeters.
         obscuration:    Linear dimension of central obscuration as fraction of aperture
                         linear dimension. [0., 1.).  [default: 0.0]
         kcrit:          Critical Fourier mode (in units of 1/r0) below which the turbulence
@@ -84,7 +86,11 @@ class SecondKick(GSObject):
                         construct one (e.g., 'arcsec', 'radians', etc.). [default: galsim.arcsec]
         gsparams:       An optional `GSParams` argument. [default: None]
     """
-    _req_params = { "lam" : float, "r0" : float, "diam" : float }
+    _req_params = {
+        "lam" : (float, u.Quantity),
+        "r0" : (float, u.Quantity),
+        "diam" : (float, u.Quantity),
+    }
     _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }
 
     _has_hard_edges = False
@@ -94,6 +100,13 @@ class SecondKick(GSObject):
 
     def __init__(self, lam, r0, diam, obscuration=0, kcrit=0.2, flux=1,
                  scale_unit=arcsec, gsparams=None):
+        if isinstance(lam, u.Quantity):
+            lam = lam.to_value(u.nm)
+        if isinstance(r0, u.Quantity):
+            r0 = r0.to_value(u.m)
+        if isinstance(diam, u.Quantity):
+            diam = diam.to_value(u.m)
+
         if isinstance(scale_unit, str):
             self._scale_unit = AngleUnit.from_name(scale_unit)
         else:

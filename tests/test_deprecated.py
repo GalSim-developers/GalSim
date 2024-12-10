@@ -386,7 +386,7 @@ def test_wfirst():
     assert galsim.wfirst.NLfunc is galsim.roman.NLfunc
 
 @timer
-def test_roman_psfs():
+def test_roman_psfs(run_slow):
     """Test the deprecated high_accuracy and approximate_struts options.
     """
     import galsim.roman
@@ -399,7 +399,7 @@ def test_roman_psfs():
         ({ 'approximate_struts':False, 'high_accuracy':False },
          { 'pupil_bin':4 }),
     ]
-    if __name__ == "__main__":
+    if run_slow:
         test_kwargs.append(
             ({ 'approximate_struts':False, 'high_accuracy':True },
             { 'pupil_bin':1, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) }),
@@ -1080,5 +1080,4 @@ def test_save_photons():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

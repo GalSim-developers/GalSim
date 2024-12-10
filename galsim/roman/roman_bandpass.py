@@ -29,7 +29,7 @@ from .. import meta_data
 from ..errors import galsim_warn
 from .. import Bandpass, LookupTable
 
-def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
+def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=False, **kwargs):
     """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all Roman
@@ -91,12 +91,17 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
                             use no thinning and truncation of bandpasses, or who want control over
                             the level of thinning and truncation, should have this be False.
                             [default: True]
+        include_all_bands:  Should the routine include the non-imaging bands (e.g., grisms)?
+                            This does not implement any dispersion physics by itself.
+                            There is currently no estimate for the thermal background for these
+                            bands and they are set to zero arbitrarily.
+                            [default: False]
         **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
                             `Bandpass.truncate` as appropriate.
 
     @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
-    from . import collecting_area
+    from . import collecting_area, non_imaging_bands
 
     # Begin by reading in the file containing the info.
     datafile = os.path.join(meta_data.share_dir, "roman", "Roman_effarea_20210614.txt")
@@ -134,8 +139,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     bandpass_dict = {}
     # Loop over the bands.
     for index, bp_name in enumerate(data.dtype.names[1:]):
-        # Need to skip the prism and grism (not used for weak lensing imaging).
-        if bp_name=='SNPrism' or bp_name=='Grism_1stOrder' or bp_name=='Grism_0thOrder':
+        if include_all_bands is False and bp_name in non_imaging_bands:
             continue
 
         # Initialize the bandpass object.

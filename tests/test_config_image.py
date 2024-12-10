@@ -23,9 +23,11 @@ import logging
 import math
 import re
 import warnings
+import astropy.units as u
 
 import galsim
 from galsim_test_helpers import *
+
 
 @timer
 def test_single():
@@ -684,6 +686,7 @@ def test_reject():
     expected_fluxes = [0, 76673, 0, 0, 24074, 0, 0, 9124, 0, 0, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
+
 @timer
 def test_snr():
     """Test signal-to-noise option for setting the flux
@@ -1131,6 +1134,7 @@ def test_scattered():
     image = galsim.fits.read('output/test_scattered.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
 
+
 @timer
 def test_scattered_noskip():
     """The default StampBuilder will automatically skip objects whose stamps are fully
@@ -1197,6 +1201,7 @@ def test_scattered_noskip():
     # Repeat with config
     image2 = galsim.config.BuildImage(config)
     np.testing.assert_equal(image2.array, image.array)
+
 
 @timer
 def test_scattered_whiten():
@@ -1969,6 +1974,7 @@ def test_wcs():
     builder = galsim.config.wcs.WCSBuilder()
     assert_raises(NotImplementedError, builder.buildWCS, config, config, logger=None)
 
+
 @timer
 def test_bandpass():
     """Test various bandpass options"""
@@ -1980,10 +1986,10 @@ def test_bandpass():
         'bp2' : {
             'type' : 'FileBandpass',
             'file_name' : 'ACS_wfc_F814W.dat',
-            'wave_type' : 'nm',
+            'wave_type' : u.nm,
             'thin' : [1.e-4, 1.e-5, 1.e-6],
-            'blue_limit': 700,
-            'red_limit': 950,
+            'blue_limit': 7000*u.Angstrom,  # Try mismatched units
+            'red_limit': 9500*u.Angstrom,
         },
         'bp3' : galsim.Bandpass('LSST_g.dat', 'nm'),
 
@@ -1997,6 +2003,12 @@ def test_bandpass():
         'eval2' : {
             'type' : 'Eval',
             'str' : '@bp1 * @bp3'
+        },
+
+        'bpz' : {
+            'file_name' : 'chromatic_reference_images/simple_bandpass.dat',
+            'wave_type' : 'nm',
+            'zeropoint' : 'Vega',
         },
 
         'bad1' : 34,
@@ -2041,6 +2053,9 @@ def test_bandpass():
     assert bp9 is not bp2
     assert bp9 == bp2b.thin(1.e-5)
 
+    bpz = galsim.config.BuildBandpass(config, 'bpz', config)[0]
+    assert bpz == bp1.withZeropoint('Vega')
+
     for bad in ['bad1', 'bad2']:
         with assert_raises(galsim.GalSimConfigError):
             galsim.config.BuildBandpass(config, bad, config)
@@ -2051,7 +2066,7 @@ def test_bandpass():
 
 
 @timer
-def test_index_key():
+def test_index_key(run_slow):
     """Test some aspects of setting non-default index_key values
     """
     nfiles = 3
@@ -2063,7 +2078,7 @@ def test_index_key():
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
-    if __name__ == '__main__':
+    if run_slow:
         logger = logging.getLogger('test_index_key')
         logger.addHandler(logging.StreamHandler(sys.stdout))
         logger.setLevel(logging.DEBUG)
@@ -2079,8 +2094,8 @@ def test_index_key():
                                 logger=logger)
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
-    if __name__ == '__main__':
-        # For nose tests skip these 3 to save some time.
+    if run_slow:
+        # For pytest tests, skip these 3 to save some time.
         # images5 is really the hardest test, and images1 is the easiest, so those two will
         # give good diagnostics for any errors.
 
@@ -2178,12 +2193,12 @@ def test_index_key():
                 final = galsim.Convolve(gal, psf)
                 final.drawImage(stamp)
 
-            if __name__ == '__main__':
+            if run_slow:
                 im.write('output/test_index_key%02d_%02d.fits'%(n,i))
                 images5[n][i].write('output/test_index_key%02d_%02d_5.fits'%(n,i))
             np.testing.assert_array_equal(im.array, images1[n][i].array,
                                           "index_key parsing failed for sequential BuildFiles run")
-            if __name__ == '__main__':
+            if run_slow:
                 np.testing.assert_array_equal(im.array, images2[n][i].array,
                                               "index_key parsing failed for output.nproc > 1")
                 np.testing.assert_array_equal(im.array, images3[n][i].array,
@@ -2242,7 +2257,7 @@ def test_index_key():
 
 
 @timer
-def test_multirng():
+def test_multirng(run_slow):
     """Test using multiple rngs.
 
     This models a run where the galaxies are the same for 3 images, then a new set for the next
@@ -2255,7 +2270,7 @@ def test_multirng():
     - Multiple input fields (although tests in test_config_value.py also do this)
     - Using a non-default build_index for power_spectrum
     """
-    if __name__ == '__main__':
+    if run_slow:
         nimages = 6
         ngals = 20
         logger = logging.getLogger('test_multirng')
@@ -2326,13 +2341,13 @@ def test_multirng():
             if b.isDefined():
                 im[b] += stamp[b]
         im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
-        if __name__ == '__main__':
+        if run_slow:
             im.write('output/test_multirng%02d.fits'%n)
         np.testing.assert_array_equal(im.array, images1[n].array)
         np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
 
-    # Finally, test invalid rng_num
+    # Test invalid rng_num
     config4 = galsim.config.CopyConfig(config)
     config4['image']['world_pos']['rng_num'] = -1
     with assert_raises(galsim.GalSimConfigError):
@@ -2354,8 +2369,18 @@ def test_multirng():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config7)
 
+    # Check that a warning is given if the user uses a Sequence for the first random seed.
+    config8 = galsim.config.CopyConfig(config)
+    config8['image']['random_seed'] = {
+        'type': 'Sequence',
+        'repeat': 3
+    }
+    with assert_warns(galsim.GalSimWarning):
+        galsim.config.BuildImage(config8)
+
+
 @timer
-def test_sequential_seeds():
+def test_sequential_seeds(run_slow):
     """Test using sequential seeds for successive images.
 
     Our old (<=2.3) way of setting rng seeds involved using the nominal seed value for
@@ -2375,7 +2400,7 @@ def test_sequential_seeds():
     seeds for multiple images is completely fine.  This test confirms that.  (It fails
     for the old way of doing the seed sequence.)
     """
-    if __name__ == '__main__':
+    if run_slow:
         nimages = 6
         ngals = 20
         logger = logging.getLogger('test_sequential_seeds')
@@ -2403,6 +2428,7 @@ def test_sequential_seeds():
             for j,stampj in enumerate(all_stamps[n-1]):
                 print(i,j,stampi==stampj)
             assert stampi not in all_stamps[n-1]
+
 
 @timer
 def test_template():
@@ -2732,6 +2758,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
 
         return image
 
+
 @timer
 def test_blend():
     """Test the functionality used by the BlendSet stamp type in examples/des/blend.py.
@@ -2804,14 +2831,15 @@ def test_blend():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamp(config, obj_num=8)
 
+
 @timer
-def test_chromatic():
+def test_chromatic(run_slow):
     """Test drawing a chromatic object on an image with a bandpass
     """
-    if __name__ == '__main__':
+    if run_slow:
         bp_file = 'LSST_r.dat'
     else:
-        # In nosetests, use a simple bandpass to go faster.
+        # In pytest, use a simple bandpass to go faster.
         bp_file = 'chromatic_reference_images/simple_bandpass.dat'
 
     # First check a chromatic galaxy with a regular PSF.
@@ -2833,8 +2861,8 @@ def test_chromatic():
 
             'sed': {
                 'file_name': 'CWW_E_ext.sed',
-                'wave_type': 'Ang',
-                'flux_type': 'flambda',
+                'wave_type': u.Angstrom,
+                'flux_type': u.erg/u.Angstrom/u.cm**2/u.s,
                 'norm_flux_density': 1.0,
                 'norm_wavelength': 500,
                 'redshift': 0.8,
@@ -3068,6 +3096,7 @@ def test_chromatic():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
+
 @timer
 def test_photon_ops():
     # Test photon ops in config
@@ -3252,6 +3281,7 @@ def test_photon_ops():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
 
+
 @timer
 def test_sensor():
     # Test sensor option in config
@@ -3269,8 +3299,8 @@ def test_sensor():
                         'file_name': 'CWW_E_ext.sed',
                         'wave_type': 'Ang',
                         'flux_type': 'flambda',
-                        'norm_flux_density': 1.0,
-                        'norm_wavelength': 500,
+                        'norm_flux_density': 1.0*u.erg/u.s/u.cm**2/u.nm,
+                        'norm_wavelength': 500*u.nm,
                         'redshift' : '@gal.redshift',
                     },
                 },
@@ -3424,6 +3454,7 @@ def test_sensor():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'sensor', config)
 
+
 @timer
 def test_initial_image():
     # This test simulates a time series of a supernova going off near a big galaxy.
@@ -3461,5 +3492,4 @@ def test_initial_image():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

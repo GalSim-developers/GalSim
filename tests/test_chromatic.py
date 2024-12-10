@@ -501,7 +501,7 @@ def test_monochromatic_filter():
                         "GSObject.drawImage()")
 
 @timer
-def test_monochromatic_sed():
+def test_monochromatic_sed(run_slow):
     # Similar to the above test, but this time with a broad bandpass and a narrow sed.
 
     bandpass = galsim.Bandpass(galsim.LookupTable([500,1000], [1,1], 'linear'), wave_type='nm')
@@ -516,7 +516,7 @@ def test_monochromatic_sed():
     nstruts = 5
     aberrations = np.array([0,0,0,0, 0.02, -0.05, -0.15, -0.02, 0.13, 0.06, -0.09, 0.11])
 
-    if __name__ == '__main__':
+    if run_slow:
         wave_list = [515, 690, 900]
     else:
         wave_list = [515]
@@ -2090,7 +2090,7 @@ def test_interpolated_ChromaticObject():
 
 
 @timer
-def test_ChromaticOpticalPSF():
+def test_ChromaticOpticalPSF(run_slow):
     """Test the ChromaticOpticalPSF functionality."""
     import time
 
@@ -2175,7 +2175,7 @@ def test_ChromaticOpticalPSF():
     print("Time to initialize InterpolatedChromaticObject: {0}s".format(t5-t4))
     obj = galsim.Convolve(star, psf)
 
-    if __name__ == '__main__':
+    if run_slow:
         # This is slow, but it is worth testing the pickling of InterpolatedChromaticObjects.
         check_pickle(psf)
     else:
@@ -2305,7 +2305,7 @@ def test_ChromaticAiry():
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
 
 @timer
-def test_phot():
+def test_phot(run_slow):
     """Test photon shooting with various chromatic PSFs.
     """
     import time
@@ -2392,7 +2392,7 @@ def test_phot():
         print('fft time = ',t1-t0)
         print('im1.max,sum = ', im1.array.max(), im1.array.sum())
 
-        if __name__ == '__main__':
+        if run_slow:
             # Now the direct photon shooting method
             t0 = time.time()
             # This is the old way that photon shooting used to work.  The new way will be tested
@@ -2490,6 +2490,29 @@ def test_phot():
     obj2 = galsim.Convolve(gal2, psf7)
     with assert_raises(galsim.GalSimRangeError):
         obj2.drawImage(bp2, image=im5, method='phot', rng=rng, n_photons=10)
+
+@timer
+def test_low_flux_phot():
+    """ Check that objects with 0 realized flux don't have problems.
+    """
+
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+    sed = galsim.SED('vega.txt', 'nm', 'flambda').thin(rel_err=1.e-2)
+    sed = sed.withFlux(1.e-5, bandpass)
+
+    base_psf = galsim.Gaussian(fwhm=0.7)
+    psf = galsim.ChromaticAtmosphere(
+        base_psf,
+        700,
+        alpha=-0.3,
+        zenith_angle=0 * galsim.degrees,
+        parallactic_angle=0 * galsim.degrees,
+    )
+
+    observed = galsim.Convolve(psf, sed * galsim.Exponential(half_light_radius=0.3))
+    rng = galsim.BaseDeviate(1234)
+    image = observed.drawImage(nx=53, ny=53, bandpass=bandpass, method="phot", rng=rng)
+    np.testing.assert_array_equal(image.array, 0.)
 
 
 @timer
@@ -3389,5 +3412,4 @@ def test_save_photons():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

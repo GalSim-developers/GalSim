@@ -1345,9 +1345,7 @@ ext=Extension("galsim._galsim",
 
 build_dep = ['setuptools>=38,<72', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
-test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose', 'scipy', 'pyyaml']
-# Note: Even though we don't use nosetests, nose is required for some tests to work.
-#       cf. https://gist.github.com/dannygoldstein/e18866ebb9c39a2739f7b9f16440e2f5
+test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy', 'pyyaml']
 
 # If Eigen doesn't exist in the normal places, download it.
 find_eigen_dir(output=True)

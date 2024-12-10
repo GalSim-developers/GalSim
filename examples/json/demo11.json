@@ -19,7 +19,7 @@
 "eval_variables" : {
     "fpixel_scale" : 0.2,
     "atheta" : "0.17 degrees",
-    "ftel_diam" : 4,
+    "qtel_diam" : "400 cm",
     "fexp_time" : 300,
     "fimage_size" : 2048,
     "inobjects" : 288,
@@ -44,7 +44,7 @@
     "shear" : { "type" : "PowerSpectrumShear" },
     "magnification" : { "type" : "PowerSpectrumMagnification" },
     "rotation" : { "type" : "Random" },
-    "scale_flux" : "$(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
+    "scale_flux" : "$(tel_diam**2 / ((2.4*u.m)**2*(1.-0.33**2))) * exp_time"
 },
 
 "image" : {

@@ -17,16 +17,10 @@ Some attributes that are allowed for all image types are:
 * ``random_seed`` = *int_value* or *list* (optional) The random seed to use for random numbers in the simulation.
 
     * The typical use case is that this is a simple integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image.
-    * If ``random_seed`` is a string, then it is parsed as a integer and treated in the same way as above.  This allows you to do a simple calculation using the ``$`` Eval shorthand to e.g. compute the initial seed from some other kind of ID number you might have in the config file.  It also means you don't have to be careful in your YAML writing to not accidentally write e.g. ``'1234'`` rather than ``1234``.
-    * If ``random_seed`` is a dict, it should parse as an *int_value*, but in this case, GalSim will not convert it into a sequence based on a single value.  Rather, it will respect your specification and evaluate the seed for each object as you specifiy.  This let's you do advanced things like use a different cadence for your random numbers (e.g. potentially to repeat the same seed for multiple objects; cf. `Demo 7`).
-    * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number behave normally for noise and such, and another one repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.  Each item in the list is parsed as above.
+    * If ``random_seed`` is a list, then the first one will be converted as described above, but the later ones will not. Rather, it will respect your specification and evaluate the seed for each object as you specifiy. This will create multiple random number generators, according to the multiple seed specifications. This is normally used to have one random number behave normally for noise and such, and another one (or more) repeat with some other cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure). See `Demo 7` and `Demo 13` for examples of this. Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
 
-    .. warning::
-
-        Within this ``random_seed`` list, any items that are either an int or str will be
-        evaluated once and converted into a sequence in the normal way.  So if you want an item
-        to be some complex Eval operation, you should make it a dict with an explicit
-        ``type: Eval``, rather than use the ``$`` shorthand notation.
+      .. note::
+          We use 0-based indexing for ``rng_num``, so the first item in the ``random_seed`` list is ``rng_num=0``, the second one is ``rng_num=1``, etc.
 
     * The default behavior, if ``random_seed`` is not given, is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
 
@@ -350,9 +344,9 @@ other types, including custom Bandpass types.
 * 'FileBandpass' is the default type here, and you may omit the type name when using it.
 
     * ``file_name`` = *str_value* (required)  The file to read in.
-    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
-    * ``blue_limit`` = *float_value* (optional)  Hard cut off on the blue side.
-    * ``red_limit`` = *float value* (optional)  Hard cut off on the red side.
+    * ``wave_type`` = *str_value* or *unit_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
+    * ``blue_limit`` = *float_value* or *quantity_value* (optional)  Hard cut off on the blue side.
+    * ``red_limit`` = *float value* or *quantity_value* (optional)  Hard cut off on the red side.
     * ``zeropoint`` = *float_value* (optional)  The zero-point to use.
     * ``thin`` = *float_value* (optional)  If given, call `Bandpass.thin` on the Bandpass after reading in from the file, using this for the ``rel_err``.
 

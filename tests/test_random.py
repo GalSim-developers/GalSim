@@ -1011,7 +1011,7 @@ def test_poisson():
 
 
 @timer
-def test_poisson_highmean():
+def test_poisson_highmean(run_slow):
     """Test Poisson random number generator with high (>2^30) mean (cf. Issue #881)
 
     It turns out that the boost poisson deviate class that we use maxes out at 2^31 and wraps
@@ -1026,7 +1026,7 @@ def test_poisson_highmean():
                  5.e20,       # Definitely would have problems with normal implementation.
                ]
 
-    if __name__ == '__main__':
+    if run_slow:
         nvals = 10000000
         rtol_var = 1.e-3
     else:
@@ -2282,5 +2282,4 @@ def test_numpy_generator():
     assert np.isclose(np.std(a3), 23, rtol=3.e-3)
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

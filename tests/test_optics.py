@@ -44,8 +44,6 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 do_slow_tests = False
 # do_slow_tests = True   # uncomment out for more rigorous testing
 #                         Warning: some of them require a LOT of memory.
-# if __name__ == "__main__":
-#     do_slow_tests = True
 
 if do_slow_tests:
     pp_decimal = 5
@@ -69,7 +67,7 @@ else:
 
 
 @timer
-def test_OpticalPSF_flux():
+def test_OpticalPSF_flux(run_slow):
     """Compare an unaberrated OpticalPSF flux to unity.
     """
     lods = (1.e-8, 4., 9.e5) # lambda/D values: don't choose unity in case symmetry hides something
@@ -81,7 +79,7 @@ def test_OpticalPSF_flux():
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2,
                 err_msg="Unaberrated Optical flux not quite unity.")
 
-        if __name__ == '__main__':
+        if run_slow:
             optics_test = galsim.OpticalPSF(lam_over_diam=lod, flux=177)
             optics_im = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel')
             np.testing.assert_almost_equal(optics_im.array.sum(), 177., 2)
@@ -933,5 +931,4 @@ def test_geometric_shoot():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

@@ -24,12 +24,12 @@ from galsim_test_helpers import *
 
 
 @timer
-def test_init():
+def test_init(run_slow):
     """Test generation of SecondKick profiles
     """
     obscuration = 0.5
 
-    if __name__ == '__main__':
+    if run_slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.1, 0.15, 0.3]
         kcrits = [0.1, 0.2, 0.4]
@@ -157,7 +157,7 @@ def test_limiting_cases():
             atol=1e-4)
 
 @timer
-def test_sk_phase_psf():
+def test_sk_phase_psf(run_slow):
     """Test that analytic second kick profile matches what can be obtained from PhaseScreenPSF with
     an appropriate truncated power spectrum.
     """
@@ -173,7 +173,7 @@ def test_sk_phase_psf():
     speed = [rng()*20 for _ in range(6)]
     direction = [rng()*360*galsim.degrees for _ in range(6)]
     aper = galsim.Aperture(4.0, obscuration=obscuration, pad_factor=0.5)
-    kcrits = [1, 3, 10] if __name__ == '__main__' else [1]
+    kcrits = [1, 3, 10] if run_slow else [1]
     for kcrit in kcrits:
         # Technically, we should probably use a smaller screen_scale here, but that runs really
         # slowly.  The below seems to work well enough for the tested kcrits.
@@ -209,7 +209,7 @@ def test_sk_phase_psf():
 
 
 @timer
-def test_sk_scale():
+def test_sk_scale(run_slow):
     """Test sk scale argument"""
     kwargs = {'lam':500, 'r0':0.2, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
@@ -234,7 +234,7 @@ def test_sk_scale():
                                    sk_arcmin._sba.xValue(galsim.PositionD(0.0, 0.01)._p)/60**2,
                                    decimal=5)
 
-    if __name__ == '__main__':
+    if run_slow:
         # These are a little slow, since the xValue is doing a real-space convolution integral.
         np.testing.assert_almost_equal(sk_arcsec.xValue(0.0, 6.0),
                                        sk_arcmin.xValue(0.0, 0.1)/60**2,
@@ -301,5 +301,4 @@ def test_sk_ne():
 
 
 if __name__ == '__main__':
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

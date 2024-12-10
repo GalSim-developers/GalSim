@@ -17,6 +17,7 @@
 #
 
 import logging
+from astropy.units import Quantity, Unit
 
 from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
@@ -110,14 +111,14 @@ class BandpassBuilder:
 class FileBandpassBuilder(BandpassBuilder):
     """A class for loading a Bandpass from a file
 
-    FileBandpass expected the following parameters:
+    FileBandpass expects the following parameters:
 
-        file_name (str)     The file to load (required)
-        wave_type(str)      The units (nm or Ang) of the wavelengths in the file (required)
-        thin (float)        A relative error to use for thinning the file (default: None)
-        blue_limit (float)  A cutoff wavelength on the blue side (default: None)
-        red_limit (float)   A cutoff wavelength on the red side (default: None)
-        zeropoint (float)   A zeropoint to use (default: None)
+        file_name (str)                 The file to load (required)
+        wave_type (str or Quantity)     The units (nm or Ang) of the wavelengths in the file (required)
+        thin (float)                    A relative error to use for thinning the file (default: None)
+        blue_limit (float or Quantity)  A cutoff wavelength on the blue side (default: None)
+        red_limit (float or Quantity)   A cutoff wavelength on the red side (default: None)
+        zeropoint (float or str)        A zeropoint to use (default: None)
     """
     def buildBandpass(self, config, base, logger):
         """Build the Bandpass based on the specifications in the config dict.
@@ -132,16 +133,27 @@ class FileBandpassBuilder(BandpassBuilder):
         """
         logger = LoggerWrapper(logger)
 
-        req = {'file_name': str, 'wave_type': str}
-        opt = {'thin' : float, 'blue_limit' : float, 'red_limit' : float, 'zeropoint': float }
+        req = {
+            'file_name': str,
+            'wave_type': (str, Unit),
+        }
+        opt = {
+            'thin' : float,
+            'blue_limit' : (float, Quantity),
+            'red_limit' : (float, Quantity),
+            'zeropoint': (float, str)
+        }
 
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
 
         file_name = kwargs.pop('file_name')
         thin = kwargs.pop('thin', None)
+        zeropoint = kwargs.pop('zeropoint', None)
 
         logger.info("Reading Bandpass file: %s",file_name)
         bandpass = Bandpass(file_name, **kwargs)
+        if zeropoint:
+            bandpass = bandpass.withZeropoint(zeropoint)
         if thin:
             bandpass = bandpass.thin(thin)
 

@@ -440,6 +440,7 @@ def test_Image_basic():
     check_pickle(galsim.BoundsI(2,3,7,8))
     check_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
 
+
 @timer
 def test_undefined_image():
     """Test various ways to construct an image with undefined bounds
@@ -530,8 +531,9 @@ def test_undefined_image():
         check_pickle(im1.view())
         check_pickle(im1.view(make_const=True))
 
+
 @timer
-def test_Image_FITS_IO():
+def test_Image_FITS_IO(run_slow):
     """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
@@ -618,7 +620,7 @@ def test_Image_FITS_IO():
         # These tests are a bit slow, so we only bother to run them for the first dtype
         # when doing the regular unit tests.  When running python test_image.py, all of them
         # will run, so when working on the code, it is a good idea to run the tests that way.
-        if i > 0 and __name__ != "__main__":
+        if i > 0 and not run_slow:
             continue
 
         test_file0 = test_file  # Save the name of the uncompressed file.
@@ -754,8 +756,9 @@ def test_Image_FITS_IO():
         im = galsim.fits.read(nowcs_file, suppress_warning=False)
     assert im.wcs == galsim.PixelScale(1.0)
 
+
 @timer
-def test_Image_MultiFITS_IO():
+def test_Image_MultiFITS_IO(run_slow):
     """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
@@ -915,7 +918,7 @@ def test_Image_MultiFITS_IO():
         # These tests are a bit slow, so we only bother to run them for the first dtype
         # when doing the regular unit tests.  When running python test_image.py, all of them
         # will run, so when working on the code, it is a good idea to run the tests that way.
-        if i > 0 and __name__ != "__main__":
+        if i > 0 and not run_slow:
             continue
 
         test_multi_file0 = test_multi_file
@@ -1082,7 +1085,7 @@ def test_Image_MultiFITS_IO():
 
 
 @timer
-def test_Image_CubeFITS_IO():
+def test_Image_CubeFITS_IO(run_slow):
     """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
@@ -1245,7 +1248,7 @@ def test_Image_CubeFITS_IO():
         # These tests are a bit slow, so we only bother to run them for the first dtype
         # when doing the regular unit tests.  When running python test_image.py, all of them
         # will run, so when working on the code, it is a good idea to run the tests that way.
-        if i > 0 and __name__ != "__main__":
+        if i > 0 and not run_slow:
             continue
 
         test_cube_file0 = test_cube_file
@@ -1468,6 +1471,7 @@ def test_Image_binary_add():
         # only be necessary to check once.
         with assert_raises(ValueError):
             image1 + image1.subImage(galsim.BoundsI(1,3,1,3))
+
 
 @timer
 def test_Image_binary_subtract():
@@ -2080,6 +2084,7 @@ def test_Image_inplace_scalar_pow():
         with assert_raises(TypeError):
             image1 **= image2
 
+
 @timer
 def test_Image_subImage():
     """Test that subImages are accessed and written correctly.
@@ -2183,6 +2188,7 @@ def make_subImage(file_name, bounds):
     stamp = full_im.subImage(bounds)
     return stamp
 
+
 @timer
 def test_subImage_persistence():
     """Test that a subimage is properly accessible even if the original image has gone out
@@ -2201,6 +2207,7 @@ def test_subImage_persistence():
     print('stamp2 = ',stamp2.array)
 
     np.testing.assert_array_equal(stamp1.array, stamp2.array)
+
 
 @timer
 def test_Image_resize():
@@ -2888,6 +2895,7 @@ def test_complex_image():
         check_pickle(im3_view)
         check_pickle(im4_view)
 
+
 @timer
 def test_complex_image_arith():
     """Additional arithmetic tests that are relevant for complex Image types
@@ -3048,6 +3056,7 @@ def test_complex_image_arith():
     image4 /= image3
     np.testing.assert_array_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageCD / ImageCD is not correct")
+
 
 @timer
 def test_int_image_arith():
@@ -3553,6 +3562,7 @@ def test_FITS_bad_type():
     # Don't forget to set it back to the original.
     setattr(galsim.Image,'valid_dtypes',orig_dtypes)
 
+
 @timer
 def test_bin():
     """Test the bin and subsample methods"""
@@ -3668,6 +3678,7 @@ def test_bin():
     np.testing.assert_almost_equal((origin6.x, origin6.y), (origin1.x, origin1.y), 6,
                                    "Binning past the edge resulted in wrong wcs")
 
+
 @timer
 def test_fpack():
     """Test the functionality that we advertise as being equivalent to fpack/funpack
@@ -3776,5 +3787,4 @@ def test_flips():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

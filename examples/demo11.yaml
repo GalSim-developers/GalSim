@@ -44,6 +44,7 @@
 # - image.noise : symmetrize
 # - wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)
 # - top level field eval_variables
+# - quantity letter type for eval variable.
 #
 # - Power spectrum shears and magnifications for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
@@ -74,8 +75,10 @@ eval_variables :
     # An unusual prefix: a = Angle.
     atheta : &theta 0.17 degrees
 
-    # tel_diam = the telescope diameter in meters.
-    ftel_diam : &tel_diam 4
+    # tel_diam = the telescope diameter.  Prefixing this with a 'q' means it is an
+    # astropy.units.Quantity.  We'll specify centimeters here, note the interaction with
+    # meters down below when we use it to calculate the scale_flux.
+    qtel_diam : &tel_diam 400 cm
 
     # exp_time = the exposure time in seconds.
     fexp_time : &exp_time 300
@@ -167,7 +170,7 @@ gal :
     #     noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec
     noise_pad_size : 11.3
 
-    # We will select a galaxy at random from the catalog. One could easily do this by setting 
+    # We will select a galaxy at random from the catalog. One could easily do this by setting
     # index : { type : Random }
     # but we will instead allow the catalog to choose a random galaxy for us.  It will remove any
     # selection effects involved in postage stamp creation using weights that are stored in the
@@ -192,7 +195,7 @@ gal :
         # second exposures.  The COSMOS galaxies have their flux set to be appropriate for HST
         # (a 2.4 m telescope with a linear obscuration factor of 0.33) with 1 second exposures.
         # So the flux should be scaled by (4**2/(2.4*(1-0.33**2))) * 300
-        "$(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
+        "$(tel_diam**2 / ((2.4*u.m)**2*(1.-0.33**2))) * exp_time"
 
 
 # Define some other information about the images

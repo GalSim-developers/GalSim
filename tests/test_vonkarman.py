@@ -25,10 +25,10 @@ from galsim_test_helpers import *
 
 
 @timer
-def test_vk():
+def test_vk(run_slow):
     """Test the generation of VonKarman profiles
     """
-    if __name__ == "__main__":
+    if run_slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.05, 0.15, 0.3]
         L0s = [1e10, 25.0, 10.0]
@@ -270,7 +270,7 @@ def vk_benchmark():
 
 
 @timer
-def test_vk_r0():
+def test_vk_r0(run_slow):
     """Test a special r0 value that resulted in an error, reported in issue #957.
 
     Note: the resolution of the bug was to add explicit split points for the first several
@@ -288,7 +288,7 @@ def test_vk_r0():
         vk = galsim.VonKarman(L0=25.,lam=700.,r0=r0)
         check_basic(vk, "VonKarman, r0=%s"%r0)
 
-    if __name__ == '__main__':
+    if run_slow:
         # Josh then tried a bunch more random triples of r0_500, lam, L0 to find more failures,
         # which are given in input/vk_fail.txt.
         r0_500_list, lam_list, L0_list = np.loadtxt('input/vk_fail.txt').T
@@ -379,8 +379,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--benchmark", action='store_true', help="Run timing benchmark")
 
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns, parser=parser)
-    args = parser.parse_args()
+    runtests(__file__, parser=parser)
+
+    args, unknown_args = parser.parse_known_args()
     if args.benchmark:
         vk_benchmark()

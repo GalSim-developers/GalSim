@@ -18,6 +18,7 @@
 
 import unittest
 import numpy as np
+import astropy.units as u
 import os
 import warnings
 
@@ -865,9 +866,9 @@ def test_dcr():
         'base_wavelength': base_wavelength,
         'HA': local_sidereal_time-obj_coord.ra,
         'latitude': '-30:14:23.76 deg',
-        'pressure': 72,
-        'temperature': 290,
-        'H2O_pressure': 0.9,
+        'pressure': 72*u.kPa,
+        'temperature': '290 K',
+        'H2O_pressure': '$900*u.Pa',
     }
     im5c = galsim.config.BuildImage(config)
     assert im5c == im5
@@ -1784,10 +1785,5 @@ def test_scale_wavelength():
     check_pickle(scale_wave)
 
 
-
 if __name__ == '__main__':
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    if no_astroplan:
-        print('Skipping test_dcr_angles, since astroplan not installed.')
-        testfns.remove(test_dcr_angles)
-    runtests(testfns)
+    runtests(__file__)

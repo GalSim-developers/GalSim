@@ -356,7 +356,7 @@ def test_knots_hlr():
             assert abs(mn-hlr) < nstd*std_check, mess
 
 @timer
-def test_knots_transform():
+def test_knots_transform(run_slow):
     """Test that overridden transformations give equivalent results as the normal methods.
     """
     def test_op(rw, op):
@@ -373,7 +373,7 @@ def test_knots_transform():
         np.testing.assert_almost_equal(im1.array, im2.array, decimal=3,
                                        err_msg='RandomKnots with op '+op)
 
-    if __name__ == '__main__':
+    if run_slow:
         npoints = 20
     else:
         npoints = 3  # Not too many, so this test doesn't take forever.
@@ -383,7 +383,7 @@ def test_knots_transform():
     rw = galsim.RandomKnots(npoints, profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
                             rng=rng)
 
-    if __name__ == '__main__':
+    if run_slow:
         # First relatively trivial tests of no ops
         test_op(rw, 'withScaledFlux(1.0)')
         test_op(rw, 'expand(1.0)')
@@ -406,7 +406,7 @@ def test_knots_transform():
     test_op(rw, 'shift(0.3, 0.9)')
     test_op(rw, '_shift(-0.3, 0.2)')
 
-    if __name__ == '__main__':
+    if run_slow:
         # A couple more that are currently not overridden, but call out to the above functions.
         test_op(rw, 'magnify(1.2)')
         test_op(rw, 'lens(0.03, 0.07, 1.12)')
@@ -435,5 +435,4 @@ def test_knots_sed():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

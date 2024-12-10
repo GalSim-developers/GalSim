@@ -68,6 +68,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
+    'sphinx.ext.intersphinx',
     'breathe',
     'gh-link',
 ]
@@ -76,6 +77,11 @@ extensions = [
 breathe_projects = {"GalSim": "doxygen_output/xml"}
 breathe_default_project = "GalSim"
 breathe_default_members = ('members', 'undoc-members')
+
+# Link to astropy
+intersphinx_mapping = {
+    'astropy': ('http://docs.astropy.org/en/stable/', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']

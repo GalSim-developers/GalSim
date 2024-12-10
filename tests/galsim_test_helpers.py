@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import pytest
 import numpy as np
 import galsim
 
@@ -465,24 +466,26 @@ def drawNoise(noise):
     return im.array.astype(np.float32).tolist()
 
 
-def runtests(testfns, parser=None):
+# Define a fixture to check if the tests were run via python script
+@pytest.fixture
+def run_slow(pytestconfig):
+    return pytestconfig.getoption("--run_slow", default=False)
+
+
+def runtests(filename, parser=None):
     if parser is None:
         from argparse import ArgumentParser
         parser = ArgumentParser()
-    parser.add_argument('-k', type=str, help='Run only the tests that match the given substring expression.')
     parser.add_argument('--profile', action='store_true', help='Profile tests')
     parser.add_argument('--prof_out', default=None, help="Profiler output file")
-    args = parser.parse_args()
+    args, unknown_args = parser.parse_known_args()
+    pytest_args = [filename] + unknown_args + ["--run_slow", "--tb=short", "-s"]
 
     if args.profile:
         import cProfile, pstats
         pr = cProfile.Profile()
         pr.enable()
-
-    for testfn in testfns:
-        if args.k is None or args.k in testfn.__name__:
-            testfn()
-
+    pytest.main(pytest_args)
     if args.profile:
         pr.disable()
         ps = pstats.Stats(pr).sort_stats('tottime')

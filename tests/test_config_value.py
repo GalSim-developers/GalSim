@@ -17,6 +17,7 @@
 #
 
 import numpy as np
+import astropy.units as u
 import math
 
 import galsim
@@ -1686,6 +1687,8 @@ def test_eval():
                              'ddct' : { 'a' : 1, 'b' : 2 },
                              'llst' : [ 1.5, 1.0, 0.5 ],
                              'xlit_two' : 2,
+                             'qlength' : 1.8*u.m,
+                             'upint' : u.imperial.pint,
                            },
         # Shorthand notation with $
         'eval4' : '$np.exp(-0.5 * y**2)',
@@ -1713,11 +1716,12 @@ def test_eval():
         # Can access the input object as a current.
         'eval21' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * ((@input.catalog).nobjects*0.6)**2)' },
         'eval22' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * (@input.dict["f"]*18)**2)' },
+        'eval23' : { 'type' : 'Eval', 'str' : 'np.exp(-pint/u.imperial.quart * length.to_value(u.m)**2)' },
 
         # Some that raise exceptions
         'bad1' : { 'type' : 'Eval', 'str' : 'npexp(-0.5)' },
         'bad2' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'x' : 1.8 },
-        'bad3' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'qx' : 1.8 },
+        'bad3' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'wx' : 1.8 },
         'bad4' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * q**2)', 'fx' : 1.8 },
         'bad5' : { 'type' : 'Eval', 'eval_str' : 'np.exp(-0.5 * x**2)', 'fx' : 1.8 },
 
@@ -1753,14 +1757,14 @@ def test_eval():
 
     galsim.config.ProcessInput(config)
     true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
-    for i in range(1,23):
+    for i in range(1,24):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
         print('i = ',i, 'val = ',test_val,true_val)
         np.testing.assert_almost_equal(test_val, true_val)
 
     # Doing it again uses saved _value and _fn
     galsim.config.RemoveCurrent(config)
-    for i in range(1,22):
+    for i in range(1,24):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
         print('i = ',i, 'val = ',test_val,true_val)
         np.testing.assert_almost_equal(test_val, true_val)
@@ -1922,6 +1926,102 @@ def test_eval():
     np.testing.assert_almost_equal(ps_mu, mu)
 
 
+def test_quantity():
+    import astropy.units as u
+    config = {
+        'length': 1.0 * u.m,
+        'length2': '1.0 m',
+        'length3': '100.0 cm',
+        'length4': {
+            'type': 'Quantity',
+            'value': 0.001,
+            'unit': 'km',
+        },
+        'length5': {
+            'type': 'Quantity',
+            'value': 0.001,
+            'unit': u.km,
+        },
+        'length6': '$1.0 * u.m',
+        'length7': '10 kg',  # Not a length!
+        'length8': {
+            'type': 'Quantity',
+            'value': {
+                'type': 'Random',
+                'min': 0.0,
+                'max': 1.0,
+            },
+            'unit': 'm',
+        },
+        'length9': {
+            'type': 'Sum',
+            'items': [
+                {
+                    'type': 'Quantity',
+                    'value': 1.0,
+                    'unit': 'm',
+                },
+                {
+                    'type': 'Quantity',
+                    'value': 1.0,
+                    'unit': 'cm',
+                }
+            ]
+        },
+        'length10': {
+            'type': 'Current',
+            'key': 'length',
+        },
+    }
+
+    value, _ = galsim.config.ParseValue(config, 'length', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length2', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length3', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length4', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length5', config, u.Quantity)
+    assert value == 1.0 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length6', config, u.Quantity)
+    assert value == 1.0 * u.m
+    # We can demand a Quantity, but there's currently no way to demand a
+    # particular dimensionality.  So this one just yields a mass.
+    value, _ = galsim.config.ParseValue(config, 'length7', config, u.Quantity)
+    assert value == 10 * u.kg
+    value, _ = galsim.config.ParseValue(config, 'length8', config, u.Quantity)
+    assert 0 <= value.value <= 1.0
+    assert value.unit == u.m
+    value, _ = galsim.config.ParseValue(config, 'length9', config, u.Quantity)
+    assert value == 1.01 * u.m
+    value, _ = galsim.config.ParseValue(config, 'length10', config, u.Quantity)
+    assert value == 1.0 * u.m
+
+
+def test_astropy_unit():
+    import astropy.units as u
+    config = {
+        'mass1': u.kg,
+        'mass2': 'kg',
+        'mass3': '$u.kg',
+        'mass4': {
+            'type': 'Unit',
+            'unit': 'kg',
+        },
+        'area1': 'm^2',
+        'area2': '$u.m * u.m',
+        'area3': '$u.m**2'
+    }
+
+    for k in ['mass1', 'mass2', 'mass3', 'mass4']:
+        value, _ = galsim.config.ParseValue(config, k, config, u.Unit)
+        assert value == u.kg
+
+    for k in ['area1', 'area2', 'area3']:
+        value, _ = galsim.config.ParseValue(config, k, config, u.Unit)
+        assert value == u.m**2
+
+
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

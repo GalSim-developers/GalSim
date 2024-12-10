@@ -138,7 +138,7 @@ def test_args():
         galsim.main.parse_args([config_file, '-j', '3'])
 
     # The ones handled by ArgumentParser raise SystemExit and print to stderr
-    # To avoid ugly text output during nosetests runs, redirect stderr to stdout for a moment.
+    # To avoid ugly text output during pytest runs, redirect stderr to stdout for a moment.
     sys_stderr = sys.stderr
     sys.stderr = sys.stdout
     with assert_raises(SystemExit):
@@ -319,5 +319,4 @@ def test_process():
         assert os.path.exists(file_name)
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

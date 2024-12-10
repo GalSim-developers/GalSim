@@ -29,6 +29,10 @@ pp_file = 'sample_pupil_rolled.fits'
 
 theta0 = (0*galsim.arcmin, 0*galsim.arcmin)
 
+# The timing tests can be unreliable in environments with other processes running at the
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 
 @timer
 def test_aperture():
@@ -112,10 +116,10 @@ def test_atm_screen_size():
 
 
 @timer
-def test_structure_function():
+def test_structure_function(run_slow):
     """Test that AtmosphericScreen generates the right structure function.
     """
-    if __name__ == '__main__':
+    if run_slow:
         L0s = [10.0, 25.0, 100.0]
         screen_size = 300.0
     else:
@@ -687,7 +691,7 @@ def test_ne():
 
 
 @timer
-def test_phase_gradient_shoot():
+def test_phase_gradient_shoot(run_slow):
     """Test that photon-shooting PSFs match Fourier optics PSFs when using the same phase screens,
     and also match the expected size from an analytic VonKarman-convolved-with-Airy PSF.
     """
@@ -700,14 +704,14 @@ def test_phase_gradient_shoot():
 
     # Ideally, we'd use as small a screen scale as possible here.  The runtime for generating
     # phase screens scales like `screen_scale`^-2 though, which is pretty steep, so we use a larger-
-    # than-desireable scale for the __name__ != '__main__' branch.  This is known to lead to a bias
+    # than-desireable scale for the not run_slow branch.  This is known to lead to a bias
     # in PSF size, which we attempt to account for below when actually comparing FFT PSF moments to
     # photon-shooting PSF moments.  Note that we don't need to apply such a correction when
     # comparing the photon-shooting PSF to the analytic VonKarman PSF since these both avoid the
     # screen_scale problem to begin with.  (Even though we do generate screens for the
     # photon-shooting PSF, because we truncate the power spectrum above kcrit, we don't require as
     # high of resolution).
-    if __name__ == '__main__':
+    if run_slow:
         screen_scale = 0.025 # m
     else:
         screen_scale = 0.1 # m
@@ -760,7 +764,7 @@ def test_phase_gradient_shoot():
     u.generate(ys)
     thetas = [(x*galsim.degrees, y*galsim.degrees) for x, y in zip(xs, ys)]
 
-    if __name__ == '__main__':
+    if run_slow:
         exptime = 15.0
         time_step = 0.05
         centroid_tolerance = 0.08
@@ -1018,7 +1022,8 @@ def test_speedup():
     psf.drawImage(method='phot', n_photons=1e3)
     t1 = time.time()
     print("Time for geometric approximation draw: {:6.4f}s".format(t1-t0))
-    assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
+    if test_timing:
+        assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 
 @timer
@@ -1192,7 +1197,7 @@ def dummyWork(i, atm):
 
 
 @timer
-def test_shared_memory():
+def test_shared_memory(run_slow):
     """Test that shared memory hooks to AtmosphericScreen work.
     """
     import multiprocessing as mp
@@ -1223,7 +1228,7 @@ def test_shared_memory():
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
 
-    if __name__ == "__main__":
+    if run_slow:
         ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
     else:
         ctxs = [None, mp.get_context("fork")]
@@ -1489,9 +1494,9 @@ def test_user_screen():
 
 
 @timer
-def test_uv_persistence():
+def test_uv_persistence(run_slow):
     from scipy.spatial.distance import cdist
-    if __name__ == '__main__':
+    if run_slow:
         nphot = 1000000
     else:
         nphot = 1000
@@ -1535,6 +1540,7 @@ def test_t_persistence():
     assert np.min(photons.time) > 10.0
     assert np.max(photons.time) < 25.0
 
+
 @timer
 def test_convolve_phasepsf():
     # This snippet didn't use to be allowed, since the two psfs populate different
@@ -1552,6 +1558,6 @@ def test_convolve_phasepsf():
     # The main thing is that it works.  But check that flux makes sense.
     assert im.array.sum() == 10
 
+
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
-    runtests(testfns)
+    runtests(__file__)

@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from astropy.units import Quantity, Unit
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -60,6 +61,16 @@ def ParseValue(config, key, base, value_type):
         the tuple (value, safe).
     """
     from .gsobject import BuildGSObject
+
+    if isinstance(value_type, tuple):
+        for vt in value_type:
+            try:
+                return ParseValue(config, key, base, vt)
+            except (GalSimConfigError, TypeError):
+                pass
+        else:
+            raise GalSimConfigError(
+                "Could not parse %s as any of types %s."%(key, value_type))
 
     # Special: if the "value_type" is GSObject, then switch over to that builder instead.
     if value_type is GSObject:
@@ -777,6 +788,21 @@ def _GenerateFromCurrent(config, base, value_type):
         raise GalSimConfigError("%s\nError generating Current value with key = %s"%(e,k))
 
 
+def _GenerateFromQuantity(config, base, value_type):
+    """Return a Quantity from a value and a unit
+    """
+    req = { 'value' : float, 'unit' : str }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    return Quantity(kwargs['value'], kwargs['unit']), safe
+
+
+def _GenerateFromUnit(config, base, value_type):
+    """Return a Unit from a string
+    """
+    req = { 'unit' : str }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    return Unit(kwargs['unit']), safe
+
 def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
@@ -825,8 +851,8 @@ RegisterValueType('List', _GenerateFromList,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable ])
 RegisterValueType('Current', _GenerateFromCurrent,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable,
-                    dict, list, None ])
-RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD ])
+                    dict, list, None, Quantity, Unit ])
+RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD, Quantity ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
 RegisterValueType('FormattedStr', _GenerateFromFormattedStr, [ str ])
@@ -845,3 +871,5 @@ RegisterValueType('XY', _GenerateFromXY, [ PositionD ])
 RegisterValueType('RTheta', _GenerateFromRTheta, [ PositionD ])
 RegisterValueType('RADec', _GenerateFromRADec, [ CelestialCoord ])
 RegisterValueType('File', _GenerateFromFile, [ LookupTable ])
+RegisterValueType('Quantity', _GenerateFromQuantity, [ Quantity ])
+RegisterValueType('Unit', _GenerateFromUnit, [ Unit ])

@@ -81,6 +81,7 @@ def main(argv):
         observation.  However, we whiten the noise of the final image so the final image has
         stationary Gaussian noise, rather than correlated noise.
     """
+    import astropy.units as u
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
 
@@ -95,7 +96,10 @@ def main(argv):
                                       # (This corresponds to 8 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum
                                       # realization (arcsec)
-    tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
+    tel_diam = 400*u.cm               # Let's figure out the flux for a 4 m class telescope.  We'll
+                                      # also show how astropy units can be used here (see especially
+                                      # the eval_variables section of the yaml version of this
+                                      # demo).
     exp_time = 300                    # exposing for 300 seconds.
     center_ra = 19.3*galsim.hours     # The RA, Dec of the center of the image on the sky
     center_dec = -33.1*galsim.degrees
@@ -106,7 +110,7 @@ def main(argv):
     # is 2.4 but there is obscuration (a linear factor of 0.33).  Here, we assume that the telescope
     # we're simulating effectively has no obscuration factor.  We're also ignoring the pi/4 factor
     # since it appears in the numerator and denominator, so we use area = diam^2.
-    hst_eff_area = 2.4**2 * (1.-0.33**2)
+    hst_eff_area = (2.4*u.m)**2 * (1.-0.33**2)
     flux_scaling = (tel_diam**2/hst_eff_area) * exp_time
 
     # random_seed is used for both the power spectrum realization and the random properties
