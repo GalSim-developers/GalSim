@@ -527,6 +527,11 @@ def test_k_limits(run_slow):
             total_flux = np.sum(test_image.array)
             assert (total_flux-contained_flux)/total_flux <= gsparams.folding_threshold
 
+            # Check that stepk and maxk scale correctly with size
+            test_profile2 = get_prof(mode, inc_angle * galsim.radians,
+                                     5*scale_radius, 5*scale_height)
+            np.testing.assert_almost_equal(test_profile2.maxk, test_profile.maxk/5)
+            np.testing.assert_almost_equal(test_profile2.stepk, test_profile.stepk/5)
 
 @timer
 def test_eq_ne():
