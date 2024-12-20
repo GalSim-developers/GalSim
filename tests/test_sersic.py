@@ -486,6 +486,90 @@ def test_sersic_1():
         np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(sersic.kValue(pos), expon.kValue(pos), decimal=5)
 
+@timer
+def test_sersic_properties():
+    """Test some basic properties of the Sersic profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_flux = 1.8
+    test_hlr = 2.3
+    test_scale_radius_trunc = 0.04559626861897289
+    test_scale_radius_notrunc = 0.009526646777227634
+    test_n = 3.1
+    prof = galsim.Sersic(n=test_n, half_light_radius=test_hlr, trunc=2*test_hlr, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(prof.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(prof.maxk, 24.663782559047256)
+    np.testing.assert_almost_equal(prof.stepk, 0.6829549246934334)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 1.0238648164347117)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius_trunc)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Now create the same profile using scale_radius
+    prof = galsim.Sersic(n=test_n, scale_radius=test_scale_radius_trunc, trunc=2*test_hlr,
+                         flux=test_flux)
+    np.testing.assert_almost_equal(prof.maxk, 24.663782559047256)
+    np.testing.assert_almost_equal(prof.stepk, 0.6829549246934334)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 1.0238648164347117)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius_trunc)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Check that stepk and maxk scale correctly with radius
+    prof2 = galsim.Sersic(n=test_n, half_light_radius=5*test_hlr, trunc=5*2*test_hlr)
+    np.testing.assert_almost_equal(prof2.maxk, prof.maxk/5)
+    np.testing.assert_almost_equal(prof2.stepk, prof.stepk/5)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        prof3 = galsim.Sersic(n=test_n, half_light_radius=test_hlr, trunc=2*test_hlr, flux=inFlux)
+        outFlux = prof3.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+    # Repeat without truncation
+    prof = galsim.Sersic(n=test_n, half_light_radius=test_hlr, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_almost_equal(prof.maxk, 50.35677579928042)
+    np.testing.assert_almost_equal(prof.stepk, 0.08358929429681608)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 6.010654623502727)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius_notrunc)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Now create the same profile using scale_radius
+    prof = galsim.Sersic(n=test_n, scale_radius=test_scale_radius_notrunc, flux=test_flux)
+    np.testing.assert_almost_equal(prof.maxk, 50.35677579928042)
+    np.testing.assert_almost_equal(prof.stepk, 0.08358929429681608)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 6.010654623502727)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius_notrunc)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Check that stepk and maxk scale correctly with radius
+    prof2 = galsim.Sersic(n=test_n, half_light_radius=5*test_hlr)
+    np.testing.assert_almost_equal(prof2.maxk, prof.maxk/5)
+    np.testing.assert_almost_equal(prof2.stepk, prof.stepk/5)
+
 
 @timer
 def test_sersic_shoot():
