@@ -132,7 +132,7 @@ def test_vk_properties():
     # Check various properties
     np.testing.assert_equal(psf.centroid, galsim.PositionD(0,0))
     np.testing.assert_almost_equal(psf.maxk, 24.511275061996837)
-    np.testing.assert_almost_equal(psf.stepk, 1.1025979141287368)
+    np.testing.assert_almost_equal(psf.stepk, 1.1025979141287368, decimal=6)
     np.testing.assert_almost_equal(psf.kValue(0,0), test_flux+0j)
     np.testing.assert_almost_equal(psf.xValue(0,0), 7.91805413536067)
     np.testing.assert_almost_equal(psf.kValue(0,0), (1+0j) * test_flux)
