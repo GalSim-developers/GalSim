@@ -150,7 +150,7 @@ def test_gaussian_properties():
     np.testing.assert_almost_equal(gauss.xValue(cen), gauss.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
+        gauss = galsim.Gaussian(flux=inFlux, sigma=test_sigma)
         outFlux = gauss.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
 
@@ -169,6 +169,10 @@ def test_gaussian_properties():
     assert_raises(TypeError, gauss.xValue, cen.x, cen.y, invalid=True)
     assert_raises(TypeError, gauss.xValue, pos=cen)
 
+    # Check that stepk and maxk scale correctly with radius
+    gauss2 = galsim.Gaussian(flux=test_flux, sigma=5*test_sigma)
+    np.testing.assert_almost_equal(gauss2.maxk, gauss.maxk/5)
+    np.testing.assert_almost_equal(gauss2.stepk, gauss.stepk/5)
 
 
 @timer

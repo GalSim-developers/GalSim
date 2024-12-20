@@ -241,6 +241,67 @@ def test_tophat():
                 approx_maxsb=True, scale=0.2)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
+@timer
+def test_box_properties():
+    """Test some basic properties of the Box profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_flux = 17.9
+    box = galsim.Box(width=0.2, height=0.25, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(box.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(box.maxk, 10000)
+    np.testing.assert_almost_equal(box.stepk, 12.566370614359172)
+    np.testing.assert_almost_equal(box.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(box.xValue(0,0), 358.0)
+    np.testing.assert_almost_equal(box.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(box.flux, test_flux)
+    np.testing.assert_almost_equal(box.xValue(0,0), box.max_sb)
+
+    # Check that stepk and maxk scale correctly with lam/D
+    box2 = galsim.Box(width=5*0.2, height=5*0.25, flux=test_flux)
+    np.testing.assert_almost_equal(box2.maxk, box.maxk/5)
+    np.testing.assert_almost_equal(box2.stepk, box.stepk/5)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        box3 = galsim.Box(width=0.2, height=0.25, flux=inFlux)
+        outFlux = box3.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+
+@timer
+def test_tophat_properties():
+    """Test some basic properties of the TopHat profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_flux = 17.9
+    tophat = galsim.TopHat(radius=0.23, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(tophat.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(tophat.maxk, 593.7252723959091)
+    np.testing.assert_almost_equal(tophat.stepk, 13.659098493868665)
+    np.testing.assert_almost_equal(tophat.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(tophat.xValue(0,0), 107.70788209243577)
+    np.testing.assert_almost_equal(tophat.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(tophat.flux, test_flux)
+    np.testing.assert_almost_equal(tophat.xValue(0,0), tophat.max_sb)
+
+    # Check that stepk and maxk scale correctly with lam/D
+    tophat2 = galsim.TopHat(radius=5*0.23, flux=test_flux)
+    np.testing.assert_almost_equal(tophat2.maxk, tophat.maxk/5)
+    np.testing.assert_almost_equal(tophat2.stepk, tophat.stepk/5)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        tophat3 = galsim.TopHat(radius=0.2, flux=inFlux)
+        outFlux = tophat3.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
 
 @timer
 def test_box_shoot():

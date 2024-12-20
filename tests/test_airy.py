@@ -223,6 +223,39 @@ def test_airy_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 @timer
+def test_airy_properties():
+    """Test some basic properties of the Airy profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_loD = 1.9
+    test_obscuration = 0.32
+    test_flux = 17.9
+    psf = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
+
+    # Check various properties
+    np.testing.assert_equal(psf.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(psf.maxk, 3.306939635357677)
+    np.testing.assert_almost_equal(psf.stepk, 0.027742458082373515)
+    np.testing.assert_almost_equal(psf.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(psf.xValue(0,0), 3.4955744341366577)
+    np.testing.assert_almost_equal(psf.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(psf.flux, test_flux)
+    np.testing.assert_almost_equal(psf.xValue(0,0), psf.max_sb)
+
+    # Check that stepk and maxk scale correctly with lam/D
+    psf2 = galsim.Airy(lam_over_diam=5*test_loD, flux=test_flux, obscuration=test_obscuration)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    np.testing.assert_almost_equal(psf2.stepk, psf.stepk/5)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        psf3 = galsim.Airy(lam_over_diam=test_loD, flux=inFlux, obscuration=test_obscuration)
+        outFlux = psf3.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+
+@timer
 def test_airy_shoot():
     """Test Airy with photon shooting.  Particularly the flux of the final image.
     """

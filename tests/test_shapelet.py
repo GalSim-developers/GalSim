@@ -180,6 +180,10 @@ def test_shapelet_properties():
     assert_raises(TypeError, galsim.Shapelet, order=order, bvec=bvec)
     assert_raises(ValueError, galsim.Shapelet, sigma=sigma, order=5, bvec=bvec)
 
+    # Check that stepk and maxk scale correctly with radius
+    shapelet2 = galsim.Shapelet(sigma=5*sigma, order=order, bvec=bvec)
+    np.testing.assert_almost_equal(shapelet2.maxk, shapelet.maxk/5)
+    np.testing.assert_almost_equal(shapelet2.stepk, shapelet.stepk/5)
 
 @timer
 def test_shapelet_fit():
