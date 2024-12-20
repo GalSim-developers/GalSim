@@ -106,23 +106,89 @@ def test_spergel():
 def test_spergel_properties():
     """Test some basic properties of the Spergel profile.
     """
+    # Unlike some other similar tests that go back to Gary's original code, this one is based
+    # on v2.3.5, the earliest version that was easy for me to go back to and install.
+    # I also slightly modified the code for stepk and maxk to use the old _sbp version,
+    # since the Python version was already buggy at this point. (Inspired by issue #1324.)
+
     test_flux = 17.9
-    spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
-    # Check that we are centered on (0, 0)
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(spergel.centroid, cen)
-    # # Check Fourier properties
-    np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    maxk = spergel.maxk
-    assert spergel.kValue(maxk,0).real/test_flux <= galsim.GSParams().maxk_threshold
-    np.testing.assert_almost_equal(spergel.flux, test_flux)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
+    test_hlr = 2.3
+    test_scale_radius = 1.6003703593406464
+    test_nu = 0.2  # Note: nu<=0 has xValue(0,0) = inf.
+    prof = galsim.Spergel(nu=test_nu, half_light_radius=test_hlr, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(prof.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(prof.maxk, 11.094091231317272)
+    np.testing.assert_almost_equal(prof.stepk, 0.2731819698773733)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 2.7808154838921206)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Now create the same profile using scale_radius
+    prof = galsim.Spergel(nu=test_nu, scale_radius=test_scale_radius, flux=test_flux)
+    np.testing.assert_almost_equal(prof.maxk, 11.094091231317272)
+    np.testing.assert_almost_equal(prof.stepk, 0.2731819698773733)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), 2.7808154838921206)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.xValue(0,0), prof.max_sb)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Check that stepk and maxk scale correctly with radius
+    prof2 = galsim.Spergel(nu=test_nu, half_light_radius=5*test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(prof2.maxk, prof.maxk/5)
+    np.testing.assert_almost_equal(prof2.stepk, prof.stepk/5)
+
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
-        outFlux = spergel.flux
+        prof3 = galsim.Spergel(nu=test_nu, half_light_radius=test_hlr, flux=inFlux)
+        outFlux = prof3.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
-        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
+
+    # Repeat with nu < 0
+    test_scale_radius2 = 2.1783499913527824
+    test_nu2 = -0.2
+    prof = galsim.Spergel(nu=test_nu2, half_light_radius=test_hlr, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(prof.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(prof.maxk, 34.42181161305098)
+    np.testing.assert_almost_equal(prof.stepk, 0.23712261251942787)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), np.inf)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.max_sb, np.inf)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius2)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Now create the same profile using scale_radius
+    prof = galsim.Spergel(nu=test_nu2, scale_radius=test_scale_radius2, flux=test_flux)
+    np.testing.assert_almost_equal(prof.maxk, 34.42181161305098)
+    np.testing.assert_almost_equal(prof.stepk, 0.23712261251942787)
+    np.testing.assert_almost_equal(prof.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+    np.testing.assert_almost_equal(prof.xValue(0,0), np.inf)
+    np.testing.assert_almost_equal(prof.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(prof.flux, test_flux)
+    np.testing.assert_almost_equal(prof.max_sb, np.inf)
+    np.testing.assert_almost_equal(prof.scale_radius, test_scale_radius2)
+    np.testing.assert_almost_equal(prof.half_light_radius, test_hlr)
+
+    # Check that stepk and maxk scale correctly with radius
+    prof2 = galsim.Spergel(nu=test_nu2, half_light_radius=5*test_hlr, flux=test_flux)
+    np.testing.assert_almost_equal(prof2.maxk, prof.maxk/5)
+    np.testing.assert_almost_equal(prof2.stepk, prof.stepk/5)
 
 
 @timer

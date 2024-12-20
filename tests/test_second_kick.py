@@ -157,6 +157,40 @@ def test_limiting_cases():
             atol=1e-4)
 
 @timer
+def test_sk_properties():
+    """Test some basic properties of the SecondKick profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_flux = 1.8
+    sk = galsim.SecondKick(lam=500, r0=0.2, diam=8, obscuration=0.6, kcrit=2, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(sk.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(sk.maxk, 487.3878716587337)
+    np.testing.assert_almost_equal(sk.stepk, 1.5080215526716452)
+    np.testing.assert_almost_equal(sk.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(sk.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sk.flux, test_flux)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        skFlux = galsim.SecondKick(lam=500, r0=0.2, diam=8, obscuration=0.6, kcrit=2, flux=inFlux)
+        outFlux = skFlux.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+    # Check that stepk and maxk scale correctly with r0,L0
+    sk2 = galsim.SecondKick(lam=500, r0=0.2/5, diam=8/5, obscuration=0.6, kcrit=2, flux=test_flux)
+    np.testing.assert_almost_equal(sk2.maxk, sk.maxk/5)
+    np.testing.assert_almost_equal(sk2.stepk, sk.stepk/5)
+
+    # Equivalent if scale lam instead.
+    sk2 = galsim.SecondKick(lam=5*500, r0=0.2, diam=8, obscuration=0.6, kcrit=2, flux=test_flux)
+    np.testing.assert_almost_equal(sk2.maxk, sk.maxk/5)
+    np.testing.assert_almost_equal(sk2.stepk, sk.stepk/5)
+
+
+@timer
 def test_sk_phase_psf(run_slow):
     """Test that analytic second kick profile matches what can be obtained from PhaseScreenPSF with
     an appropriate truncated power spectrum.

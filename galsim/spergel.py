@@ -205,7 +205,7 @@ class Spergel(GSObject):
 
     @property
     def _stepk(self):
-        R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold) * self._r0
+        R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold)
         # Go to at least 5*hlr
         R = max(R, self.gsparams.stepk_minimum_hlr * self.half_light_radius)
         return math.pi / R

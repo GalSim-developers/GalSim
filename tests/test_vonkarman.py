@@ -121,6 +121,44 @@ def test_vk_scale():
 
 
 @timer
+def test_vk_properties():
+    """Test some basic properties of the VonKarman profile.
+    """
+    # Regression test based on v2.3.5 version of the code.
+
+    test_flux = 1.8
+    psf = galsim.VonKarman(lam=500, r0=0.2, L0=25.0, flux=test_flux)
+
+    # Check various properties
+    np.testing.assert_equal(psf.centroid, galsim.PositionD(0,0))
+    np.testing.assert_almost_equal(psf.maxk, 24.511275061996837)
+    np.testing.assert_almost_equal(psf.stepk, 1.1025979141287368)
+    np.testing.assert_almost_equal(psf.kValue(0,0), test_flux+0j)
+    np.testing.assert_almost_equal(psf.xValue(0,0), 7.91805413536067)
+    np.testing.assert_almost_equal(psf.kValue(0,0), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(psf.flux, test_flux)
+    np.testing.assert_almost_equal(psf.xValue(0,0), psf.max_sb)
+
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        psfFlux = galsim.VonKarman(lam=500, r0=0.2, L0=25.0, flux=inFlux)
+        outFlux = psfFlux.flux
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+    # Check that stepk and maxk scale correctly with r0,L0
+    psf2 = galsim.VonKarman(lam=500, r0=0.2/5, L0=25.0/5, flux=test_flux)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    # This is not exact, since it's a computed quantity from the lookup table, so only
+    # equal to about 1%.
+    np.testing.assert_allclose(psf2.stepk, psf.stepk/5, rtol=0.01)
+
+    # Equivalent if scale lam instead.
+    psf2 = galsim.VonKarman(lam=5*500, r0=0.2, L0=25.0, flux=test_flux)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    np.testing.assert_allclose(psf2.stepk, psf.stepk/5, rtol=0.01)
+
+
+@timer
 def test_vk_shoot():
     """Test VonKarman with photon shooting.  Particularly the flux of the final image.
     """
