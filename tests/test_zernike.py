@@ -1568,5 +1568,56 @@ def test_dz_mean():
         )
 
 
+def test_large_j(run_slow):
+    # The analytic form for an annular Zernike of the form (n, m) = (n, n) or (n, -n)
+    # is:
+    #   r^n sincos(n theta) sqrt((2n+2) / sum_i=0^n-1 eps^(2i))
+    # where sincos is sin if n is even and cos if n is odd, and eps = R_inner/R_outer.
+
+    rng = galsim.BaseDeviate(1234).as_numpy_generator()
+    x = rng.uniform(-1.0, 1.0, size=100)
+    y = rng.uniform(-1.0, 1.0, size=100)
+
+    R_outer = 1.0
+    R_inner = 0.5
+    eps = R_inner/R_outer
+
+    test_vals = [
+        (10, 1e-12),  # Z66
+        (20, 1e-12),  # Z231
+        (40, 1e-9),   # Z861
+    ]
+    if run_slow:
+        test_vals += [
+            (60, 1e-6),   # Z1891
+            (80, 1e-3),  # Z3321
+            # (100, 10),  # Z5151  # This one is catastrophic failure!
+        ]
+
+    print()
+    for n, tol in test_vals:
+        j = np.sum(np.arange(n+2))
+        n, m = galsim.zernike.noll_to_zern(j)
+        print(f"Z{j} => (n, m) = ({n}, {n})")
+        coefs = np.zeros(j+1)
+        coefs[j] = 1.0
+        zk = Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
+
+        def analytic_zk(x, y):
+            r = np.hypot(x, y)
+            theta = np.arctan2(y, x)
+            factor = np.sqrt((2*n+2) / np.sum([eps**(2*i) for i in range(n+1)]))
+            if m > 0:
+                return r**n * np.cos(n*theta) * factor
+            else:
+                return r**n * np.sin(n*theta) * factor
+
+        np.testing.assert_allclose(
+            zk(x, y),
+            analytic_zk(x, y),
+            atol=tol, rtol=tol
+        )
+
+
 if __name__ == "__main__":
     runtests(__file__)

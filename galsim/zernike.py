@@ -387,7 +387,7 @@ def __annular_zern_rho_coefs(n, m, eps):
             if i % 2 == 1: continue
             j = i // 2
             more_coefs = (norm**j) * binomial(-eps**2, 1, j)
-            out[0:i+1:2] += coef*more_coefs
+            out[0:i+1:2] += float(coef)*more_coefs
     elif m == n:  # Equation (25)
         norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
         out[n] = norm
