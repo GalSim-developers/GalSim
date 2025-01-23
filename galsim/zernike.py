@@ -1215,6 +1215,20 @@ class DoubleZernike:
                     assert np.shape(x) == np.shape(u)
                     return horner4d(u, v, x, y, self._coef_array_uvxy)
 
+    def xycoef(self, u, v):
+        """Return the xy Zernike coefficients for a given uv point or points.
+
+        Parameters:
+            u, v: float or array.  UV point(s).
+
+        Returns:
+            [npoint, jmax] array.  Zernike coefficients for the given UV point(s).
+        """
+        uu, vv = np.broadcast_arrays(u, v)
+        out = np.array([z(uu, vv) for z in self._xy_series]).T
+        out[..., 0] = 0.0  # Zero out piston term
+        return out
+
     def __neg__(self):
         """Negate a DoubleZernike."""
         if 'coef' in self.__dict__:
