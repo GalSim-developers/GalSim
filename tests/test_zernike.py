@@ -876,6 +876,21 @@ def test_dz_val():
                 atol=2e-13, rtol=0
             )
 
+        zk_coefs = dz.xycoef(*uv_vector)
+        for zk, c in zip(zk_list, zk_coefs):
+            # Zk may have trailing zeros...
+            ncoef = len(c)
+            np.testing.assert_allclose(
+                zk.coef[:ncoef],
+                c,
+                atol=2e-13, rtol=0
+            )
+        for i, (u, v) in enumerate(zip(*uv_vector)):
+            np.testing.assert_equal(
+                zk_coefs[i],
+                dz.xycoef(u, v)
+            )
+
         # Check asserts
         with assert_raises(AssertionError):
             dz(0.0, [1.0])
