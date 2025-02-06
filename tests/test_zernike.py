@@ -1596,9 +1596,10 @@ def test_large_j(run_slow):
 
     print()
     for n, tol in test_vals:
-        j = np.sum(np.arange(n+2))
-        n, m = galsim.zernike.noll_to_zern(j)
-        print(f"Z{j} => (n, m) = ({n}, {n})")
+        j = (n+1)*(n+2)//2
+        _, m = galsim.zernike.noll_to_zern(j)
+        print(f"Z{j} => (n, m) = ({n}, {m})")
+        assert n == abs(m)
         coefs = np.zeros(j+1)
         coefs[j] = 1.0
         zk = Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
