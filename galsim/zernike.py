@@ -140,7 +140,7 @@ def __noll_coef_array(jmax, obscuration):
 _noll_coef_array = LRU_Cache(__noll_coef_array)
 
 
-def _xy_contribution(rho2_power, rho_power, shape):
+def __xy_contribution(rho2_power, rho_power):
     """Convert (rho, |rho|^2) bivariate polynomial coefficients to (x, y) bivariate polynomial
     coefficients.
     """
@@ -162,25 +162,29 @@ def _xy_contribution(rho2_power, rho_power, shape):
     #
     # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
     # |rho|^2.
+    if rho2_power == 0 and rho_power == 0:
+        return np.array([[1]], dtype=np.complex128)
+
+    if rho2_power > 0:
+        prev = _xy_contribution(rho2_power-1, rho_power)
+        shape = (prev.shape[0] + 2, prev.shape[1] +2)
+        out = np.zeros(shape, dtype=np.complex128)
+        for (i, j) in zip(*np.nonzero(prev)):
+            val = prev[i, j]
+            out[i+2, j] += val
+            out[i, j+2] += val
+        return out
+
+    # else rho_power > 0
+    prev = _xy_contribution(rho2_power, rho_power-1)
+    shape = (prev.shape[0] + 1, prev.shape[1] + 1)
     out = np.zeros(shape, dtype=np.complex128)
-    out[0,0] = 1
-    while rho2_power >= 1:
-        new = np.zeros_like(out)
-        for (i, j) in zip(*np.nonzero(out)):
-            val = out[i, j]
-            new[i+2, j] += val
-            new[i, j+2] += val
-        rho2_power -= 1
-        out = new
-    while rho_power >= 1:
-        new = np.zeros_like(out)
-        for (i, j) in zip(*np.nonzero(out)):
-            val = out[i, j]
-            new[i+1, j] += val
-            new[i, j+1] += 1j*val
-        rho_power -= 1
-        out = new
+    for (i, j) in zip(*np.nonzero(prev)):
+        val = prev[i, j]
+        out[i+1, j] += val
+        out[i, j+1] += 1j*val
     return out
+_xy_contribution = LRU_Cache(__xy_contribution)
 
 
 def _rrsq_to_xy(coefs, shape):
@@ -190,7 +194,8 @@ def _rrsq_to_xy(coefs, shape):
 
     # Now we loop through the elements of coefs and compute their contribution to new_coefs
     for (i, j) in zip(*np.nonzero(coefs)):
-        new_coefs += (coefs[i, j]*_xy_contribution(i, j, shape)).real
+        contribution = (coefs[i, j]*_xy_contribution(i, j)).real
+        new_coefs[:contribution.shape[0], :contribution.shape[1]] += contribution
     return new_coefs
 
 
