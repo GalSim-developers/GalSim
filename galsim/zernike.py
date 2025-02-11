@@ -721,17 +721,40 @@ class Zernike:
         newCoef /= self.R_outer
         return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
-    def __call__(self, x, y):
+    def __call__(self, x, y, robust=False):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
         Synonym for `evalCartesian`.
 
         Parameters:
-            x:    x-coordinate of evaluation points.  Can be list-like.
-            y:    y-coordinate of evaluation points.  Can be list-like.
+            x:       x-coordinate of evaluation points.  Can be list-like.
+            y:       y-coordinate of evaluation points.  Can be list-like.
+            robust:  If True, use a more robust method for evaluating the polynomial.
+                     This can sometimes be slower, but is usually more accurate,
+                     especially for large Noll indices.  [default: False]
         Returns:
             Series evaluations as numpy array.
         """
+        if robust:
+            return self.evalCartesianRobust(x, y)
         return self.evalCartesian(x, y)
+
+    def evalCartesianRobust(self, x, y):
+        """Evaluate this Zernike polynomial series at Cartesian coordinates x and y using a more
+        robust method than the default `evalCartesian`.
+
+        Parameters:
+            x:    x-coordinate of evaluation points.  Can be list-like.
+            y:    y-coordinate of evaluation points.  Can be list-like.
+
+        Returns:
+            Series evaluations as numpy array.
+        """
+        x = np.asarray(x)
+        y = np.asarray(y)
+        rho = (x + 1j*y) / self.R_outer
+        rhosq = np.abs(rho)**2
+        ar = _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
+        return horner2d(rhosq, rho, ar).real
 
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
@@ -743,7 +766,8 @@ class Zernike:
         Returns:
             Series evaluations as numpy array.
         """
-        return horner2d(x, y, self._coef_array_xy, dtype=float)
+        ar = self._coef_array_xy
+        return horner2d(x, y, ar, dtype=float)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.

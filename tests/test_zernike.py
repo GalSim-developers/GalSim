@@ -1583,25 +1583,25 @@ def test_large_j(run_slow):
     eps = R_inner/R_outer
 
     test_vals = [
-        (10, 1e-12),  # Z66
-        (20, 1e-12),  # Z231
-        (40, 1e-9),   # Z861
+        (10, 1e-12, 1e-12),  # Z66
+        (20, 1e-12, 1e-12),  # Z231
+        (40, 1e-9, 1e-12),   # Z861
     ]
     if run_slow:
         test_vals += [
-            (60, 1e-6),   # Z1891
-            (80, 1e-3),  # Z3321
-            # (100, 10),  # Z5151  # This one is catastrophic failure!
+            (60, 1e-6, 1e-12),  # Z1891
+            (80, 1e-3, 1e-12),  # Z3321
+            (100, None, 1e-11),   # Z5151
+            (200, None, 1e-11),   # Z20301
         ]
 
     print()
-    for n, tol in test_vals:
+    for n, tol, tol2 in test_vals:
         j = (n+1)*(n+2)//2
         _, m = galsim.zernike.noll_to_zern(j)
         print(f"Z{j} => (n, m) = ({n}, {m})")
         assert n == abs(m)
-        coefs = np.zeros(j+1)
-        coefs[j] = 1.0
+        coefs = [0]*j+[1]
         zk = Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
 
         def analytic_zk(x, y):
@@ -1613,10 +1613,23 @@ def test_large_j(run_slow):
             else:
                 return r**n * np.sin(n*theta) * factor
 
+        analytic_vals = analytic_zk(x, y)
+        if n < 100:
+            np.testing.assert_allclose(
+                zk(x, y),
+                analytic_vals,
+                atol=tol, rtol=tol
+            )
+
+        robust_vals = zk.evalCartesianRobust(x, y)
         np.testing.assert_allclose(
-            zk(x, y),
-            analytic_zk(x, y),
-            atol=tol, rtol=tol
+            robust_vals,
+            analytic_vals,
+            atol=tol2, rtol=tol2
+        )
+        np.testing.assert_equal(
+            robust_vals,
+            zk(x, y, robust=True)
         )
 
 
