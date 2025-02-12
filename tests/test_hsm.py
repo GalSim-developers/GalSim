@@ -45,7 +45,7 @@ decimal_shape = 3 # decimal place at which to require equality in shapes
 test_timing = False
 
 # define inputs and expected results for tests that use real SDSS galaxies
-img_dir = os.path.join(".","HSM_precomputed")
+img_dir = os.path.join(os.path.dirname(__file__), "HSM_precomputed")
 gal_file_prefix = "image."
 psf_file_prefix = "psf."
 img_suff = ".fits"
