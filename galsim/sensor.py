@@ -175,10 +175,10 @@ class SiliconSensor(Sensor):
                             take more time. If it is increased larger than 4, the size of the
                             Poisson simulation must be increased to match. [default: 3]
         nrecalc:            The number of electrons to accumulate before recalculating the
-                            distortion of the pixel shapes.  If this is 0, then a recalculation
-                            is triggered at the start of an accumulate call, but then no further
-                            recalculation is done.  Coupled with resume=True, this allows the
-                            user to fully control when recalculations happen. [default: 10000]
+                            distortion of the pixel shapes.  If this is 0, then no automatic
+                            recalculations are done during an accumulation. Coupled with
+                            resume=True and recalc=True options, this allows the user to fully
+                            control when recalculations happen. [default: 10000]
         treering_func:      A `LookupTable` giving the tree ring pattern f(r). [default: None]
         treering_center:    A `PositionD` object with the center of the tree ring pattern in pixel
                             coordinates, which may be outside the pixel region. [default: None;
@@ -299,7 +299,7 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=PositionI(0,0), resume=False):
+    def accumulate(self, photons, image, orig_center=PositionI(0,0), resume=False, recalc=False):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -313,6 +313,8 @@ class SiliconSensor(Sensor):
                             accumulation to see what flux is already on the image, which can
                             be more efficient, especially when the number of pixels is large.
                             [default: False]
+            recalc:         Whether to force a recalculation at the pixel boundaries at the
+                            start. [default: False]
 
         Returns:
             the total flux that fell onto the image.
@@ -344,7 +346,7 @@ class SiliconSensor(Sensor):
         #      - resume=True
         #      - nrecalc = 0
         #    Don't initialize image.  Use _last_image.
-        #    Do an update at the start.
+        #    Do an update at the start if recalc=True
         #    Set nbatch to total photon flux
 
         nphotons = len(photons)
@@ -355,7 +357,6 @@ class SiliconSensor(Sensor):
             i2 = nphotons
             if resume:
                 self._silicon.subtractDelta(image._image)
-                self._silicon.update(image._image)
             else:
                 self._silicon.initialize(image._image, orig_center._p);
             self._accum_flux_since_update = 0.
@@ -377,6 +378,10 @@ class SiliconSensor(Sensor):
             nbatch = self.effective_nrecalc
             i2 = 0
             self._silicon.initialize(image._image, orig_center._p);
+            self._accum_flux_since_update = 0
+
+        if resume and recalc:
+            self._silicon.update(image._image)
             self._accum_flux_since_update = 0
 
         i1 = 0
