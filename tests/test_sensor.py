@@ -954,6 +954,8 @@ def test_resume(run_slow):
                                    treering_func=treering_func, treering_center=treering_center)
     sensor3 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
                                    treering_func=treering_func, treering_center=treering_center)
+    sensor4 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=0,
+                                   treering_func=treering_func, treering_center=treering_center)
 
     waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
                                      bandpass = galsim.Bandpass('LSST_r.dat', 'nm'))
@@ -962,6 +964,7 @@ def test_resume(run_slow):
     im1 = galsim.ImageF(nx,ny)  # Will not use resume
     im2 = galsim.ImageF(nx,ny)  # Will use resume
     im3 = galsim.ImageF(nx,ny)  # Will run all photons in one pass
+    im4 = galsim.ImageF(nx,ny)  # Will recalculate manually.
 
     t_resume = 0
     t_no_resume = 0
@@ -1021,12 +1024,25 @@ def test_resume(run_slow):
     sensor3.accumulate(all_photons, im3)
     np.testing.assert_array_equal(im2.array, im3.array)
 
+    # Check the manual recalculation version:
+    i1 = 0
+    i2 = int(nrecalc)
+    while i1 < len(all_photons):
+        i2 = min(i2, len(all_photons))
+        some_photons = galsim.PhotonArray(i2-i1)
+        some_photons.copyFrom(all_photons, source_indices=slice(i1,i2))
+        sensor4.accumulate(some_photons, im4, resume=(i1 > 0))
+        i1 = i2
+        i2 += int(nrecalc)
+    # This should also be equivalent to the above 2 and 3 versions.
+    np.testing.assert_array_equal(im2.array, im4.array)
+
     # If resume is used either with the wrong image or on the first call to accumulate, then
     # this should raise an exception.
     assert_raises(RuntimeError, sensor3.accumulate, all_photons, im1, resume=True)
-    sensor4 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+    sensor5 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
                                    treering_func=treering_func, treering_center=treering_center)
-    assert_raises(RuntimeError, sensor4.accumulate, all_photons, im1, resume=True)
+    assert_raises(RuntimeError, sensor5.accumulate, all_photons, im1, resume=True)
 
 @timer
 def test_flat(run_slow):
