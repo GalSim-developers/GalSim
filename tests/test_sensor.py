@@ -930,18 +930,17 @@ def test_resume(run_slow):
         nx = 200
         ny = 200
         block_size = int(1.2e5)
-        nrecalc = 1.e6
+        nrecalc = int(1.e6)
     else:
         flux_per_pixel = 40
         nx = 20
         ny = 20
         block_size = int(1.3e3)
-        nrecalc = 1.e4
+        nrecalc = int(1.e4)
 
     expected_num_photons = nx * ny * flux_per_pixel
     pd = galsim.PoissonDeviate(rng, mean=expected_num_photons)
     num_photons = int(pd())  # Poisson realization of the given expected number of photons.
-    #nrecalc = num_photons / 2  # Only recalc once.
     flux_per_photon = 1
     print('num_photons = ',num_photons,' .. expected = ',expected_num_photons)
 
@@ -956,6 +955,8 @@ def test_resume(run_slow):
                                    treering_func=treering_func, treering_center=treering_center)
     sensor4 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=0,
                                    treering_func=treering_func, treering_center=treering_center)
+    sensor5 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=0,
+                                   treering_func=treering_func, treering_center=treering_center)
 
     waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
                                      bandpass = galsim.Bandpass('LSST_r.dat', 'nm'))
@@ -964,7 +965,8 @@ def test_resume(run_slow):
     im1 = galsim.ImageF(nx,ny)  # Will not use resume
     im2 = galsim.ImageF(nx,ny)  # Will use resume
     im3 = galsim.ImageF(nx,ny)  # Will run all photons in one pass
-    im4 = galsim.ImageF(nx,ny)  # Will recalculate manually.
+    im4 = galsim.ImageF(nx,ny)  # Will recalculate manually
+    im5 = galsim.ImageF(nx,ny)  # Will recalculate manually with batches
 
     t_resume = 0
     t_no_resume = 0
@@ -1026,23 +1028,37 @@ def test_resume(run_slow):
 
     # Check the manual recalculation version:
     i1 = 0
-    i2 = int(nrecalc)
+    i2 = nrecalc
     while i1 < len(all_photons):
         i2 = min(i2, len(all_photons))
         some_photons = galsim.PhotonArray(i2-i1)
         some_photons.copyFrom(all_photons, source_indices=slice(i1,i2))
-        sensor4.accumulate(some_photons, im4, resume=(i1 > 0))
+        sensor4.accumulate(some_photons, im4, resume=(i1>0), recalc=True)
         i1 = i2
-        i2 += int(nrecalc)
+        i2 += nrecalc
     # This should also be equivalent to the above 2 and 3 versions.
     np.testing.assert_array_equal(im2.array, im4.array)
+
+    # Finally, do it again with batches smaller than nrecalc.
+    nbatch = nrecalc // 4
+    i1 = 0
+    i2 = nbatch
+    while i1 < len(all_photons):
+        i2 = min(i2, len(all_photons))
+        some_photons = galsim.PhotonArray(i2-i1)
+        some_photons.copyFrom(all_photons, source_indices=slice(i1,i2))
+        sensor5.accumulate(some_photons, im5, resume=(i1>0), recalc=(i1 % nrecalc == 0))
+        i1 = i2
+        i2 += nbatch
+    # This should also be equivalent
+    np.testing.assert_array_equal(im2.array, im5.array)
 
     # If resume is used either with the wrong image or on the first call to accumulate, then
     # this should raise an exception.
     assert_raises(RuntimeError, sensor3.accumulate, all_photons, im1, resume=True)
-    sensor5 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+    sensor6 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
                                    treering_func=treering_func, treering_center=treering_center)
-    assert_raises(RuntimeError, sensor5.accumulate, all_photons, im1, resume=True)
+    assert_raises(RuntimeError, sensor6.accumulate, all_photons, im1, resume=True)
 
 @timer
 def test_flat(run_slow):
