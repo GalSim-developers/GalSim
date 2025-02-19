@@ -479,6 +479,10 @@ class Image:
         """
         return self._array.strides[1]//self._array.itemsize == 1
 
+    @array.setter
+    def array(self, other):
+        self._array[:] = self._safe_cast(other)
+
     @lazy_property
     def _image(self):
         cls = self._cpp_type[self.dtype]
