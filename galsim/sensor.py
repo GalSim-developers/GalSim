@@ -359,7 +359,7 @@ class SiliconSensor(Sensor):
                 self._silicon.subtractDelta(image._image)
             else:
                 self._silicon.initialize(image._image, orig_center._p);
-            self._accum_flux_since_update = 0.
+                self._accum_flux_since_update = 0.
         elif resume:
             # Case 2
             # The number in this batch is the total per recalc minus the number of photons
