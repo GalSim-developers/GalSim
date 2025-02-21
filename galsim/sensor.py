@@ -313,7 +313,7 @@ class SiliconSensor(Sensor):
                             accumulation to see what flux is already on the image, which can
                             be more efficient, especially when the number of pixels is large.
                             [default: False]
-            recalc:         Whether to force a recalculation at the pixel boundaries at the
+            recalc:         Whether to force a recalculation of the pixel boundaries at the
                             start. [default: False]
 
         Returns:
