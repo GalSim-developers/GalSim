@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photons and Sensor Effects &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interpolation Tools" href="cpp_interp.html" />
+    <link rel="prev" title="Noise-related Functionality" href="cpp_noise.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Photons and Sensor Effects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c-photon-array">C++ Photon Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silicon-sensor">Silicon Sensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charge-deflection-correction">Charge Deflection Correction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cpp.html">C++ Layer</a></li>
+      <li class="breadcrumb-item active">Photons and Sensor Effects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_photon.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="photons-and-sensor-effects">
+<h1>Photons and Sensor Effects<a class="headerlink" href="#photons-and-sensor-effects" title="Permalink to this heading"></a></h1>
+<section id="c-photon-array">
+<h2>C++ Photon Array<a class="headerlink" href="#c-photon-array" title="Permalink to this heading"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArrayE">
+<span id="_CPPv3N6galsim11PhotonArrayE"></span><span id="_CPPv2N6galsim11PhotonArrayE"></span><span id="galsim::PhotonArray"></span><span class="target" id="classgalsim_1_1_photon_array"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PhotonArray</span></span></span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArrayE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Class to hold a list of “photon” arrival positions. </p>
+<p>Class holds arrays of information about photon arrivals: x and y positions, dxdz and dydz inclination “angles” (really slopes), a flux, and a wavelength carried by each photon. It is the intention that fluxes of photons be nearly equal in absolute value so that noise statistics can be estimated by counting number of positive and negative photons. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-unnamed-group">Unnamed Group</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray9getXArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray9getXArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray9getXArrayEv"></span><span id="galsim::PhotonArray::getXArray"></span><span class="target" id="classgalsim_1_1_photon_array_1a1da545e04b5324ac27f4641e88ac4b48"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getXArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray9getXArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accessors that provide access as numpy arrays in Python layer. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray9getYArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray9getYArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray9getYArrayEv"></span><span id="galsim::PhotonArray::getYArray"></span><span class="target" id="classgalsim_1_1_photon_array_1ae2fb1343b0387f5279edd784f36ed6ab"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getYArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray9getYArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray12getFluxArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray12getFluxArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray12getFluxArrayEv"></span><span id="galsim::PhotonArray::getFluxArray"></span><span class="target" id="classgalsim_1_1_photon_array_1a5735c6548d9e271f9b55f9ecf4664149"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getFluxArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray12getFluxArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray12getDXDZArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray12getDXDZArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray12getDXDZArrayEv"></span><span id="galsim::PhotonArray::getDXDZArray"></span><span class="target" id="classgalsim_1_1_photon_array_1a13775332f8cd8fb979f4d49a7e5a3520"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getDXDZArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray12getDXDZArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray12getDYDZArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray12getDYDZArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray12getDYDZArrayEv"></span><span id="galsim::PhotonArray::getDYDZArray"></span><span class="target" id="classgalsim_1_1_photon_array_1a86dfae2d78f63af61a1b84adb297e542"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getDYDZArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray12getDYDZArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray18getWavelengthArrayEv">
+<span id="_CPPv3N6galsim11PhotonArray18getWavelengthArrayEv"></span><span id="_CPPv2N6galsim11PhotonArray18getWavelengthArrayEv"></span><span id="galsim::PhotonArray::getWavelengthArray"></span><span class="target" id="classgalsim_1_1_photon_array_1a99685170ed5e9f217ff2d94ea2587aac"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getWavelengthArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray18getWavelengthArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray9getXArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray9getXArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray9getXArrayEv"></span><span id="galsim::PhotonArray::getXArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1a2ec07260928fb4fa043bb3af6d436100"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getXArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray9getXArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray9getYArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray9getYArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray9getYArrayEv"></span><span id="galsim::PhotonArray::getYArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1aeb3f06e902aa7d815b5a159f5410d995"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getYArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray9getYArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray12getFluxArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray12getFluxArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray12getFluxArrayEv"></span><span id="galsim::PhotonArray::getFluxArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1a7cc5f79a15f59073ca9088dc48e82a59"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getFluxArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray12getFluxArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray12getDXDZArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray12getDXDZArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray12getDXDZArrayEv"></span><span id="galsim::PhotonArray::getDXDZArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1ac3f92093575d791b6bedf080ba0a2187"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getDXDZArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray12getDXDZArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray12getDYDZArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray12getDYDZArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray12getDYDZArrayEv"></span><span id="galsim::PhotonArray::getDYDZArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1a66bf09e07a6b67d1cc20165d1a3f85d8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getDYDZArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray12getDYDZArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray18getWavelengthArrayEv">
+<span id="_CPPv3NK6galsim11PhotonArray18getWavelengthArrayEv"></span><span id="_CPPv2NK6galsim11PhotonArray18getWavelengthArrayEv"></span><span id="galsim::PhotonArray::getWavelengthArrayC"></span><span class="target" id="classgalsim_1_1_photon_array_1a35d2ecaa7b2bc5e3078b05b221fd4bfa"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getWavelengthArray</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray18getWavelengthArrayEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray18hasAllocatedAnglesEv">
+<span id="_CPPv3NK6galsim11PhotonArray18hasAllocatedAnglesEv"></span><span id="_CPPv2NK6galsim11PhotonArray18hasAllocatedAnglesEv"></span><span id="galsim::PhotonArray::hasAllocatedAnglesC"></span><span class="target" id="classgalsim_1_1_photon_array_1a654b70d04de8bcb0297d0d3f5b5b95e6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hasAllocatedAngles</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray18hasAllocatedAnglesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray23hasAllocatedWavelengthsEv">
+<span id="_CPPv3NK6galsim11PhotonArray23hasAllocatedWavelengthsEv"></span><span id="_CPPv2NK6galsim11PhotonArray23hasAllocatedWavelengthsEv"></span><span id="galsim::PhotonArray::hasAllocatedWavelengthsC"></span><span class="target" id="classgalsim_1_1_photon_array_1a281134128bcfae07cdb5bea0a79bcbae"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hasAllocatedWavelengths</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray23hasAllocatedWavelengthsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray11PhotonArrayEi">
+<span id="_CPPv3N6galsim11PhotonArray11PhotonArrayEi"></span><span id="_CPPv2N6galsim11PhotonArray11PhotonArrayEi"></span><span id="galsim::PhotonArray::PhotonArray__i"></span><span class="target" id="classgalsim_1_1_photon_array_1ad411864e6603305b32a47d2c8057e02c"></span><span class="sig-name descname"><span class="n"><span class="pre">PhotonArray</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray11PhotonArrayEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> of the given size, allocating the arrays locally. </p>
+<p>Note: PhotonArrays made this way can only be used locally in the C++ layer, not returned back to Python. Also, only x,y,flux will be allocated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>N</strong> – <strong>[in]</strong> Size of array </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray11PhotonArrayE6size_tPdPdPdPdPdPdb">
+<span id="_CPPv3N6galsim11PhotonArray11PhotonArrayE6size_tPdPdPdPdPdPdb"></span><span id="_CPPv2N6galsim11PhotonArray11PhotonArrayE6size_tPdPdPdPdPdPdb"></span><span id="galsim::PhotonArray::PhotonArray__s.doubleP.doubleP.doubleP.doubleP.doubleP.doubleP.b"></span><span class="target" id="classgalsim_1_1_photon_array_1a598203d309aefe14127c98672291a531"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PhotonArray</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">y</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">flux</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dxdz</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dydz</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">wave</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">is_corr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray11PhotonArrayE6size_tPdPdPdPdPdPdb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> of the given size with the given arrays, which should be allocated separately (in Python typically). </p>
+<p>If angles or wavelengths are not set, these may be 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> Size of array </p></li>
+<li><p><strong>x</strong> – <strong>[in]</strong> An array of the initial x values </p></li>
+<li><p><strong>y</strong> – <strong>[in]</strong> An array of the initial y values </p></li>
+<li><p><strong>flux</strong> – <strong>[in]</strong> An array of the initial flux values </p></li>
+<li><p><strong>dxdz</strong> – <strong>[in]</strong> An array of the initial dxdz values (may be 0) </p></li>
+<li><p><strong>dydz</strong> – <strong>[in]</strong> An array of the initial dydz values (may be 0) </p></li>
+<li><p><strong>wave</strong> – <strong>[in]</strong> An array of the initial wavelength values (may be 0) </p></li>
+<li><p><strong>is_corr</strong> – <strong>[in]</strong> A boolean indicating whether the current values are correlated. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray4sizeEv">
+<span id="_CPPv3NK6galsim11PhotonArray4sizeEv"></span><span id="_CPPv2NK6galsim11PhotonArray4sizeEv"></span><span id="galsim::PhotonArray::sizeC"></span><span class="target" id="classgalsim_1_1_photon_array_1ad9c56fcfe4df465c9874b2789b9d5243"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accessor for array size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array size </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray9setPhotonEiddd">
+<span id="_CPPv3N6galsim11PhotonArray9setPhotonEiddd"></span><span id="_CPPv2N6galsim11PhotonArray9setPhotonEiddd"></span><span id="galsim::PhotonArray::setPhoton__i.double.double.double"></span><span class="target" id="classgalsim_1_1_photon_array_1a8275c1c5a7d97b68e5e38476b9267639"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPhoton</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">flux</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray9setPhotonEiddd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set characteristics of a photon that are decided during photon shooting (i.e. only x,y,flux) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p></li>
+<li><p><strong>x</strong> – <strong>[in]</strong> x coordinate of photon </p></li>
+<li><p><strong>y</strong> – <strong>[in]</strong> y coordinate of photon </p></li>
+<li><p><strong>flux</strong> – <strong>[in]</strong> flux of photon </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray4getXEi">
+<span id="_CPPv3NK6galsim11PhotonArray4getXEi"></span><span id="_CPPv2NK6galsim11PhotonArray4getXEi"></span><span id="galsim::PhotonArray::getX__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1ae4fb31c57d9294a691fa9c505a808505"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getX</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray4getXEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access x coordinate of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>x coordinate of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray4getYEi">
+<span id="_CPPv3NK6galsim11PhotonArray4getYEi"></span><span id="_CPPv2NK6galsim11PhotonArray4getYEi"></span><span id="galsim::PhotonArray::getY__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1acbfdcf2bfb38fc16c12d99405ca8e331"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getY</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray4getYEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access y coordinate of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>y coordinate of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray7getFluxEi">
+<span id="_CPPv3NK6galsim11PhotonArray7getFluxEi"></span><span id="_CPPv2NK6galsim11PhotonArray7getFluxEi"></span><span id="galsim::PhotonArray::getFlux__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1a9951406b675d092f9363eedc5b67e8de"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFlux</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray7getFluxEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access flux of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>flux of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray7getDXDZEi">
+<span id="_CPPv3NK6galsim11PhotonArray7getDXDZEi"></span><span id="_CPPv2NK6galsim11PhotonArray7getDXDZEi"></span><span id="galsim::PhotonArray::getDXDZ__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1ae1974fc784633d7b39cb17d1d0c936f4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDXDZ</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray7getDXDZEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access dxdz of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dxdz of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray7getDYDZEi">
+<span id="_CPPv3NK6galsim11PhotonArray7getDYDZEi"></span><span id="_CPPv2NK6galsim11PhotonArray7getDYDZEi"></span><span id="galsim::PhotonArray::getDYDZ__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1a7b4ec413fb9c74ad09626aeac6d19535"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDYDZ</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray7getDYDZEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access dydz coordinate of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dydz coordinate of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray13getWavelengthEi">
+<span id="_CPPv3NK6galsim11PhotonArray13getWavelengthEi"></span><span id="_CPPv2NK6galsim11PhotonArray13getWavelengthEi"></span><span id="galsim::PhotonArray::getWavelength__iC"></span><span class="target" id="classgalsim_1_1_photon_array_1aec1330de458a51dba8ae9afd623abf74"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getWavelength</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray13getWavelengthEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access wavelength of a photon. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> – <strong>[in]</strong> Index of desired photon (no bounds checking) </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>wavelength of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray12getTotalFluxEv">
+<span id="_CPPv3NK6galsim11PhotonArray12getTotalFluxEv"></span><span id="_CPPv2NK6galsim11PhotonArray12getTotalFluxEv"></span><span id="galsim::PhotonArray::getTotalFluxC"></span><span class="target" id="classgalsim_1_1_photon_array_1a58d7502c80a32ff7b64b60f71be3930d"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getTotalFlux</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray12getTotalFluxEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return sum of all photons’ fluxes. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>flux of photon </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray12setTotalFluxEd">
+<span id="_CPPv3N6galsim11PhotonArray12setTotalFluxEd"></span><span id="_CPPv2N6galsim11PhotonArray12setTotalFluxEd"></span><span id="galsim::PhotonArray::setTotalFlux__double"></span><span class="target" id="classgalsim_1_1_photon_array_1a4d861af05145391cc60694c19f75cc7a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setTotalFlux</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">flux</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray12setTotalFluxEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Rescale all photon fluxes so that total flux matches argument. </p>
+<p>If current total flux is zero, no rescaling is done.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flux</strong> – <strong>[in]</strong> desired total flux of all photons. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray9scaleFluxEd">
+<span id="_CPPv3N6galsim11PhotonArray9scaleFluxEd"></span><span id="_CPPv2N6galsim11PhotonArray9scaleFluxEd"></span><span id="galsim::PhotonArray::scaleFlux__double"></span><span class="target" id="classgalsim_1_1_photon_array_1a38cb428c22e3b3490d327069189a9670"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scaleFlux</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">scale</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray9scaleFluxEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Rescale all photon fluxes by the given factor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scale</strong> – <strong>[in]</strong> Scaling factor for all fluxes </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray7scaleXYEd">
+<span id="_CPPv3N6galsim11PhotonArray7scaleXYEd"></span><span id="_CPPv2N6galsim11PhotonArray7scaleXYEd"></span><span id="galsim::PhotonArray::scaleXY__double"></span><span class="target" id="classgalsim_1_1_photon_array_1a574ff7f53820b1cf07d7389506a0c5e7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scaleXY</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">scale</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray7scaleXYEd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Rescale all photon positions by the given factor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scale</strong> – <strong>[in]</strong> Scaling factor for all positions </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray8assignAtEiRK11PhotonArray">
+<span id="_CPPv3N6galsim11PhotonArray8assignAtEiRK11PhotonArray"></span><span id="_CPPv2N6galsim11PhotonArray8assignAtEiRK11PhotonArray"></span><span id="galsim::PhotonArray::assignAt__i.PhotonArrayCR"></span><span class="target" id="classgalsim_1_1_photon_array_1a0f3374585388454b01b6dcbdd6d12a96"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">assignAt</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">istart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="n"><span class="pre">PhotonArray</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray8assignAtEiRK11PhotonArray" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assign the contents of another array to a portion of this one. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istart</strong> – <strong>[in]</strong> The starting index at which to assign the contents of rhs </p></li>
+<li><p><strong>rhs</strong> – <strong>[in]</strong> <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> whose contents to assign into this one </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray8convolveERK11PhotonArray11BaseDeviate">
+<span id="_CPPv3N6galsim11PhotonArray8convolveERK11PhotonArray11BaseDeviate"></span><span id="_CPPv2N6galsim11PhotonArray8convolveERK11PhotonArray11BaseDeviate"></span><span id="galsim::PhotonArray::convolve__PhotonArrayCR.BaseDeviate"></span><span class="target" id="classgalsim_1_1_photon_array_1a5165a595ca5f6d7152b8bab2df677817"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">convolve</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="n"><span class="pre">PhotonArray</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ud</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray8convolveERK11PhotonArray11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Convolve this array with another. </p>
+<p>Convolution of two arrays is defined as adding the coordinates on a photon-by-photon basis and multiplying the fluxes on a photon-by-photon basis. Output photons’ flux is renormalized so that the expectation value of output total flux is product of two input totals, if the two photon streams are uncorrelated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> to convolve with this one. Must be same size. </p></li>
+<li><p><strong>rng</strong> – <strong>[in]</strong> A <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> in case we need to shuffle. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray15convolveShuffleERK11PhotonArray11BaseDeviate">
+<span id="_CPPv3N6galsim11PhotonArray15convolveShuffleERK11PhotonArray11BaseDeviate"></span><span id="_CPPv2N6galsim11PhotonArray15convolveShuffleERK11PhotonArray11BaseDeviate"></span><span id="galsim::PhotonArray::convolveShuffle__PhotonArrayCR.BaseDeviate"></span><span class="target" id="classgalsim_1_1_photon_array_1ad3543d24ec03736304110fd0e3132299"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">convolveShuffle</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="n"><span class="pre">PhotonArray</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rhs</span></span>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">rng</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray15convolveShuffleERK11PhotonArray11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Convolve this array with another, shuffling the order in which photons are combined. </p>
+<p>Same convolution behavior as <a class="reference internal" href="#classgalsim_1_1_photon_array_1a5165a595ca5f6d7152b8bab2df677817"><span class="std std-ref">convolve()</span></a>, but the order in which the photons are multiplied into the array is randomized to destroy any flux or position correlations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – <strong>[in]</strong> <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> to convolve with this one. Must be same size. </p></li>
+<li><p><strong>rng</strong> – <strong>[in]</strong> A <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> used to shuffle the input photons. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENK6galsim11PhotonArray5addToEd9ImageViewI1TE">
+<span id="_CPPv3I0ENK6galsim11PhotonArray5addToE9ImageViewI1TE"></span><span id="_CPPv2I0ENK6galsim11PhotonArray5addToE9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_photon_array_1a1697a9ec4eaac5f791e0c7bb09d4911f"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addTo</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0ENK6galsim11PhotonArray5addToEd9ImageViewI1TE" title="galsim::PhotonArray::addTo::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0ENK6galsim11PhotonArray5addToEd9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add flux of photons to an image by binning into pixels. </p>
+<p>Photon in this <a class="reference internal" href="#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> are binned into the pixels of the input Image and their flux summed into the pixels. Image is assumed to represent surface brightness, so photons’ fluxes are divided by image pixel area. Photons past the edges of the image are discarded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – <strong>[in]</strong> the Image to which the photons’ flux will be added. </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The total flux of photons the landed inside the image bounds. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim11PhotonArray7setFromEiRK9BaseImageI1TEd11BaseDeviate">
+<span id="_CPPv3I0EN6galsim11PhotonArray7setFromERK9BaseImageI1TEd11BaseDeviate"></span><span id="_CPPv2I0EN6galsim11PhotonArray7setFromERK9BaseImageI1TEd11BaseDeviate"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_photon_array_1a7af255e6ab1410eb72d3ee2e673fc7c7"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFrom</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9BaseImageE" title="galsim::BaseImage"><span class="n"><span class="pre">BaseImage</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim11PhotonArray7setFromEiRK9BaseImageI1TEd11BaseDeviate" title="galsim::PhotonArray::setFrom::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">image</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">maxFlux</span></span>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ud</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim11PhotonArray7setFromEiRK9BaseImageI1TEd11BaseDeviate" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set photon positions based on flux in an image. </p>
+<p>The flux in each non-zero pixel will be turned into 1 or more photons according to the maxFlux parameter which sets an upper limit for the absolute value of the flux of any photon. Pixels with abs values &gt; maxFlux will spawn multiple photons.</p>
+<p>The positions of the photons will be random within the area of each pixel. TODO: This corresponds to the <a class="reference internal" href="cpp_interp.html#classgalsim_1_1_nearest"><span class="std std-ref">Nearest</span></a> interpolant. Consider implementing other interpolation options here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The image to use for the photon fluxes and positions. </p></li>
+<li><p><strong>maxFlux</strong> – The maximum flux that any photon should have. </p></li>
+<li><p><strong>rng</strong> – A <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_base_deviate"><span class="std std-ref">BaseDeviate</span></a> in case we need to shuffle.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the total number of photons set. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim11PhotonArray12isCorrelatedEv">
+<span id="_CPPv3NK6galsim11PhotonArray12isCorrelatedEv"></span><span id="_CPPv2NK6galsim11PhotonArray12isCorrelatedEv"></span><span id="galsim::PhotonArray::isCorrelatedC"></span><span class="target" id="classgalsim_1_1_photon_array_1adf7570a1acf270c8d23b9670b3eb7503"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isCorrelated</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim11PhotonArray12isCorrelatedEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the current array has correlated photons. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim11PhotonArray13setCorrelatedEb">
+<span id="_CPPv3N6galsim11PhotonArray13setCorrelatedEb"></span><span id="_CPPv2N6galsim11PhotonArray13setCorrelatedEb"></span><span id="galsim::PhotonArray::setCorrelated__b"></span><span class="target" id="classgalsim_1_1_photon_array_1a2ffa7dc985f9b34bb540ebcd2f6e4ceb"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setCorrelated</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">is_corr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11PhotonArray13setCorrelatedEb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set whether the current array has correlated photons. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="silicon-sensor">
+<h2>Silicon Sensor<a class="headerlink" href="#silicon-sensor" title="Permalink to this heading"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7SiliconE">
+<span id="_CPPv3N6galsim7SiliconE"></span><span id="_CPPv2N6galsim7SiliconE"></span><span id="galsim::Silicon"></span><span class="target" id="classgalsim_1_1_silicon"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Silicon</span></span></span><a class="headerlink" href="#_CPPv4N6galsim7SiliconE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7Silicon7SiliconEidiiidddPdRK5Table8PositionIdERK5Tableb">
+<span id="_CPPv3N6galsim7Silicon7SiliconEidiiidddPdRK5Table8PositionIdERK5Tableb"></span><span id="_CPPv2N6galsim7Silicon7SiliconEidiiidddPdRK5Table8PositionIdERK5Tableb"></span><span id="galsim::Silicon::Silicon__i.double.i.i.i.double.double.double.doubleP.TableCR.Position:double:.TableCR.b"></span><span class="target" id="classgalsim_1_1_silicon_1adc447090dd3f50a75a96618066d5ab26"></span><span class="sig-name descname"><span class="n"><span class="pre">Silicon</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">numVertices</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">numElec</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ny</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">qDist</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">diffStep</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pixelSize</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sensorThickness</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vertex_data</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_interp.html#_CPPv4N6galsim5TableE" title="galsim::Table"><span class="n"><span class="pre">Table</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tr_radial_table</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">treeRingCenter</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="cpp_interp.html#_CPPv4N6galsim5TableE" title="galsim::Table"><span class="n"><span class="pre">Table</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">abs_length_table</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">transpose</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Silicon7SiliconEidiiidddPdRK5Table8PositionIdERK5Tableb" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7SiliconD0Ev">
+<span id="_CPPv3N6galsim7SiliconD0Ev"></span><span id="_CPPv2N6galsim7SiliconD0Ev"></span><span id="galsim::Silicon::~Silicon"></span><span class="target" id="classgalsim_1_1_silicon_1a83eadba7b68508801a5e16bc5fa98984"></span><span class="sig-name descname"><span class="n"><span class="pre">~Silicon</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7SiliconD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim7Silicon11insidePixelEiidddR6BoundsIiEPbiP6BoundsIdEP6BoundsIdEP8PositionIfEP8PositionIfEP8PositionIdE">
+<span id="_CPPv3NK6galsim7Silicon11insidePixelEiidddR6BoundsIiEPbiP6BoundsIdEP6BoundsIdEP8PositionIfEP8PositionIfEP8PositionIdE"></span><span id="_CPPv2NK6galsim7Silicon11insidePixelEiidddR6BoundsIiEPbiP6BoundsIdEP6BoundsIdEP8PositionIfEP8PositionIfEP8PositionIdE"></span><span id="galsim::Silicon::insidePixel__i.i.double.double.double.Bounds:i:R.bP.i.Bounds:double:P.Bounds:double:P.Position:float:P.Position:float:P.Position:double:PC"></span><span class="target" id="classgalsim_1_1_silicon_1a365ddeda9d8b13eb94f2ec6ff9dba384"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">insidePixel</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ix</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">iy</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zconv</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="n"><span class="pre">Bounds</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">targetBounds</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">off_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">emptypolySize</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="n"><span class="pre">Bounds</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pixelInnerBoundsData</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="n"><span class="pre">Bounds</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pixelOuterBoundsData</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">float</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">horizontalBoundaryPointsData</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">float</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">verticalBoundaryPointsData</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">emptypolyData</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim7Silicon11insidePixelEiidddR6BoundsIiEPbiP6BoundsIdEP6BoundsIdEP8PositionIfEP8PositionIfEP8PositionIdE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim7Silicon17scaleBoundsToPolyEiiiiRK7PolygonR7Polygond">
+<span id="_CPPv3NK6galsim7Silicon17scaleBoundsToPolyEiiiiRK7PolygonR7Polygond"></span><span id="_CPPv2NK6galsim7Silicon17scaleBoundsToPolyEiiiiRK7PolygonR7Polygond"></span><span id="galsim::Silicon::scaleBoundsToPoly__i.i.i.i.PolygonCR.PolygonR.doubleC"></span><span class="target" id="classgalsim_1_1_silicon_1ae087bec247d47bb115a716612c1bdd69"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scaleBoundsToPoly</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">j</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ny</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Polygon</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">emptypoly</span></span>, <span class="n"><span class="pre">Polygon</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">result</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">factor</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim7Silicon17scaleBoundsToPolyEiiiiRK7PolygonR7Polygond" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim7Silicon24calculateConversionDepthEbPKdPKdbPKdPKdid">
+<span id="_CPPv3NK6galsim7Silicon24calculateConversionDepthEbPKdPKdbPKdPKdid"></span><span id="_CPPv2NK6galsim7Silicon24calculateConversionDepthEbPKdPKdbPKdPKdid"></span><span id="galsim::Silicon::calculateConversionDepth__b.doubleCP.doubleCP.b.doubleCP.doubleCP.i.doubleC"></span><span class="target" id="classgalsim_1_1_silicon_1a422ef60d36d05135a7ea88933cc53024"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">calculateConversionDepth</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">photonsHasAllocatedWavelengths</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">photonsWavelength</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">abs_length_table_data</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">photonsHasAllocatedAngles</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">photonsDXDZ</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">photonsDYDZ</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">randomNumber</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim7Silicon24calculateConversionDepthEbPKdPKdbPKdPKdid" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon22updatePixelDistortionsEv9ImageViewI1TE">
+<span id="_CPPv3I0EN6galsim7Silicon22updatePixelDistortionsE9ImageViewI1TE"></span><span id="_CPPv2I0EN6galsim7Silicon22updatePixelDistortionsE9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a7c520c22f55c99922c91aead6d1b507c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">updatePixelDistortions</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon22updatePixelDistortionsEv9ImageViewI1TE" title="galsim::Silicon::updatePixelDistortions::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon22updatePixelDistortionsEv9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiER7Polygon">
+<span id="_CPPv3NK6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiER7Polygon"></span><span id="_CPPv2NK6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiER7Polygon"></span><span id="galsim::Silicon::calculateTreeRingDistortion__i.i.Position:i:.PolygonRC"></span><span class="target" id="classgalsim_1_1_silicon_1ab85d0ceee9e80438c2e5b150146e57b5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">calculateTreeRingDistortion</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">j</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">orig_center</span></span>, <span class="n"><span class="pre">Polygon</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">poly</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiER7Polygon" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiEiiii">
+<span id="_CPPv3N6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiEiiii"></span><span id="_CPPv2N6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiEiiii"></span><span id="galsim::Silicon::calculateTreeRingDistortion__i.i.Position:i:.i.i.i.i"></span><span class="target" id="classgalsim_1_1_silicon_1a9083afb8d9ec951d481b87aa2615cb54"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">calculateTreeRingDistortion</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">j</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">orig_center</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ny</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">j1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Silicon27calculateTreeRingDistortionEii8PositionIiEiiii" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon22addTreeRingDistortionsEv9ImageViewI1TE8PositionIiE">
+<span id="_CPPv3I0EN6galsim7Silicon22addTreeRingDistortionsE9ImageViewI1TE8PositionIiE"></span><span id="_CPPv2I0EN6galsim7Silicon22addTreeRingDistortionsE9ImageViewI1TE8PositionIiE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a19f758e0fd65e354aa8da4664960680e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addTreeRingDistortions</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon22addTreeRingDistortionsEv9ImageViewI1TE8PositionIiE" title="galsim::Silicon::addTreeRingDistortions::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">orig_center</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon22addTreeRingDistortionsEv9ImageViewI1TE8PositionIiE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon13subtractDeltaEv9ImageViewI1TE">
+<span id="_CPPv3I0EN6galsim7Silicon13subtractDeltaE9ImageViewI1TE"></span><span id="_CPPv2I0EN6galsim7Silicon13subtractDeltaE9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a3143fcea73188a678aed62c0f4f82fcf"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subtractDelta</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon13subtractDeltaEv9ImageViewI1TE" title="galsim::Silicon::subtractDelta::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon13subtractDeltaEv9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon8addDeltaEv9ImageViewI1TE">
+<span id="_CPPv3I0EN6galsim7Silicon8addDeltaE9ImageViewI1TE"></span><span id="_CPPv2I0EN6galsim7Silicon8addDeltaE9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1aa333f19a65e9ed23070213f70585fffc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addDelta</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon8addDeltaEv9ImageViewI1TE" title="galsim::Silicon::addDelta::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon8addDeltaEv9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon10initializeEv9ImageViewI1TE8PositionIiE">
+<span id="_CPPv3I0EN6galsim7Silicon10initializeE9ImageViewI1TE8PositionIiE"></span><span id="_CPPv2I0EN6galsim7Silicon10initializeE9ImageViewI1TE8PositionIiE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a392f8e5dfa0466d5332ae9be290cf494"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">initialize</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon10initializeEv9ImageViewI1TE8PositionIiE" title="galsim::Silicon::initialize::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">orig_center</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon10initializeEv9ImageViewI1TE8PositionIiE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7Silicon8finalizeEv">
+<span id="_CPPv3N6galsim7Silicon8finalizeEv"></span><span id="_CPPv2N6galsim7Silicon8finalizeEv"></span><span id="galsim::Silicon::finalize"></span><span class="target" id="classgalsim_1_1_silicon_1a316a230820eb6ae5bf2f5051cba87de8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">finalize</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Silicon8finalizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon10accumulateEdRK11PhotonArrayii11BaseDeviate9ImageViewI1TE">
+<span id="_CPPv3I0EN6galsim7Silicon10accumulateERK11PhotonArrayii11BaseDeviate9ImageViewI1TE"></span><span id="_CPPv2I0EN6galsim7Silicon10accumulateERK11PhotonArrayii11BaseDeviate9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a37b31e746b02ac97a78f156f722e3be7"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">accumulate</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="n"><span class="pre">PhotonArray</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">photons</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i2</span></span>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim11BaseDeviateE" title="galsim::BaseDeviate"><span class="n"><span class="pre">BaseDeviate</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">rng</span></span>, <a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon10accumulateEdRK11PhotonArrayii11BaseDeviate9ImageViewI1TE" title="galsim::Silicon::accumulate::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon10accumulateEdRK11PhotonArrayii11BaseDeviate9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon6updateEv9ImageViewI1TE">
+<span id="_CPPv3I0EN6galsim7Silicon6updateE9ImageViewI1TE"></span><span id="_CPPv2I0EN6galsim7Silicon6updateE9ImageViewI1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1a454ba1ea25530f4eb40ffde71a47d4ec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon6updateEv9ImageViewI1TE" title="galsim::Silicon::update::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon6updateEv9ImageViewI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim7Silicon9pixelAreaEiiii">
+<span id="_CPPv3NK6galsim7Silicon9pixelAreaEiiii"></span><span id="_CPPv2NK6galsim7Silicon9pixelAreaEiiii"></span><span id="galsim::Silicon::pixelArea__i.i.i.iC"></span><span class="target" id="classgalsim_1_1_silicon_1a1d341e339ee4bc7789162497b4694c78"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pixelArea</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">j</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ny</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim7Silicon9pixelAreaEiiii" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim7Silicon18fillWithPixelAreasEv9ImageViewI1TE8PositionIiEb">
+<span id="_CPPv3I0EN6galsim7Silicon18fillWithPixelAreasE9ImageViewI1TE8PositionIiEb"></span><span id="_CPPv2I0EN6galsim7Silicon18fillWithPixelAreasE9ImageViewI1TE8PositionIiEb"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_silicon_1ac32119a2a5a76286653dbf44fc127a2e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fillWithPixelAreas</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="cpp_image.html#_CPPv4I0EN6galsim9ImageViewE" title="galsim::ImageView"><span class="n"><span class="pre">ImageView</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim7Silicon18fillWithPixelAreasEv9ImageViewI1TE8PositionIiEb" title="galsim::Silicon::fillWithPixelAreas::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span>, <a class="reference internal" href="cpp_bounds.html#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="n"><span class="pre">Position</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">orig_center</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">use_flux</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim7Silicon18fillWithPixelAreasEv9ImageViewI1TE8PositionIiEb" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="charge-deflection-correction">
+<h2>Charge Deflection Correction<a class="headerlink" href="#charge-deflection-correction" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim7ApplyCDEiPdPdPKd">
+<span id="_CPPv3N6galsim7ApplyCDEiPdPdPKd"></span><span id="_CPPv2N6galsim7ApplyCDEiPdPdPKd"></span><span id="galsim::ApplyCD__i.doubleP.doubleP.doubleCP"></span><span class="target" id="namespacegalsim_1ac3b2244893f534d64c8778fd690fc8bd"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ApplyCD</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cd</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7ApplyCDEiPdPdPKd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_noise.html" class="btn btn-neutral float-left" title="Noise-related Functionality" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_interp.html" class="btn btn-neutral float-right" title="Interpolation Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

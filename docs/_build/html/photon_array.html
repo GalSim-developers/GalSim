@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photon Arrays &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sensor Models" href="sensor.html" />
+    <link rel="prev" title="Photon Shooting" href="photon.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="photon.html">Photon Shooting</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Photon Arrays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.PhotonArray"><code class="docutils literal notranslate"><span class="pre">PhotonArray</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.addTo"><code class="docutils literal notranslate"><span class="pre">PhotonArray.addTo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateAngles"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateAngles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocatePupil"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocatePupil()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateTimes"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateTimes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.allocateWavelengths"><code class="docutils literal notranslate"><span class="pre">PhotonArray.allocateWavelengths()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.assignAt"><code class="docutils literal notranslate"><span class="pre">PhotonArray.assignAt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.concatenate"><code class="docutils literal notranslate"><span class="pre">PhotonArray.concatenate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.convolve"><code class="docutils literal notranslate"><span class="pre">PhotonArray.convolve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.copyFrom"><code class="docutils literal notranslate"><span class="pre">PhotonArray.copyFrom()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.dxdz"><code class="docutils literal notranslate"><span class="pre">PhotonArray.dxdz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.dydz"><code class="docutils literal notranslate"><span class="pre">PhotonArray.dydz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.flux"><code class="docutils literal notranslate"><span class="pre">PhotonArray.flux</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.fromArrays"><code class="docutils literal notranslate"><span class="pre">PhotonArray.fromArrays()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.getTotalFlux"><code class="docutils literal notranslate"><span class="pre">PhotonArray.getTotalFlux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.hasAllocatedAngles"><code class="docutils literal notranslate"><span class="pre">PhotonArray.hasAllocatedAngles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.hasAllocatedPupil"><code class="docutils literal notranslate"><span class="pre">PhotonArray.hasAllocatedPupil()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.hasAllocatedTimes"><code class="docutils literal notranslate"><span class="pre">PhotonArray.hasAllocatedTimes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.hasAllocatedWavelengths"><code class="docutils literal notranslate"><span class="pre">PhotonArray.hasAllocatedWavelengths()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.isCorrelated"><code class="docutils literal notranslate"><span class="pre">PhotonArray.isCorrelated()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.makeFromImage"><code class="docutils literal notranslate"><span class="pre">PhotonArray.makeFromImage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.pupil_u"><code class="docutils literal notranslate"><span class="pre">PhotonArray.pupil_u</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.pupil_v"><code class="docutils literal notranslate"><span class="pre">PhotonArray.pupil_v</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.read"><code class="docutils literal notranslate"><span class="pre">PhotonArray.read()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.scaleFlux"><code class="docutils literal notranslate"><span class="pre">PhotonArray.scaleFlux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.scaleXY"><code class="docutils literal notranslate"><span class="pre">PhotonArray.scaleXY()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.setCorrelated"><code class="docutils literal notranslate"><span class="pre">PhotonArray.setCorrelated()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.setTotalFlux"><code class="docutils literal notranslate"><span class="pre">PhotonArray.setTotalFlux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.size"><code class="docutils literal notranslate"><span class="pre">PhotonArray.size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.time"><code class="docutils literal notranslate"><span class="pre">PhotonArray.time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.wavelength"><code class="docutils literal notranslate"><span class="pre">PhotonArray.wavelength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.write"><code class="docutils literal notranslate"><span class="pre">PhotonArray.write()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.x"><code class="docutils literal notranslate"><span class="pre">PhotonArray.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PhotonArray.y"><code class="docutils literal notranslate"><span class="pre">PhotonArray.y</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sensor.html">Sensor Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html">Photon Operators</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="photon.html">Photon Shooting</a></li>
+      <li class="breadcrumb-item active">Photon Arrays</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/photon_array.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="photon-arrays">
+<h1>Photon Arrays<a class="headerlink" href="#photon-arrays" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.PhotonArray">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PhotonArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxdz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dydz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray" title="Permalink to this definition"></a></dt>
+<dd><p>The PhotonArray class encapsulates the concept of a collection of photons incident on
+a detector.</p>
+<p>A PhotonArray object is not typically constructed directly by the user.  Rather, it is
+typically constructed as the return value of the <a class="reference internal" href="gsobject.html#galsim.GSObject.shoot" title="galsim.GSObject.shoot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shoot</span></code></a> method.
+At this point, the photons only have x,y,flux values.</p>
+<p>Then there are a number of <a class="reference internal" href="photon_ops.html#photon-operators"><span class="std std-ref">Photon Operators</span></a>, which perform various modifications to the
+photons such as giving them wavelengths (<a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> or inclination angles
+(<a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>) or move them around according to the effect of differential chromatic
+refraction (DCR; <a class="reference internal" href="photon_ops.html#galsim.PhotonDCR" title="galsim.PhotonDCR"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonDCR</span></code></a>).</p>
+<p>One could also add functionality to remove some photons due to fringing or vignetting,
+but these are not yet implemented.</p>
+<p>A PhotonArray instance has the following attributes, each of which is a numpy array:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The incidence x position of the photons in image coordinates (pixels),
+typically measured at the top of the detector.</p></li>
+<li><p><strong>y</strong> – The incidence y position of the photons in image coordinates (pixels),
+typically measured at the top of the detector.</p></li>
+<li><p><strong>flux</strong> – The flux of the photons in units of photons. Typically, these are all 1,
+but see the note below for reasons some photons might have flux != 1.</p></li>
+<li><p><strong>dxdz</strong> – The tangent of the inclination angles in the x direction.  Note that we define
+the +z direction as towards towards the dielectric medium of the detector and
+-z as towards vacuum; consequently, a photon with increasing x in time has
+positive dxdz.</p></li>
+<li><p><strong>dydz</strong> – The tangent of the inclination angles in the y direction.  Note that we define
+the +z direction as towards towards the dielectric medium of the detector and
+-z as towards vacuum; consequently, a photon with increasing y in time has
+positive dydz.</p></li>
+<li><p><strong>wavelength  The wavelength of the photons</strong> (<em>in nm</em>)</p></li>
+<li><p><strong>pupil_u</strong> – Horizontal location of photon as it intersected the entrance pupil plane
+(meters).</p></li>
+<li><p><strong>pupil_v</strong> – Vertical location of photon as it intersected the entrance pupil plane
+(meters).</p></li>
+<li><p><strong>time</strong> – Time stamp for photon impacting the pupil plane (seconds).</p></li>
+</ul>
+</dd>
+</dl>
+<p>Unlike most GalSim objects (but like <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>), PhotonArrays are mutable.  It is permissible
+to write values to the above attributes with code like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">photon_array</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">photon_array</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="mf">20.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="n">sed</span><span class="o">.</span><span class="n">sampleWavelength</span><span class="p">(</span><span class="n">photonarray</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">bandpass</span><span class="p">)</span>
+<span class="go">etc.</span>
+</pre></div>
+</div>
+<p>All of these will update the existing numpy arrays being used by the photon_array instance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normal photons have flux=1, but we allow for “fat” photons that combine the effect of
+several photons at once for efficiency.  Also, some profiles need to use negative flux
+photons to properly implement photon shooting (e.g. <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>, which uses negative
+flux photons to get the interpolation correct).  Finally, when we “remove” photons, for
+better efficiency, we actually just set the flux to 0 rather than recreate new numpy arrays.</p>
+</div>
+<p>The initialization constructs a PhotonArray to hold N photons, but does not set the values of
+anything yet.  The constructor allocates space for the x,y,flux arrays, since those are always
+needed.  The other arrays are only allocated on demand if the user accesses these attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The number of photons to store in this PhotonArray.  This value cannot be
+changed.</p></li>
+<li><p><strong>x</strong> – Optionally, the initial x values. [default: None]</p></li>
+<li><p><strong>y</strong> – Optionally, the initial y values. [default: None]</p></li>
+<li><p><strong>flux</strong> – Optionally, the initial flux values. [default: None]</p></li>
+<li><p><strong>dxdz</strong> – Optionally, the initial dxdz values. [default: None]</p></li>
+<li><p><strong>dydz</strong> – Optionally, the initial dydz values. [default: None]</p></li>
+<li><p><strong>wavelength</strong> – Optionally, the initial wavelength values (in nm). [default: None]</p></li>
+<li><p><strong>pupil_u</strong> – Optionally, the initial pupil_u values. [default: None]</p></li>
+<li><p><strong>pupil_v</strong> – Optionally, the initial pupil_v values. [default: None]</p></li>
+<li><p><strong>time</strong> – Optionally, the initial time values. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.addTo">
+<span class="sig-name descname"><span class="pre">addTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.addTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.addTo" title="Permalink to this definition"></a></dt>
+<dd><p>Add flux of photons to an image by binning into pixels.</p>
+<p>Photons in this <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> are binned into the pixels of the input
+<a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> and their flux summed into the pixels.  The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> is assumed to represent
+surface brightness, so photons’ fluxes are divided by image pixel area.
+Photons past the edges of the image are discarded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> to which the photons’ flux will be added.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the total flux of photons the landed inside the image bounds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.allocateAngles">
+<span class="sig-name descname"><span class="pre">allocateAngles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.allocateAngles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.allocateAngles" title="Permalink to this definition"></a></dt>
+<dd><p>Allocate memory for the incidence angles, <a class="reference internal" href="#galsim.PhotonArray.dxdz" title="galsim.PhotonArray.dxdz"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dxdz</span></code></a> and <a class="reference internal" href="#galsim.PhotonArray.dydz" title="galsim.PhotonArray.dydz"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dydz</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.allocatePupil">
+<span class="sig-name descname"><span class="pre">allocatePupil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.allocatePupil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.allocatePupil" title="Permalink to this definition"></a></dt>
+<dd><p>Allocate the memory for the pupil coordinates, <a class="reference internal" href="#galsim.PhotonArray.pupil_u" title="galsim.PhotonArray.pupil_u"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pupil_u</span></code></a> and <a class="reference internal" href="#galsim.PhotonArray.pupil_v" title="galsim.PhotonArray.pupil_v"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pupil_v</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.allocateTimes">
+<span class="sig-name descname"><span class="pre">allocateTimes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.allocateTimes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.allocateTimes" title="Permalink to this definition"></a></dt>
+<dd><p>Allocate the memory for the time stamps, <a class="reference internal" href="#galsim.PhotonArray.time" title="galsim.PhotonArray.time"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.allocateWavelengths">
+<span class="sig-name descname"><span class="pre">allocateWavelengths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.allocateWavelengths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.allocateWavelengths" title="Permalink to this definition"></a></dt>
+<dd><p>Allocate the memory for the <a class="reference internal" href="#galsim.PhotonArray.wavelength" title="galsim.PhotonArray.wavelength"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wavelength</span></code></a> array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.assignAt">
+<span class="sig-name descname"><span class="pre">assignAt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.assignAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.assignAt" title="Permalink to this definition"></a></dt>
+<dd><p>Assign the contents of another <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to this one starting at istart.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istart</strong> – The first index at which to insert new values.</p></li>
+<li><p><strong>rhs</strong> – The other <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> from which to get the values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.concatenate">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">concatenate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_arrays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.concatenate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.concatenate" title="Permalink to this definition"></a></dt>
+<dd><p>Create a single PhotonArray from a list of multiple PhotonArrays.</p>
+<p>The size of the created PhotonArray will be the sum of the sizes of the given arrays,
+and the values will be concatenations of the values in each.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The optional value arrays (e.g. dxdz, wavelength, etc.) must be given in
+all the given photon_arrays or in none of them.  This is not checked.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>photon_arrays</strong> – A list of PhotonArray objects to be concatenated.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.convolve">
+<span class="sig-name descname"><span class="pre">convolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.convolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.convolve" title="Permalink to this definition"></a></dt>
+<dd><p>Convolve this <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> with another.</p>
+<p>..note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">If</span> <span class="n">both</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">rhs</span> <span class="n">have</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">pupil</span> <span class="n">coordinates</span> <span class="ow">or</span> <span class="n">times</span> <span class="n">assigned</span><span class="p">,</span>
+<span class="n">then</span> <span class="n">the</span> <span class="n">values</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">first</span> <span class="n">array</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="bp">self</span><span class="p">)</span> <span class="n">take</span> <span class="n">precedence</span><span class="o">.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.copyFrom">
+<span class="sig-name descname"><span class="pre">copyFrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">slice(None,</span> <span class="pre">None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">slice(None,</span> <span class="pre">None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_other</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.copyFrom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.copyFrom" title="Permalink to this definition"></a></dt>
+<dd><p>Copy some contents of another <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to some elements of this one.</p>
+<p>Specifically each element of rhs[source_indices] is mapped to self[target_indices].
+The values s1 and s2 may be slices, list of indices, or anything else that is a valid
+key for a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rhs</strong> – The <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> from which to get values.</p></li>
+<li><p><strong>target_indices</strong> – The indices at which to assign values in the current PhotonArray (self).
+[default: slice(None)]</p></li>
+<li><p><strong>source_indices</strong> – The indices from which to get values from the PhotonArray, <code class="docutils literal notranslate"><span class="pre">rhs</span></code>.
+[default: slice(None)]</p></li>
+<li><p><strong>do_xy</strong> – Whether to include copying the x and y arrays. [default: True]</p></li>
+<li><p><strong>do_flux</strong> – Whether to include copying the flux array. [default: True]</p></li>
+<li><p><strong>do_other</strong> – Whether to include copying the other arrays (angles, wavelength,
+pupil positions, time). [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.dxdz">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dxdz</span></span><a class="headerlink" href="#galsim.PhotonArray.dxdz" title="Permalink to this definition"></a></dt>
+<dd><p>dx/dz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tangent of the inclination angles in the x direction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.dydz">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dydz</span></span><a class="headerlink" href="#galsim.PhotonArray.dydz" title="Permalink to this definition"></a></dt>
+<dd><p>dy/dz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tangent of the inclination angles in the y direction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.flux">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flux</span></span><a class="headerlink" href="#galsim.PhotonArray.flux" title="Permalink to this definition"></a></dt>
+<dd><p>The flux of the photons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.fromArrays">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fromArrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxdz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dydz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_corr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.fromArrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.fromArrays" title="Permalink to this definition"></a></dt>
+<dd><p>Create a PhotonArray from pre-allocated numpy arrays without any copying.</p>
+<p>The normal PhotonArray constructor always allocates new arrays and copies any provided
+initial values into those new arrays.  This class method, by constrast, constructs a
+PhotonArray that references existing numpy arrays, so that any PhotonOps or photon shooting
+of GSObjects applied to the resulting PhotonArray will also be reflected in the original
+arrays.</p>
+<p>Note that the input arrays must all be the same length, have dtype float64 and be
+c_contiguous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – X values.</p></li>
+<li><p><strong>y</strong> – X values.</p></li>
+<li><p><strong>flux</strong> – Flux values.</p></li>
+<li><p><strong>dxdz</strong> – Optionally, the initial dxdz values. [default: None]</p></li>
+<li><p><strong>dydz</strong> – Optionally, the initial dydz values. [default: None]</p></li>
+<li><p><strong>wavelength</strong> – Optionally, the initial wavelength values (in nm). [default: None]</p></li>
+<li><p><strong>pupil_u</strong> – Optionally, the initial pupil_u values (in m). [default: None]</p></li>
+<li><p><strong>pupil_v</strong> – Optionally, the initial pupil_v values (in m). [default: None]</p></li>
+<li><p><strong>time</strong> – Optionally, the initial time values (in s). [default: None]</p></li>
+<li><p><strong>is_corr</strong> – Whether or not the photons are correlated. [default: False]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.getTotalFlux">
+<span class="sig-name descname"><span class="pre">getTotalFlux</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.getTotalFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.getTotalFlux" title="Permalink to this definition"></a></dt>
+<dd><p>Return the total flux of all the photons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.hasAllocatedAngles">
+<span class="sig-name descname"><span class="pre">hasAllocatedAngles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.hasAllocatedAngles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.hasAllocatedAngles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the arrays for the incidence angles <a class="reference internal" href="#galsim.PhotonArray.dxdz" title="galsim.PhotonArray.dxdz"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dxdz</span></code></a> and <a class="reference internal" href="#galsim.PhotonArray.dydz" title="galsim.PhotonArray.dydz"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dydz</span></code></a> have been
+allocated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.hasAllocatedPupil">
+<span class="sig-name descname"><span class="pre">hasAllocatedPupil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.hasAllocatedPupil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.hasAllocatedPupil" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the arrays for the pupil coordinates <a class="reference internal" href="#galsim.PhotonArray.pupil_u" title="galsim.PhotonArray.pupil_u"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pupil_u</span></code></a> and <a class="reference internal" href="#galsim.PhotonArray.pupil_v" title="galsim.PhotonArray.pupil_v"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pupil_v</span></code></a> have been
+allocated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.hasAllocatedTimes">
+<span class="sig-name descname"><span class="pre">hasAllocatedTimes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.hasAllocatedTimes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.hasAllocatedTimes" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the array for the time stamps <a class="reference internal" href="#galsim.PhotonArray.time" title="galsim.PhotonArray.time"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time</span></code></a> has been allocated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.hasAllocatedWavelengths">
+<span class="sig-name descname"><span class="pre">hasAllocatedWavelengths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.hasAllocatedWavelengths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.hasAllocatedWavelengths" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the <a class="reference internal" href="#galsim.PhotonArray.wavelength" title="galsim.PhotonArray.wavelength"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wavelength</span></code></a> array has been allocated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.isCorrelated">
+<span class="sig-name descname"><span class="pre">isCorrelated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.isCorrelated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.isCorrelated" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the photons are correlated</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.makeFromImage">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">makeFromImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.makeFromImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.makeFromImage" title="Permalink to this definition"></a></dt>
+<dd><p>Turn an existing <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> into a <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> that would accumulate into this image.</p>
+<p>The flux in each non-zero pixel will be turned into 1 or more photons with random positions
+within the pixel bounds.  The <code class="docutils literal notranslate"><span class="pre">max_flux</span></code> parameter (which defaults to 1) sets an upper
+limit for the absolute value of the flux of any photon.  Pixels with abs values &gt; maxFlux
+will spawn multiple photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The image to turn into a <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a></p></li>
+<li><p><strong>max_flux</strong> – The maximum flux value to use for any output photon [default: 1]</p></li>
+<li><p><strong>rng</strong> – A <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> to use for the random number generation [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.pupil_u">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pupil_u</span></span><a class="headerlink" href="#galsim.PhotonArray.pupil_u" title="Permalink to this definition"></a></dt>
+<dd><p>Horizontal location of photon as it intersected the entrance pupil plane.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.pupil_v">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pupil_v</span></span><a class="headerlink" href="#galsim.PhotonArray.pupil_v" title="Permalink to this definition"></a></dt>
+<dd><p>Vertical location of photon as it intersected the entrance pupil plane.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.read" title="Permalink to this definition"></a></dt>
+<dd><p>Create a <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>, reading the photon data from a FITS file.</p>
+<p>The file being read in is not arbitrary.  It is expected to be a file that was written
+out with the <a class="reference internal" href="#galsim.PhotonArray.write" title="galsim.PhotonArray.write"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.write</span></code></a> method.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">photons</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;photons.fits&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">photons2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PhotonArray</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;photons.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> – The file name of the input FITS file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.scaleFlux">
+<span class="sig-name descname"><span class="pre">scaleFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.scaleFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.scaleFlux" title="Permalink to this definition"></a></dt>
+<dd><p>Rescale the photon fluxes by the given factor.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>scale:      The factor by which to scale the fluxes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.scaleXY">
+<span class="sig-name descname"><span class="pre">scaleXY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.scaleXY"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.scaleXY" title="Permalink to this definition"></a></dt>
+<dd><p>Scale the photon positions (<a class="reference internal" href="#galsim.PhotonArray.x" title="galsim.PhotonArray.x"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">x</span></code></a> and <a class="reference internal" href="#galsim.PhotonArray.y" title="galsim.PhotonArray.y"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">y</span></code></a>) by the given factor.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>scale:      The factor by which to scale the positions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.setCorrelated">
+<span class="sig-name descname"><span class="pre">setCorrelated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_corr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.setCorrelated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.setCorrelated" title="Permalink to this definition"></a></dt>
+<dd><p>Set whether the photons are correlated</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.setTotalFlux">
+<span class="sig-name descname"><span class="pre">setTotalFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.setTotalFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.setTotalFlux" title="Permalink to this definition"></a></dt>
+<dd><p>Rescale the photon fluxes to achieve the given total flux.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>flux:       The target flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.size" title="Permalink to this definition"></a></dt>
+<dd><p>Return the size of the photon array.  Equivalent to <code class="docutils literal notranslate"><span class="pre">len(self)</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.time">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><a class="headerlink" href="#galsim.PhotonArray.time" title="Permalink to this definition"></a></dt>
+<dd><p>Time stamp of when photon encounters the pupil plane.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.wavelength">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wavelength</span></span><a class="headerlink" href="#galsim.PhotonArray.wavelength" title="Permalink to this definition"></a></dt>
+<dd><p>The wavelength of the photons (in nm).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PhotonArray.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonArray.write" title="Permalink to this definition"></a></dt>
+<dd><p>Write a <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to a FITS file.</p>
+<p>The output file will be a FITS binary table with a row for each photon in the <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.
+Columns will include ‘id’ (sequential from 1 to nphotons), ‘x’, ‘y’, and ‘flux’.
+Additionally, the columns ‘dxdz’, ‘dydz’, and ‘wavelength’ will be included if they are
+set for this <a class="reference internal" href="#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> object.</p>
+<p>The file can be read back in with the classmethod <a class="reference internal" href="#galsim.PhotonArray.read" title="galsim.PhotonArray.read"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.read</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">photons</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;photons.fits&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">photons2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PhotonArray</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;photons.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> – The file name of the output FITS file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.x">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#galsim.PhotonArray.x" title="Permalink to this definition"></a></dt>
+<dd><p>The incidence x position in image coordinates (pixels), typically at the top of
+the detector.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.PhotonArray.y">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#galsim.PhotonArray.y" title="Permalink to this definition"></a></dt>
+<dd><p>The incidence y position in image coordinates (pixels), typically at the top of
+the detector.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="photon.html" class="btn btn-neutral float-left" title="Photon Shooting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sensor.html" class="btn btn-neutral float-right" title="Sensor Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

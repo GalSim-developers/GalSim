@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.extra_weight &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.extra_weight</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.extra_weight</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="kn">import</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="kn">import</span> <span class="n">AddNoiseVariance</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">ImageF</span>
+
+<span class="c1"># The weight extra output type builds an ImageF of the inverse noise variance in the image.</span>
+<span class="c1"># It builds up the variance either from the stamp information if noise is being added then</span>
+<span class="c1"># or at the end from the full image if that is when noise is added.  Then at the end of</span>
+<span class="c1"># the image processing, it inverts the image to get the appropriate weight map.</span>
+
+<div class="viewcode-block" id="WeightBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_weight.WeightBuilder">[docs]</a><span class="k">class</span> <span class="nc">WeightBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This builds a weight map image to go along with each regular data image.</span>
+
+<span class="sd">    The weight is the inverse variance of the noise in the image.</span>
+
+<span class="sd">    There is a option called &#39;include_obj_var&#39; that governs whether the weight should include the</span>
+<span class="sd">    Poisson variance of the signal.  In real data, you don&#39;t know the true signal, and estimating</span>
+<span class="sd">    the Poisson noise from the realized image can lead to biases.  As such, different applications</span>
+<span class="sd">    may or may not want this included.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The function to call at the end of building each stamp</span>
+    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;do_noise_in_stamps&#39;</span><span class="p">]:</span>
+            <span class="n">weight_im</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;include_obj_var&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span>
+            <span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">weight_im</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_im</span>
+
+    <span class="c1"># The function to call at the end of building each image</span>
+    <span class="k">def</span> <span class="nf">processImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">],</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="c1"># If we have been accumulating the variance on the stamps, build the total from them.</span>
+            <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
+                <span class="n">stamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">stamp</span><span class="o">.</span><span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
+                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span> <span class="c1"># pragma: no branch</span>
+                    <span class="c1"># This next line is equivalent to:</span>
+                    <span class="c1">#    image[b] += stamp[b]</span>
+                    <span class="c1"># except that this doesn&#39;t work through the proxy.  We can only call methods</span>
+                    <span class="c1"># that don&#39;t start with _.  Hence using the more verbose form here.</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">setSubImage</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">subImage</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">stamp</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, build the variance map now.</span>
+            <span class="k">if</span> <span class="s1">&#39;include_obj_var&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
+            <span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Now invert the variance image to get weight map.</span>
+        <span class="c1"># Note that any zeros present in the image are maintained as zeros after inversion.</span>
+        <span class="c1"># So it is ok to set bad pixels to have zero variance above, and they will invert to have</span>
+        <span class="c1"># zero weight.</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">invertSelf</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span></div>
+
+
+<span class="c1"># Register this as a valid extra output</span>
+<span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">WeightBuilder</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

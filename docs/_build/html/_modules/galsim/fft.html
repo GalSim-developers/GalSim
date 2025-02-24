@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.fft &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.fft</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.fft</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span><span class="p">,</span> <span class="n">ImageCD</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+
+<div class="viewcode-block" id="fft2"><a class="viewcode-back" href="../../fft.html#galsim.fft.fft2">[docs]</a><span class="k">def</span> <span class="nf">fft2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the 2-dimensional discrete Fourier Transform.</span>
+
+<span class="sd">    For valid inputs, the result is equivalent to numpy.fft.fft2(a), but usually faster.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.fft2(a)</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.fft2(a)</span>
+
+<span class="sd">    Restrictions on this version vs the numpy version:</span>
+
+<span class="sd">        - The input array must be 2-dimensional.</span>
+<span class="sd">        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is</span>
+<span class="sd">          not required.)</span>
+<span class="sd">        - If it has a real dtype, it will be coerced to numpy.float64.</span>
+<span class="sd">        - If it has a complex dtype, it will be coerced to numpy.complex128.</span>
+
+<span class="sd">    The returned array will be complex with dtype numpy.complex128.</span>
+
+<span class="sd">    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.fft2(numpy.fft.fftshift(a))</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.fft2(a, shift_in=True)</span>
+
+<span class="sd">    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.fftshift(numpy.fft.fft2(a))</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.fft2(a, shift_out=True)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        a:          The input array to be transformed</span>
+<span class="sd">        shift_in:   Whether to shift the input array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+<span class="sd">        shift_out:  Whether to shift the output array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a complex numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must be 2D.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">Mo2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">No2</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">M</span> <span class="o">!=</span> <span class="n">Mo2</span><span class="o">*</span><span class="mi">2</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">No2</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must have even sizes.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">xim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">No2</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+        <span class="n">kim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="o">-</span><span class="n">No2</span><span class="p">,</span><span class="n">No2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+            <span class="n">_galsim</span><span class="o">.</span><span class="n">cfft</span><span class="p">(</span><span class="n">xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">kim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">shift_in</span><span class="p">,</span> <span class="n">shift_out</span><span class="p">)</span>
+        <span class="n">kar</span> <span class="o">=</span> <span class="n">kim</span><span class="o">.</span><span class="n">array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">xim</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">No2</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+
+        <span class="c1"># This works, but it&#39;s a bit slower.</span>
+        <span class="c1">#kim = ImageCD(BoundsI(-No2,No2-1,-Mo2,Mo2-1))</span>
+        <span class="c1">#_galsim.cfft(xim._image, kim._image, False, shift_in, shift_out)</span>
+        <span class="c1">#kar = kim.array</span>
+
+        <span class="c1"># Faster to start with rfft2 version</span>
+        <span class="n">rkim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">No2</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+            <span class="n">_galsim</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">rkim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">shift_in</span><span class="p">,</span> <span class="n">shift_out</span><span class="p">)</span>
+        <span class="c1"># This only returns kx &gt;= 0.  Fill out the full image.</span>
+        <span class="n">kar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">rkar</span> <span class="o">=</span> <span class="n">rkim</span><span class="o">.</span><span class="n">array</span>
+        <span class="k">if</span> <span class="n">shift_out</span><span class="p">:</span>
+            <span class="n">kar</span><span class="p">[:,</span><span class="n">No2</span><span class="p">:</span><span class="n">N</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span>
+            <span class="n">kar</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+            <span class="n">kar</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">Mo2</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[</span><span class="n">M</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">Mo2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+            <span class="n">kar</span><span class="p">[</span><span class="n">Mo2</span><span class="p">:</span><span class="n">M</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[</span><span class="n">Mo2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kar</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="n">No2</span><span class="p">]</span>
+            <span class="n">kar</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="n">N</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+            <span class="n">kar</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">M</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="n">N</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkar</span><span class="p">[</span><span class="n">M</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">No2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">kar</span></div>
+
+
+<div class="viewcode-block" id="ifft2"><a class="viewcode-back" href="../../fft.html#galsim.fft.ifft2">[docs]</a><span class="k">def</span> <span class="nf">ifft2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the 2-dimensional inverse discrete Fourier Transform.</span>
+
+<span class="sd">    For valid inputs, the result is equivalent to numpy.fft.ifft2(a), but usually faster.::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.ifft2(ka)</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.ifft2(ka)</span>
+
+<span class="sd">    Restrictions on this version vs the numpy version:</span>
+
+<span class="sd">        - The array must be 2-dimensional.</span>
+<span class="sd">        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is</span>
+<span class="sd">          not required.)</span>
+<span class="sd">        - The array is assumed to be Hermitian, which means the k values with kx&lt;0 are assumed</span>
+<span class="sd">          to be equal to the conjuate of their inverse.  This will always be the case if</span>
+<span class="sd">          a is an output of fft2 (with a real input array).  i.e.</span>
+
+<span class="sd">          - for kx &gt;= N/2, ky &gt; 0: a[ky, kx] == a[N-ky, N-kx].conjugate()</span>
+<span class="sd">          - for kx &gt;= N/2, ky = 0: a[0, kx] == a[0, N-kx].conjugate()</span>
+
+<span class="sd">          Only the elements a[:,0:N/2+1] are accessed by this function.</span>
+<span class="sd">        - If it has a real dtype, it will be coerced to numpy.float64.</span>
+<span class="sd">        - If it has a complex dtype, it will be coerced to numpy.complex128.</span>
+
+<span class="sd">    The returned array will be complex with dtype numpy.complex128.</span>
+
+<span class="sd">    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.ifft2(numpy.fft.fftshift(ka))</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.ifft2(ka, shift_in=True)</span>
+
+<span class="sd">    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.fftshift(numpy.fft.ifft2(ka))</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.ifft2(ka, shift_out=True)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        a:          The input array to be transformed</span>
+<span class="sd">        shift_in:   Whether to shift the input array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+<span class="sd">        shift_out:  Whether to shift the output array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a complex numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must be 2D.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">N</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">Mo2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">No2</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">M</span> <span class="o">!=</span> <span class="n">Mo2</span><span class="o">*</span><span class="mi">2</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">No2</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must have even sizes.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">kim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">No2</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">kim</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">No2</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+    <span class="n">xim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="o">-</span><span class="n">No2</span><span class="p">,</span><span class="n">No2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">cfft</span><span class="p">(</span><span class="n">kim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">shift_in</span><span class="p">,</span> <span class="n">shift_out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xim</span><span class="o">.</span><span class="n">array</span></div>
+
+
+<div class="viewcode-block" id="rfft2"><a class="viewcode-back" href="../../fft.html#galsim.fft.rfft2">[docs]</a><span class="k">def</span> <span class="nf">rfft2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the one-dimensional discrete Fourier Transform for real input.</span>
+
+<span class="sd">    For valid inputs, the result is equivalent to numpy.fft.rfft2(a), but usually faster.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.rfft2(a)</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.rfft2(a)</span>
+
+<span class="sd">    Restrictions on this version vs the numpy version:</span>
+
+<span class="sd">        - The input array must be 2-dimensional.</span>
+<span class="sd">        - If it does not have dtype numpy.float64, it will be coerced to numpy.float64.</span>
+<span class="sd">        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is</span>
+<span class="sd">          not required.)</span>
+
+<span class="sd">    The returned array will be complex with dtype numpy.complex128.</span>
+
+<span class="sd">    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.rfft2(numpy.fft.fftshift(a))</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.rfft2(a, shift_in=True)</span>
+
+<span class="sd">    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::</span>
+
+<span class="sd">        &gt;&gt;&gt; ka1 = numpy.fft.fftshift(numpy.fft.rfft2(a),axes=(0,))</span>
+<span class="sd">        &gt;&gt;&gt; ka2 = galsim.fft.rfft2(a, shift_out=True)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        a:          The input array to be transformed</span>
+<span class="sd">        shift_in:   Whether to shift the input array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+<span class="sd">        shift_out:  Whether to shift the output array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a complex numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must be 2D.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">N</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">Mo2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">No2</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">M</span> <span class="o">!=</span> <span class="n">Mo2</span><span class="o">*</span><span class="mi">2</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">No2</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must have even sizes.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">xim</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">No2</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+    <span class="n">kim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">No2</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">kim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">shift_in</span><span class="p">,</span> <span class="n">shift_out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kim</span><span class="o">.</span><span class="n">array</span></div>
+
+
+<div class="viewcode-block" id="irfft2"><a class="viewcode-back" href="../../fft.html#galsim.fft.irfft2">[docs]</a><span class="k">def</span> <span class="nf">irfft2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the 2-dimensional inverse FFT of a real array.</span>
+
+<span class="sd">    For valid inputs, the result is equivalent to numpy.fft.irfft2(a), but usually faster.::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.irfft2(ka)</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.irfft2(ka)</span>
+
+<span class="sd">    Restrictions on this version vs the numpy version:</span>
+
+<span class="sd">        - The array must be 2-dimensional.</span>
+<span class="sd">        - If it does not have dtype numpy.complex128, it will be coerced to numpy.complex128.</span>
+<span class="sd">        - It must have shape (M, N/2+1).</span>
+<span class="sd">        - The size M must be even. (Ideally 2^k or 3*2^k for speed, but this is not required.)</span>
+
+<span class="sd">    The returned array will be real with dtype numpy.float64.</span>
+
+<span class="sd">    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.irfft2(numpy.fft.fftshift(a, axes=(0,)))</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.irfft2(a, shift_in=True)</span>
+
+<span class="sd">    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::</span>
+
+<span class="sd">        &gt;&gt;&gt; a1 = numpy.fft.fftshift(numpy.fft.irfft2(a))</span>
+<span class="sd">        &gt;&gt;&gt; a2 = galsim.fft.irfft2(a, shift_out=True)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        a:          The input array to be transformed</span>
+<span class="sd">        shift_in:   Whether to shift the input array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+<span class="sd">        shift_out:  Whether to shift the output array so that the center is moved to (0,0).</span>
+<span class="sd">                    [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a real numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must be 2D.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">No2</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">No2</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># s is (M,No2+1)</span>
+    <span class="n">Mo2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">M</span> <span class="o">!=</span> <span class="n">Mo2</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Input array must have even sizes.&quot;</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">kim</span> <span class="o">=</span> <span class="n">ImageCD</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span><span class="n">Mo2</span><span class="p">)</span>
+    <span class="n">xim</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="o">-</span><span class="n">No2</span><span class="p">,</span><span class="n">No2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">kim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">shift_in</span><span class="p">,</span> <span class="n">shift_out</span><span class="p">)</span>
+    <span class="n">xim</span> <span class="o">=</span> <span class="n">xim</span><span class="o">.</span><span class="n">subImage</span><span class="p">(</span><span class="n">BoundsI</span><span class="p">(</span><span class="o">-</span><span class="n">No2</span><span class="p">,</span><span class="n">No2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="n">Mo2</span><span class="p">,</span><span class="n">Mo2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">xim</span><span class="o">.</span><span class="n">array</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

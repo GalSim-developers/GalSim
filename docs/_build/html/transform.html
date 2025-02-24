@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformed Profiles &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The GSParams class" href="gsparams.html" />
+    <link rel="prev" title="Composite Profiles" href="composite.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Arbitrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Transformed Profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#affine-transformations">Affine Transformations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.Transformation"><code class="docutils literal notranslate"><span class="pre">Transformation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.Transform"><code class="docutils literal notranslate"><span class="pre">Transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim._Transform"><code class="docutils literal notranslate"><span class="pre">_Transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#de-convolution-of-a-gsobject">De-convolution of a GSObject</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.Deconvolution"><code class="docutils literal notranslate"><span class="pre">Deconvolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.Deconvolve"><code class="docutils literal notranslate"><span class="pre">Deconvolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#fourier-space-square-root">Fourier-space Square Root</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.FourierSqrtProfile"><code class="docutils literal notranslate"><span class="pre">FourierSqrtProfile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.FourierSqrt"><code class="docutils literal notranslate"><span class="pre">FourierSqrt()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="sb.html">Surface Brightness Profiles</a></li>
+      <li class="breadcrumb-item active">Transformed Profiles</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/transform.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="transformed-profiles">
+<h1>Transformed Profiles<a class="headerlink" href="#transformed-profiles" title="Permalink to this heading"></a></h1>
+<p>Any profile can be modified in a number of ways, including stretching, dilating,
+rotating, and translating, and even more complicated things like forming the
+inverse in Fourier space to effect a deconvolution.</p>
+<section id="affine-transformations">
+<h2>Affine Transformations<a class="headerlink" href="#affine-transformations" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.Transformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Transformation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class for modeling an affine transformation of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instance.</p>
+<p>Typically, you do not need to construct a Transformation object explicitly.  This is the type
+returned by the various transformation methods of <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> such as <a class="reference internal" href="gsobject.html#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a>,
+<a class="reference internal" href="gsobject.html#galsim.GSObject.rotate" title="galsim.GSObject.rotate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.rotate</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shift</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.transform" title="galsim.GSObject.transform"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.transform</span></code></a>, etc.</p>
+<p>All the various transformations can be described as a combination of a jacobian matrix
+(i.e. <a class="reference internal" href="gsobject.html#galsim.GSObject.transform" title="galsim.GSObject.transform"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.transform</span></code></a>) and a translation (<a class="reference internal" href="gsobject.html#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shift</span></code></a>), which are described by
+(dudx,dudy,dvdx,dvdy) and (dx,dy) respectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The name of the flux_ratio parameter is technically wrong here if the jacobian has a
+non-unit determinant, since that would also scale the flux.  The flux_ratio parameter
+actually only refers to an overall amplitude ratio for the surface brightness profile.
+The total flux scaling is actually <code class="docutils literal notranslate"><span class="pre">|det(jac)|</span> <span class="pre">*</span> <span class="pre">flux_ratio</span></code>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to be transformed.</p></li>
+<li><p><strong>jac</strong> – A list, tuple or numpy array ( dudx, dudy, dvdx, dvdy ) describing
+the Jacobian of the transformation.  Use None to indicate that the
+Jacobian is the 2x2 unit matrix.  [default: None]</p></li>
+<li><p><strong>offset</strong> – A galsim.PositionD or tuple giving the offset by which to shift the
+profile. [default: (0.,0.)]</p></li>
+<li><p><strong>flux_ratio</strong> – A factor by which to multiply the surface brightness of the object.
+(Technically, not necessarily the flux.  See above.) [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the transformed object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>original</strong> – The original object that is being transformed.</p></li>
+<li><p><strong>jac</strong> – The jacobian of the transformation matrix.</p></li>
+<li><p><strong>offset</strong> – The offset being applied.</p></li>
+<li><p><strong>flux_ratio</strong> – The amount by which the overall surface brightness amplitude is multiplied.</p></li>
+<li><p><strong>gsparams</strong> – The usual gsparams attribute that all <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes have.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Note: if <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> is unspecified (or None), then the Transformation instance inherits the
+<a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> from obj.  Also, note that parameters related to the Fourier-space calculations must
+be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
+threshold parameters will simply be ignored).</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Transformation.flux_ratio">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flux_ratio</span></span><a class="headerlink" href="#galsim.Transformation.flux_ratio" title="Permalink to this definition"></a></dt>
+<dd><p>The flux ratio of the transformation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Transformation.jac">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jac</span></span><a class="headerlink" href="#galsim.Transformation.jac" title="Permalink to this definition"></a></dt>
+<dd><p>The Jacobian of the transforamtion.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Transformation.offset">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#galsim.Transformation.offset" title="Permalink to this definition"></a></dt>
+<dd><p>The offset of the transformation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Transformation.original">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">original</span></span><a class="headerlink" href="#galsim.Transformation.original" title="Permalink to this definition"></a></dt>
+<dd><p>The original object being transformed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Transformation.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Transformation.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given gsparams</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unless you set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>, this method will also update the gsparams
+of the wrapped component object.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.Transform">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Transform" title="Permalink to this definition"></a></dt>
+<dd><p>A function for transforming either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
+<p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.Transformation" title="galsim.Transformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Transformation</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticTransformation" title="galsim.ChromaticTransformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticTransformation</span></code></a> object is required to represent the resulting transformed object.</p>
+<p>Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
+non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
+only refers to an overall amplitude ratio for the surface brightness profile.  The total
+flux scaling is actually <code class="docutils literal notranslate"><span class="pre">|det(jac)|</span> <span class="pre">*</span> <span class="pre">flux_ratio</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to be transformed.</p></li>
+<li><p><strong>jac</strong> – A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
+of the transformation.  Use None to indicate that the Jacobian is the
+2x2 unit matrix.  [default: None]</p></li>
+<li><p><strong>offset</strong> – A galsim.PositionD or tuple giving the offset by which to shift the
+profile. [default: (0.,0.)]</p></li>
+<li><p><strong>flux_ratio</strong> – A factor by which to multiply the surface brightness of the object.
+(Technically, not necessarily the flux.  See above.) [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the transformed object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.Transformation" title="galsim.Transformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Transformation</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticTransformation" title="galsim.ChromaticTransformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticTransformation</span></code></a> instance as appropriate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim._Transform">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">_Transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#_Transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim._Transform" title="Permalink to this definition"></a></dt>
+<dd><p>Approximately equivalent to Transform, but without some of the sanity checks (such as
+checking for chromatic options) or setting a new gsparams.</p>
+<p>For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular <a class="reference internal" href="#galsim.Transform" title="galsim.Transform"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Transform</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to be transformed.</p></li>
+<li><p><strong>jac</strong> – A 2x2 numpy array describing the Jacobian of the transformation.
+Use None to indicate that the Jacobian is the 2x2 unit matrix.
+[default: None]</p></li>
+<li><p><strong>offset</strong> – The offset to apply. [default (0.,0.)]</p></li>
+<li><p><strong>flux_ratio</strong> – A factor by which to multiply the surface brightness of the object.
+[default: 1.]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="de-convolution-of-a-gsobject">
+<h2>De-convolution of a GSObject<a class="headerlink" href="#de-convolution-of-a-gsobject" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.Deconvolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Deconvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Deconvolution" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class for deconvolving a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+<p>The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
+or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
+cannot be photon-shot using the ‘phot’ method of <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.</p>
+<p>You may also specify a <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for more
+information about this option.  Note: if <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> is unspecified (or None), then the
+Deconvolution instance inherits the same <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> as the object being deconvolved.</p>
+<p>The normal way to use this class is to use the Deconvolve() factory function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">inv_psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Deconvolve</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deconv_gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">inv_psf</span><span class="p">,</span> <span class="n">gal</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to deconvolve.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the deconvolved object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Deconvolution.orig_obj">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.Deconvolution.orig_obj" title="Permalink to this definition"></a></dt>
+<dd><p>The original object that is being deconvolved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Deconvolution.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Deconvolution.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given gsparams</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unless you set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>, this method will also update the gsparams
+of the wrapped component object.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.Deconvolve">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Deconvolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Deconvolve" title="Permalink to this definition"></a></dt>
+<dd><p>A function for deconvolving by either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
+<p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticDeconvolution" title="galsim.ChromaticDeconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticDeconvolution</span></code></a> object is required to represent the deconvolution by a surface
+brightness profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to deconvolve.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the deconvolved object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticDeconvolution" title="galsim.ChromaticDeconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticDeconvolution</span></code></a> instance as appropriate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fourier-space-square-root">
+<h2>Fourier-space Square Root<a class="headerlink" href="#fourier-space-square-root" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.FourierSqrtProfile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FourierSqrtProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FourierSqrtProfile" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class for computing the Fourier-space sqrt of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+<p>The FourierSqrtProfile class represents the Fourier-space square root of another profile.
+Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a
+FourierSqrtProfile as one of the components cannot be photon-shot using the ‘phot’ method of
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.</p>
+<p>You may also specify a <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for more
+information about this option.  Note: if <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> is unspecified (or None), then the
+FourierSqrtProfile instance inherits the same <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> as the object being operated on.</p>
+<p>The normal way to use this class is to use the <a class="reference internal" href="#galsim.FourierSqrt" title="galsim.FourierSqrt"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FourierSqrt</span></code></a> factory function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fourier_sqrt</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FourierSqrt</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to compute Fourier-space square root of.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the transformed object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.FourierSqrtProfile.orig_obj">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.FourierSqrtProfile.orig_obj" title="Permalink to this definition"></a></dt>
+<dd><p>The original object being Fourier sqrt-ed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.FourierSqrtProfile.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given gsparams</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unless you set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>, this method will also update the gsparams
+of the wrapped component object.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.FourierSqrt">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FourierSqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FourierSqrt" title="Permalink to this definition"></a></dt>
+<dd><p>A function for computing the Fourier-space square root of either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
+<p>The FourierSqrt function is principally used for doing an optimal coaddition algorithm
+originally developed by Nick Kaiser (but unpublished) and also described by Zackay &amp; Ofek 2015
+(<a class="reference external" href="http://adsabs.harvard.edu/abs/2015arXiv151206879Z">http://adsabs.harvard.edu/abs/2015arXiv151206879Z</a>).  See the script make_coadd.py in the
+GalSim/examples directory for an example of how it works.</p>
+<p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.FourierSqrtProfile" title="galsim.FourierSqrtProfile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FourierSqrtProfile</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticFourierSqrtProfile" title="galsim.ChromaticFourierSqrtProfile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticFourierSqrtProfile</span></code></a> object is required to represent the operation applied to a surface
+brightness profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to compute the Fourier-space square root of.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the transformed object.  This
+is normally a good idea, but there may be use cases where one
+would not want to do this. [default: True]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.FourierSqrtProfile" title="galsim.FourierSqrtProfile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FourierSqrtProfile</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticFourierSqrtProfile" title="galsim.ChromaticFourierSqrtProfile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticFourierSqrtProfile</span></code></a> instance as appropriate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="composite.html" class="btn btn-neutral float-left" title="Composite Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gsparams.html" class="btn btn-neutral float-right" title="The GSParams class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

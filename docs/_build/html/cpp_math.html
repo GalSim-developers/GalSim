@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Shared Data" href="shared.html" />
+    <link rel="prev" title="HSM Implementation" href="cpp_hsm.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Math</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nonlinear-solver">Nonlinear solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bessel-and-related-functions">Bessel and Related Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-mathematical-functions">Other mathematical functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#horner-s-method-for-polynomial-evaluation">Horner’s method for polynomial evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-integration-functions">C++ Integration Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#misc-utilities">Misc Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cpp.html">C++ Layer</a></li>
+      <li class="breadcrumb-item active">Math</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_math.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="math">
+<h1>Math<a class="headerlink" href="#math" title="Permalink to this heading"></a></h1>
+<section id="nonlinear-solver">
+<h2>Nonlinear solver<a class="headerlink" href="#nonlinear-solver" title="Permalink to this heading"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN6galsim5SolveE">
+<span id="_CPPv3I00EN6galsim5SolveE"></span><span id="_CPPv2I00EN6galsim5SolveE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgalsim_1_1_solve"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Solve</span></span></span><a class="headerlink" href="#_CPPv4I00EN6galsim5SolveE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A class that solves a provided function for a zero. </p>
+<p>The first template argument, F, is the type of the function. Typically you would simple function object that defines the operator() method and use that for F.</p>
+<p>The second template argument (optional: default = double) is the type of the arguments to the function.</p>
+<p>The solving process is in two parts:</p>
+<p><ol class="loweralpha">
+<li><p>First the solution needs to be bracketed.</p>
+<p>This can be done in several ways:</p>
+<p>a) If you know the appropriate range, you can set it in the constructor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Solve</span><span class="o">&lt;</span><span class="n">MyFunc</span><span class="o">&gt;</span> <span class="n">solver</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>b) If you don’t know the range, you can set an initial guess range and let <a class="reference internal" href="#classgalsim_1_1_solve"><span class="std std-ref">Solve</span></a> expand the range until it finds a range that brackets the solution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Solve</span><span class="o">&lt;</span><span class="n">MyFunc</span><span class="o">&gt;</span> <span class="n">solver</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">);</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">bracket</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>c) If you know one end of the range, but not the other you can expand only one side of the range from the initial guess:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Solve</span><span class="o">&lt;</span><span class="n">MyFunc</span><span class="o">&gt;</span> <span class="n">solver</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">r_max</span><span class="p">);</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">bracketUpper</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>(There is also a corresponding <a class="reference internal" href="#classgalsim_1_1_solve_1ac6d0325d664ece6713b79efe3994eacf"><span class="std std-ref">bracketLower()</span></a> method.)</p>
+<p>d) Sometimes there is a fundamental limit past which you want to make sure that the range doesn’t go. e.g. For values that must be positive, you might want to make sure the range doesn’t extend past 0.</p>
+<p>For this case, there are the following two functions <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">bracketUpperWithLimit</span><span class="p">(</span><span class="n">upper_limit</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">bracketLowerWithLimit</span><span class="p">(</span><span class="n">lower_limit</span><span class="p">)</span>
+</pre></div>
+</div>
+</p>
+<p>Finally, note that there is nothing in the code that enforces x_min &lt; x_max. If the two limits bracket the code in reverse order, that’s ok.</p>
+</li>
+<li><p>The next step is to solve for the root within this range. There are currently two algorithms for doing that: Bisect and Brent. You can tell <a class="reference internal" href="#classgalsim_1_1_solve"><span class="std std-ref">Solve</span></a> which one to use with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">setMethod</span><span class="p">(</span><span class="n">Bisect</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">setMethod</span><span class="p">(</span><span class="n">Brent</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(In fact, the former is unnecessary, since Bisect is the default.)</p>
+<p>Then the method <a class="reference internal" href="#classgalsim_1_1_solve_1a64f00951d2988350ab65e0d5c44a64d6"><span class="std std-ref">root()</span></a> will solve for the root in that range.</p>
+</li>
+</ol>
+</p>
+<p>Typical usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">MyFunc</span> <span class="p">{</span>
+    <span class="n">double</span> <span class="n">operator</span><span class="p">()(</span><span class="n">double</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">MyFunc</span> <span class="n">func</span><span class="p">;</span>
+<span class="n">Solve</span><span class="o">&lt;</span><span class="n">MyFunc</span><span class="o">&gt;</span> <span class="n">solver</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">);</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">bracket</span><span class="p">();</span>         <span class="o">//</span> <span class="n">If</span> <span class="n">necessary</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">setMethod</span><span class="p">(</span><span class="n">Brent</span><span class="p">);</span>  <span class="o">//</span> <span class="n">If</span> <span class="n">desired</span>
+<span class="n">double</span> <span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">root</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve5SolveERK1F1T1T">
+<span id="_CPPv3N6galsim5Solve5SolveERK1F1T1T"></span><span id="_CPPv2N6galsim5Solve5SolveERK1F1T1T"></span><span id="galsim::Solve::Solve__FCR.T.T"></span><span class="target" id="classgalsim_1_1_solve_1a033c73ab95526b69899e8acfbc70a1bf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Solve</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func_</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">lb_</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ub_</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve5SolveERK1F1T1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructor taking the function to solve, and the range (if known). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve11setMaxStepsEi">
+<span id="_CPPv3N6galsim5Solve11setMaxStepsEi"></span><span id="_CPPv2N6galsim5Solve11setMaxStepsEi"></span><span id="galsim::Solve::setMaxSteps__i"></span><span class="target" id="classgalsim_1_1_solve_1a524e4aa8293b490d8c99a52b7b58d52e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setMaxSteps</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve11setMaxStepsEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the maximum number of steps for the solving algorithm to use. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve9setMethodE6Method">
+<span id="_CPPv3N6galsim5Solve9setMethodE6Method"></span><span id="_CPPv2N6galsim5Solve9setMethodE6Method"></span><span id="galsim::Solve::setMethod__Method"></span><span class="target" id="classgalsim_1_1_solve_1a71c9d52be54fac377abb1359bf190b7b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setMethod</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">Method</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">m_</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve9setMethodE6Method" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set which method to use: Bisect or Brent. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve13setXToleranceE1T">
+<span id="_CPPv3N6galsim5Solve13setXToleranceE1T"></span><span id="_CPPv2N6galsim5Solve13setXToleranceE1T"></span><span id="galsim::Solve::setXTolerance__T"></span><span class="target" id="classgalsim_1_1_solve_1ad5a68dd69f9ee0698408ef825ee6bc68"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setXTolerance</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve13setXToleranceE1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the tolerance to define when the root is close enough to 0. (abs(x) &lt; tol) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve13getXToleranceEv">
+<span id="_CPPv3NK6galsim5Solve13getXToleranceEv"></span><span id="_CPPv2NK6galsim5Solve13getXToleranceEv"></span><span id="galsim::Solve::getXToleranceC"></span><span class="target" id="classgalsim_1_1_solve_1a3f3df45b9128e317f51224e2e6e55757"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getXTolerance</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve13getXToleranceEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the current tolerance. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve9setBoundsE1T1T">
+<span id="_CPPv3N6galsim5Solve9setBoundsE1T1T"></span><span id="_CPPv2N6galsim5Solve9setBoundsE1T1T"></span><span id="galsim::Solve::setBounds__T.T"></span><span class="target" id="classgalsim_1_1_solve_1a8bbd1f21c10c4bf6afea688e5f2b7aea"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setBounds</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">lb</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ub</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve9setBoundsE1T1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the bounds for the search to new values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve13getLowerBoundEv">
+<span id="_CPPv3NK6galsim5Solve13getLowerBoundEv"></span><span id="_CPPv2NK6galsim5Solve13getLowerBoundEv"></span><span id="galsim::Solve::getLowerBoundC"></span><span class="target" id="classgalsim_1_1_solve_1a3a636b058c73f77172d64a06dda11d61"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getLowerBound</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve13getLowerBoundEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the current search bounds. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve13getUpperBoundEv">
+<span id="_CPPv3NK6galsim5Solve13getUpperBoundEv"></span><span id="_CPPv2NK6galsim5Solve13getUpperBoundEv"></span><span id="galsim::Solve::getUpperBoundC"></span><span class="target" id="classgalsim_1_1_solve_1ad3af4bc1d55e65106d9eeadfe91334b1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getUpperBound</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve13getUpperBoundEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve14evaluateBoundsEv">
+<span id="_CPPv3NK6galsim5Solve14evaluateBoundsEv"></span><span id="_CPPv2NK6galsim5Solve14evaluateBoundsEv"></span><span id="galsim::Solve::evaluateBoundsC"></span><span class="target" id="classgalsim_1_1_solve_1a94ef141d41caff27d77b1d85a0510df3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">evaluateBounds</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve14evaluateBoundsEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Make sure the current bounds have corresponding flower, fupper. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve7bracketEv">
+<span id="_CPPv3N6galsim5Solve7bracketEv"></span><span id="_CPPv2N6galsim5Solve7bracketEv"></span><span id="galsim::Solve::bracket"></span><span class="target" id="classgalsim_1_1_solve_1a7eb39f1fca16eeef8c01861f46dc8378"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracket</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve7bracketEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hunt for bracket, geometrically expanding range. </p>
+<p>This version assumes that the root is to the side of the end point that is closer to 0. This will be true if the function is monotonic. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve8bracket1ER1TR1TR1TR1T">
+<span id="_CPPv3N6galsim5Solve8bracket1ER1TR1TR1TR1T"></span><span id="_CPPv2N6galsim5Solve8bracket1ER1TR1TR1TR1T"></span><span id="galsim::Solve::bracket1__TR.TR.TR.TR"></span><span class="target" id="classgalsim_1_1_solve_1abd89df920b0b55de6865964263ad47b7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracket1</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">b</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fa</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fb</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve8bracket1ER1TR1TR1TR1T" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve12bracketUpperEv">
+<span id="_CPPv3N6galsim5Solve12bracketUpperEv"></span><span id="_CPPv2N6galsim5Solve12bracketUpperEv"></span><span id="galsim::Solve::bracketUpper"></span><span class="target" id="classgalsim_1_1_solve_1ae09e393edf3722d544f6a6dde4d6d10e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracketUpper</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve12bracketUpperEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hunt for bracket, geometrically expanding range. </p>
+<p>This one only expands to the right for when you know that the lower bound is definitely to the left of the root, but the upper bound might not bracket it. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve12bracketLowerEv">
+<span id="_CPPv3N6galsim5Solve12bracketLowerEv"></span><span id="_CPPv2N6galsim5Solve12bracketLowerEv"></span><span id="galsim::Solve::bracketLower"></span><span class="target" id="classgalsim_1_1_solve_1ac6d0325d664ece6713b79efe3994eacf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracketLower</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve12bracketLowerEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hunt for bracket, geometrically expanding range. </p>
+<p>The opposite of bracketUpper &amp;#8212; only expand to the left. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve17bracket1WithLimitER1TR1TR1TR1TR1T">
+<span id="_CPPv3N6galsim5Solve17bracket1WithLimitER1TR1TR1TR1TR1T"></span><span id="_CPPv2N6galsim5Solve17bracket1WithLimitER1TR1TR1TR1TR1T"></span><span id="galsim::Solve::bracket1WithLimit__TR.TR.TR.TR.TR"></span><span class="target" id="classgalsim_1_1_solve_1af2c474f6fcd3ddc34f5fe015efccfdc7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracket1WithLimit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">b</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fa</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fb</span></span>, <a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve17bracket1WithLimitER1TR1TR1TR1TR1T" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve21bracketUpperWithLimitE1T">
+<span id="_CPPv3N6galsim5Solve21bracketUpperWithLimitE1T"></span><span id="_CPPv2N6galsim5Solve21bracketUpperWithLimitE1T"></span><span id="galsim::Solve::bracketUpperWithLimit__T"></span><span class="target" id="classgalsim_1_1_solve_1ae21cd78e673e06860435d6cfafbc9819"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracketUpperWithLimit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">upper_limit</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve21bracketUpperWithLimitE1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hunt for upper bracket, with an upper limit to how far it can go. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5Solve21bracketLowerWithLimitE1T">
+<span id="_CPPv3N6galsim5Solve21bracketLowerWithLimitE1T"></span><span id="_CPPv2N6galsim5Solve21bracketLowerWithLimitE1T"></span><span id="galsim::Solve::bracketLowerWithLimit__T"></span><span class="target" id="classgalsim_1_1_solve_1a3aed902043c7c3aef488504cbdcd423d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bracketLowerWithLimit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">lower_limit</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Solve21bracketLowerWithLimitE1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hunt for lower bracket, with a lower limit to how far it can go. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve4rootEv">
+<span id="_CPPv3NK6galsim5Solve4rootEv"></span><span id="_CPPv2NK6galsim5Solve4rootEv"></span><span id="galsim::Solve::rootC"></span><span class="target" id="classgalsim_1_1_solve_1a64f00951d2988350ab65e0d5c44a64d6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">root</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve4rootEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Find the root according the the method currently set. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve6bisectEv">
+<span id="_CPPv3NK6galsim5Solve6bisectEv"></span><span id="_CPPv2NK6galsim5Solve6bisectEv"></span><span id="galsim::Solve::bisectC"></span><span class="target" id="classgalsim_1_1_solve_1a2cb1b66a02ccf6ba03d01ed09142d05b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bisect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve6bisectEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A simple bisection root-finder. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5Solve6zbrentEv">
+<span id="_CPPv3NK6galsim5Solve6zbrentEv"></span><span id="_CPPv2NK6galsim5Solve6zbrentEv"></span><span id="galsim::Solve::zbrentC"></span><span class="target" id="classgalsim_1_1_solve_1aed380acb1ccdb58e4f8336d26038b19a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5SolveE" title="galsim::Solve::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">zbrent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5Solve6zbrentEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A more sophisticated root-finder using Brent’s algorithm. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="bessel-and-related-functions">
+<h2>Bessel and Related Functions<a class="headerlink" href="#bessel-and-related-functions" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math12cyl_bessel_jEdd">
+<span id="_CPPv3N6galsim4math12cyl_bessel_jEdd"></span><span id="_CPPv2N6galsim4math12cyl_bessel_jEdd"></span><span id="galsim::math::cyl_bessel_j__double.double"></span><span class="target" id="namespacegalsim_1_1math_1ad1e588d230b1a8b1caa625c7e84e0b1a"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cyl_bessel_j</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math12cyl_bessel_jEdd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math12cyl_bessel_yEdd">
+<span id="_CPPv3N6galsim4math12cyl_bessel_yEdd"></span><span id="_CPPv2N6galsim4math12cyl_bessel_yEdd"></span><span id="galsim::math::cyl_bessel_y__double.double"></span><span class="target" id="namespacegalsim_1_1math_1ac302e4e0770169650b3302d5480144b1"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cyl_bessel_y</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math12cyl_bessel_yEdd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math12cyl_bessel_kEdd">
+<span id="_CPPv3N6galsim4math12cyl_bessel_kEdd"></span><span id="_CPPv2N6galsim4math12cyl_bessel_kEdd"></span><span id="galsim::math::cyl_bessel_k__double.double"></span><span class="target" id="namespacegalsim_1_1math_1a8eb96583c0b3ba99d4d02d21a0da5e24"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cyl_bessel_k</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math12cyl_bessel_kEdd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math12cyl_bessel_iEdd">
+<span id="_CPPv3N6galsim4math12cyl_bessel_iEdd"></span><span id="_CPPv2N6galsim4math12cyl_bessel_iEdd"></span><span id="galsim::math::cyl_bessel_i__double.double"></span><span class="target" id="namespacegalsim_1_1math_1a7bf29a7ed9962b9c5374dffbf54f2525"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cyl_bessel_i</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math12cyl_bessel_iEdd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math2j0Ed">
+<span id="_CPPv3N6galsim4math2j0Ed"></span><span id="_CPPv2N6galsim4math2j0Ed"></span><span id="galsim::math::j0__double"></span><span class="target" id="namespacegalsim_1_1math_1a22a9ed3ec4178e9ac6eac9c06a3aacfd"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">j0</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math2j0Ed" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math2j1Ed">
+<span id="_CPPv3N6galsim4math2j1Ed"></span><span id="_CPPv2N6galsim4math2j1Ed"></span><span id="galsim::math::j1__double"></span><span class="target" id="namespacegalsim_1_1math_1a3ae579bbc6dc0dd50075ea3217ce5570"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">j1</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math2j1Ed" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math14getBesselRoot0Ei">
+<span id="_CPPv3N6galsim4math14getBesselRoot0Ei"></span><span id="_CPPv2N6galsim4math14getBesselRoot0Ei"></span><span id="galsim::math::getBesselRoot0__i"></span><span class="target" id="namespacegalsim_1_1math_1ab128907513c68864ab8a2b4681cad312"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getBesselRoot0</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math14getBesselRoot0Ei" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math13getBesselRootEdi">
+<span id="_CPPv3N6galsim4math13getBesselRootEdi"></span><span id="_CPPv2N6galsim4math13getBesselRootEdi"></span><span id="galsim::math::getBesselRoot__double.i"></span><span class="target" id="namespacegalsim_1_1math_1af1bbfd04bb7e8a1161b82260e22b2420"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getBesselRoot</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math13getBesselRootEdi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+<section id="other-mathematical-functions">
+<h2>Other mathematical functions<a class="headerlink" href="#other-mathematical-functions" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math6sincosEdRdRd">
+<span id="_CPPv3N6galsim4math6sincosEdRdRd"></span><span id="_CPPv2N6galsim4math6sincosEdRdRd"></span><span id="galsim::math::sincos__double.doubleR.doubleR"></span><span class="target" id="namespacegalsim_1_1math_1aba16c54be6dd1b014fb60c160a0476d4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">sincos</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">theta</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">sint</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">cost</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math6sincosEdRdRd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math7gamma_pEdd">
+<span id="_CPPv3N6galsim4math7gamma_pEdd"></span><span id="_CPPv2N6galsim4math7gamma_pEdd"></span><span id="galsim::math::gamma_p__double.double"></span><span class="target" id="namespacegalsim_1_1math_1a574ba7145f79d22bbc4ab941a47345d8"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">gamma_p</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math7gamma_pEdd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math4sincEd">
+<span id="_CPPv3N6galsim4math4sincEd"></span><span id="_CPPv2N6galsim4math4sincEd"></span><span id="galsim::math::sinc__double"></span><span class="target" id="namespacegalsim_1_1math_1a68f4f9a4e4dda343583d8461011e7ee2"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">sinc</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math4sincEd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math2SiEd">
+<span id="_CPPv3N6galsim4math2SiEd"></span><span id="_CPPv2N6galsim4math2SiEd"></span><span id="galsim::math::Si__double"></span><span class="target" id="namespacegalsim_1_1math_1a384c4f9aed4854f4d35aa4f68cabb7fe"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Si</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math2SiEd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math2CiEd">
+<span id="_CPPv3N6galsim4math2CiEd"></span><span id="_CPPv2N6galsim4math2CiEd"></span><span id="galsim::math::Ci__double"></span><span class="target" id="namespacegalsim_1_1math_1acbcf76ab3947edc323332068413e40a8"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Ci</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math2CiEd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+<section id="horner-s-method-for-polynomial-evaluation">
+<h2>Horner’s method for polynomial evaluation<a class="headerlink" href="#horner-s-method-for-polynomial-evaluation" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math6HornerEPKdKiPKdKiPd">
+<span id="_CPPv3N6galsim4math6HornerEPKdKiPKdKiPd"></span><span id="_CPPv2N6galsim4math6HornerEPKdKiPKdKiPd"></span><span id="galsim::math::Horner__doubleCP.iC.doubleCP.iC.doubleP"></span><span class="target" id="namespacegalsim_1_1math_1acb8d92bc7473eb1b4372019de22619f4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Horner</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coef</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nc</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math6HornerEPKdKiPKdKiPd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math8Horner2DEPKdPKdKiPKdKiKiPdPd">
+<span id="_CPPv3N6galsim4math8Horner2DEPKdPKdKiPKdKiKiPdPd"></span><span id="_CPPv2N6galsim4math8Horner2DEPKdPKdKiPKdKiKiPdPd"></span><span id="galsim::math::Horner2D__doubleCP.doubleCP.iC.doubleCP.iC.iC.doubleP.doubleP"></span><span class="target" id="namespacegalsim_1_1math_1a45e4e55adfccf7a8b8e14b403be9abe9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Horner2D</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coef</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ncx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ncy</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">result</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">temp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math8Horner2DEPKdPKdKiPKdKiKiPdPd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+<section id="c-integration-functions">
+<h2>C++ Integration Functions<a class="headerlink" href="#c-integration-functions" title="Permalink to this heading"></a></h2>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ9IntRegionE">
+<span id="_CPPv3I0EN6galsim5integ9IntRegionE"></span><span id="_CPPv2I0EN6galsim5integ9IntRegionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structgalsim_1_1integ_1_1_int_region"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">IntRegion</span></span></span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A type that encapsulates everything known about the integral in a region. </p>
+<p>The constructor of <a class="reference internal" href="#structgalsim_1_1integ_1_1_int_region"><span class="std std-ref">IntRegion</span></a> takes the minimum and maximum values for the region, along with an optional ostream for outputing diagnostic information.</p>
+<p>After the integration is done, the <a class="reference internal" href="#structgalsim_1_1integ_1_1_int_region"><span class="std std-ref">IntRegion</span></a> will also hold the estimate of the integral’s value over the region, along with an estimate of the error. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion9IntRegionEK1TK1TPNSt7ostreamEPNSt3mapI1T1TEE">
+<span id="_CPPv3N6galsim5integ9IntRegion9IntRegionEK1TK1TPNSt7ostreamEPNSt3mapI1T1TEE"></span><span id="_CPPv2N6galsim5integ9IntRegion9IntRegionEK1TK1TPNSt7ostreamEPNSt3mapI1T1TEE"></span><span id="galsim::integ::IntRegion::IntRegion__TC.TC.osP.std::map:T.T:P"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1aa35962111eae9c2be2dd246f314cdd9a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">IntRegion</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">b</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dbgout_</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">map</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fxmap_</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion9IntRegionEK1TK1TPNSt7ostreamEPNSt3mapI1T1TEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructor taking the bounds of the region and (optionally) an ostream for outputing diagnostic information. </p>
+<p>Note that normally a &lt; b. However, a &gt; b is also valid. If a &gt; b, then the integral will be from right to left, which is just the negative of the integral from b to a. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> – The left end of the region </p></li>
+<li><p><strong>b</strong> – The right end of the region </p></li>
+<li><p><strong>dbgout_</strong> – An optional ostream for diagnostic info </p></li>
+<li><p><strong>fxmap_</strong> – Known results </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegionltERK9IntRegionI1TE">
+<span id="_CPPv3NK6galsim5integ9IntRegionltERK9IntRegionI1TE"></span><span id="_CPPv2NK6galsim5integ9IntRegionltERK9IntRegionI1TE"></span><span id="galsim::integ::IntRegion::lt-operator__IntRegion:T:CRC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a6ad73391b4f4de547ab43e6508ff39fc"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">r2</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegionltERK9IntRegionI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>op&lt; sorts by the error estimate </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegiongtERK9IntRegionI1TE">
+<span id="_CPPv3NK6galsim5integ9IntRegiongtERK9IntRegionI1TE"></span><span id="_CPPv2NK6galsim5integ9IntRegiongtERK9IntRegionI1TE"></span><span id="galsim::integ::IntRegion::gt-operator__IntRegion:T:CRC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a3bf1acfcc3074a5d224f42104580d315"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">r2</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegiongtERK9IntRegionI1TE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>op&gt; sorts by the error estimate </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion9subDivideERNSt6vectorI9IntRegionI1TEEE">
+<span id="_CPPv3N6galsim5integ9IntRegion9subDivideERNSt6vectorI9IntRegionI1TEEE"></span><span id="_CPPv2N6galsim5integ9IntRegion9subDivideERNSt6vectorI9IntRegionI1TEEE"></span><span id="galsim::integ::IntRegion::subDivide__std::vector:IntRegion:T::R"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a7f5b798625d49507bbe6b178c1c81153"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subDivide</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">children</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion9subDivideERNSt6vectorI9IntRegionI1TEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Subdivide a region according to the current split points or biset. </p>
+<p>If there are no split points set yet, then this will bisect the region. However, you may also set split points using addSplit(x). This is worth doing if you know about any discontinuities, zeros or poles in the function you are integrating. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion6bisectEv">
+<span id="_CPPv3N6galsim5integ9IntRegion6bisectEv"></span><span id="_CPPv2N6galsim5integ9IntRegion6bisectEv"></span><span id="galsim::integ::IntRegion::bisect"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a1790607c9bc4a948718b837b3bc8ce2f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bisect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion6bisectEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set a split point at the bisection. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion17findZeroCrossingsEv">
+<span id="_CPPv3N6galsim5integ9IntRegion17findZeroCrossingsEv"></span><span id="_CPPv2N6galsim5integ9IntRegion17findZeroCrossingsEv"></span><span id="galsim::integ::IntRegion::findZeroCrossings"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a87211211987889c1f42ed68890d00097"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">findZeroCrossings</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion17findZeroCrossingsEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Search for zero crossings based on values stored in fxmap. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion8addSplitEK1T">
+<span id="_CPPv3N6galsim5integ9IntRegion8addSplitEK1T"></span><span id="_CPPv2N6galsim5integ9IntRegion8addSplitEK1T"></span><span id="galsim::integ::IntRegion::addSplit__TC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1ad50b4352761c2343dac0767473aa1a6f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addSplit</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion8addSplitEK1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add a split point to the current list to be used by the next subDivide call. </p>
+<p>This is worth doing if you know about any discontinuities, zeros or poles in the function you are integrating. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegion9getNSplitEv">
+<span id="_CPPv3NK6galsim5integ9IntRegion9getNSplitEv"></span><span id="_CPPv2NK6galsim5integ9IntRegion9getNSplitEv"></span><span id="galsim::integ::IntRegion::getNSplitC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1aa3bc2e0ef149217888a5dac04bdae045"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getNSplit</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegion9getNSplitEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the number of split points currently set. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegion4leftEv">
+<span id="_CPPv3NK6galsim5integ9IntRegion4leftEv"></span><span id="_CPPv2NK6galsim5integ9IntRegion4leftEv"></span><span id="galsim::integ::IntRegion::leftC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a156bad6afae9bdc4f7177aeb2bb0a6e3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">left</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegion4leftEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the left end of the region. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegion5rightEv">
+<span id="_CPPv3NK6galsim5integ9IntRegion5rightEv"></span><span id="_CPPv2NK6galsim5integ9IntRegion5rightEv"></span><span id="galsim::integ::IntRegion::rightC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a19fc30d9cf83101ace3009a3df83a657"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">right</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegion5rightEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the right end of the region. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegion6getErrEv">
+<span id="_CPPv3NK6galsim5integ9IntRegion6getErrEv"></span><span id="_CPPv2NK6galsim5integ9IntRegion6getErrEv"></span><span id="galsim::integ::IntRegion::getErrC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a4a1c99f59c51c65fcd637367b094f30c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getErr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegion6getErrEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the current error estimate. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6galsim5integ9IntRegion7getAreaEv">
+<span id="_CPPv3NK6galsim5integ9IntRegion7getAreaEv"></span><span id="_CPPv2NK6galsim5integ9IntRegion7getAreaEv"></span><span id="galsim::integ::IntRegion::getAreaC"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1aa23ab24e7c169716293c86d9e1cc7621"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getArea</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6galsim5integ9IntRegion7getAreaEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the current estimate of the integral over the region. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion7setAreaERK1TRK1T">
+<span id="_CPPv3N6galsim5integ9IntRegion7setAreaERK1TRK1T"></span><span id="_CPPv2N6galsim5integ9IntRegion7setAreaERK1TRK1T"></span><span id="galsim::integ::IntRegion::setArea__TCR.TCR"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a2dc1fe42a1fabea87ebdf63bd2f4e8a1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setArea</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion7setAreaERK1TRK1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set a new estimate of the area and error. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion8useFXMapEv">
+<span id="_CPPv3N6galsim5integ9IntRegion8useFXMapEv"></span><span id="_CPPv2N6galsim5integ9IntRegion8useFXMapEv"></span><span id="galsim::integ::IntRegion::useFXMap"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1ab64610120a34f9daa25560930cb1d237"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">useFXMap</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion8useFXMapEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Setup an fxmap for this region. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion6dbgoutE">
+<span id="_CPPv3N6galsim5integ9IntRegion6dbgoutE"></span><span id="_CPPv2N6galsim5integ9IntRegion6dbgoutE"></span><span id="galsim::integ::IntRegion::dbgout__osP"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a44fcafcb1288c856371117b8d6f34ee1"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">dbgout</span></span></span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion6dbgoutE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim5integ9IntRegion5fxmapE">
+<span id="_CPPv3N6galsim5integ9IntRegion5fxmapE"></span><span id="_CPPv2N6galsim5integ9IntRegion5fxmapE"></span><span id="galsim::integ::IntRegion::fxmap__std::map:T.T:P"></span><span class="target" id="structgalsim_1_1integ_1_1_int_region_1a8f2b89ce92e64c81562f0c1310437dc9"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">map</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">fxmap</span></span></span><a class="headerlink" href="#_CPPv4N6galsim5integ9IntRegion5fxmapE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int1dEdRK2UFddKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int1dERK2UFddKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int1dERK2UFddKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1aac27b1cfe3fd309e1a9f54c75cd9a4a1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int1d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int1dEdRK2UFddKdKd" title="galsim::integ::int1d::UF"><span class="n"><span class="pre">UF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">min</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int1dEdRK2UFddKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 1-dimensional integral using simple min/max values for the region. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function to be integrated (may be a function object) </p></li>
+<li><p><strong>min</strong> – The lower bound of the integration </p></li>
+<li><p><strong>max</strong> – The upper bound of the integration </p></li>
+<li><p><strong>relerr</strong> – The target relative error </p></li>
+<li><p><strong>abserr</strong> – The target absolute error </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int1dEdRK2UFR9IntRegionIdEKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int1dERK2UFR9IntRegionIdEKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int1dERK2UFR9IntRegionIdEKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a747eb6da31c52ca8ea2708e8650ff491"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int1d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int1dEdRK2UFR9IntRegionIdEKdKd" title="galsim::integ::int1d::UF"><span class="n"><span class="pre">UF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int1dEdRK2UFR9IntRegionIdEKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 1-dimensional integral using an <a class="reference internal" href="#structgalsim_1_1integ_1_1_int_region"><span class="std std-ref">IntRegion</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function to be integrated(may be a function object) </p></li>
+<li><p><strong>reg</strong> – The region of the integration </p></li>
+<li><p><strong>relerr</strong> – The target relative error </p></li>
+<li><p><strong>abserr</strong> – The target absolute error </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int2dEdRK2BFddddKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int2dERK2BFddddKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int2dERK2BFddddKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a0790016913d401eb1dd2a3c2271e86b5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int2d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int2dEdRK2BFddddKdKd" title="galsim::integ::int2d::BF"><span class="n"><span class="pre">BF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmin</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmax</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymin</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymax</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int2dEdRK2BFddddKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 2-dimensional integral using simple min/max values for borh regions (i.e. the integral is over a square) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN6galsim5integ5int2dEdRK2BFR9IntRegionIdERK4YREGKdKd">
+<span id="_CPPv3I00EN6galsim5integ5int2dERK2BFR9IntRegionIdERK4YREGKdKd"></span><span id="_CPPv2I00EN6galsim5integ5int2dERK2BFR9IntRegionIdERK4YREGKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BF</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">YREG</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a54bcec721497367eab177de1af2774c0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int2d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5integ5int2dEdRK2BFR9IntRegionIdERK4YREGKdKd" title="galsim::integ::int2d::BF"><span class="n"><span class="pre">BF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN6galsim5integ5int2dEdRK2BFR9IntRegionIdERK4YREGKdKd" title="galsim::integ::int2d::YREG"><span class="n"><span class="pre">YREG</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">yreg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00EN6galsim5integ5int2dEdRK2BFR9IntRegionIdERK4YREGKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 2-dimensional integral. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function to be integrated (may be a function object) </p></li>
+<li><p><strong>reg</strong> – The region of the inner integral </p></li>
+<li><p><strong>yreg</strong> – yreg(x) is the region of the outer integral at x </p></li>
+<li><p><strong>relerr</strong> – The target relative error </p></li>
+<li><p><strong>abserr</strong> – The target absolute error </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int2dEdRK2BFR9IntRegionIdER9IntRegionIdEKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int2dERK2BFR9IntRegionIdER9IntRegionIdEKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int2dERK2BFR9IntRegionIdER9IntRegionIdEKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a9fd31788baf1df5e30dacab28396a39a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int2d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int2dEdRK2BFR9IntRegionIdER9IntRegionIdEKdKd" title="galsim::integ::int2d::BF"><span class="n"><span class="pre">BF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reg</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">yreg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int2dEdRK2BFR9IntRegionIdER9IntRegionIdEKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 3-dimensional integral using constant IntRegions for both regions (i.e. the integral is over a square) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int3dEdRK2TFddddddKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int3dERK2TFddddddKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int3dERK2TFddddddKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a7b16937ed53485e206946dc4371c93ee"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int3d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int3dEdRK2TFddddddKdKd" title="galsim::integ::int3d::TF"><span class="n"><span class="pre">TF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmin</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmax</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymin</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymax</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zmin</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zmax</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int3dEdRK2TFddddddKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 3-dimensional integral using simple min/max values for all regions (i.e. the integral is over a cube) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I000EN6galsim5integ5int3dEdRK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd">
+<span id="_CPPv3I000EN6galsim5integ5int3dERK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd"></span><span id="_CPPv2I000EN6galsim5integ5int3dERK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TF</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">YREG</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ZREG</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1a98a91eb73ae55a31a9ed8f04434a83a9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int3d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN6galsim5integ5int3dEdRK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd" title="galsim::integ::int3d::TF"><span class="n"><span class="pre">TF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN6galsim5integ5int3dEdRK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd" title="galsim::integ::int3d::YREG"><span class="n"><span class="pre">YREG</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">yreg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN6galsim5integ5int3dEdRK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd" title="galsim::integ::int3d::ZREG"><span class="n"><span class="pre">ZREG</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">zreg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I000EN6galsim5integ5int3dEdRK2TFR9IntRegionIdERK4YREGRK4ZREGKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 3-dimensional integral. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The function to be integrated (may be a function object) </p></li>
+<li><p><strong>reg</strong> – The region of the inner integral </p></li>
+<li><p><strong>yreg</strong> – yreg(x) is the region of the middle integral at x </p></li>
+<li><p><strong>zreg</strong> – zreg(x)(y) is the region of the outer integral at x,y </p></li>
+<li><p><strong>relerr</strong> – The target relative error </p></li>
+<li><p><strong>abserr</strong> – The target absolute error </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim5integ5int3dEdRK2TFR9IntRegionIdER9IntRegionIdER9IntRegionIdEKdKd">
+<span id="_CPPv3I0EN6galsim5integ5int3dERK2TFR9IntRegionIdER9IntRegionIdER9IntRegionIdEKdKd"></span><span id="_CPPv2I0EN6galsim5integ5int3dERK2TFR9IntRegionIdER9IntRegionIdER9IntRegionIdEKdKd"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TF</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1integ_1ae778559b29ed9b902c65b9b789701562"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">integ</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int3d</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6galsim5integ5int3dEdRK2TFR9IntRegionIdER9IntRegionIdER9IntRegionIdEKdKd" title="galsim::integ::int3d::TF"><span class="n"><span class="pre">TF</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reg</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">yreg</span></span>, <a class="reference internal" href="#_CPPv4I0EN6galsim5integ9IntRegionE" title="galsim::integ::IntRegion"><span class="n"><span class="pre">IntRegion</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">zreg</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFRELERR</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">DEFABSERR</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim5integ5int3dEdRK2TFR9IntRegionIdER9IntRegionIdER9IntRegionIdEKdKd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform a 3-dimensional integral using constant IntRegions for all regions (i.e. the integral is over a cube) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math12hankel_truncEKNSt8functionIFddEEEdddddi">
+<span id="_CPPv3N6galsim4math12hankel_truncEKNSt8functionIFddEEEdddddi"></span><span id="_CPPv2N6galsim4math12hankel_truncEKNSt8functionIFddEEEdddddi"></span><span class="target" id="namespacegalsim_1_1math_1a31a63e516ec09e043e4913c473860a22"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">hankel_trunc</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">maxr</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.e-6</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.e-12</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nzeros</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">10</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math12hankel_truncEKNSt8functionIFddEEEdddddi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim4math10hankel_infEKNSt8functionIFddEEEddddi">
+<span id="_CPPv3N6galsim4math10hankel_infEKNSt8functionIFddEEEddddi"></span><span id="_CPPv2N6galsim4math10hankel_infEKNSt8functionIFddEEEddddi"></span><span class="target" id="namespacegalsim_1_1math_1afdac9490b032d2e4b4cb80a1579b62ec"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">hankel_inf</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">double</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">relerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.e-6</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">abserr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.e-12</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nzeros</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">10</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim4math10hankel_infEKNSt8functionIFddEEEddddi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+<section id="misc-utilities">
+<h2>Misc Utilities<a class="headerlink" href="#misc-utilities" title="Permalink to this heading"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6galsim4math5isNanEb1T">
+<span id="_CPPv3I0EN6galsim4math5isNanE1T"></span><span id="_CPPv2I0EN6galsim4math5isNanE1T"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacegalsim_1_1math_1a5123e834d5048af505b1f76a32fbd56e"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">math</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">isNan</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN6galsim4math5isNanEb1T" title="galsim::math::isNan::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim4math5isNanEb1T" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim13SetOMPThreadsEi">
+<span id="_CPPv3N6galsim13SetOMPThreadsEi"></span><span id="_CPPv2N6galsim13SetOMPThreadsEi"></span><span id="galsim::SetOMPThreads__i"></span><span class="target" id="namespacegalsim_1aff763d150ba49c6feca4aa320d35101a"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">SetOMPThreads</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_threads</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13SetOMPThreadsEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6galsim13GetOMPThreadsEv">
+<span id="_CPPv3N6galsim13GetOMPThreadsEv"></span><span id="_CPPv2N6galsim13GetOMPThreadsEv"></span><span id="galsim::GetOMPThreads"></span><span class="target" id="namespacegalsim_1a4acb08e5734f6183c12a5f2a5a2d71c6"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">GetOMPThreads</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13GetOMPThreadsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_hsm.html" class="btn btn-neutral float-left" title="HSM Implementation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="shared.html" class="btn btn-neutral float-right" title="Shared Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

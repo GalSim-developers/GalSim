@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Level Fields &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Objects" href="config_objects.html" />
+    <link rel="prev" title="The Config Module" href="config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Top Level Fields</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_top.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="top-level-fields">
+<h1>Top Level Fields<a class="headerlink" href="#top-level-fields" title="Permalink to this heading"></a></h1>
+<p>At the top level, there are 6 basic fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">psf</span></code> defines what kind of PSF profile to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gal</span></code> defines what kind of galaxy profile to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp</span></code> defines parameters related to building the postage stamp image of each object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image</span></code> defines parameters related to the full images to be drawn.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> defines any necessary input files or things that need some kind of initialization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> defines the names and format of the output files.</p></li>
+</ul>
+<p>None of these are technically required, although it is an error to have _neither_ <code class="docutils literal notranslate"><span class="pre">psf</span></code> nor
+<code class="docutils literal notranslate"><span class="pre">gal</span></code>. (If you don’t want to draw anything but noise, you need to let GalSim know that this is intentional by using <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">None</span></code> for one of these.)  But the most common usage would be to use
+<code class="docutils literal notranslate"><span class="pre">psf</span></code>, <code class="docutils literal notranslate"><span class="pre">gal</span></code>, <code class="docutils literal notranslate"><span class="pre">image</span></code> and <code class="docutils literal notranslate"><span class="pre">output</span></code>.
+It is not uncommon for there to be no input files, so you will often omit the <code class="docutils literal notranslate"><span class="pre">input</span></code> field.
+And sometimes you will omit the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field to draw an image with just stars.
+Most simulations will use the default <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type (called ‘Basic’), which involves drawing
+a galaxy convolved by a PSF (or just a PSF image if <code class="docutils literal notranslate"><span class="pre">gal</span></code> is omitted) on each postage stamp,
+so this field will very often be omitted as well.</p>
+<p>We will go through each one in turn. As we do, some values will be called <em>float_value</em>,
+<em>int_value</em>, etc. These can either be a value directly (e.g. <em>float_value</em> could just be 1.5),
+or they can be a dict that describes how the value should be generated each time (e.g. a random
+number or a value read from an input catalog).
+See <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a> for more information about how to specify these values.</p>
+<p>In addition each value will have one of (required) or (optional) or (default = _something_) to
+indicate whether the item is required or if there is some sensible default value.  The (optional)
+tag usually means that the action in question will not be done at all, rather than done using some
+default value. Also, sometimes no item is individually required, but one of several is.</p>
+<p><strong>psf</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">psf</span></code> field defines the profile of the point-spread function (PSF).
+Any object type is allowed for
+the <code class="docutils literal notranslate"><span class="pre">psf</span></code> type, although some types are obviously more appropriate to use as a PSF than others.
+For a list of all the available object types, see <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">Config Objects</span></a>.</p>
+<p>If this field is omitted, the PSF will effectively be a delta function.  I.e. the ideal
+galaxy surface brightness profiles will be drawn directly on the image without any convolution.</p>
+<p><strong>gal</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">gal</span></code> field defines the profile of the galaxy.
+As for the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field, any object type is allowed for
+the <code class="docutils literal notranslate"><span class="pre">gal</span></code> type, although some types are obviously more appropriate to use as a galaxy than others.
+For a list of all the available object types, see <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">Config Objects</span></a>.</p>
+<p>Technically, the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field is not
+fundamental; its usage is defined by the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type.  One could for instance define a
+<code class="docutils literal notranslate"><span class="pre">stamp</span></code> type that looked for a <code class="docutils literal notranslate"><span class="pre">gal_set</span></code> field instead that might give a list of galaxies
+to draw onto a single stamp.  However, all of the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> types defined natively in GalSim
+use the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, so it will be used by most users of the code.</p>
+<p>If this field is omitted, the default <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type = ‘Basic’ will draw the PSF surface brightness
+profiles directly according to the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field.
+Other <code class="docutils literal notranslate"><span class="pre">stamp</span></code> types may require this field or may require some other field instead.</p>
+<p><strong>stamp</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field defines the relevant properties and parameters of the stamp-building process.
+For a list of all the available <code class="docutils literal notranslate"><span class="pre">stamp</span></code> types, see <a class="reference internal" href="config_stamp.html#config-stamp-field"><span class="std std-ref">Config Stamp Field</span></a>.</p>
+<p>This field is often omitted, in which case the ‘Basic’ <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type will be assumed.</p>
+<p><strong>image</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">image</span></code> field defines the relevant properties and parameters of the full image-building
+process.
+For a list of all the available <code class="docutils literal notranslate"><span class="pre">image</span></code> types, see <a class="reference internal" href="config_image.html#config-image-field"><span class="std std-ref">Config Image Field</span></a>.</p>
+<p>If this field is omitted, the ‘Single’ <code class="docutils literal notranslate"><span class="pre">image</span></code> type will be assumed.</p>
+<p><strong>input</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">input</span></code> field indicates where to find any files that you want to use in building the images
+or how to set up any objects that require initialization.
+For a list of all the available <code class="docutils literal notranslate"><span class="pre">input</span></code> types, see <a class="reference internal" href="config_input.html#config-input-field"><span class="std std-ref">Config Input Field</span></a>.</p>
+<p>This field is only required if you use <a class="reference internal" href="config_objects.html#config-objects"><span class="std std-ref">object types</span></a>
+or <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">value types</span></a> that use an input object.
+Such types will indicate this requirement in their descriptions.</p>
+<p><strong>output</strong>:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">output</span></code> field indicates where to write the output files and what kind of output format they
+should have.
+For a list of all the available <code class="docutils literal notranslate"><span class="pre">output</span></code> types, see <a class="reference internal" href="config_output.html#config-output-field"><span class="std std-ref">Config Output Field</span></a>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config.html" class="btn btn-neutral float-left" title="The Config Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_objects.html" class="btn btn-neutral float-right" title="Config Objects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

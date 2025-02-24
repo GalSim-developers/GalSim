@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.sensor &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.sensor</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.sensor</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;Sensor&#39;</span><span class="p">,</span> <span class="s1">&#39;SiliconSensor&#39;</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">,</span> <span class="n">GalSimError</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+
+<div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor">[docs]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base class for other sensor models, and also an implementation of the simplest possible</span>
+<span class="sd">    sensor model that just converts each photon into an electron and drops it in the appropriate</span>
+<span class="sd">    pixel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Sensor.accumulate"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
+<span class="sd">        pixels in the image.</span>
+
+<span class="sd">        Each photon has a position, which corresponds to the (x,y) position at the top of the</span>
+<span class="sd">        sensor.  In general, they may also have incidence directions and wavelengths, although</span>
+<span class="sd">        these are not used by the base class implementation.</span>
+
+<span class="sd">        The base class implementation simply accumulates the photons above each pixel into that</span>
+<span class="sd">        pixel.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photons:        A `PhotonArray` instance describing the incident photons.</span>
+<span class="sd">            image:          The `Image` into which the photons should be accumuated.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
+<span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            resume:         Resume accumulating on the same image as a previous call to accumulate.</span>
+<span class="sd">                            In the base class, this has no effect, but it can provide an efficiency</span>
+<span class="sd">                            gain for some derived classes. [default: False]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the total flux that fell onto the image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Calling accumulate on image with undefined bounds&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">photons</span><span class="o">.</span><span class="n">addTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Sensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the pixel areas according to the given sensor.</span>
+
+<span class="sd">        If the pixels are all the same size, then this should just return 1.0.</span>
+
+<span class="sd">        But if the pixels vary in size, it should return an Image with the pixel areas</span>
+<span class="sd">        relative to the nominal pixel size. The input image gives the flux values if relevant</span>
+<span class="sd">        (e.g. to set the current levels of the brighter-fatter distortions).</span>
+
+<span class="sd">        The returned image will have the same size and bounds as the input image, and will have</span>
+<span class="sd">        for its flux values the net pixel area for each pixel according to the sensor model.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image:          The `Image` with the current flux values.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
+<span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            use_flux:       Whether to properly handle the current flux in the image (True) or</span>
+<span class="sd">                            to just calculate the pixel areas for a zero-flux image (False).</span>
+<span class="sd">                            [default: True]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            either 1.0 or an `Image` with the pixel areas</span>
+<span class="sd">            (The base class return 1.0.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">1.</span></div>
+
+    <span class="k">def</span> <span class="nf">updateRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Sensor()&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sensor</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>  <span class="c1"># Checks that neither is a subclass</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SiliconSensor"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor">[docs]</a><span class="k">class</span> <span class="nc">SiliconSensor</span><span class="p">(</span><span class="n">Sensor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A model of a silicon-based CCD sensor that converts photons to electrons at a wavelength-</span>
+<span class="sd">    dependent depth (probabilistically) and drifts them down to the wells, properly taking</span>
+<span class="sd">    into account the repulsion of previously accumulated electrons (known as the brighter-fatter</span>
+<span class="sd">    effect).</span>
+
+<span class="sd">    There are currently four up-to-date sensors shipped with GalSim, which you can specify as the</span>
+<span class="sd">    ``name`` parameter mentioned below. The _50_ indicates 50V back-bias.</span>
+
+<span class="sd">        lsst_itl_50_8</span>
+<span class="sd">                    The ITL sensor being used for LSST, using 8 points along each side of the</span>
+<span class="sd">                    pixel boundaries.</span>
+
+<span class="sd">        lsst_itl_50_32</span>
+<span class="sd">                    The ITL sensor being used for LSST, using 32 points along each side of the</span>
+<span class="sd">                    pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)</span>
+
+<span class="sd">        lsst_e2v_50_8</span>
+<span class="sd">                    The E2V sensor being used for LSST, using 8 points along each side of the</span>
+<span class="sd">                    pixel boundaries.</span>
+
+<span class="sd">        lsst_e2v_50_32</span>
+<span class="sd">                    The E2V sensor being used for LSST, using 32 points along each side of the</span>
+<span class="sd">                    pixel boundaries.  (This is more accurate than the lsst_e2v_8, but slower.)</span>
+
+<span class="sd">    The SiliconSensor model is asymmetric in the behavior along rows and columns in the CCD.</span>
+<span class="sd">    The traditional meaning of (x,y) is (col,row), and the brighter-fatter effect is stronger</span>
+<span class="sd">    along the columns than across the rows, since charge flows more easily in the readout</span>
+<span class="sd">    direction.</span>
+
+<span class="sd">    There is also an option to include &quot;tree rings&quot; in the SiliconSensor model, which add small</span>
+<span class="sd">    distortions to the sensor pixel positions due to non-uniform background doping in the silicon</span>
+<span class="sd">    sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial</span>
+<span class="sd">    function needs to be a `galsim.LookupTable` instance.  Note that if you just want a simple</span>
+<span class="sd">    cosine radial function, you can use the helper class method `simple_treerings` to build the</span>
+<span class="sd">    `LookupTable` for you.</span>
+
+<span class="sd">    Note that there is an option to transpose the effect if your definition of the image is to</span>
+<span class="sd">    have the readout &quot;columns&quot; along the x direction.  E.g. to conform with the LSST Camera</span>
+<span class="sd">    Coordinate System definitions of x,y, which are transposed relative to the usual FITS meanings.</span>
+<span class="sd">    This only affects the direction of the brighter-fatter effect.  It does not change the meaning</span>
+<span class="sd">    of treering_center, which should still be defined in terms of the coordinate system of the</span>
+<span class="sd">    images being passed to `accumulate`.</span>
+
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        name:               The base name of the files which contains the sensor information,</span>
+<span class="sd">                            presumably calculated from the Poisson_CCD simulator, which may</span>
+<span class="sd">                            be specified either as an absolute path or as one of the above names</span>
+<span class="sd">                            that are in the ``galsim.meta_data.share_dir/sensors`` directory.</span>
+<span class="sd">                            name.cfg should be the file used to simulate the pixel distortions,</span>
+<span class="sd">                            and name.dat should containt the distorted pixel information.</span>
+<span class="sd">                            [default: &#39;lsst_itl_50_8&#39;]</span>
+<span class="sd">        strength:           Set the strength of the brighter-fatter effect relative to the</span>
+<span class="sd">                            amount specified by the Poisson simulation results.  [default: 1]</span>
+<span class="sd">        rng:                A `BaseDeviate` object to use for the random number generation</span>
+<span class="sd">                            for the stochastic aspects of the electron production and drift.</span>
+<span class="sd">                            [default: None, in which case one will be made for you]</span>
+<span class="sd">        diffusion_factor:   A factor by which to multiply the diffusion.  Use 0.0 to turn off the</span>
+<span class="sd">                            effect of diffusion entirely. [default: 1.0]</span>
+<span class="sd">        qdist:              The maximum number of pixels away to calculate the distortion due to</span>
+<span class="sd">                            the charge accumulation. A large value will increase accuracy but</span>
+<span class="sd">                            take more time. If it is increased larger than 4, the size of the</span>
+<span class="sd">                            Poisson simulation must be increased to match. [default: 3]</span>
+<span class="sd">        nrecalc:            The number of electrons to accumulate before recalculating the</span>
+<span class="sd">                            distortion of the pixel shapes.  If this is 0, then no automatic</span>
+<span class="sd">                            recalculations are done during an accumulation. Coupled with</span>
+<span class="sd">                            resume=True and recalc=True options, this allows the user to fully</span>
+<span class="sd">                            control when recalculations happen. [default: 10000]</span>
+<span class="sd">        treering_func:      A `LookupTable` giving the tree ring pattern f(r). [default: None]</span>
+<span class="sd">        treering_center:    A `PositionD` object with the center of the tree ring pattern in pixel</span>
+<span class="sd">                            coordinates, which may be outside the pixel region. [default: None;</span>
+<span class="sd">                            required if treering_func is provided]</span>
+<span class="sd">        transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is</span>
+<span class="sd">                            stronger along the x direction. [default: False]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;strength&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;diffusion_factor&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s1">&#39;qdist&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;nrecalc&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;transpose&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                    <span class="s1">&#39;treering_func&#39;</span> <span class="p">:</span> <span class="n">LookupTable</span><span class="p">,</span> <span class="s1">&#39;treering_center&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lsst_itl_50_8&#39;</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffusion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">qdist</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">nrecalc</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">treering_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">treering_center</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+                 <span class="n">transpose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strength</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">strength</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">UniformDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">diffusion_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">qdist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nrecalc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nrecalc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span> <span class="o">=</span> <span class="n">treering_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span> <span class="o">=</span> <span class="n">treering_center</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">transpose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_image</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.cfg&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.dat&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">):</span>
+            <span class="n">cfg_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;sensors&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cfg_file</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot locate file </span><span class="si">%s</span><span class="s2"> or </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">,</span> <span class="n">cfg_file</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span> <span class="o">=</span> <span class="n">cfg_file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;sensors&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot locate vertex file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_config_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">)</span>
+
+        <span class="c1"># Get the Tree ring radial function, if it exists</span>
+        <span class="k">if</span> <span class="n">treering_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># This is a dummy table in the case where no function is specified</span>
+            <span class="c1"># A bit kludgy, but it works</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],</span> <span class="n">f</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">treering_func</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;treering_func must be a galsim.LookupTable&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">treering_center</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;treering_center must be a galsim.PositionD&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Now we read in the absorption length table:</span>
+        <span class="n">abs_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;sensors&#39;</span><span class="p">,</span> <span class="s1">&#39;abs_length.dat&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_abs_length</span><span class="p">(</span><span class="n">abs_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_silicon</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_init_silicon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">diff_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff_step</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span>
+        <span class="n">NumVertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;NumVertices&#39;</span><span class="p">]</span>
+        <span class="n">Nx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;PixelBoundaryNx&#39;</span><span class="p">]</span>
+        <span class="n">Ny</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;PixelBoundaryNy&#39;</span><span class="p">]</span>
+        <span class="c1"># This parameter may be either PixelSize or PixelSizeX.</span>
+        <span class="n">PixelSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;PixelSizeX&#39;</span><span class="p">]</span>
+        <span class="n">SensorThickness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SensorThickness&#39;</span><span class="p">]</span>
+        <span class="n">num_elec</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CollectedCharge_0_0&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span>
+        <span class="c1"># Scale this too, especially important if strength &gt;&gt; 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effective_nrecalc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nrecalc</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span>
+        <span class="n">vertex_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">,</span> <span class="n">skiprows</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vertex_data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">Nx</span> <span class="o">*</span> <span class="n">Ny</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">NumVertices</span> <span class="o">+</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">5</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Vertex file </span><span class="si">%s</span><span class="s2"> does not match config file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">))</span>
+
+        <span class="n">_vertex_data</span> <span class="o">=</span> <span class="n">vertex_data</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Silicon</span><span class="p">(</span><span class="n">NumVertices</span><span class="p">,</span> <span class="n">num_elec</span><span class="p">,</span> <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span><span class="p">,</span>
+                                        <span class="n">diff_step</span><span class="p">,</span> <span class="n">PixelSize</span><span class="p">,</span> <span class="n">SensorThickness</span><span class="p">,</span> <span class="n">_vertex_data</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">abs_length_table</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">updateRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.SiliconSensor(</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, strength=</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">strength</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, diffusion_factor=</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, transpose=True&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.SiliconSensor(name=</span><span class="si">%r</span><span class="s1">, strength=</span><span class="si">%f</span><span class="s1">, rng=</span><span class="si">%r</span><span class="s1">, diffusion_factor=</span><span class="si">%f</span><span class="s1">, &#39;</span>
+                <span class="s1">&#39;qdist=</span><span class="si">%d</span><span class="s1">, nrecalc=</span><span class="si">%f</span><span class="s1">, treering_func=</span><span class="si">%r</span><span class="s1">, treering_center=</span><span class="si">%r</span><span class="s1">, transpose=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nrecalc</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SiliconSensor</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">config</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">strength</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">strength</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rng</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">diffusion_factor</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">qdist</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">nrecalc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">nrecalc</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">treering_func</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">treering_center</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">transpose</span><span class="p">))</span>
+
+    <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;_silicon&#39;</span><span class="p">]</span>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;_last_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Don&#39;t save this through a serialization.</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_silicon</span><span class="p">()</span>  <span class="c1"># Build the _silicon object.</span>
+
+<div class="viewcode-block" id="SiliconSensor.accumulate"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recalc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Accumulate the photons incident at the surface of the sensor into the appropriate</span>
+<span class="sd">        pixels in the image.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photons:        A `PhotonArray` instance describing the incident photons</span>
+<span class="sd">            image:          The `Image` into which the photons should be accumuated.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
+<span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            resume:         Resume accumulating on the same image as a previous call to accumulate.</span>
+<span class="sd">                            This skips an initial (slow) calculation at the start of the</span>
+<span class="sd">                            accumulation to see what flux is already on the image, which can</span>
+<span class="sd">                            be more efficient, especially when the number of pixels is large.</span>
+<span class="sd">                            [default: False]</span>
+<span class="sd">            recalc:         Whether to force a recalculation of the pixel boundaries at the</span>
+<span class="sd">                            start. [default: False]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the total flux that fell onto the image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">resume</span> <span class="ow">and</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_image</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;accumulate called with resume, but accumulate has not &quot;</span>
+                                  <span class="s2">&quot;been been run yet.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;accumulate called with resume, but provided image does &quot;</span>
+                                  <span class="s2">&quot;not match one used in the previous accumulate call.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Calling accumulate on image with undefined bounds&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Cases:</span>
+        <span class="c1"># 1. Brand new image.</span>
+        <span class="c1">#      - resume=False</span>
+        <span class="c1">#    Set image and initialize</span>
+        <span class="c1">#    Set nbatch to effective_nrecalc (or all)</span>
+        <span class="c1">#</span>
+        <span class="c1"># 2. Continuing previous image with recalc according to nrecalc</span>
+        <span class="c1">#      - resume=True</span>
+        <span class="c1">#      - nrecalc &gt; 0</span>
+        <span class="c1">#    Don&#39;t initialize image.  Use _last_image.</span>
+        <span class="c1">#    Set nbatch to how many left in current recalc</span>
+        <span class="c1">#</span>
+        <span class="c1"># 3. Continuing previous image with manual recalculation</span>
+        <span class="c1">#      - resume=True</span>
+        <span class="c1">#      - nrecalc = 0</span>
+        <span class="c1">#    Don&#39;t initialize image.  Use _last_image.</span>
+        <span class="c1">#    Do an update at the start if recalc=True</span>
+        <span class="c1">#    Set nbatch to total photon flux</span>
+
+        <span class="n">nphotons</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">photons</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_nrecalc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Case 3 or 1</span>
+            <span class="n">nbatch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># We won&#39;t actually use this, but logically this makes sense.</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">nphotons</span>
+            <span class="k">if</span> <span class="n">resume</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">subtractDelta</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">);</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">elif</span> <span class="n">resume</span><span class="p">:</span>
+            <span class="c1"># Case 2</span>
+            <span class="c1"># The number in this batch is the total per recalc minus the number of photons</span>
+            <span class="c1"># shot in the last pass(es) of this function since being updated.</span>
+            <span class="n">nbatch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_nrecalc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># We also need to subtract off the delta image from the last pass.</span>
+            <span class="c1"># This represents the flux in the image that hasn&#39;t updated the pixel boundaries</span>
+            <span class="c1"># yet.  So the first accumulate below will continue to add to this, and the whole</span>
+            <span class="c1"># delta image will be added at the end of that call.  Thus we remove it now, so it&#39;s</span>
+            <span class="c1"># not added twice.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">subtractDelta</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Case 1</span>
+            <span class="n">nbatch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_nrecalc</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">);</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">resume</span> <span class="ow">and</span> <span class="n">recalc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># added_flux is how much flux acctually lands on the sensor.</span>
+        <span class="c1"># accum_flux is how much flux is in the photons that we have accumulated so far.</span>
+        <span class="c1"># cumsum_flux is an array with the cumulate sum of the photon fluxes in the photon array.</span>
+        <span class="n">added_flux</span> <span class="o">=</span> <span class="n">accum_flux</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">cumsum_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">i1</span> <span class="o">&lt;</span> <span class="n">nphotons</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cumsum_flux</span><span class="p">,</span> <span class="n">accum_flux</span><span class="o">+</span><span class="n">nbatch</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i2</span><span class="p">,</span> <span class="n">nphotons</span><span class="p">)</span>
+            <span class="n">added_flux</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i2</span> <span class="o">&lt;</span> <span class="n">nphotons</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+                <span class="n">nbatch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_nrecalc</span>  <span class="c1"># In case the first pass was a resume</span>
+                <span class="n">accum_flux</span> <span class="o">=</span> <span class="n">cumsum_flux</span><span class="p">[</span><span class="n">i2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_accum_flux_since_update</span> <span class="o">+=</span> <span class="n">cumsum_flux</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">accum_flux</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="n">i2</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># On the last pass, we don&#39;t update the pixel positions, but we do need to add the</span>
+        <span class="c1"># current running delta image to the full image.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">addDelta</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">added_flux</span></div>
+
+<div class="viewcode-block" id="SiliconSensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an image with the corresponding pixel areas according to the `SiliconSensor`</span>
+<span class="sd">        model.</span>
+
+<span class="sd">        The input image gives the flux values used to set the current levels of the brighter-fatter</span>
+<span class="sd">        distortions.</span>
+
+<span class="sd">        The returned image will have the same size and bounds as the input image, and will have</span>
+<span class="sd">        for its flux values the net pixel area for each pixel according to the `SiliconSensor`</span>
+<span class="sd">        model.</span>
+
+<span class="sd">        Note: The areas here are in units of the nominal pixel area.  This does not account for</span>
+<span class="sd">        any conversion from pixels to sky units using the image wcs (if any).</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image:          The `Image` with the current flux values.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
+<span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            use_flux:       Whether to properly handle the current flux in the image (True) or</span>
+<span class="sd">                            to just calculate the pixel areas for a zero-flux image (False).</span>
+<span class="sd">                            [default: True]  (Note that use_flux=True potentially uses a lot of</span>
+<span class="sd">                            memory!)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            an `Image` with the pixel areas</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">area_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">area_image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">fill_with_pixel_areas</span><span class="p">(</span><span class="n">area_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span> <span class="n">use_flux</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">area_image</span></div>
+
+    <span class="k">def</span> <span class="nf">_read_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="c1"># This reads the Poisson simulator config file for</span>
+        <span class="c1"># the settings that were run</span>
+        <span class="c1"># and returns a dictionary with the values</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span> <span class="p">]</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;#&#39;</span> <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;=&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Error reading config file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">])</span>
+        <span class="c1"># convert strings to int or float values when appropriate</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">SyntaxError</span><span class="p">,</span> <span class="ne">NameError</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">def</span> <span class="nf">_read_abs_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="c1"># This reads in a table of absorption</span>
+        <span class="c1"># length vs wavelength in Si.</span>
+        <span class="c1"># The ipython notebook that created the data</span>
+        <span class="c1"># file from astropy is in the same directory</span>
+        <span class="c1"># in share/sensors/absorption</span>
+        <span class="n">abs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">skiprows</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">xarray</span> <span class="o">=</span> <span class="n">abs_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">farray</span> <span class="o">=</span> <span class="n">abs_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xarray</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">farray</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abs_length_table</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_diff_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">NumPhases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;NumPhases&#39;</span><span class="p">]</span>
+        <span class="n">CollectingPhases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CollectingPhases&#39;</span><span class="p">]</span>
+        <span class="c1"># I&#39;m assuming square pixels for now.</span>
+        <span class="n">PixelSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;PixelSizeX&#39;</span><span class="p">]</span>
+        <span class="n">SensorThickness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SensorThickness&#39;</span><span class="p">]</span>
+        <span class="n">ChannelStopWidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;ChannelStopWidth&#39;</span><span class="p">]</span>
+        <span class="n">FieldOxideTaper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;FieldOxideTaper&quot;</span><span class="p">]</span>
+        <span class="n">Vbb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;Vbb&#39;</span><span class="p">]</span>
+        <span class="n">Vparallel_lo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;Vparallel_lo&#39;</span><span class="p">]</span>
+        <span class="n">Vparallel_hi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;Vparallel_hi&#39;</span><span class="p">]</span>
+        <span class="n">qfh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;qfh&quot;</span><span class="p">]</span>
+        <span class="n">CCDTemperature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CCDTemperature&#39;</span><span class="p">]</span>
+        <span class="c1"># This calculates the diffusion step size given the detector</span>
+        <span class="c1"># parameters.  The diffusion step size is the mean radius of diffusion</span>
+        <span class="c1"># assuming the electron propagates the full width of the sensor.</span>
+        <span class="c1"># It depends on the temperature, the sensor voltages, and</span>
+        <span class="c1"># the diffusion_factor parameter.</span>
+        <span class="c1"># The diffusion sigma will be scaled in Silicon.cpp</span>
+        <span class="c1"># depending on the conversion depth</span>
+
+        <span class="c1"># Set up the diffusion step size at the operating temperature</span>
+        <span class="c1"># First, calculate the approximate front side voltage</span>
+        <span class="n">VChannelStop</span> <span class="o">=</span> <span class="n">qfh</span> <span class="c1"># near zero</span>
+        <span class="n">VCollect</span> <span class="o">=</span> <span class="n">Vparallel_hi</span> <span class="o">+</span> <span class="mf">12.0</span> <span class="c1"># Estimate from simulation</span>
+        <span class="n">VBarrier</span> <span class="o">=</span> <span class="n">Vparallel_lo</span> <span class="o">+</span> <span class="mf">15.0</span> <span class="c1"># Estimate from simulation</span>
+        <span class="n">ChannelStopRegionWidth</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">ChannelStopWidth</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">FieldOxideTaper</span><span class="p">)</span>
+        <span class="n">ChannelStopRegionArea</span> <span class="o">=</span> <span class="n">ChannelStopRegionWidth</span> <span class="o">*</span> <span class="n">PixelSize</span>
+        <span class="n">CollectArea</span> <span class="o">=</span> <span class="p">(</span><span class="n">PixelSize</span> <span class="o">-</span> <span class="n">ChannelStopRegionWidth</span><span class="p">)</span> <span class="o">*</span> <span class="n">PixelSize</span> <span class="o">*</span> <span class="n">CollectingPhases</span> <span class="o">/</span> <span class="n">NumPhases</span>
+        <span class="n">BarrierArea</span> <span class="o">=</span> <span class="p">(</span><span class="n">PixelSize</span> <span class="o">-</span> <span class="n">ChannelStopRegionWidth</span><span class="p">)</span> <span class="o">*</span> <span class="n">PixelSize</span> <span class="o">*</span> <span class="p">(</span><span class="n">NumPhases</span> <span class="o">-</span> <span class="n">CollectingPhases</span><span class="p">)</span> <span class="o">/</span> <span class="n">NumPhases</span>
+        <span class="n">Vfront</span> <span class="o">=</span> <span class="p">(</span><span class="n">ChannelStopRegionArea</span> <span class="o">*</span> <span class="n">VChannelStop</span> <span class="o">+</span> <span class="n">CollectArea</span> <span class="o">*</span> <span class="n">VCollect</span> <span class="o">+</span> <span class="n">BarrierArea</span> <span class="o">*</span> <span class="n">VBarrier</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">PixelSize</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Then, the total voltage across the silicon</span>
+        <span class="n">Vdiff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Vfront</span> <span class="o">-</span> <span class="n">Vbb</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="c1"># This just makes sure that Vdiff is always &gt; 1.0V</span>
+        <span class="n">MobilityFactor</span> <span class="o">=</span> <span class="mf">0.27</span> <span class="c1"># This is the factor from Green et.al.</span>
+        <span class="c1"># 0.026 is kT/q at room temp (298 K)</span>
+        <span class="n">diff_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">0.026</span> <span class="o">*</span> <span class="n">CCDTemperature</span> <span class="o">/</span> <span class="mf">298.0</span> <span class="o">/</span> <span class="n">Vdiff</span> <span class="o">/</span> <span class="n">MobilityFactor</span><span class="p">)</span> <span class="o">*</span> <span class="n">SensorThickness</span>
+        <span class="k">return</span> <span class="n">diff_step</span>
+
+<div class="viewcode-block" id="SiliconSensor.simple_treerings"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.simple_treerings">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">simple_treerings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mf">8000.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Make a simple sinusoidal tree ring pattern that can be used as the ``treering_func``</span>
+<span class="sd">        parameter of `SiliconSensor`.</span>
+
+<span class="sd">        The functional form is :math:`f(r) = A \cos(2 \pi r/P)` where :math:`A` is the</span>
+<span class="sd">        ``amplitude`` and :math:`P` is the ``period``.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            amplitude:  The amplitude of the tree ring pattern distortion.  Typically</span>
+<span class="sd">                        this is less than 0.01 pixels. [default: 0.5]</span>
+<span class="sd">            period:     The period of the tree ring distortion pattern, in pixels.</span>
+<span class="sd">                        [default: 100.]</span>
+<span class="sd">            r_max:      The maximum value of r to store in the lookup table. [default: 8000]</span>
+<span class="sd">            dr:         The spacing to use for the r values. [default: period/100]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">period</span><span class="p">)</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="n">period</span><span class="o">/</span><span class="mf">100.</span>
+        <span class="n">npoints</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r_max</span> <span class="o">/</span> <span class="n">dr</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">LookupTable</span><span class="o">.</span><span class="n">from_func</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="n">r_max</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="n">npoints</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

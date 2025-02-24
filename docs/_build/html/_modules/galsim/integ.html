@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.integ &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.integ</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.integ</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">._utilities</span> <span class="kn">import</span> <span class="n">LRU_Cache</span>
+
+
+<div class="viewcode-block" id="int1d"><a class="viewcode-back" href="../../integ.html#galsim.integ.int1d">[docs]</a><span class="k">def</span> <span class="nf">int1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">abs_err</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate a 1-dimensional function from min to max.</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        &gt;&gt;&gt; def func(x): return x**2</span>
+<span class="sd">        &gt;&gt;&gt; galsim.integ.int1d(func, 0, 1)</span>
+<span class="sd">        0.33333333333333337</span>
+<span class="sd">        &gt;&gt;&gt; galsim.integ.int1d(func, 0, 2)</span>
+<span class="sd">        2.666666666666667</span>
+<span class="sd">        &gt;&gt;&gt; galsim.integ.int1d(func, -1, 1)</span>
+<span class="sd">        0.66666666666666674</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This uses an adaptive Gauss-Kronrod-Patterson method for doing the integration.</span>
+
+<span class="sd">        cf. https://www.jstor.org/stable/2004583</span>
+
+<span class="sd">        If one or both endpoints are infinite, it will automatically use an appropriate</span>
+<span class="sd">        transformation to turn it into a finite integral.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        func:       The function to be integrated.  y = func(x) should be valid.</span>
+<span class="sd">        min:        The lower end of the integration bounds (anything &lt; -1.e10 is treated as</span>
+<span class="sd">                    negative infinity).</span>
+<span class="sd">        max:        The upper end of the integration bounds (anything &gt; 1.e10 is treated as positive</span>
+<span class="sd">                    infinity).</span>
+<span class="sd">        rel_err:    The desired relative error [default: 1.e-6]</span>
+<span class="sd">        abs_err:    The desired absolute error [default: 1.e-12]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the value of the integral.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">)</span>
+    <span class="nb">max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">)</span>
+    <span class="n">rel_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rel_err</span><span class="p">)</span>
+    <span class="n">abs_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">abs_err</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PyInt1d</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="nb">min</span><span class="p">,</span><span class="nb">max</span><span class="p">,</span><span class="n">rel_err</span><span class="p">,</span><span class="n">abs_err</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="hankel"><a class="viewcode-back" href="../../integ.html#galsim.integ.hankel">[docs]</a><span class="k">def</span> <span class="nf">hankel</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">abs_err</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Perform an order nu Hankel transform of the given function f(r) at a specific k value.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        F(k) = \int_0^\infty f(r) J_\nu(k r) r dr</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        For non-truncated Hankel integrals, this uses the method outlined in Ogata, 2005:</span>
+<span class="sd">        http://www.kurims.kyoto-u.ac.jp/~prims/pdf/41-4/41-4-40.pdf</span>
+
+<span class="sd">        For truncated integrals (and k=0), it uses the same adaptive Gauss-Kronrod-Patterson</span>
+<span class="sd">        method used for `int1d`.</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">        func:       The function f(r)</span>
+<span class="sd">        k:          (float or numpy array) The value(s) of k for which to calculate F(k).</span>
+<span class="sd">        nu:         The order of the Bessel function to use for the transform. [default: 0]</span>
+<span class="sd">        rmax:       An optional truncation radius at which to have f(r) drop to 0. [default: None]</span>
+<span class="sd">        rel_err:    The desired relative accuracy [default: 1.e-6]</span>
+<span class="sd">        abs_err:    The desired absolute accuracy [default: 1.e-12]</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        An estimate of F(k)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rel_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rel_err</span><span class="p">)</span>
+    <span class="n">abs_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">abs_err</span><span class="p">)</span>
+    <span class="n">nu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+    <span class="n">rmax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rmax</span><span class="p">)</span> <span class="k">if</span> <span class="n">rmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;k must be &gt;= 0&quot;</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nu</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;nu must be &gt;= 0&quot;</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">_k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">PyHankel</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">_k</span><span class="p">,</span> <span class="n">_res</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">rmax</span><span class="p">,</span> <span class="n">rel_err</span><span class="p">,</span> <span class="n">abs_err</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="IntegrationRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.IntegrationRule">[docs]</a><span class="k">class</span> <span class="nc">IntegrationRule</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that can be used to integrate something more complicated than a normal</span>
+<span class="sd">    scalar function.</span>
+
+<span class="sd">    In GalSim, we use it to do the integration of chromatic images over a bandpass.</span>
+<span class="sd">    Typically f is some kind of draw function, xs are the wavelengths, and w is the</span>
+<span class="sd">    bandpass throughput.  But this class is abstracted away from all of that and can be used</span>
+<span class="sd">    for anything where the function returns something complicated, but which can be added</span>
+<span class="sd">    together to compute the quadrature.</span>
+
+<span class="sd">    Specifically the return value from f must be closed under both addition and multiplication</span>
+<span class="sd">    by a scalar (a float value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the integral int(f(x) w(x) dx) using the appropriate Rule.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            f:      Function to integrate.</span>
+<span class="sd">            xs:     Locations at which to evaluate f.</span>
+<span class="sd">            w:      Weight function if desired [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The approximation to the integral.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateWeights</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span> <span class="n">xs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MidptRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.MidptRule">[docs]</a><span class="k">class</span> <span class="nc">MidptRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Midpoint rule for integration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MidptRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.MidptRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the midpoint rule integration</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            xs:     Locations at which to evaluate f.</span>
+<span class="sd">            w:      Weight function if desired [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The net weights to use at each location.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Not enough points for midptRule integration&quot;</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gs</span> <span class="o">*=</span> <span class="n">w</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gs</span></div></div>
+
+<div class="viewcode-block" id="TrapzRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.TrapzRule">[docs]</a><span class="k">class</span> <span class="nc">TrapzRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Trapezoidal rule for integration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TrapzRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.TrapzRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the trapezoidal rule integration</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            xs:     Locations at which to evaluate f.</span>
+<span class="sd">            w:      Weight function if desired [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The net weights to use at each location.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Not enough points for trapzRule integration&quot;</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gs</span> <span class="o">*=</span> <span class="n">w</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gs</span></div></div>
+
+<div class="viewcode-block" id="QuadRule"><a class="viewcode-back" href="../../integ.html#galsim.integ.QuadRule">[docs]</a><span class="k">class</span> <span class="nc">QuadRule</span><span class="p">(</span><span class="n">IntegrationRule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quadratic rule for integration</span>
+
+<span class="sd">    This models both f and w as linear between the evaluation points, so the product is</span>
+<span class="sd">    quadratic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="QuadRule.calculateWeights"><a class="viewcode-back" href="../../integ.html#galsim.integ.QuadRule.calculateWeights">[docs]</a>    <span class="k">def</span> <span class="nf">calculateWeights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the apporpriate weights for the quadratic rule integration</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            xs:     Locations at which to evaluate f.</span>
+<span class="sd">            w:      Weight function if desired [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The net weights to use at each location.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Not enough points for quadRule integration&quot;</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TrapzRule</span><span class="p">()</span><span class="o">.</span><span class="n">calculateWeights</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="n">w</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ws</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ws</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">ws</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">ws</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ws</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ws</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="n">gs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">ws</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">ws</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">gs</span> <span class="o">/=</span> <span class="mf">6.</span>
+        <span class="k">return</span> <span class="n">gs</span></div></div>
+
+<span class="c1"># To ease backwards compatibility, these are an instantiated object of the above classes</span>
+<span class="n">midptRule</span> <span class="o">=</span> <span class="n">MidptRule</span><span class="p">()</span>  <span class="c1">#: For convenience, an instance of `MidptRule`</span>
+<span class="n">trapzRule</span> <span class="o">=</span> <span class="n">TrapzRule</span><span class="p">()</span>  <span class="c1">#: For convenience, an instance of `TrapzRule`</span>
+<span class="n">quadRule</span> <span class="o">=</span> <span class="n">QuadRule</span><span class="p">()</span>    <span class="c1">#: For convenience, an instance of `QuadRule`</span>
+
+
+<div class="viewcode-block" id="ImageIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ImageIntegrator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for integrators used by `ChromaticObject` to integrate the drawn images</span>
+<span class="sd">    over wavelengthh using a `Bandpass` as a weight function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must instantiate subclass of ImageIntegrator&quot;</span><span class="p">)</span>
+    <span class="c1"># subclasses must define</span>
+    <span class="c1"># 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to</span>
+    <span class="c1">#    evaluate the integrand</span>
+    <span class="c1"># 2) an function attribute `.rule` which takes an integrand function as its first</span>
+    <span class="c1">#    argument, and a list of evaluation wavelengths as its second argument, and returns</span>
+    <span class="c1">#    an approximation to the integral.  (E.g., the function midptRule above)</span>
+
+<div class="viewcode-block" id="ImageIntegrator.__call__"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluateAtWavelength</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">drawImageKwargs</span><span class="p">,</span> <span class="n">doK</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            evaluateAtWavelength:   Function that returns a monochromatic surface brightness</span>
+<span class="sd">                                    profile as a function of wavelength.</span>
+<span class="sd">            bandpass:               `Bandpass` object representing the filter being imaged through.</span>
+<span class="sd">            image:                  `Image` used to set size and scale of output</span>
+<span class="sd">            drawImageKwargs:        dict with other kwargs to send to `ChromaticObject.drawImage`</span>
+<span class="sd">                                    function.</span>
+<span class="sd">            doK:                    Integrate up results of `ChromaticObject.drawKImage` instead of</span>
+<span class="sd">                                    results of `ChromaticObject.drawImage`.  [default: False]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the result of integral as an `Image`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateWaves</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_n_eval</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">waves</span><span class="p">)</span>
+        <span class="n">drawImageKwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;add_to_image&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="c1"># Make sure add_to_image isn&#39;t in kwargs</span>
+
+        <span class="k">def</span> <span class="nf">integrand</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+            <span class="n">prof</span> <span class="o">=</span> <span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">doK</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="o">**</span><span class="n">drawImageKwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawKImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="o">**</span><span class="n">drawImageKwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rule</span><span class="p">(</span><span class="n">integrand</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SampleIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.SampleIntegrator">[docs]</a><span class="k">class</span> <span class="nc">SampleIntegrator</span><span class="p">(</span><span class="n">ImageIntegrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
+<span class="sd">    wavelength using a `Bandpass` as a weight function.</span>
+
+<span class="sd">    This integrator will evaluate the integrand only at the wavelengths in ``bandpass.wave_list``.</span>
+<span class="sd">    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of</span>
+<span class="sd">    points equally spaced apart.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        rule:       Which integration rule to apply to the wavelength and monochromatic surface</span>
+<span class="sd">                    brightness samples.  Options include:</span>
+
+<span class="sd">                    - galsim.integ.midptRule: Use the midpoint integration rule</span>
+<span class="sd">                    - galsim.integ.trapzRule: Use the trapezoidal integration rule</span>
+<span class="sd">                    - galsim.integ.quadRule: Use the quadratic integration rule</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span>
+
+    <span class="k">def</span> <span class="nf">calculateWaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">wave_list</span></div>
+
+
+<div class="viewcode-block" id="ContinuousIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.ContinuousIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ContinuousIntegrator</span><span class="p">(</span><span class="n">ImageIntegrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a chromatic surface brightness profile integrator, which will integrate over</span>
+<span class="sd">    wavelength using a `Bandpass` as a weight function.</span>
+
+<span class="sd">    This integrator will evaluate the integrand at a given number ``N`` of equally spaced</span>
+<span class="sd">    wavelengths over the interval defined by bandpass.blue_limit and bandpass.red_limit.  See</span>
+<span class="sd">    SampleIntegrator for an integrator that only evaluates the integrand at the predefined set of</span>
+<span class="sd">    wavelengths in ``bandpass.wave_list``.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        rule:           Which integration rule to apply to the wavelength and monochromatic</span>
+<span class="sd">                        surface brightness samples.  Options include:</span>
+
+<span class="sd">                        - galsim.integ.midptRule: Use the midpoint integration rule</span>
+<span class="sd">                        - galsim.integ.trapzRule: Use the trapezoidal integration rule</span>
+<span class="sd">                        - galsim.integ.quadRule: Use the quadratic integration rule</span>
+
+<span class="sd">        N:              Number of equally-wavelength-spaced monochromatic surface brightness</span>
+<span class="sd">                        samples to evaluate. [default: 250]</span>
+<span class="sd">        use_endpoints:  Whether to sample the endpoints ``bandpass.blue_limit`` and</span>
+<span class="sd">                        ``bandpass.red_limit``.  This should probably be True for a rule like</span>
+<span class="sd">                        numpy.trapz, which explicitly samples the integration limits.  For a</span>
+<span class="sd">                        rule like the midpoint rule, however, the integration limits are not</span>
+<span class="sd">                        generally sampled, (only the midpoint between each integration limit and</span>
+<span class="sd">                        its nearest interior point is sampled), thus ``use_endpoints`` should be</span>
+<span class="sd">                        set to False in this case.  [default: True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">use_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_endpoints</span> <span class="o">=</span> <span class="n">use_endpoints</span>
+
+    <span class="k">def</span> <span class="nf">calculateWaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="o">*</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_endpoints</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">+</span> <span class="n">h</span> <span class="o">*</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">+</span> <span class="n">h</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)]</span></div>
+
+
+<span class="n">_leggauss</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">gq_annulus_points</span><span class="p">(</span><span class="n">r_outer</span><span class="p">,</span> <span class="n">r_inner</span><span class="p">,</span> <span class="n">n_rings</span><span class="p">,</span> <span class="n">n_spokes</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Generate points and weights for Gaussian quadrature over an annulus.</span>
+
+<span class="sd">    Sample points are generated on a grid of rings (constant radius) and spokes</span>
+<span class="sd">    (constant azimuth).  The sample points with the weights can be used to</span>
+<span class="sd">    approximate an integral over an annulus as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \Int_annulus f(x, y) dx dy = \Sum_{x, y, w} f(x, y) * w</span>
+
+<span class="sd">    To integrate a nth order 2d polynomial over an annulus exactly requires</span>
+<span class="sd">        n_rings = n//2+1</span>
+<span class="sd">        n_spokes = n+1</span>
+
+<span class="sd">    References:</span>
+<span class="sd">      - G. W. Forbes,</span>
+<span class="sd">        &quot;Optical system assessment for design: numerical ray tracing in the Gaussian pupil,&quot;</span>
+<span class="sd">        J. Opt. Soc. Am. A 5, 1943-1956 (1988)</span>
+
+<span class="sd">      - Brian J. Bauman, Hong Xiao,</span>
+<span class="sd">        &quot;Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,&quot;</span>
+<span class="sd">        Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        r_outer: Outer radius of annulus</span>
+<span class="sd">        r_inner: Inner radius of annulus</span>
+<span class="sd">        n_rings: Number of sample rings to use in the Gaussian quadrature</span>
+<span class="sd">        n_spokes: Number of sample spokes to use in the Gaussian quadrature</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        x, y: Cartesian coordinates of the sample points</span>
+<span class="sd">        weights: Weights to use for the Gaussian quadrature</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Li</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">_leggauss</span><span class="p">(</span><span class="n">n_rings</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">r_inner</span><span class="o">/</span><span class="n">r_outer</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">r_outer</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">r_inner</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eps</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">Li</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">eps</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">r_outer</span>
+    <span class="n">spokes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_spokes</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">w</span><span class="o">*</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n_spokes</span><span class="p">)</span>
+    <span class="n">rings</span><span class="p">,</span> <span class="n">spokes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">rings</span><span class="p">,</span> <span class="n">spokes</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">rings</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">rings</span> <span class="o">=</span> <span class="n">rings</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">spokes</span> <span class="o">=</span> <span class="n">spokes</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">rings</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">spokes</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">rings</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">spokes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span>
+
+
+<span class="k">def</span> <span class="nf">gq_annulus</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">r_outer</span><span class="p">,</span> <span class="n">r_inner</span><span class="p">,</span> <span class="n">n_rings</span><span class="p">,</span> <span class="n">n_spokes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Integrate a function over an annular region, using Gaussian quadrature</span>
+<span class="sd">    over an annulus.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">      - G. W. Forbes,</span>
+<span class="sd">        &quot;Optical system assessment for design: numerical ray tracing in the Gaussian pupil,&quot;</span>
+<span class="sd">        J. Opt. Soc. Am. A 5, 1943-1956 (1988)</span>
+
+<span class="sd">      - Brian J. Bauman, Hong Xiao,</span>
+<span class="sd">        &quot;Gaussian quadrature for optical design with noncircular pupils and fields, and broad wavelength range,&quot;</span>
+<span class="sd">        Proc. SPIE 7652, International Optical Design Conference 2010, 76522S (9 September 2010); https://doi.org/10.1117/12.872773</span>
+
+<span class="sd">    The annulus is sampled on a grid of rings and spokes.</span>
+<span class="sd">    To integrate a nth order 2d polynomial exactly, this technique requires</span>
+<span class="sd">        n_rings = n//2+1</span>
+<span class="sd">        n_spokes = n+1</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        f: Function to integrate</span>
+<span class="sd">        r_inner: Inner radius of annulus</span>
+<span class="sd">        r_outer: Outer radius of annulus</span>
+<span class="sd">        n_rings: Number of sample rings to use in the Gaussian quadrature</span>
+<span class="sd">        n_spokes: Number of sample spokes to use in the Gaussian quadrature</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The integral of f over the annulus</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">gq_annulus_points</span><span class="p">(</span><span class="n">r_outer</span><span class="p">,</span> <span class="n">r_inner</span><span class="p">,</span> <span class="n">n_rings</span><span class="p">,</span> <span class="n">n_spokes</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span><span class="p">(</span><span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span> <span class="n">y_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">val</span><span class="o">*</span><span class="n">weights</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

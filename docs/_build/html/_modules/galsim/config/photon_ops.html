@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.photon_ops &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.photon_ops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.photon_ops</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">get_cls_params</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">BuildSED</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">PhotonOp</span>
+<span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">WavelengthSampler</span><span class="p">,</span> <span class="n">FRatioAngles</span><span class="p">,</span> <span class="n">PhotonDCR</span><span class="p">,</span> <span class="n">Refraction</span><span class="p">,</span> <span class="n">FocusDepth</span>
+<span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">TimeSampler</span><span class="p">,</span> <span class="n">PupilImageSampler</span><span class="p">,</span> <span class="n">PupilAnnulusSampler</span>
+
+<span class="c1"># This file handles the construction of photon_ops in config[&#39;stamp&#39;][&#39;photon_ops&#39;].</span>
+
+<span class="c1"># This module-level dict will store all the registered photon_op types.</span>
+<span class="c1"># See the RegisterPhotonOpType function at the end of this file.</span>
+<span class="c1"># The keys are the (string) names of the photon_ops types, and the values will be builders that</span>
+<span class="c1"># know how to build the photon operator object.</span>
+<span class="n">valid_photon_op_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">BuildPhotonOps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the parameters from config[key] (which should be a list) and return a constructed</span>
+<span class="sd">    photon_ops as a list.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     A dict with the configuration information for the photon ops.</span>
+<span class="sd">                    (usually base[&#39;stamp&#39;])</span>
+<span class="sd">        key:        The key in the dict for the photon_ops list.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+<span class="sd">        logger:     Optionally, provide a logger for logging debug statements. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the photon_ops list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;photon_ops must be a list&quot;</span><span class="p">)</span>
+    <span class="n">photon_ops</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>  <span class="c1"># The list in the config dict</span>
+    <span class="n">ops</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># List of the actual operators</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">photon_ops</span><span class="p">)):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">BuildPhotonOp</span><span class="p">(</span><span class="n">photon_ops</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ops</span>
+
+<span class="k">def</span> <span class="nf">BuildPhotonOp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the parameters from config[key] and return a single constructed photon_op object.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     A list with the configuration information for the photon ops.</span>
+<span class="sd">                    (usually base[&#39;stamp&#39;][&#39;photon_ops&#39;])</span>
+<span class="sd">        key:        The index in the list for this photon_op.  It&#39;s called key, since for most</span>
+<span class="sd">                    things, this is a key into a dict, but here it&#39;s normally an integer index</span>
+<span class="sd">                    into the photon_ops list.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+<span class="sd">        logger:     Optionally, provide a logger for logging debug statements. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a object that would be valid in a photon_ops list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Start BuildPhotonOp key = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="c1"># Check for direct value, else get the type</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">PhotonOp</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">param</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span> <span class="ow">or</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">op_type</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;photon_op must be either a PhotonOp or a dict&quot;</span><span class="p">)</span>
+
+    <span class="c1"># For these two, just do the usual ParseValue function.</span>
+    <span class="k">if</span> <span class="n">op_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Eval&#39;</span><span class="p">,</span> <span class="s1">&#39;Current&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">op_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_photon_op_types</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid photon_op type.&quot;</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_photon_op_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+    <span class="c1"># Check if we can use the current cached object</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">cop</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">cindex_key</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cindex</span> <span class="o">==</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: The photon_op is already current&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: index_key = </span><span class="si">%s</span><span class="s1">, index = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+                         <span class="n">cindex_key</span><span class="p">,</span> <span class="n">cindex</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cop</span>
+
+    <span class="c1"># Need to use a builder.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Building photon_op type </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">op_type</span><span class="p">)</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_photon_op_types</span><span class="p">[</span><span class="n">op_type</span><span class="p">]</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildPhotonOp</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: photon_op = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">))</span>
+
+    <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">op</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span>
+
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<div class="viewcode-block" id="PhotonOpBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.PhotonOpBuilder">[docs]</a><span class="k">class</span> <span class="nc">PhotonOpBuilder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for building PhotonOp objects.</span>
+
+<span class="sd">    The base class defines the call signatures of the methods that any derived class should follow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PhotonOpBuilder.buildPhotonOp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.PhotonOpBuilder.buildPhotonOp">[docs]</a>    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
+
+<span class="sd">        Note: Sub-classes must override this function with a real implementation.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the PhotonOp</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If provided, a logger for logging debug statements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the constructed PhotonOp object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> class has not overridden buildPhotonOp&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building simple PhotonOp objects.</span>
+
+<span class="sd">    The initializer takes an init_func, which is the class or function to call to build the</span>
+<span class="sd">    PhotonOp.  For the kwargs, it calls getKwargs, which does the normal parsing of the req_params</span>
+<span class="sd">    and related class attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_func</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
+
+    <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the kwargs to pass to the build function based on the following attributes of</span>
+<span class="sd">        init_func:</span>
+
+<span class="sd">        _req_params</span>
+<span class="sd">                        A dict of required parameters and their types.</span>
+<span class="sd">        _opt_params</span>
+<span class="sd">                        A dict of optional parameters and their types.</span>
+<span class="sd">        _single_params</span>
+<span class="sd">                        A list of dicts of parameters such that one and only one of</span>
+<span class="sd">                        parameter in each dict is required.</span>
+<span class="sd">        _takes_rng</span>
+<span class="sd">                        A bool value saying whether an rng object is required.</span>
+
+<span class="sd">        See the classes in photon_array.py for examples of classes that set these attributes.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the photon_op type.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If provided, a logger for logging debug statements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            kwargs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">takes_rng</span><span class="p">:</span>  <span class="c1"># pragma: no cover  None of ours have this anymore.  But it&#39;s still allowed.</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kwargs</span>
+
+    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the PhotonOp based on the specifications in the config dict.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the photon_op type.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If provided, a logger for logging debug statements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the constructed PhotonOp object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getKwargs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">WavelengthSamplerBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a WavelengthSampler</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This one needs special handling for sed and bandpass</span>
+    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="n">WavelengthSampler</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sed&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;sed&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;sed is required for WavelengthSampler&quot;</span><span class="p">)</span>
+        <span class="n">sed</span> <span class="o">=</span> <span class="n">BuildSED</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;sed&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sed</span>
+        <span class="k">if</span> <span class="s1">&#39;bandpass&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;bandpass is required for WavelengthSampler&quot;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;bandpass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;bandpass&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">WavelengthSampler</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">PhotonDCRBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a PhotonDCR</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This one needs special handling for obj_coord</span>
+    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="n">PhotonDCR</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;sky_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;obj_coord&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;sky_pos&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">PhotonDCR</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ListPhotonOpBuilder</span><span class="p">(</span><span class="n">PhotonOpBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Select a photon_op from a list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">buildPhotonOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+        <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not a list.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the length of items.</span>
+        <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for photon_op type=List&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BuildPhotonOp</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegisterPhotonOpType"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.RegisterPhotonOpType">[docs]</a><span class="k">def</span> <span class="nf">RegisterPhotonOpType</span><span class="p">(</span><span class="n">photon_op_type</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a photon_op type for use by the config apparatus.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_op_type: The name of the config type to register</span>
+<span class="sd">        builder:        A builder object to use for building the PhotonOp object.  It should</span>
+<span class="sd">                        be an instance of a subclass of PhotonOpBuilder.</span>
+<span class="sd">        input_type:     If the PhotonOp builder utilises an input object, give the key name of the</span>
+<span class="sd">                        input type here.  (If it uses more than one, this may be a list.)</span>
+<span class="sd">                        [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_photon_op_types</span><span class="p">[</span><span class="n">photon_op_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span>
+    <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">photon_op_type</span><span class="p">)</span></div>
+
+
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;WavelengthSampler&#39;</span><span class="p">,</span> <span class="n">WavelengthSamplerBuilder</span><span class="p">())</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;FRatioAngles&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">FRatioAngles</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;PhotonDCR&#39;</span><span class="p">,</span> <span class="n">PhotonDCRBuilder</span><span class="p">())</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;Refraction&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">Refraction</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;FocusDepth&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">FocusDepth</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="n">ListPhotonOpBuilder</span><span class="p">())</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;PupilImageSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PupilImageSampler</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;PupilAnnulusSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PupilAnnulusSampler</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;TimeSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">TimeSampler</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

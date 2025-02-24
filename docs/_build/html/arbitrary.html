@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbitrary Profiles &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Phase-screen PSFs" href="phase_psf.html" />
+    <link rel="prev" title="Galaxies" href="gal.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Arbitrary Profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#interpolated-images">Interpolated Images</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.InterpolatedImage"><code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim._InterpolatedImage"><code class="docutils literal notranslate"><span class="pre">_InterpolatedImage()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#interpolated-fourier-space-images">Interpolated Fourier-space Images</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.InterpolatedKImage"><code class="docutils literal notranslate"><span class="pre">InterpolatedKImage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim._InterpolatedKImage"><code class="docutils literal notranslate"><span class="pre">_InterpolatedKImage()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#shapelet-decomposition">Shapelet Decomposition</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.Shapelet"><code class="docutils literal notranslate"><span class="pre">Shapelet</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="sb.html">Surface Brightness Profiles</a></li>
+      <li class="breadcrumb-item active">Arbitrary Profiles</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/arbitrary.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="arbitrary-profiles">
+<h1>Arbitrary Profiles<a class="headerlink" href="#arbitrary-profiles" title="Permalink to this heading"></a></h1>
+<p>If none of the above classes seem appropriate, it is possible to define any arbitrary
+profile by an image and then interpolating between the pixel positions to define the
+surface brightness at any arbitrary location.  Similarly, one can define the image in
+Fourier space, or use shapelets, which are a different complete basis set, instead of
+using pixels.</p>
+<section id="interpolated-images">
+<h2>Interpolated Images<a class="headerlink" href="#interpolated-images" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.InterpolatedImage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InterpolatedImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'flux'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_pad_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculate_stepk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculate_maxk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_true_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depixelize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_force_stepk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_force_maxk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InterpolatedImage" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class describing non-parametric profiles specified using an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, which can be
+interpolated for the purpose of carrying out transformations.</p>
+<p>The InterpolatedImage class is useful if you have a non-parametric description of an object as
+an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, that you wish to manipulate / transform using <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods such as
+<a class="reference internal" href="gsobject.html#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.magnify" title="galsim.GSObject.magnify"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.magnify</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shift</span></code></a>, etc.  Note that when convolving an
+InterpolatedImage, the use of real-space convolution is not recommended, since it is typically
+a great deal slower than Fourier-space convolution for this kind of object.</p>
+<p>There are three options for determining the flux of the profile.</p>
+<ol class="arabic simple">
+<li><p>You can simply specify a <code class="docutils literal notranslate"><span class="pre">flux</span></code> value explicitly.</p></li>
+<li><p>If you set <code class="docutils literal notranslate"><span class="pre">normalization</span> <span class="pre">=</span> <span class="pre">'flux'</span></code>, the flux will be taken as the sum of the pixel values
+in the input image.  This corresponds to an image that was drawn with
+<code class="docutils literal notranslate"><span class="pre">drawImage(method='no_pixel')</span></code>.  This is the default if flux is not given.</p></li>
+<li><p>If you set <code class="docutils literal notranslate"><span class="pre">normalization</span> <span class="pre">=</span> <span class="pre">'sb'</span></code>, the pixel values are treated as samples of the surface
+brightness profile at each location.  This corresponds to an image drawn with
+<code class="docutils literal notranslate"><span class="pre">drawImage(method='sb')</span></code>.  The flux is then the sum of the pixels in the input image
+multiplied by the pixel area.</p></li>
+</ol>
+<p>You can also use images that were drawn with one of the pixel-integrating methods (‘auto’,
+‘phot’, ‘fft’, or ‘real_space’), or real images where nature has integrated over the pixel for
+you.  However, the resulting profile will by default include a convolution by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> (this
+is equivalent to integration over the pixel).  This is often acceptable, and the resulting
+<a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> object can be convolved by other profiles as usual.  One just needs to
+remember to draw the final convolved profile using <code class="docutils literal notranslate"><span class="pre">method='no_pixel'</span></code> to avoid including
+the pixel convolution a second time.  In particular, one should not use it in conjunction
+with photon shooting, for the same reason.</p>
+<p>However, if you want to try to remove the effect of the pixel and have the <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>
+model the pre-pixelized profile, then you can set <code class="docutils literal notranslate"><span class="pre">depixelize=True</span></code>.  This will call
+<a class="reference internal" href="image_class.html#galsim.Image.depixelize" title="galsim.Image.depixelize"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.depixelize</span></code></a> on the image automatically to try to remove the effect of the pixelization.
+We recommend using a Lanczos interpolant with this option for best results.  (Higher order
+tends to work better here.) This step can be rather slow and memory-demanding, so use this
+with caution.  But if used, the resulting profile represents the true underlying profile,
+without the pixel convolution.  It can therefore be rotated, sheared, etc.  And when rendering,
+one should use the methods that do involve integration over the pixel: <code class="docutils literal notranslate"><span class="pre">auto</span></code>, <code class="docutils literal notranslate"><span class="pre">phot</span></code>, etc.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Input images that are undersampled and/or noisy may not necessarily work well with the
+<code class="docutils literal notranslate"><span class="pre">depixelize=True</span></code> option.  Users should treat this option with some care and validate
+that the results are sufficiently accurate for your particular use case.</p>
+</div>
+<p>If the input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> has a <code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> associated with it, then there is no need to
+specify one as a parameter here.  But if one is provided, that will override any <code class="docutils literal notranslate"><span class="pre">scale</span></code> or
+<code class="docutils literal notranslate"><span class="pre">wcs</span></code> that is native to the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>The user may optionally specify an interpolant, <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code>, for real-space manipulations
+(e.g., shearing, resampling).  If none is specified, then by default, a <a class="reference internal" href="interpolant.html#galsim.Quintic" title="galsim.Quintic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Quintic</span></code></a> interpolant is
+used.  The user may also choose to specify two quantities that can affect the Fourier space
+convolution: the k-space interpolant (<code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code>) and the amount of padding to include
+around the original images (<code class="docutils literal notranslate"><span class="pre">pad_factor</span></code>).  The default values for <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code>,
+<code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code>, and <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> were chosen based on the tests of branch #389 to reach
+good accuracy without being excessively slow.  Users should be particularly wary about changing
+<code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code> and <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> from the defaults without careful testing.  The user is
+given complete freedom to choose interpolants and pad factors, and no warnings are raised when
+the code is modified to choose some combination that is known to give significant error.  More
+details can be found in <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>, especially table 1, and in comment
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621">https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621</a> and the following
+comments.</p>
+<p>The user can choose to pad the image with a noise profile if desired.  To do so, specify
+the target size for the noise padding in <code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code>, and specify the kind of noise
+to use in <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code>.  The <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> option may be a Gaussian random noise of some
+variance, or a Gaussian but correlated noise field that is specified either as a
+<a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance, an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> (from which a correlated noise model is derived), or
+a string (interpreted as a filename of an image to use for deriving a <a class="reference internal" href="corr_noise.html#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a>).
+The user can also pass in a random number generator to be used for noise generation.  Finally,
+the user can pass in a <code class="docutils literal notranslate"><span class="pre">pad_image</span></code> for deterministic image padding.</p>
+<p>By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
+use for further manipulations, rather than using the most conservative possibility.  For typical
+objects representing galaxies and PSFs this can easily make the difference between several
+seconds (conservative) and 0.04s (recalculated).  However, the user can turn off this option,
+and may especially wish to do so when using images that do not contain a high S/N object - e.g.,
+images of noise fields.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interpolated_image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedImage</span><span class="p">(</span>
+<span class="go">        image, x_interpolant=None, k_interpolant=None, normalization=&#39;flux&#39;, scale=None,</span>
+<span class="go">        wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0., use_cache=True,</span>
+<span class="go">        pad_image=None, rng=None, calculate_stepk=True, calculate_maxk=True,</span>
+<span class="go">        use_true_center=True, offset=None, hdu=None)</span>
+</pre></div>
+</div>
+<p>Initializes <code class="docutils literal notranslate"><span class="pre">interpolated_image</span></code> as an InterpolatedImage instance.</p>
+<p>For comparison of the case of padding with noise or zero when the image itself includes noise,
+compare <code class="docutils literal notranslate"><span class="pre">im1</span></code> and <code class="docutils literal notranslate"><span class="pre">im2</span></code> from the following code snippet (which can be executed from the
+examples/ directory):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;data/147246.0_150.416558_1.998697_masknoise.fits&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_im1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_im2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">noise_pad</span><span class="o">=</span><span class="s1">&#39;data/blankimg.fits&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_im1</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;no_pixel&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_im2</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">im2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;no_pixel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Examination of these two images clearly shows how padding with a correlated noise field that is
+similar to the one in the real data leads to a more reasonable appearance for the result when
+re-drawn at a different size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from which to construct the object.
+This may be either an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance or a string indicating a fits
+file from which to read the image.  In the latter case, the <code class="docutils literal notranslate"><span class="pre">hdu</span></code>
+kwarg can be used to specify a particular HDU in that file.</p></li>
+<li><p><strong>x_interpolant</strong> – Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance or a string indicating which real-space
+interpolant should be used.  Options are ‘nearest’, ‘sinc’, ‘linear’,
+‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the integer order
+to use. [default: galsim.Quintic()]</p></li>
+<li><p><strong>k_interpolant</strong> – Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance or a string indicating which k-space
+interpolant should be used.  Options are ‘nearest’, ‘sinc’, ‘linear’,
+‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the integer order
+to use.  We strongly recommend leaving this parameter at its default
+value; see text above for details.  [default: galsim.Quintic()]</p></li>
+<li><p><strong>normalization</strong> – <p>Two options for specifying the normalization of the input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>:</p>
+<ul>
+<li><p>”flux” or “f” means that the sum of the pixels is normalized
+to be equal to the total flux.</p></li>
+<li><p>”surface brightness” or “sb” means that the pixels sample
+the surface brightness distribution at each location.</p></li>
+</ul>
+<p>This is overridden if you specify an explicit flux value.
+[default: “flux”]</p>
+</p></li>
+<li><p><strong>scale</strong> – If provided, use this as the pixel scale for the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>; this will
+override the pixel scale stored by the provided <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, in any.
+If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, then take the provided image’s pixel scale.
+[default: None]</p></li>
+<li><p><strong>wcs</strong> – If provided, use this as the wcs for the image.  At most one of
+<code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> may be provided. [default: None]</p></li>
+<li><p><strong>flux</strong> – Optionally specify a total flux for the object, which overrides the
+implied flux normalization from the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> itself. [default: None]</p></li>
+<li><p><strong>pad_factor</strong> – Factor by which to pad the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> with zeros.  We strongly recommend
+leaving this parameter at its default value; see text above for
+details.  [default: 4]</p></li>
+<li><p><strong>noise_pad_size</strong> – If provided, the image will be padded out to this size (in arcsec) with
+the noise specified by <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code>. This is important if you are
+planning to whiten the resulting image.  You want to make sure that the
+noise-padded image is larger than the postage stamp onto which you are
+drawing this object.  [default: None]</p></li>
+<li><p><strong>noise_pad</strong> – <p>Noise properties to use when padding the original image with
+noise.  This can be specified in several ways:</p>
+<ol class="loweralpha simple">
+<li><p>as a float, which is interpreted as being a variance to use when
+padding with uncorrelated Gaussian noise;</p></li>
+<li><p>as a <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseCorrelatedNoise</span></code></a>, which contains information about
+the desired noise power spectrum - any random number generator passed
+to the <code class="docutils literal notranslate"><span class="pre">rng</span></code> keyword will take precedence over that carried in
+an input <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance;</p></li>
+<li><p>as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of a noise field, which is used to calculate
+the desired noise power spectrum; or</p></li>
+<li><p>as a string which is interpreted as a filename containing an
+example noise field with the proper noise power spectrum (as an
+<a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> in the first HDU).</p></li>
+</ol>
+<p>It is important to keep in mind that the calculation of the correlation
+function that is internally stored within a <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a>
+object is a non-negligible amount of overhead, so the recommended means
+of specifying a correlated noise field for padding are (b) or (d).  In
+the case of (d), if the same file is used repeatedly, then the
+<code class="docutils literal notranslate"><span class="pre">use_cache</span></code> keyword (see below) can be used to prevent the need for
+repeated <a class="reference internal" href="corr_noise.html#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a> initializations.  [default: 0, i.e., pad
+with zeros]</p>
+</p></li>
+<li><p><strong>use_cache</strong> – Specify whether to cache <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> read in from a file to save
+having to build a CorrelatedNoise object repeatedly from the same image.
+[default: True]</p></li>
+<li><p><strong>rng</strong> – If padding by noise, the user can optionally supply the random noise
+generator to use for drawing random numbers as <code class="docutils literal notranslate"><span class="pre">rng</span></code> (may be any kind
+of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object).  Such a user-input random number generator
+takes precedence over any stored within a user-input
+<a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance (see the <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> parameter).
+If <code class="docutils literal notranslate"><span class="pre">rng=None</span></code>, one will be automatically created, using the time as a
+seed. [default: None]</p></li>
+<li><p><strong>pad_image</strong> – <p><a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> to be used for deterministically padding the original image.
+This can be specified in two ways:</p>
+<ul>
+<li><p>as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>; or</p></li>
+<li><p>as a string which is interpreted as a filename containing an
+image to use (in the first HDU).</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">pad_image</span></code> scale or wcs is ignored.  It uses the same scale or
+wcs for both the <code class="docutils literal notranslate"><span class="pre">image</span></code> and the <code class="docutils literal notranslate"><span class="pre">pad_image</span></code>.
+The user should be careful to ensure that the image used for padding
+has roughly zero mean.  The purpose of this keyword is to allow for a
+more flexible representation of some noise field around an object; if
+the user wishes to represent the sky level around an object, they
+should do that after they have drawn the final image instead.
+[default: None]</p>
+</p></li>
+<li><p><strong>calculate_stepk</strong> – Specify whether to perform an internal determination of the extent of
+the object being represented by the InterpolatedImage; often this is
+useful in choosing an optimal value for the stepsize in the Fourier
+space lookup table.
+If you know a priori an appropriate maximum value for <code class="docutils literal notranslate"><span class="pre">stepk</span></code>, then
+you may also supply that here instead of a bool value, in which case
+the <code class="docutils literal notranslate"><span class="pre">stepk</span></code> value is still calculated, but will not go above the
+provided value.
+[default: True]</p></li>
+<li><p><strong>calculate_maxk</strong> – Specify whether to perform an internal determination of the highest
+spatial frequency needed to accurately render the object being
+represented by the InterpolatedImage; often this is useful in choosing
+an optimal value for the extent of the Fourier space lookup table.
+If you know a priori an appropriate maximum value for <code class="docutils literal notranslate"><span class="pre">maxk</span></code>, then
+you may also supply that here instead of a bool value, in which case
+the <code class="docutils literal notranslate"><span class="pre">maxk</span></code> value is still calculated, but will not go above the
+provided value.
+[default: True]</p></li>
+<li><p><strong>use_true_center</strong> – Similar to the same parameter in the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> function,
+this sets whether to use the true center of the provided image as the
+center of the profile (if <code class="docutils literal notranslate"><span class="pre">use_true_center=True</span></code>) or the nominal
+center given by image.center (if <code class="docutils literal notranslate"><span class="pre">use_true_center=False</span></code>)
+[default: True]</p></li>
+<li><p><strong>depixelize</strong> – Whether to try to remove the effect of the pixelization.  If this is
+True, then drawing this profile with method=’auto’ should render an
+image equivalent to the input image.  If this is False (the default),
+then you would need to draw with method=’no_pixel’ to get an equivalent
+image.  See discussion above. [default: False]</p></li>
+<li><p><strong>offset</strong> – The location in the input image to use as the center of the profile.
+This should be specified relative to the center of the input image
+(either the true center if <code class="docutils literal notranslate"><span class="pre">use_true_center=True</span></code>, or the nominal
+center if <code class="docutils literal notranslate"><span class="pre">use_true_center=False</span></code>).  [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>hdu</strong> – When reading in an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from a file, this parameter can be used to
+select a particular HDU in the file. [default: None]</p></li>
+<li><p><strong>_force_stepk</strong> – Override the normal stepk calculation (using gsparams.folding_threshold)
+and force stepk to the given value. [default: 0]</p></li>
+<li><p><strong>_force_maxk</strong> – Override the normal maxk calculation (using gsparams.maxk_threshold)
+and force maxk to the given value.  This option in particular can help
+reduce FFT artifacts in a manner that is currently unobtainable by
+lowering maxk_threshold. [default: 0]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.InterpolatedImage.image">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">image</span></span><a class="headerlink" href="#galsim.InterpolatedImage.image" title="Permalink to this definition"></a></dt>
+<dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.InterpolatedImage.k_interpolant">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">k_interpolant</span></span><a class="headerlink" href="#galsim.InterpolatedImage.k_interpolant" title="Permalink to this definition"></a></dt>
+<dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.InterpolatedImage.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InterpolatedImage.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<p>You may either provide a <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or one or more named parameters as keyword arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The latter style will leave all non-named parameters at their current
+values. It only updates the named parameters to the given values.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.InterpolatedImage.x_interpolant">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x_interpolant</span></span><a class="headerlink" href="#galsim.InterpolatedImage.x_interpolant" title="Permalink to this definition"></a></dt>
+<dd><p>The real-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim._InterpolatedImage">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">_InterpolatedImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">galsim.Quintic(gsparams=galsim.GSParams(128,</span> <span class="pre">8192,</span> <span class="pre">0.005,</span> <span class="pre">5.0,</span> <span class="pre">0.001,</span> <span class="pre">1e-05,</span> <span class="pre">1e-05,</span> <span class="pre">1,</span> <span class="pre">0.0001,</span> <span class="pre">1e-06,</span> <span class="pre">1e-06,</span> <span class="pre">1e-08,</span> <span class="pre">1e-05))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">galsim.Quintic(gsparams=galsim.GSParams(128,</span> <span class="pre">8192,</span> <span class="pre">0.005,</span> <span class="pre">5.0,</span> <span class="pre">0.001,</span> <span class="pre">1e-05,</span> <span class="pre">1e-05,</span> <span class="pre">1,</span> <span class="pre">0.0001,</span> <span class="pre">1e-06,</span> <span class="pre">1e-06,</span> <span class="pre">1e-08,</span> <span class="pre">1e-05))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_true_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_stepk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_maxk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim._InterpolatedImage" title="Permalink to this definition"></a></dt>
+<dd><p>Approximately equivalent to <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>, but with fewer options and no sanity checks.</p>
+<p>Some notable reductions in functionality relative to <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>:</p>
+<ol class="arabic simple">
+<li><p>There are no padding options. The image must be provided with all padding already applied.</p></li>
+<li><p>The stepk and maxk values will not be calculated.  If you want to use values for these other
+than the default, you may provide them as force_stepk and force_maxk.  Otherwise
+stepk ~= 2pi / image_size and maxk ~= x_interpolant.krange() / pixel_scale.</p></li>
+<li><p>The flux is just the flux of the image.  It cannot be rescaled to a different flux value.</p></li>
+<li><p>The input image must have a defined wcs.</p></li>
+<li><p>The image is not recentered to have its center at (0,0).  The returned profile will be
+centered wherever the (0,0) location is in the image, possibly with an offset governed
+by <code class="docutils literal notranslate"><span class="pre">offset</span></code> and <code class="docutils literal notranslate"><span class="pre">use_true_center</span></code>.  If you want to mimic the behavior of the regular
+<a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> initializer, you can call <code class="docutils literal notranslate"><span class="pre">image.setCenter(0,0)</span></code> before calling this
+function.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from which to construct the object.</p></li>
+<li><p><strong>x_interpolant</strong> – An <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance for real-space interpolation
+[default: Quintic]</p></li>
+<li><p><strong>k_interpolant</strong> – An <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance for k-space interpolation [default: Quintic]</p></li>
+<li><p><strong>use_true_center</strong> – Whether to adjust the offset by the difference between the integer
+center and the true center. For odd-sized images, this does nothing,
+but for even-sized dimensions, it adjusts the offset by -0.5.
+[default: True]</p></li>
+<li><p><strong>offset</strong> – The location in the input image to use as the center of the profile
+relative to position (0,0). [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>force_stepk</strong> – A stepk value to use rather than the default value. [default: 0.]</p></li>
+<li><p><strong>force_maxk</strong> – A maxk value to use rather than the default value. [default: 0.]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="interpolated-fourier-space-images">
+<h2>Interpolated Fourier-space Images<a class="headerlink" href="#interpolated-fourier-space-images" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.InterpolatedKImage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InterpolatedKImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_kimage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imag_kimage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imag_hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InterpolatedKImage" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class describing non-parametric profiles specified by samples of their complex Fourier
+transform.</p>
+<p>The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
+transform of the profile (provided as either a complex <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> or two images giving the real
+and imaginary parts) that you wish to manipulate / transform using <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods such as
+<a class="reference internal" href="gsobject.html#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.magnify" title="galsim.GSObject.magnify"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.magnify</span></code></a>, <a class="reference internal" href="gsobject.html#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shift</span></code></a>, etc.  Note that neither real-space
+convolution nor photon-shooting of InterpolatedKImages is currently implemented.  Please submit
+an issue at <a class="reference external" href="http://github.com/GalSim-developers/GalSim/issues">http://github.com/GalSim-developers/GalSim/issues</a> if you require either of these
+use cases.</p>
+<p>The images required for creating an InterpolatedKImage are precisely those returned by the
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawKImage</span></code></a> method.  The <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> objects in the following command will
+produce essentially equivalent images when drawn with the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">returns_a_GSObject</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedKImage</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">drawKImage</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The input <code class="docutils literal notranslate"><span class="pre">kimage</span></code> must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
+known as <a class="reference internal" href="image_class.html#galsim.ImageCF" title="galsim.ImageCF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">ImageCF</span></code></a> and <a class="reference internal" href="image_class.html#galsim.ImageCD" title="galsim.ImageCD"><code class="xref any py py-func docutils literal notranslate"><span class="pre">ImageCD</span></code></a> objects respectively.
+The only wcs permitted is a simple <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> (or <a class="reference internal" href="wcs.html#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>), in which case <code class="docutils literal notranslate"><span class="pre">kimage.scale</span></code>
+is used for the <code class="docutils literal notranslate"><span class="pre">stepk</span></code> value unless overridden by the <code class="docutils literal notranslate"><span class="pre">stepk</span></code> initialization argument.</p>
+<p>Furthermore, the complex-valued Fourier profile given by <code class="docutils literal notranslate"><span class="pre">kimage</span></code> must be Hermitian, since it
+represents a real-valued real-space profile.  (To see an example of valid input to
+InterpolatedKImage, you can look at the output of <a class="reference internal" href="gsobject.html#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawKImage</span></code></a>).</p>
+<p>The user may optionally specify an interpolant, <code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code>, for Fourier-space
+manipulations (e.g., shearing, resampling).  If none is specified, then by default, a <a class="reference internal" href="interpolant.html#galsim.Quintic" title="galsim.Quintic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Quintic</span></code></a>
+interpolant is used.  The <a class="reference internal" href="interpolant.html#galsim.Quintic" title="galsim.Quintic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Quintic</span></code></a> interpolant has been found to be a good compromise between
+speed and accuracy for real-and Fourier-space interpolation of objects specified by samples of
+their real-space profiles (e.g., in <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>), though no extensive testing has been
+performed for objects specified by samples of their Fourier-space profiles (e.g., this
+class).</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interpolated_kimage</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+<span class="go">                                                    gsparams=None)</span>
+</pre></div>
+</div>
+<p>Initializes <code class="docutils literal notranslate"><span class="pre">interpolated_kimage</span></code> as an InterpolatedKImage instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kimage</strong> – The complex <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> corresponding to the Fourier-space samples.</p></li>
+<li><p><strong>k_interpolant</strong> – Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance or a string indicating which k-space
+interpolant should be used.  Options are ‘nearest’, ‘sinc’, ‘linear’,
+‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the integer order
+to use.  [default: galsim.Quintic()]</p></li>
+<li><p><strong>stepk</strong> – By default, the stepk value (the sampling frequency in Fourier-space)
+of the profile is set by the <code class="docutils literal notranslate"><span class="pre">scale</span></code> attribute of the supplied images.
+This keyword allows the user to specify a coarser sampling in Fourier-
+space, which may increase efficiency at the expense of decreasing the
+separation between neighboring copies of the DFT-rendered real-space
+profile.  (See the <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> docstring for the parameter
+<code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> for more information). [default: kimage.scale]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+<li><p><strong>real_kimage</strong> – Optionally, rather than provide kimage, you may provide the real
+and imaginary parts separately.  These separate real-valued images
+may be strings, in which case they refer to FITS files from which
+to read the images. [default: None]</p></li>
+<li><p><strong>imag_kimage</strong> – The imaginary image corresponding to real_kimage. [default: None]</p></li>
+<li><p><strong>real_hdu</strong> – When reading in real_kimage from a file, this parameter can be used to
+select a particular HDU in the file. [default: None]</p></li>
+<li><p><strong>imag_hdu</strong> – When reading in imag_kimage from a file, this parameter can be used to
+select a particular HDU in the file. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.InterpolatedKImage.k_interpolant">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">k_interpolant</span></span><a class="headerlink" href="#galsim.InterpolatedKImage.k_interpolant" title="Permalink to this definition"></a></dt>
+<dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.InterpolatedKImage.kimage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kimage</span></span><a class="headerlink" href="#galsim.InterpolatedKImage.kimage" title="Permalink to this definition"></a></dt>
+<dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.InterpolatedKImage.withGSParams">
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InterpolatedKImage.withGSParams" title="Permalink to this definition"></a></dt>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<p>You may either provide a <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or one or more named parameters as keyword arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">folding_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The latter style will leave all non-named parameters at their current
+values. It only updates the named parameters to the given values.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim._InterpolatedKImage">
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">_InterpolatedKImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_interpolant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedKImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim._InterpolatedKImage" title="Permalink to this definition"></a></dt>
+<dd><p>Approximately equivalent to <a class="reference internal" href="#galsim.InterpolatedKImage" title="galsim.InterpolatedKImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedKImage</span></code></a>, but with fewer options and no sanity
+checks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kimage</strong> – The complex <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> corresponding to the Fourier-space samples.</p></li>
+<li><p><strong>k_interpolant</strong> – An <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> instance indicating which k-space interpolant should be
+used.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="shapelet-decomposition">
+<h2>Shapelet Decomposition<a class="headerlink" href="#shapelet-decomposition" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.Shapelet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Shapelet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bvec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Shapelet" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+<p>A class describing polar shapelet surface brightness profiles.</p>
+<p>This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
+decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions
+of the 2-d quantum harmonic oscillator.  The functions are Laguerre polynomials multiplied
+by a Gaussian.  See Bernstein &amp; Jarvis, 2002 or Massey &amp; Refregier, 2005 for more detailed
+information about this kind of decomposition.  For this class, we follow the notation of
+Bernstein &amp; Jarvis.</p>
+<p>The decomposition is described by an overall scale length, <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, and a vector of
+coefficients, <code class="docutils literal notranslate"><span class="pre">b</span></code>.  The <code class="docutils literal notranslate"><span class="pre">b</span></code> vector is indexed by two values, which can be either (p,q) or
+(N,m).  In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number
+of quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.</p>
+<p>The 2D image is given by (in polar coordinates):</p>
+<div class="math notranslate nohighlight">
+\[I(r,\theta) = \frac{1}{\sigma^2} \sum_{pq} b_{pq} \psi_{pq}(r/\sigma, \theta)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\psi_{pq}\)</span> are the shapelet eigenfunctions, given by:</p>
+<div class="math notranslate nohighlight">
+\[\psi_pq(r,\theta) = \frac{(-)^q}{\sqrt{\pi}} \sqrt{\frac{q!}{p!}}
+                    r^m \exp(i m \theta) \exp(-r^2/2) L_q^{(m)}(r^2)\]</div>
+<p>and <span class="math notranslate nohighlight">\(L_q^{(m)}(x)\)</span> are generalized Laguerre polynomials.</p>
+<p>The coeffients <span class="math notranslate nohighlight">\(b_{pq}\)</span> are in general complex.  However, we require that the resulting
+<span class="math notranslate nohighlight">\(I(r,\theta)\)</span> be purely real, which implies that <span class="math notranslate nohighlight">\(b_{pq} = b_{qp}^*\)</span>
+(where <span class="math notranslate nohighlight">\({}^*\)</span> means complex conjugate).
+This further implies that <span class="math notranslate nohighlight">\(b_{pp}\)</span> (i.e. <span class="math notranslate nohighlight">\(b_{pq}\)</span> with <span class="math notranslate nohighlight">\(p==q\)</span>) is real.</p>
+<ol class="arabic">
+<li><p>Make a blank Shapelet instance with all <span class="math notranslate nohighlight">\(b_{pq} = 0.\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Make a Shapelet instance using a given vector for the <span class="math notranslate nohighlight">\(b_{pq}\)</span> values.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bvec</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">bvec</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>We use the following order for the coefficients, where the subscripts are in terms of p,q.</p>
+<p>[ b00  Re(b10)  Im(b10)  Re(b20)  Im(b20)  b11  Re(b30)  Im(b30)  Re(b21)  Im(b21) … ]</p>
+<p>i.e. we progressively increase N, and for each value of N, we start with m=N and go down to
+m=0 or 1 as appropriate.  And since m=0 is intrinsically real, it only requires one spot
+in the list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sigma</strong> – The scale size in the standard units (usually arcsec).</p></li>
+<li><p><strong>order</strong> – The order of the shapelet decomposition.  This is the maximum
+N=p+q included in the decomposition.</p></li>
+<li><p><strong>bvec</strong> – The initial vector of coefficients.  [default: None, which means to use
+all zeros]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Shapelet.bvec">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bvec</span></span><a class="headerlink" href="#galsim.Shapelet.bvec" title="Permalink to this definition"></a></dt>
+<dd><p>The vector of shapelet coefficients</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Shapelet.fit">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'flux'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Shapelet.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit for a shapelet decomposition of a given image.</p>
+<p>The optional <code class="docutils literal notranslate"><span class="pre">normalization</span></code> parameter mirrors the parameter of the <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>
+class.  The following sequence should produce drawn images that are approximate matches to
+the original image:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitShapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;sb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im2</span> <span class="o">=</span> <span class="n">shapelet</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im2</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitShapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im3</span> <span class="o">=</span> <span class="n">shapelet</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im3</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;no_pixel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then <code class="docutils literal notranslate"><span class="pre">im2</span></code> and <code class="docutils literal notranslate"><span class="pre">im3</span></code> should be as close as possible to <code class="docutils literal notranslate"><span class="pre">image</span></code> for the given <code class="docutils literal notranslate"><span class="pre">sigma</span></code>
+and <code class="docutils literal notranslate"><span class="pre">order</span></code>.  Increasing the order can improve the fit, as can having <code class="docutils literal notranslate"><span class="pre">sigma</span></code> match the
+natural scale size of the image.  However, it should be noted that some images are not well
+fit by a shapelet for any (reasonable) order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sigma</strong> – The scale size in the standard units (usually arcsec).</p></li>
+<li><p><strong>order</strong> – The order of the shapelet decomposition.  This is the maximum
+N=p+q included in the decomposition.</p></li>
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> for which to fit the shapelet decomposition</p></li>
+<li><p><strong>center</strong> – The position in pixels to use for the center of the decomposition.
+[default: image.true_center]</p></li>
+<li><p><strong>normalization</strong> – The normalization to assume for the image.
+[default: “flux”]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the fitted Shapelet profile</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Shapelet.getNM">
+<span class="sig-name descname"><span class="pre">getNM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getNM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Shapelet.getNM" title="Permalink to this definition"></a></dt>
+<dd><p>Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The value of N=p+q to get.</p></li>
+<li><p><strong>m</strong> – The value of m=p-q to get.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a tuple (Re(b_pq), Im(b_pq))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Shapelet.getPQ">
+<span class="sig-name descname"><span class="pre">getPQ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getPQ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Shapelet.getPQ" title="Permalink to this definition"></a></dt>
+<dd><p>Return the (p,q) coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> – The p index to get.</p></li>
+<li><p><strong>q</strong> – The q index to get.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a tuple (Re(b_pq), Im(b_pq))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Shapelet.order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">order</span></span><a class="headerlink" href="#galsim.Shapelet.order" title="Permalink to this definition"></a></dt>
+<dd><p>The shapelet order.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="galsim.Shapelet.sigma">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#galsim.Shapelet.sigma" title="Permalink to this definition"></a></dt>
+<dd><p>The scale size, sigma.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.Shapelet.size">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Shapelet.size" title="Permalink to this definition"></a></dt>
+<dd><p>The size of the shapelet vector.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gal.html" class="btn btn-neutral float-left" title="Galaxies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="phase_psf.html" class="btn btn-neutral float-right" title="Phase-screen PSFs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

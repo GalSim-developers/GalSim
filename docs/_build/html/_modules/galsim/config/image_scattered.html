@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.image_scattered &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.image_scattered</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.image_scattered</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageBuilder</span><span class="p">,</span> <span class="n">FlattenNoiseVariance</span><span class="p">,</span> <span class="n">RegisterImageType</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">BuildStamps</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="kn">import</span> <span class="n">AddSky</span><span class="p">,</span> <span class="n">AddNoise</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">ProcessInputNObjects</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="c1"># This file adds image type Scattered, which places individual stamps at arbitrary</span>
+<span class="c1"># locations on a larger image.</span>
+
+<div class="viewcode-block" id="ScatteredImageBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.image_scattered.ScatteredImageBuilder">[docs]</a><span class="k">class</span> <span class="nc">ScatteredImageBuilder</span><span class="p">(</span><span class="n">ImageBuilder</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do the initialization and setup for building the image.</span>
+
+<span class="sd">        This figures out the size that the image will be, but doesn&#39;t actually build it yet.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            ignore:     A list of parameters that are allowed to be in config that we can</span>
+<span class="sd">                        ignore here. i.e. it won&#39;t be an error if these parameters are present.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            xsize, ysize</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: Building Scattered: image, obj = </span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">image_num</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: nobj = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
+
+        <span class="c1"># These are allowed for Scattered, but we don&#39;t use them here.</span>
+        <span class="n">extra_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_xsize&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_ysize&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;nobjects&#39;</span> <span class="p">]</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;size&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;xsize&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;ysize&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="kc">None</span> <span class="p">}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="o">+</span><span class="n">extra_ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">full_xsize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">full_ysize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ysize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">full_xsize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">full_ysize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Both image.xsize and image.ysize need to be defined and &gt; 0.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If image_force_xsize and image_force_ysize were set in config, make sure it matches.</span>
+        <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="s1">&#39;image_force_xsize&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="n">full_xsize</span> <span class="o">!=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_xsize&#39;</span><span class="p">])</span> <span class="ow">or</span>
+             <span class="p">(</span><span class="s1">&#39;image_force_ysize&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="n">full_ysize</span> <span class="o">!=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_ysize&#39;</span><span class="p">])</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to reconcile required image xsize and ysize with provided &quot;</span>
+                <span class="s2">&quot;xsize=</span><span class="si">%d</span><span class="s2">, ysize=</span><span class="si">%d</span><span class="s2">, &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">full_xsize</span><span class="p">,</span><span class="n">full_ysize</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">full_xsize</span><span class="p">,</span> <span class="n">full_ysize</span>
+
+
+    <span class="k">def</span> <span class="nf">buildImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an Image containing multiple objects placed at arbitrary locations.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            image_num:  The current image number.</span>
+<span class="sd">            obj_num:    The first object number in the image.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the final image and the current noise variance in the image as a tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">full_image</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Both image_pos and world_pos specified for Scattered image.&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;image_pos&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="p">(</span><span class="s1">&#39;stamp&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span>
+                    <span class="p">(</span><span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]))):</span>
+            <span class="n">full_xsize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_xsize&#39;</span><span class="p">]</span>
+            <span class="n">full_ysize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_ysize&#39;</span><span class="p">]</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">xmax</span> <span class="o">=</span> <span class="n">xmin</span> <span class="o">+</span> <span class="n">full_xsize</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
+            <span class="n">ymax</span> <span class="o">=</span> <span class="n">ymin</span> <span class="o">+</span> <span class="n">full_ysize</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;XY&#39;</span> <span class="p">,</span>
+                <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Random&#39;</span> <span class="p">,</span> <span class="s1">&#39;min&#39;</span> <span class="p">:</span> <span class="n">xmin</span> <span class="p">,</span> <span class="s1">&#39;max&#39;</span> <span class="p">:</span> <span class="n">xmax</span> <span class="p">},</span>
+                <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Random&#39;</span> <span class="p">,</span> <span class="s1">&#39;min&#39;</span> <span class="p">:</span> <span class="n">ymin</span> <span class="p">,</span> <span class="s1">&#39;max&#39;</span> <span class="p">:</span> <span class="n">ymax</span> <span class="p">}</span>
+            <span class="p">}</span>
+
+        <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span> <span class="o">=</span> <span class="n">BuildStamps</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">do_noise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">):</span>
+            <span class="c1"># This is our signal that the object was skipped.</span>
+            <span class="k">if</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: full bounds = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: stamp </span><span class="si">%d</span><span class="s1"> bounds = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: Overlap = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">image_num</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">bounds</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="n">full_image</span><span class="p">[</span><span class="n">bounds</span><span class="p">]</span> <span class="o">+=</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">bounds</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Object centered at (</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">) is entirely off the main image, &quot;</span>
+                    <span class="s2">&quot;whose bounds are (</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">).&quot;</span><span class="o">%</span><span class="p">(</span>
+                        <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">stamps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                        <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span>
+                        <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymax</span><span class="p">))</span>
+
+        <span class="c1"># Bring the image so far up to a flat noise variance</span>
+        <span class="n">current_var</span> <span class="o">=</span> <span class="n">FlattenNoiseVariance</span><span class="p">(</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">current_var</span>
+
+    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
+
+<span class="sd">        Here we just have one job per task.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the image field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            jobs:       A list of jobs to split up into tasks.  Each job in the list is a</span>
+<span class="sd">                        dict of parameters that includes &#39;image_num&#39; and &#39;obj_num&#39;.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="p">[</span> <span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the final noise to a Scattered image</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image:          The image onto which to add the noise.</span>
+<span class="sd">            config:         The configuration dict for the image field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            image_num:      The current image number.</span>
+<span class="sd">            obj_num:        The first object number in the image.</span>
+<span class="sd">            current_var:    The current noise variance in each postage stamps.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
+        <span class="n">AddSky</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of objects that will be built for this image.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:         The configuration dict for the image field.</span>
+<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            image_num:      The current image number.</span>
+<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">            approx:         Whether an approximate/overestimate is ok [default: False]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the number of objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">orig_index_key</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_key&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_num</span>
+
+        <span class="c1"># Allow nobjects to be automatic based on input catalog</span>
+        <span class="k">if</span> <span class="s1">&#39;nobjects&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">nobj</span> <span class="o">=</span> <span class="n">ProcessInputNObjects</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="n">approx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nobj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s2">&quot;Attribute nobjects is required for image.type = Scattered&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nobj</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span>
+        <span class="k">return</span> <span class="n">nobj</span></div>
+
+<span class="c1"># Register this as a valid image type</span>
+<span class="n">RegisterImageType</span><span class="p">(</span><span class="s1">&#39;Scattered&#39;</span><span class="p">,</span> <span class="n">ScatteredImageBuilder</span><span class="p">())</span>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

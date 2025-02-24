@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.des.des_shapelet &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.des.des_shapelet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.des.des_shapelet</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..bounds</span> <span class="kn">import</span> <span class="n">BoundsD</span>
+<span class="kn">from</span> <span class="nn">..shapelet</span> <span class="kn">import</span> <span class="n">Shapelet</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">SkipThisObject</span>
+<span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+
+<div class="viewcode-block" id="DES_Shapelet"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet">[docs]</a><span class="k">class</span> <span class="nc">DES_Shapelet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated polar shapelet decompositions.</span>
+<span class="sd">    These are stored as ``*_fitpsf.fits`` files.  They are not used in DES anymore, so this</span>
+<span class="sd">    class is at best of historical interest</span>
+
+<span class="sd">    The shapelet PSFs measure a shapelet decomposition of each star and interpolate the shapelet</span>
+<span class="sd">    coefficients over the image positions.</span>
+
+<span class="sd">    Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know</span>
+<span class="sd">    about the WCS, so they are able to fit the shapelet model directly in terms of arcsec.</span>
+<span class="sd">    Thus, the getPSF function always returns a profile in world coordinates.</span>
+
+<span class="sd">    Typical usage:</span>
+
+<span class="sd">        &gt;&gt;&gt; des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)</span>
+<span class="sd">        &gt;&gt;&gt; image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image</span>
+<span class="sd">        &gt;&gt;&gt;                                                   # NOT in arcsec on the sky!</span>
+<span class="sd">        &gt;&gt;&gt; psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates</span>
+
+<span class="sd">    Note that the returned psf here already includes the pixel.  This is what is sometimes</span>
+<span class="sd">    called an &quot;effective PSF&quot;.  Thus, you should not convolve by the pixel profile again</span>
+<span class="sd">    (nor integrate over the pixel).  This would effectively include the pixel twice!</span>
+
+<span class="sd">    This class will only interpolate within the defining bounds.  It won&#39;t extrapolate</span>
+<span class="sd">    beyond the bounding box of where the stars defined the interpolation.</span>
+<span class="sd">    If you try to use it with an invalid position, it will throw an IndexError.</span>
+<span class="sd">    You can check whether a position is valid with</span>
+
+<span class="sd">        &gt;&gt;&gt; if des_shapelet.bounds.includes(pos):</span>
+<span class="sd">        &gt;&gt;&gt;     psf = des_shapelet.getPSF(pos)</span>
+<span class="sd">        &gt;&gt;&gt; else:</span>
+<span class="sd">        &gt;&gt;&gt;     [...skip this object...]</span>
+
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        file_name:  The name of the file to be read in.</span>
+<span class="sd">        dir:        Optionally a directory name can be provided if the file names do not</span>
+<span class="sd">                    already include it. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_fits</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DES_Shapelet.read_fits"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.read_fits">[docs]</a>    <span class="k">def</span> <span class="nf">read_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in a DES_Shapelet stored in FITS file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
+            <span class="n">cat</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="c1"># These fields each only contain one element, hence the [0]&#39;s.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;psf_order&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_size</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;fit_order&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npca</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;npca&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">BoundsD</span><span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;xmin&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;xmax&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;ymin&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;ymax&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ave_psf</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;ave_psf&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ave_psf</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_size</span><span class="p">,)</span>
+
+        <span class="c1"># Note: older pyfits versions don&#39;t get the shape right.</span>
+        <span class="c1"># For newer pyfits versions the reshape command should be a no op.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;rot_matrix&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_size</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npca</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npca</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interp_matrix</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;interp_matrix&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">npca</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npca</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">getBounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span>
+
+    <span class="k">def</span> <span class="nf">getSigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+
+    <span class="k">def</span> <span class="nf">getOrder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span>
+
+<div class="viewcode-block" id="DES_Shapelet.getPSF"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at position image_pos</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image_pos:  The position in pixel units for which to build the PSF.</span>
+<span class="sd">            gsparams:   An optional `GSParams` instance to pass to the constructed GSObject.</span>
+<span class="sd">                        [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the PSF as a galsim.Shapelet instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">Shapelet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">getB</span><span class="p">(</span><span class="n">image_pos</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+
+        <span class="c1"># The fitpsf files were built with respect to (u,v) = (ra,dec).  The GalSim convention is</span>
+        <span class="c1"># to use sky coordinates with u = -ra.  So we need to flip the profile across the v axis</span>
+        <span class="c1"># to take u -&gt; -u.</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">psf</span></div>
+
+<div class="viewcode-block" id="DES_Shapelet.getB"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.getB">[docs]</a>    <span class="k">def</span> <span class="nf">getB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the B vector as a numpy array at position pos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">includes</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimBoundsError</span><span class="p">(</span><span class="s2">&quot;position in DES_Shapelet.getPSF is out of bounds&quot;</span><span class="p">,</span>
+                                    <span class="n">pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+
+        <span class="n">Px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_definePxy</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span>
+        <span class="n">Py</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_definePxy</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">Px</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="n">q</span><span class="p">]</span> <span class="o">*</span> <span class="n">Py</span><span class="p">[</span><span class="n">q</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_size</span>
+
+        <span class="c1"># Note: This is equivalent to:</span>
+        <span class="c1">#</span>
+        <span class="c1">#     P = numpy.empty(self.fit_size)</span>
+        <span class="c1">#     k = 0</span>
+        <span class="c1">#     for n in range(self.fit_order+1):</span>
+        <span class="c1">#         for q in range(n+1):</span>
+        <span class="c1">#             P[k] = Px[n-q] * Py[q]</span>
+        <span class="c1">#             k = k+1</span>
+
+        <span class="n">b1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_matrix</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rot_matrix</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_size</span>
+        <span class="n">b</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ave_psf</span>
+        <span class="k">return</span> <span class="n">b</span></div>
+
+    <span class="k">def</span> <span class="nf">_definePxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">):</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="nb">min</span><span class="o">-</span><span class="nb">max</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nb">max</span><span class="o">-</span><span class="nb">min</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no branch (always true for file we have for testing.)</span>
+            <span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="mf">2.</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">*</span><span class="n">x1</span><span class="o">*</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">*</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">temp</span></div>
+
+<span class="c1"># First we need to add the class itself as a valid input_type.</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;des_shapelet&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">DES_Shapelet</span><span class="p">))</span>
+
+<span class="c1"># Also make a builder to create the PSF object for a given position.</span>
+<span class="c1"># The builders require 4 args.</span>
+<span class="c1"># config is a dictionary that includes &#39;type&#39; plus other items you might want to allow or require.</span>
+<span class="c1"># base is the top level config dictionary where some global variables are stored.</span>
+<span class="c1"># ignore is a list of key words that might be in the config dictionary that you should ignore.</span>
+<span class="k">def</span> <span class="nf">BuildDES_Shapelet</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a GSObject representing the shapelet model at the correct location in the image in a</span>
+<span class="sd">    config-processing context.</span>
+
+<span class="sd">    This is used as object type ``DES_Shapelet`` in a config file.</span>
+
+<span class="sd">    It requires the use of the ``des_shapelet`` input field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">des_shapelet</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;des_shapelet&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;DES_Shapelet&#39;</span><span class="p">)</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
+    <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;DES_Shapelet requested, but no image_pos defined in base.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Convert gsparams from a dict to an actual GSParams object</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getBounds</span><span class="p">()</span><span class="o">.</span><span class="n">includes</span><span class="p">(</span><span class="n">image_pos</span><span class="p">):</span>
+        <span class="c1">#psf = des_shapelet.getPSF(image_pos, gsparams)</span>
+        <span class="c1"># Because of serialization issues, the above call doesn&#39;t work.  So we need to</span>
+        <span class="c1"># repeat the internals of getPSF here.</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getB</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getSigma</span><span class="p">()</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getOrder</span><span class="p">()</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">Shapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Position &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; not in interpolation bounds: &#39;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">des_shapelet</span><span class="o">.</span><span class="n">getBounds</span><span class="p">())</span>
+        <span class="k">raise</span> <span class="n">SkipThisObject</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;flux&#39;</span><span class="p">])</span>
+
+    <span class="c1"># The second item here is &quot;safe&quot;, a boolean that declares whether the returned value is</span>
+    <span class="c1"># safe to save and use again for later objects.  In this case, we wouldn&#39;t want to do</span>
+    <span class="c1"># that, since they will be at different positions, so the interpolated PSF will be different.</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="kc">False</span>
+
+<span class="c1"># Register this builder with the config framework:</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;DES_Shapelet&#39;</span><span class="p">,</span> <span class="n">BuildDES_Shapelet</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;des_shapelet&#39;</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

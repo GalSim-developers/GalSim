@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Charge Deflection Model &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Miscellaneous Utilities" href="misc.html" />
+    <link rel="prev" title="Differential Chromatic Refraction" href="dcr.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Charge Deflection Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.cdmodel.BaseCDModel"><code class="docutils literal notranslate"><span class="pre">BaseCDModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.cdmodel.BaseCDModel.__init__"><code class="docutils literal notranslate"><span class="pre">BaseCDModel.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.cdmodel.BaseCDModel.applyBackward"><code class="docutils literal notranslate"><span class="pre">BaseCDModel.applyBackward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.cdmodel.BaseCDModel.applyForward"><code class="docutils literal notranslate"><span class="pre">BaseCDModel.applyForward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.cdmodel.PowerLawCD"><code class="docutils literal notranslate"><span class="pre">PowerLawCD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.cdmodel.PowerLawCD.__init__"><code class="docutils literal notranslate"><span class="pre">PowerLawCD.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="utilities.html">Helper Functions and Classes</a></li>
+      <li class="breadcrumb-item active">Charge Deflection Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="charge-deflection-model">
+<h1>Charge Deflection Model<a class="headerlink" href="#charge-deflection-model" title="Permalink to this heading"></a></h1>
+<p>We include in GalSim a basic implementation of the Antilogus charge deflection model.
+Probably at this point, there are better implementations of this model, so this might not
+be very useful for most users.  However, if you just want a quick and dirty way to simulate
+the so-called “Brighter-Fatter Effect”, you can use this.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A better implementation of brighter-fatter is now available as part of the <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a>
+model.  It does not use the Antilogus model at all, but rather tries to simulate the
+underlying physics of the effect.</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.cdmodel.BaseCDModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.cdmodel.</span></span><span class="sig-name descname"><span class="pre">BaseCDModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a_l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel" title="Permalink to this definition"></a></dt>
+<dd><p>Base class for the most generic, i.e. no with symmetries or distance scaling relationships
+assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.cdmodel.BaseCDModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a_l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize a generic CDModel (charge deflection model).</p>
+<p>Usually this class will not be instantiated directly, but there is nothing to prevent you
+from doing so.  Each of the input a_l, a_r, a_b &amp; a_t matrices must have the same shape and
+be odd-dimensioned.</p>
+<p>The model implemented here is described in Antilogus et al. (2014). The effective border
+of a pixel shifts to an extent proportional to the flux in a pixel at separation (dx,dy)
+and a coefficient a(dx,dy). Contributions of all neighbouring pixels are superposed. Border
+shifts are calculated for each (l=left, r=right (=positive x), b=bottom, t=top (=pos. y))
+border and the resulting change in flux in a pixel is the shift times the mean of its flux
+and the flux in the pixel on the opposite side of the border (caveat: in Antilogus et al.
+2014 the sum is used instead of the mean, making the a(dx,dy) a factor of 2 smaller).</p>
+<p>The parameters of the model are the a_l/r/b/t matrices, whose entry at (dy,dx) gives the
+respective shift coefficient. Note that for a realistic model, the matrices have a number
+of symmetries, as described in Antilogus et al. (2014). Use derived classes like PowerLawCD
+to have a model that automatically fulfills the symmetry conditions.</p>
+<p>Note that there is a gain factor included in the coefficients. When the a_* are measured
+from flat fields according to eqn. 4.10 in Antilogus et. al (2014) and applied to images
+that have the same gain as the flats, the correction is as intended. If the gain in the
+images is different, this can be accounted for with the gain_ratio parameter when calling
+applyForward or applyBackward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a_l</strong> – NumPy array containing matrix of deflection coefficients of left pixel border</p></li>
+<li><p><strong>a_r</strong> – NumPy array containing matrix of deflection coefficients of right pixel border</p></li>
+<li><p><strong>a_b</strong> – NumPy array containing matrix of deflection coefficients of bottom pixel border</p></li>
+<li><p><strong>a_t</strong> – NumPy array containing matrix of deflection coefficients of top pixel border</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.cdmodel.BaseCDModel.applyBackward">
+<span class="sig-name descname"><span class="pre">applyBackward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyBackward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyBackward" title="Permalink to this definition"></a></dt>
+<dd><p>Apply the charge deflection model in the backward direction (accurate to linear order).</p>
+<p>Returns an image with the backward charge deflection transformation applied.  The input
+image is not modified, but its WCS is included in the returned image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gain_ratio</strong> – Ratio of gain_image/gain_flat when shift coefficients were derived from
+flat fields; default value is 1., which assumes the common case that your
+flat and science images have the same gain value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.cdmodel.BaseCDModel.applyForward">
+<span class="sig-name descname"><span class="pre">applyForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyForward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyForward" title="Permalink to this definition"></a></dt>
+<dd><p>Apply the charge deflection model in the forward direction.</p>
+<p>Returns an image with the forward charge deflection transformation applied.  The input image
+is not modified, but its WCS is included in the returned image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gain_ratio</strong> – Ratio of gain_image/gain_flat when shift coefficients were derived from
+flat fields; default value is 1., which assumes the common case that your
+flat and science images have the same gain value</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.cdmodel.PowerLawCD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.cdmodel.</span></span><span class="sig-name descname"><span class="pre">PowerLawCD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#galsim.cdmodel.BaseCDModel" title="galsim.cdmodel.BaseCDModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCDModel</span></code></a></p>
+<p>Class for parametrizing charge deflection coefficient strengths as a power law in distance
+from affected pixel border.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.cdmodel.PowerLawCD.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize a power-law charge deflection model.</p>
+<p>The deflections from charges in the six pixels directly neighbouring a pixel border are
+modelled independently by the parameters <code class="docutils literal notranslate"><span class="pre">r0</span></code>, <code class="docutils literal notranslate"><span class="pre">t0</span></code> (directly adjacent to borders
+between two pixels in the same row=y / column=x) and <code class="docutils literal notranslate"><span class="pre">rx</span></code>, <code class="docutils literal notranslate"><span class="pre">tx</span></code> (pixels on the corner
+of pixel borders).</p>
+<p>Deflections due to charges further away are modelled as a power-law:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r_distance</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where A is a power-law amplitude (<code class="docutils literal notranslate"><span class="pre">r</span></code> for a_l / a_b and <code class="docutils literal notranslate"><span class="pre">t</span></code> for a_b / a_t), theta is
+the angle between the pixel border line and the line from border center to the other pixel
+center.</p>
+<p>Sign conventions are such that positive <code class="docutils literal notranslate"><span class="pre">r0</span></code>, <code class="docutils literal notranslate"><span class="pre">t0</span></code>, <code class="docutils literal notranslate"><span class="pre">rx</span></code>, <code class="docutils literal notranslate"><span class="pre">tx</span></code>, <code class="docutils literal notranslate"><span class="pre">r</span></code>, <code class="docutils literal notranslate"><span class="pre">t</span></code>
+correspond to physical deflection of equal charges (this is also how the theta above is
+defined).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – Maximum separation [pix] out to which charges contribute to deflection</p></li>
+<li><p><strong>r0</strong> – a_l(0,-1)=a_r(0,+1) deflection coefficient along x direction</p></li>
+<li><p><strong>t0</strong> – a_b(-1,0)=a_t(+1,0) deflection coefficient along y direction</p></li>
+<li><p><strong>rx</strong> – a_l(-1,-1)=a_r(+1,+1) diagonal contribution to deflection along x direction</p></li>
+<li><p><strong>tx</strong> – a_b(-1,-1)=a_t(+1,+1) diagonal contribution to deflection along y direction</p></li>
+<li><p><strong>r</strong> – Power-law amplitude for contribution to deflection along x from further away</p></li>
+<li><p><strong>t</strong> – Power-law amplitude for contribution to deflection along y from further away</p></li>
+<li><p><strong>alpha</strong> – Power-law exponent for deflection from further away</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dcr.html" class="btn btn-neutral float-left" title="Differential Chromatic Refraction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="misc.html" class="btn btn-neutral float-right" title="Miscellaneous Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

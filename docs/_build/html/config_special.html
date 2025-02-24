@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Special Fields &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The galsim Executable" href="config_galsim.html" />
+    <link rel="prev" title="Config Values" href="config_values.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Special Fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modules">modules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eval-variables">eval_variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#template">template</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.config.RegisterTemplate"><code class="docutils literal notranslate"><span class="pre">RegisterTemplate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#special-specifications">Special Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#index-key">index_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rng-index-key">rng_index_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rng-num">rng_num</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="config.html">The Config Module</a></li>
+      <li class="breadcrumb-item active">Special Fields</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_special.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="special-fields">
+<h1>Special Fields<a class="headerlink" href="#special-fields" title="Permalink to this heading"></a></h1>
+<p>There are a couple of other top level fields that act more in a support role, rather than being
+part of the main processing.</p>
+<section id="modules">
+<h2>modules<a class="headerlink" href="#modules" title="Permalink to this heading"></a></h2>
+<p>Almost all aspects of the file building can be customized by the user if the existing GalSim
+types do not do precisely what you need.  How to do this is described in the pages about
+each of the different top-level fields.  In all cases, you need to tell GalSim what Python
+modules to load at the start of processing to get the implementations of your custom types.
+That is what this field is for.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">modules</span></code> field should contain a list of modules that GalSim should import before
+processing the rest of the config file.  These modules can be either in the current directory
+where you are running the code or installed in your Python distro.  (Or technically, they
+need to be located in a directory in <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>.)</p>
+<p>See:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/meds.yaml"><code class="file docutils literal notranslate"><span class="pre">meds.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a></p></li>
+</ul>
+<p>for some examples of this field.</p>
+</section>
+<section id="eval-variables">
+<h2>eval_variables<a class="headerlink" href="#eval-variables" title="Permalink to this heading"></a></h2>
+<p>Sometimes, it can be useful to define some configuration parameters right at the top of the
+config file that might be used farther down in the file somewhere to highlight them.
+Or sometimes, there are calculations that are needed by several different values in the
+config file, which you only want to calculate once.</p>
+<p>You can put such values in a top-level <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code> field.  They work just like
+variables that you define for <a class="reference internal" href="config_values.html#eval-type"><span class="std std-ref">Eval</span></a>
+items, but they can be placed separately from those evaluations.</p>
+<p>For examples of this field, see:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/demo11.yaml"><code class="file docutils literal notranslate"><span class="pre">demo11.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/draw_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">draw_psf.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a></p></li>
+</ul>
+</section>
+<section id="template">
+<h2>template<a class="headerlink" href="#template" title="Permalink to this heading"></a></h2>
+<p>This feature directs the config processing to first load in some other file (or specific
+field with that file) and then possibly modify some components of that dict.</p>
+<p>To load in some other config file named <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, you would write:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">template</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<p>If you only want to load a particular field from that file, say the <code class="docutils literal notranslate"><span class="pre">image</span></code> field, you could
+write:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">template</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span><span class="p">:</span><span class="n">image</span>
+</pre></div>
+</div>
+<p>The template field may appear anywhere in the config file.  Wherever it appears, the contents
+of the other file will be a starting point for that part of the current config dict,
+but you can replace
+or add values by specifying new values for some of the fields.  Fields that are not at
+the top level are specified using a <code class="docutils literal notranslate"><span class="pre">.</span></code> to proceed down the levels of the config hierarchy.
+e.g. <code class="docutils literal notranslate"><span class="pre">image.noise.sky_level</span></code> refers to <code class="docutils literal notranslate"><span class="pre">config['image']['noise']['sky_level']</span></code>.</p>
+<p>For example, if you have a simulation defined in <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code>, and you want to make another
+simulation that is identical, except you want Sersic galaxies instead of Exponential galaxies say,
+you could write a new file that looks something like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml</span>
+<span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sersic</span>
+<span class="w">    </span><span class="nt">n </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min </span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">half_light_radius </span><span class="p">:</span>
+<span class="w">        </span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml:gal.half_light_radius</span>
+<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="nt">output.dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sersic_sim</span>
+</pre></div>
+</div>
+<p>This will load in the file <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code> first, then replace the whole <code class="docutils literal notranslate"><span class="pre">config['gal']</span></code> field
+as well as <code class="docutils literal notranslate"><span class="pre">config['output']['dir']</span></code> (leaving the rest of <code class="docutils literal notranslate"><span class="pre">config['output']</span></code> unchanged).
+The new <code class="docutils literal notranslate"><span class="pre">config['gal']</span></code> field will use the same <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> specification from
+the other file (which might be some complicated random variate that you did not want to
+duplicate here).</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">template</span></code> field is not at the top level of the config dict, the adjustments should be
+made relative to that level of the dictionary:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">psf </span><span class="p">:</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cgc.yaml:psf</span>
+<span class="w">    </span><span class="nt">index_key </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">obj_num</span>
+<span class="w">    </span><span class="nt">items.0.ellip.e.max </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">    </span><span class="nt">items.1.nstruts </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">items.1.strut_angle </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>Note that the modifications do not start with <code class="docutils literal notranslate"><span class="pre">psf.</span></code>, since the template processing is being done
+within the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field.</p>
+<p>Finally, if you want to use a different field from the current config dict as a template, you can
+use the colon notation without the file.
+E.g. To have a bulge plus disk that have the same kinds of parameters, except that the overall type is a DeVaucouleurs and Exponential respectively, you could do:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sum</span>
+<span class="w">    </span><span class="nt">items</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DeVaucouleurs</span>
+<span class="w">            </span><span class="nt">half_light_radius</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">0.8</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">            </span><span class="nt">flux</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">            </span><span class="nt">ellip</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eta1Eta2</span>
+<span class="w">                </span><span class="nt">eta1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">                </span><span class="nt">eta2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="p p-Indicator">-</span>
+<span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">:gal.items.0</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exponential</span>
+</pre></div>
+</div>
+<p>This would generate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.</p>
+<p>It is also possible for modules to register a name for a template file, so users can use that name
+rather than the actual file location.  For instance, if a module has a template yaml file that is
+installed with the python code, it will typically be in an obscure location in a Python
+site-packages directory somewhere.  But the installed module would be able to know this location
+and register it by name.  E.g. “my_default_sim”.  Then users who want to
+start with that canonical config file and maybe modify a few things can write:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_module</span>
+
+<span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_default_sim</span>
+
+<span class="nt">image.random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12345</span>
+<span class="nt">image.nobjects</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span>
+<span class="nt">output.file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">objs_500.fits</span>
+</pre></div>
+</div>
+<p>To use this feature, the module (i.e. my_module in the example here) should register the name to the correct file name using the <a class="reference internal" href="#galsim.config.RegisterTemplate" title="galsim.config.RegisterTemplate"><code class="xref any py py-func docutils literal notranslate"><span class="pre">RegisterTemplate</span></code></a> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">default_sim_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">module_dir</span><span class="p">,</span> <span class="s1">&#39;my_default_sim.yaml&#39;</span><span class="p">)</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterTemplate</span><span class="p">(</span><span class="s1">&#39;my_default_sim&#39;</span><span class="p">,</span> <span class="n">default_sim_file</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.config.RegisterTemplate">
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#RegisterTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterTemplate" title="Permalink to this definition"></a></dt>
+<dd><p>Register a template config file with the given named alias.</p>
+<p>There are currently no named templates shipped with GalSim, but this function
+provides a mechanism for modules to register a config file with a more user-friendly
+name for a module-provided configuration that may be stored in an awkward location
+on disk.</p>
+<p>E.g. LSSTDESC.imSim has a few configurations that include most of the default recommended
+modules for producing various simulations of LSST images.  They are stored in the imSim
+data directory, but users can just use the named value as a more convenient alias.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template_name</strong> – The name to allow in a ‘template’ field in lieu of the file name.</p></li>
+<li><p><strong>file_name</strong> – The actual file name on disk with the configuration file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>See:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/rgc.yaml"><code class="file docutils literal notranslate"><span class="pre">rgc.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/cgc_psf.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc_psf.yaml</span> </code></a></p></li>
+</ul>
+<p>for more examples of this feature.</p>
+</section>
+</section>
+<section id="special-specifications">
+<h1>Special Specifications<a class="headerlink" href="#special-specifications" title="Permalink to this heading"></a></h1>
+<p>A few specifications may be used almost anywhere in the config to adjust how the values in those
+fields are processed.  They are automatically propagated to lower levels in the dictionary.
+For instance, if you set <code class="docutils literal notranslate"><span class="pre">index_key</span> <span class="pre">:</span> <span class="pre">image_num</span></code> in the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field, then all values
+generated for any aspect of the psf will be constant for a whole image and only change
+when the processing goes on to the next image.</p>
+<section id="index-key">
+<h2>index_key<a class="headerlink" href="#index-key" title="Permalink to this heading"></a></h2>
+<p>This specifies the cadence on which to generate a new value for each non-constant value.
+There are default cadences for each of the major top-level fields, but if you want to specify
+a different cadence for some value or field, then you can override it.</p>
+<p>Options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘file_num’  Update the values for each new file.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">input</span></code> and <code class="docutils literal notranslate"><span class="pre">output</span></code> fields.</p></li>
+<li><p>‘image_num’  Update the values for each new image.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field that apply to the full image (i.e. not including <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>, etc.).</p></li>
+<li><p>‘obj_num’  Update the values for each object. This is the default for the other items in <code class="docutils literal notranslate"><span class="pre">image</span></code>, and also for items in <code class="docutils literal notranslate"><span class="pre">stamp</span></code>, <code class="docutils literal notranslate"><span class="pre">gal</span></code>, and <code class="docutils literal notranslate"><span class="pre">psf</span></code>.</p></li>
+<li><p>‘obj_num_in_file’  For this purpose, equivalent to ‘obj_num’.  (For ‘Sequence’ value types, there is an important distinction between the two.  See its description in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a> for more details.)</p></li>
+</ul>
+</div></blockquote>
+<p>It is also possible for a custom module to add additional valid values here by adding to <code class="docutils literal notranslate"><span class="pre">galsim.config.valid_index_keys</span></code>, which is a list of strings, which are allowed.</p>
+</section>
+<section id="rng-index-key">
+<h2>rng_index_key<a class="headerlink" href="#rng-index-key" title="Permalink to this heading"></a></h2>
+<p>Each <code class="docutils literal notranslate"><span class="pre">index_key</span></code> has its own random number generator to use for generating values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.</p>
+<p>For instance, if you set <code class="docutils literal notranslate"><span class="pre">rng_index_key</span> <span class="pre">=</span> <span class="pre">'image_num'</span></code> for a <code class="docutils literal notranslate"><span class="pre">gal</span></code> value, then it will use the rng normally used for image_num items, but it will still generate a new value for each obj_num.</p>
+</section>
+<section id="rng-num">
+<h2>rng_num<a class="headerlink" href="#rng-num" title="Permalink to this heading"></a></h2>
+<p>Normally you specify a single random number seed, which spawns a sequence of rng objects that
+update according to the above index keys.  So an rng for each object is stored in <code class="docutils literal notranslate"><span class="pre">obj_num_rng</span></code>,
+one for image_num values is in <code class="docutils literal notranslate"><span class="pre">image_num_rng</span></code>, etc.</p>
+<p>However, you are allowed to specify this seed sequence manually, and in particular, you can
+have it be a list of several different sequences which update at different rates, and may
+repeat.  For instance, this may be useful to have some galaxy properties repeat for several
+exposures, while other properties of the observations are different for each exposure.</p>
+<p>You would specify which random number you want to use from such a list using <code class="docutils literal notranslate"><span class="pre">rng_num</span></code> in a
+field. See the description of <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> in  <a class="reference internal" href="config_image.html#image-field-attributes"><span class="std std-ref">Image Field Attributes</span></a> for more information.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_values.html" class="btn btn-neutral float-left" title="Config Values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_galsim.html" class="btn btn-neutral float-right" title="The galsim Executable" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

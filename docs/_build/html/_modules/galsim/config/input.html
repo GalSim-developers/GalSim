@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.input &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.config.input</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.input</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">NamespaceProxy</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">RemoveCurrent</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">GetLoggerProxy</span><span class="p">,</span> <span class="n">get_cls_params</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">SafeManager</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">PropagateIndexKeyRNGNum</span><span class="p">,</span> <span class="n">single_threaded</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span><span class="p">,</span> <span class="n">_GetBoolValue</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">RegisterValueType</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimError</span>
+<span class="kn">from</span> <span class="nn">..catalog</span> <span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="c1"># This file handles processing the input items according to the specifications in config[&#39;input&#39;].</span>
+<span class="c1"># This file includes the basic functionality, which is often sufficient for simple input types,</span>
+<span class="c1"># but it has hooks to allow more customized behavior where necessary. See input_*.py for examples.</span>
+
+<span class="c1"># This module-level dict will store all the registered input types.</span>
+<span class="c1"># See the RegisterInputType function near the end of this file.</span>
+<span class="c1"># The keys will be the (string) names of the extra output types, and the values will be</span>
+<span class="c1"># builder classes that will perform the different processing functions.</span>
+<span class="c1"># The keys will be the (string) names of the image types, and the values will be loaders</span>
+<span class="c1"># that load the input object&#39;s class as well some other information we need to know to how to</span>
+<span class="c1"># process the input object correctly.</span>
+<span class="n">valid_input_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># We also keep track of the connected value or gsobject types.</span>
+<span class="c1"># These are registered by the value or gsobject types that use each input object.</span>
+<span class="n">connected_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Input objects can choose not to use an input manager, and instead use the shared memory model</span>
+<span class="c1"># described in the AtmosphericScreen doc string.  To make that work, they would set</span>
+<span class="c1"># use_proxy=False and provide worker_init and worker_initargs functions.</span>
+<span class="c1"># These are collected here to be run buy the MultiProcess function in config.util.</span>
+<span class="n">worker_init_fns</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">worker_initargs_fns</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Ref: https://stackoverflow.com/questions/26499548/</span>
+<span class="c1"># This custom proxy lets us access attributes and properties of input objects, not just methods,</span>
+<span class="c1"># which are normally the only thing exposed in proxies.</span>
+<span class="c1"># I started out with the answers from martineau and shts38, but it didn&#39;t always work.</span>
+<span class="c1"># This implementation is my own (MJ) combining their ideas with some things that the AutoProxy</span>
+<span class="c1"># function in the multiprocessing package does.</span>
+
+<span class="k">def</span> <span class="nf">InputProxy</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Create a derived NamespaceProxy class for `target`. &quot;&quot;&quot;</span>
+
+    <span class="c1"># This bit follows what multiprocessing.managers.MakeProxy normally does.</span>
+    <span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">public_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">meth</span> <span class="ow">in</span> <span class="n">public_methods</span><span class="p">:</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;def </span><span class="si">%s</span><span class="s1">(self, *args, **kwds):</span>
+<span class="s1">                    return self._callmethod(</span><span class="si">%r</span><span class="s1">, args, kwds)</span>
+<span class="s1">             &#39;&#39;&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span><span class="n">meth</span><span class="p">),</span> <span class="n">dic</span><span class="p">)</span>
+
+    <span class="c1"># NamespaceProxy starts with __getattribute__ defined, so subclass from that rather than</span>
+    <span class="c1"># BaseProxy, as MakeProxy normally does.</span>
+    <span class="n">proxy_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;_Proxy&quot;</span>
+    <span class="n">ProxyType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">proxy_name</span><span class="p">,</span> <span class="p">(</span><span class="n">NamespaceProxy</span><span class="p">,),</span> <span class="n">dic</span><span class="p">)</span>
+
+    <span class="c1"># Expose all the public methods and also __getattribute__ and __setattr__.</span>
+    <span class="n">ProxyType</span><span class="o">.</span><span class="n">_exposed_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">public_methods</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;__getattribute__&#39;</span><span class="p">,</span> <span class="s1">&#39;__setattr__&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">ProxyType</span>
+
+<div class="viewcode-block" id="ProcessInput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessInput">[docs]</a><span class="k">def</span> <span class="nf">ProcessInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_scope_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process the input field, reading in any specified input files or setting up</span>
+<span class="sd">    any objects that need to be initialized.</span>
+
+<span class="sd">    Each item registered as a valid input type will be built and available at the top level</span>
+<span class="sd">    of config in config[&#39;_input_objs&#39;].  Since there is allowed to be more than one of each type</span>
+<span class="sd">    of input object (e.g. multilpe catalogs or multiple dicts), these are actually lists.</span>
+<span class="sd">    If there is only one e.g. catalog entry in config[&#39;input&#39;], then this list will have one</span>
+<span class="sd">    element.</span>
+
+<span class="sd">    e.g. config[&#39;_input_objs&#39;][&#39;catalog&#39;][0] holds the first catalog item defined in</span>
+<span class="sd">    config[&#39;input&#39;][&#39;catalog&#39;] (if any).</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:             The configuration dict to process</span>
+<span class="sd">        logger:             If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        file_scope_only:    If True, only process the input items that are marked as being</span>
+<span class="sd">                            possibly relevant for file- and image-level items. [default: False]</span>
+<span class="sd">        safe_only:          If True, only process the input items whose construction parameters</span>
+<span class="sd">                            are not going to change every file, so it can be made once and</span>
+<span class="sd">                            used by multiple processes if appropriate. [default: False]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Start ProcessInput&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">)</span>
+
+        <span class="c1"># We&#39;ll iterate through this list of keys a few times</span>
+        <span class="n">all_keys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_input_types</span><span class="p">]</span>
+
+        <span class="c1"># The input items can be rather large.  Especially RealGalaxyCatalog.  So it is</span>
+        <span class="c1"># unwieldy to copy them in the config file for each process.  Instead we use proxy</span>
+        <span class="c1"># objects which are implemented using multiprocessing.BaseManager.  See</span>
+        <span class="c1">#</span>
+        <span class="c1">#     http://docs.python.org/2/library/multiprocessing.html</span>
+        <span class="c1">#</span>
+        <span class="c1"># The input manager keeps track of all the real objects for us.  We use it to put</span>
+        <span class="c1"># a proxy object in the config dict, which is copyable to other processes.</span>
+        <span class="c1"># The input manager itself should not be copied, so the function CopyConfig makes</span>
+        <span class="c1"># sure to only keep that in the original config dict, not the one that gets passed</span>
+        <span class="c1"># to other processed.</span>
+        <span class="c1"># The proxy objects are  able to call public functions in the real object via</span>
+        <span class="c1"># multiprocessing communication channels.  (A Pipe, I believe.)  The BaseManager</span>
+        <span class="c1"># base class handles all the details.  We just need to register each class we need</span>
+        <span class="c1"># with a name (called tag below) and then construct it by calling that tag function.</span>
+
+        <span class="c1"># We don&#39;t need the manager stuff if we (a) are already in a multiprocessing Process, or</span>
+        <span class="c1"># (b) we are only loading for file scope, or (c) both config.image.nproc and</span>
+        <span class="c1"># config.output.nproc == 1.</span>
+        <span class="n">use_manager</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="n">file_scope_only</span> <span class="ow">and</span>
+                <span class="p">(</span> <span class="p">(</span><span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="ow">and</span>
+                   <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span>
+                  <span class="p">(</span><span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="ow">and</span>
+                   <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_manager</span> <span class="ow">and</span> <span class="s1">&#39;_input_manager&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">class</span> <span class="nc">InputManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
+
+            <span class="c1"># Register each input field with the InputManager class</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">nfields</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nfields</span><span class="p">):</span>
+                    <span class="n">tag</span> <span class="o">=</span> <span class="n">key</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+                    <span class="n">init_func</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">init_func</span>
+                    <span class="n">proxy</span> <span class="o">=</span> <span class="n">InputProxy</span><span class="p">(</span><span class="n">init_func</span><span class="p">)</span>
+                    <span class="n">InputManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span>
+            <span class="c1"># Start up the input_manager</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">InputManager</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
+                <span class="c1"># Starting in python 3.12, there is a deprecation warning about using fork when</span>
+                <span class="c1"># a process is multithreaded. This can get triggered here by the start()</span>
+                <span class="c1"># function, even though I&#39;m pretty sure this is completely safe.</span>
+                <span class="c1"># So at least until it is shown that this is a problem, just suppress</span>
+                <span class="c1"># this warning here by wrapping in single_threaded()</span>
+                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Read all input fields provided and create the corresponding object</span>
+        <span class="c1"># with the parameters given in the config file.</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="c1"># Skip this key if not relevant for file_scope_only run.</span>
+            <span class="k">if</span> <span class="n">file_scope_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">loader</span><span class="o">.</span><span class="n">file_scope</span><span class="p">:</span> <span class="k">continue</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Process input key </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">LoadAllInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">safe_only</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Check that there are no other attributes specified.</span>
+        <span class="n">valid_keys</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">],</span> <span class="n">ignore</span><span class="o">=</span><span class="n">valid_keys</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SetupInput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupInput">[docs]</a><span class="k">def</span> <span class="nf">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the input field if it hasn&#39;t been processed yet.</span>
+
+<span class="sd">    This is mostly useful if the user isn&#39;t running through the full processing and just starting</span>
+<span class="sd">    at BuildImage say.  This will make sure the input objects are set up in the way that they</span>
+<span class="sd">    normally would have been by the first level of processing in a ``galsim config_file`` run.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict in which to setup the input items.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;_input_objs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="c1"># Make sure any user-set index keys are propagated properly.</span>
+        <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+        <span class="n">ProcessInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">LoadAllInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load all items of a single input type, named key, with definition given by the dict field.</span>
+
+<span class="sd">    This function just detects if the dict item for this key is a list and calls LoadInputObj</span>
+<span class="sd">    for every num.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This is designed as an internal implementation detail, not meant to be used by end users.</span>
+<span class="sd">        So it doesn&#39;t have some of the safeguards we normally put on public facing functions.</span>
+<span class="sd">        However, we expect the API to persist, and we&#39;ll try to use deprecations if we change</span>
+<span class="sd">        anything, so if users find it useful, it is fine to go ahead and use it in your own</span>
+<span class="sd">        custom input module implementations.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict to process</span>
+<span class="sd">        key:        The key name of this input type</span>
+<span class="sd">        safe_only:  Only load &quot;safe&quot; input objects.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">nfields</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nfields</span><span class="p">):</span>
+        <span class="n">input_obj</span> <span class="o">=</span> <span class="n">LoadInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">safe_only</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">input_obj</span>
+
+
+<span class="k">def</span> <span class="nf">LoadInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a single input object, named key, with definition given by the dict field.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This is designed as an internal implementation detail, not meant to be used by end users.</span>
+<span class="sd">        So it doesn&#39;t have some of the safeguards we normally put on public facing functions.</span>
+<span class="sd">        However, we expect the API to persist, and we&#39;ll try to use deprecations if we change</span>
+<span class="sd">        anything, so if users find it useful, it is fine to go ahead and use it in your own</span>
+<span class="sd">        custom input module implementations.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict to process</span>
+<span class="sd">        key:        The key name of this input type</span>
+<span class="sd">        num:        Which number in the list of this key, if needed. [default: 0]</span>
+<span class="sd">        safe_only:  Only load &quot;safe&quot; input objects.</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The constructed input object, which is also saved in config[&#39;_input_objs&#39;][key]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;_input_objs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">all_input_objs</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">nfields</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_input_objs</span><span class="p">:</span>
+        <span class="n">all_input_objs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">nfields</span>
+
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">fields</span>
+    <span class="n">input_objs</span> <span class="o">=</span> <span class="n">all_input_objs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Check if we already have it loaded.  If so, early exit.</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
+        <span class="n">input_obj</span> <span class="o">=</span> <span class="n">input_objs</span><span class="p">[</span><span class="n">num</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">field</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Current values for </span><span class="si">%s</span><span class="s1"> are </span><span class="si">%s</span><span class="s1">, safe = </span><span class="si">%s</span><span class="s1">, current index = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                     <span class="n">file_num</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_obj</span><span class="p">),</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">cindex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">input_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">csafe</span> <span class="ow">or</span> <span class="n">cindex</span> <span class="o">==</span> <span class="n">index</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Using </span><span class="si">%s</span><span class="s1"> already read in&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">input_obj</span>
+
+    <span class="c1"># Not loaded or not current.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Build input type </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">getKwargs</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># If an exception was raised here, and we are doing the safe_only run,</span>
+        <span class="c1"># then it probably needed an rng that we don&#39;t have yet.  So really, that</span>
+        <span class="c1"># just implies that this input object isn&#39;t safe to keep around anyway.</span>
+        <span class="c1"># So in this case, we just continue on.  If it was not a safe_only run,</span>
+        <span class="c1"># the exception is reraised.</span>
+        <span class="c1"># The one exception is if the exception indicates that another input type was needed.</span>
+        <span class="c1"># In that case, we load the dependent input type and try again.</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;No input&quot;</span><span class="p">):</span>
+            <span class="n">dep_input</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> input seems to depend on </span><span class="si">%s</span><span class="s2">.  Try loading that.&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dep_input</span><span class="p">)</span>
+            <span class="n">input_obj</span> <span class="o">=</span> <span class="n">LoadAllInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">dep_input</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="n">safe_only</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+            <span class="c1"># Now recurse to try this key again.</span>
+            <span class="k">return</span> <span class="n">LoadInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">num</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="n">safe_only</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">safe_only</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: caught exception: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+    <span class="k">if</span> <span class="n">safe_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">safe</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Skip </span><span class="si">%s</span><span class="s1"> </span><span class="si">%d</span><span class="s1">, since not safe&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">num</span><span class="p">)</span>
+        <span class="n">input_objs</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: </span><span class="si">%s</span><span class="s1"> kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">use_proxy</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_input_manager&#39;</span> <span class="ow">in</span> <span class="n">config</span>
+                 <span class="ow">and</span> <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span>
+                 <span class="ow">and</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">useProxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">use_proxy</span><span class="p">:</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="n">key</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;logger&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="c1"># Loggers can&#39;t be pickled. (At least prior to py3.7.  Maybe they fixed this?)</span>
+            <span class="c1"># So if we have a logger, switch it for a proxy instead.</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetLoggerProxy</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">])</span>
+        <span class="n">input_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">],</span><span class="n">tag</span><span class="p">)(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_obj</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">init_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Built input object </span><span class="si">%s</span><span class="s1"> </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">num</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;file_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: file_name = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_num</span><span class="p">,</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">loader</span><span class="o">.</span><span class="n">has_nobj</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="s1">&#39;getApproxNObjects&#39;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Input </span><span class="si">%s</span><span class="s1"> has approximately </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getApproxNObjects</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Input </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+
+    <span class="n">input_objs</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_obj</span>
+    <span class="n">loader</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">input_objs</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Invalidate any currently cached values that use this kind of input object:</span>
+    <span class="c1"># TODO: This isn&#39;t quite correct if there are multiple versions of this input</span>
+    <span class="c1">#       item.  e.g. you might want to invalidate dict0, but not dict1.</span>
+    <span class="c1">#       So ideally, we would check for the num parameter in each config before</span>
+    <span class="c1">#       invalidating it.  Right now, we just invalidate everything with this type.</span>
+    <span class="k">for</span> <span class="n">value_type</span> <span class="ow">in</span> <span class="n">connected_types</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+        <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">value_type</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Cleared current vals for items with type </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">file_num</span><span class="p">,</span><span class="n">value_type</span><span class="p">)</span>
+    <span class="c1"># Save the current status of this item in the normal way so we can check for it</span>
+    <span class="c1"># here and also so it can be used e.g. as @input.catalog in an Eval statement.</span>
+    <span class="n">field</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="n">safe</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">input_obj</span>
+
+
+<div class="viewcode-block" id="ProcessInputNObjects"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessInputNObjects">[docs]</a><span class="k">def</span> <span class="nf">ProcessInputNObjects</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the input field, just enough to determine the number of objects.</span>
+
+<span class="sd">    Some input items are relevant for determining the number of objects in a file or image.</span>
+<span class="sd">    This means we need to have them processed before splitting up jobs over multiple processes</span>
+<span class="sd">    (since the seed increments based on the number of objects).  So this function builds</span>
+<span class="sd">    the input items that have a getNObjects() method and returns the number of objects.</span>
+
+<span class="sd">    Caveat: This function tries each input type in galsim.config.valid_input_types in</span>
+<span class="sd">            order and returns the nobjects for the first one that works.  If multiple input</span>
+<span class="sd">            items have nobjects and they are inconsistent, this function may return a</span>
+<span class="sd">            number of objects that isn&#39;t what you wanted.  In this case, you should explicitly</span>
+<span class="sd">            set nobjects or nimages in the configuration dict, rather than relying on this</span>
+<span class="sd">            galsim.config &quot;magic&quot;.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict to process</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        approx:     Whether an approximate count is ok. [default: False]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the number of objects to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_input_types</span><span class="p">:</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">loader</span><span class="o">.</span><span class="n">has_nobj</span><span class="p">:</span>
+                <span class="c1"># If it&#39;s a list, just use the first one.</span>
+                <span class="n">input_obj</span> <span class="o">=</span> <span class="n">LoadInputObj</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">approx</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="s1">&#39;getApproxNObjects&#39;</span><span class="p">):</span>
+                    <span class="n">nobj</span> <span class="o">=</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getApproxNObjects</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nobj</span> <span class="o">=</span> <span class="n">input_obj</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Found nobjects = </span><span class="si">%d</span><span class="s1"> for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                             <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">nobj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">nobj</span>
+    <span class="c1"># If didn&#39;t find anything, return None.</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="SetupInputsForImage"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupInputsForImage">[docs]</a><span class="k">def</span> <span class="nf">SetupInputsForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do any necessary setup of the input items at the start of an image.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     The configuration dict to process</span>
+<span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_input_types</span><span class="p">:</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]:</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">input_objs</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="c1"># Make fields a list if necessary.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span> <span class="n">fields</span> <span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)):</span>
+                    <span class="n">field</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="n">num</span><span class="p">]</span>
+                    <span class="n">input_obj</span> <span class="o">=</span> <span class="n">input_objs</span><span class="p">[</span><span class="n">num</span><span class="p">]</span>
+                    <span class="n">loader</span><span class="o">.</span><span class="n">setupImage</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">GetNumInputObj</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the number of input objects of the given type</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        input_type: The type of input object to count</span>
+<span class="sd">        base:       The base config dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">][</span><span class="n">input_type</span><span class="p">])</span>
+
+<span class="c1"># A helper function for getting the input object needed for generating a value or building</span>
+<span class="c1"># a gsobject.</span>
+<div class="viewcode-block" id="GetInputObj"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetInputObj">[docs]</a><span class="k">def</span> <span class="nf">GetInputObj</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the input object needed for generating a particular value</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        input_type: The type of input object to get</span>
+<span class="sd">        config:     The config dict for this input item</span>
+<span class="sd">        base:       The base config dict</span>
+<span class="sd">        param_name: The type of value that we are trying to construct (only used for</span>
+<span class="sd">                    error messages).</span>
+<span class="sd">        num:        Which number in the list of this key, if needed. [default: 0]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;_input_objs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="n">input_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="s2">&quot;No input </span><span class="si">%s</span><span class="s2"> available for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span><span class="n">param_name</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">num</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s1">&#39;num&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">num</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid num &lt; 0 supplied for </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="n">param_name</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">GetNumInputObj</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid num supplied for </span><span class="si">%s</span><span class="s2"> (too large)&quot;</span><span class="o">%</span><span class="n">param_name</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;_input_objs&#39;</span><span class="p">][</span><span class="n">input_type</span><span class="p">][</span><span class="n">num</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="InputLoader"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader">[docs]</a><span class="k">class</span> <span class="nc">InputLoader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define how to load a particular input type.</span>
+
+<span class="sd">    The base class is often sufficient for simple types, but you may derive from it and</span>
+<span class="sd">    override some of the functions to deal with special handling requirements.</span>
+
+<span class="sd">    The loader object defines a few attributes that will be used by the processing framework,</span>
+<span class="sd">    so any derived class should make sure to define them as well.</span>
+
+<span class="sd">    init_func</span>
+<span class="sd">                The class or function that will be used to build the input object.</span>
+
+<span class="sd">    has_nobj</span>
+<span class="sd">                Whether the object can be used to automatically determine the number of</span>
+<span class="sd">                objects to build for a given file or image.  For example, a galsim.Catalog has</span>
+<span class="sd">                a specific number of rows in it.  In many cases, you will just want to run</span>
+<span class="sd">                through the whole catalog for each output file.  So the number of objects to</span>
+<span class="sd">                build will just be the number of objects in the input catalog. [default: False]</span>
+
+<span class="sd">                If this is True, the constructed input object must have a ``getNObjects()``</span>
+<span class="sd">                method.  The constructor may (if practical) only load enough to figure out</span>
+<span class="sd">                how many objects there are.  Other attributes may use lazy properties to delay</span>
+<span class="sd">                finishing the read if that is efficient.</span>
+
+<span class="sd">                It may optionally also have a ``getApproxNObjects()`` method, which may</span>
+<span class="sd">                return an approximate estimate of the number of objects.  This is used for the</span>
+<span class="sd">                initial calculation of what object numbers to use for each file/image, and it</span>
+<span class="sd">                is generally acceptable if this is an over-estimate, even a pretty egregious</span>
+<span class="sd">                over-estimate if necessary.</span>
+
+<span class="sd">    file_scope</span>
+<span class="sd">                Whether the input object might be relevant at file scope when the file and</span>
+<span class="sd">                image is initially being set up. [default: False]</span>
+
+<span class="sd">                If this is False, then the input object won&#39;t be loaded until after the</span>
+<span class="sd">                initial file setup.  For example, you might store the file names you want</span>
+<span class="sd">                to use for the output files in a YAML file, which you plan to read in as a</span>
+<span class="sd">                dict input object. Thus, dict is our canonical example of an input type for</span>
+<span class="sd">                which this parameter should be True.</span>
+
+<span class="sd">    takes_logger</span>
+<span class="sd">                Whether the input object has a logger attribute.  If so, and a proxy is being</span>
+<span class="sd">                used, then the logger will be replaced with a logger proxy. [default: False]</span>
+
+<span class="sd">    use_proxy</span>
+<span class="sd">                Whether to use a proxy for commicating between processes.  This is normally</span>
+<span class="sd">                necessary whenever multiprocessing is being used, but there are cases where it</span>
+<span class="sd">                is not necessary and just slows things down.  [default: True]</span>
+
+<span class="sd">    worker_init</span>
+<span class="sd">                One way to avoid using a proxy is to follow the shared memory model decsribed</span>
+<span class="sd">                in the doc string of `AtmosphericScreen`.  This mode uses a global dict, which</span>
+<span class="sd">                is initialized for each worker at the start of multi-processing.  To use this</span>
+<span class="sd">                method, one needs to provide an initialization function that gets run when</span>
+<span class="sd">                each worker starts.  [default: None]</span>
+
+<span class="sd">    worker_initargs</span>
+<span class="sd">                A function to provide the necessary arguments to worker_init. [default: None]</span>
+<span class="sd">                This is required whenever worker_init is not None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">has_nobj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">file_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">takes_logger</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">use_proxy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">worker_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">worker_initargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_func</span> <span class="o">=</span> <span class="n">init_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_nobj</span> <span class="o">=</span> <span class="n">has_nobj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_scope</span> <span class="o">=</span> <span class="n">file_scope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">takes_logger</span> <span class="o">=</span> <span class="n">takes_logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_proxy</span> <span class="o">=</span> <span class="n">use_proxy</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">worker_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">worker_initargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Must provide both worker_init and worker_initargs&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">worker_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">worker_init_fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker_init</span><span class="p">)</span>
+            <span class="n">worker_initargs_fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker_initargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InputLoader.getKwargs"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.getKwargs">[docs]</a>    <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the config dict and return the kwargs needed to build the input object.</span>
+
+<span class="sd">        The default implementation looks for special class attributes called:</span>
+
+<span class="sd">        _req_params</span>
+<span class="sd">                        A dict of required parameters and their types.</span>
+<span class="sd">        _opt_params</span>
+<span class="sd">                        A dict of optional parameters and their types.</span>
+<span class="sd">        _single_params</span>
+<span class="sd">                        A list of dicts of parameters such that one and only one of</span>
+<span class="sd">                        parameter in each dict is required.</span>
+<span class="sd">        _takes_rng</span>
+<span class="sd">                        A bool value saying whether an rng object is required.</span>
+
+<span class="sd">        See galsim.Catalog for an example of a class that sets these attributes.</span>
+
+<span class="sd">        In addition to the kwargs, we also return a bool value, safe, that indicates whether</span>
+<span class="sd">        the constructed object will be safe to keep around for multiple files (True) of if</span>
+<span class="sd">        it will need to be rebuilt for each output file (False).</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The config dict for this input item</span>
+<span class="sd">            base:       The base config dict</span>
+<span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            kwargs, safe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="o">=</span><span class="n">single</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">takes_rng</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s1">&#39;input &#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">init_func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">takes_logger</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<div class="viewcode-block" id="InputLoader.useProxy"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.useProxy">[docs]</a>    <span class="k">def</span> <span class="nf">useProxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether to use a proxy for the input object.</span>
+
+<span class="sd">        The default behavior is to return self.use_proxy, which is set by the constructor</span>
+<span class="sd">        parameters.  But if you want to decide whether to use a proxy based on something</span>
+<span class="sd">        in the config dict, you can override this and decide at run time.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.  [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_proxy</span></div>
+
+<div class="viewcode-block" id="InputLoader.setupImage"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.setupImage">[docs]</a>    <span class="k">def</span> <span class="nf">setupImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do any necessary setup at the start of each image.</span>
+
+<span class="sd">        In the base class, this function does not do anything.  But see PowerSpectrumLoader</span>
+<span class="sd">        for an example that does require some setup at the start of each image.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            input_obj:  The input object to use</span>
+<span class="sd">            config:     The configuration dict for the input type</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            logger:     If given, a logger object to log progress.  [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="InputLoader.initialize"><a class="viewcode-back" href="../../../config_input.html#galsim.config.InputLoader.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_objs</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Do any global setup for input objects right after they are loaded.</span>
+
+<span class="sd">        In the base class, this function does not do anything. It can be used to do</span>
+<span class="sd">        things like load an input object and then assign it to an eval variable in the</span>
+<span class="sd">        base configuration dictionary.</span>
+
+<span class="sd">        When writing this method, remember that the entries in input objs are set to</span>
+<span class="sd">        ``None`` initially. This can cause problems for some operations on them and so</span>
+<span class="sd">        you may want to test for this condition with code like</span>
+<span class="sd">        ``all(iobj is not None for iobj in input_objs)``.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            input_objs:  The (current) list of input objects.</span>
+<span class="sd">            num:         The entry in the list that was loaded.</span>
+<span class="sd">            base:        The base configuration dict.</span>
+<span class="sd">            logger:      If given, a logger object to log progress.  [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+<div class="viewcode-block" id="RegisterInputType"><a class="viewcode-back" href="../../../config_input.html#galsim.config.RegisterInputType">[docs]</a><span class="k">def</span> <span class="nf">RegisterInputType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an input type for use by the config apparatus.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        input_type:     The name of the type in config[&#39;input&#39;]</span>
+<span class="sd">        loader:         A loader object to use for loading in the input object.</span>
+<span class="sd">                        It should be an instance of InputLoader or a subclass thereof.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_input_types</span><span class="p">[</span><span class="n">input_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">loader</span>
+    <span class="k">if</span> <span class="n">input_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connected_types</span><span class="p">:</span>
+        <span class="n">connected_types</span><span class="p">[</span><span class="n">input_type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RegisterInputConnectedType"><a class="viewcode-back" href="../../../config_process.html#galsim.config.RegisterInputConnectedType">[docs]</a><span class="k">def</span> <span class="nf">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">type_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register that some gsobject or value type is connected to a given input type.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        input_type:     The name of the type in config[&#39;input&#39;]</span>
+<span class="sd">        type_name:      The name of the type that uses this input object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">input_type</span><span class="p">:</span>
+            <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">input_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">input_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connected_types</span><span class="p">:</span>
+            <span class="n">connected_types</span><span class="p">[</span><span class="n">input_type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">connected_types</span><span class="p">[</span><span class="n">input_type</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">type_name</span><span class="p">)</span></div>
+
+<span class="c1"># We define in this file two simple input types: catalog and dict, which read in a Catalog</span>
+<span class="c1"># or Dict from a file and then can use that to generate values.</span>
+
+<span class="c1"># Now define the value generators connected to the catalog and dict input types.</span>
+<span class="k">def</span> <span class="nf">_GenerateFromCatalog</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a value read from an input catalog</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_cat</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Catalog&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified.</span>
+    <span class="c1"># The normal thing with a Catalog is to just use each object in order,</span>
+    <span class="c1"># so we don&#39;t require the user to specify that by hand.  We can do it for them.</span>
+    <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">input_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+
+    <span class="c1"># Coding note: the and/or bit is equivalent to a C ternary operator:</span>
+    <span class="c1">#     input_cat.isFits() ? str : int</span>
+    <span class="c1"># which of course doesn&#39;t exist in python.  This does the same thing (so long as the</span>
+    <span class="c1"># middle item evaluates to true).</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;col&#39;</span> <span class="p">:</span> <span class="n">input_cat</span><span class="o">.</span><span class="n">isFits</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">str</span> <span class="ow">or</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;col&#39;</span><span class="p">]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">input_cat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">input_cat</span><span class="o">.</span><span class="n">getFloat</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">input_cat</span><span class="o">.</span><span class="n">getInt</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># value_type is bool</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_GetBoolValue</span><span class="p">(</span><span class="n">input_cat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">))</span>
+
+    <span class="c1">#print(base[&#39;file_num&#39;],&#39;Catalog: col = %s, index = %s, val = %s&#39;%(col, index, val))</span>
+    <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_GenerateFromDict</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a value read from an input dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_dict</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;dict&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Dict&#39;</span><span class="p">)</span>
+
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;key&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
+
+    <span class="n">val</span> <span class="o">=</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1">#print(base[&#39;file_num&#39;],&#39;Dict: key = %s, val = %s&#39;%(key,val))</span>
+    <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="c1"># Register these as valid value types</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Catalog&#39;</span><span class="p">,</span> <span class="n">_GenerateFromCatalog</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span> <span class="p">],</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;catalog&#39;</span><span class="p">)</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;catalog&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">Catalog</span><span class="p">,</span> <span class="n">has_nobj</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;dict&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">Dict</span><span class="p">,</span> <span class="n">file_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Dict&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDict</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span> <span class="p">],</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;dict&#39;</span><span class="p">)</span>
+<span class="c1"># Note: Doing the above in different orders for catalog and dict is intentional.  It makes sure</span>
+<span class="c1"># we test that this works for users no matter which order they do their registering.</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

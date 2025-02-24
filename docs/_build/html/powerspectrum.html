@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power Spectrum Shears &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="NFW Halo Shears" href="nfwhalo.html" />
+    <link rel="prev" title="The Shear class" href="shear.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="wl.html">Weak Lensing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shear.html">The Shear class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Power Spectrum Shears</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.PowerSpectrum"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum._getShear"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum._getShear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum._getConvergence"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum._getConvergence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum._getMagnification"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum._getMagnification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum._getLensing"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum._getLensing()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.buildGrid"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.buildGrid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.calculateXi"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.calculateXi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.getConvergence"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.getConvergence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.getLensing"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.getLensing()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.getMagnification"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.getMagnification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.getShear"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.getShear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.PowerSpectrum.nRandCallsForBuildGrid"><code class="docutils literal notranslate"><span class="pre">PowerSpectrum.nRandCallsForBuildGrid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.lensing_ps.PowerSpectrumRealizer"><code class="docutils literal notranslate"><span class="pre">PowerSpectrumRealizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#galsim.lensing_ps.PowerSpectrumRealizer.__call__"><code class="docutils literal notranslate"><span class="pre">PowerSpectrumRealizer.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#galsim.lensing_ps.theoryToObserved"><code class="docutils literal notranslate"><span class="pre">theoryToObserved()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nfwhalo.html">NFW Halo Shears</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pse.html">Power Spectrum Estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="wl.html">Weak Lensing</a></li>
+      <li class="breadcrumb-item active">Power Spectrum Shears</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/powerspectrum.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="power-spectrum-shears">
+<h1>Power Spectrum Shears<a class="headerlink" href="#power-spectrum-shears" title="Permalink to this heading"></a></h1>
+<p>This is the “lensing engine” for calculating shears according to a Gaussian process with
+specified E- and/or B-mode power spectra.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PowerSpectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e_power_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_power_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum" title="Permalink to this definition"></a></dt>
+<dd><p>Class to represent a lensing shear field according to some power spectrum <span class="math notranslate nohighlight">\(P(k)\)</span>.</p>
+<p><strong>General considerations</strong>:</p>
+<p>A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
+arbitary positions.  This class is originally initialized with a power spectrum from which we
+would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates
+shears on a grid, and if necessary, when <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> (or another “get” method) is called, it
+will interpolate to the requested positions.  For detail on how these processes are carried
+out, please see the document in the GalSim repository, <code class="docutils literal notranslate"><span class="pre">devel/modules/lensing_engine.pdf</span></code>.</p>
+<p>This class generates the shears according to the input power spectrum using a DFT approach,
+which means that we implicitly assume our discrete representation of <span class="math notranslate nohighlight">\(P(k)\)</span> on a grid is
+one complete cell in an infinite periodic series.  We are making assumptions about what
+<span class="math notranslate nohighlight">\(P(k)\)</span> is doing outside of our minimum and maximum k range, and those must be kept in
+mind when comparing with theoretical expectations.  Specifically, since the power spectrum is
+realized on only a finite grid it has been been effectively bandpass filtered between a
+minimum and maximum k value in each of the k1, k2 directions.  See the <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> method for
+more information.</p>
+<p>As a result, the shear generation currently does not include sample variance due to coverage of
+a finite patch.  We explicitly enforce <span class="math notranslate nohighlight">\(P(0)=0\)</span>, which is true for the full sky in a
+reasonable cosmological model, but it ignores the fact that our little patch of sky might
+reasonably live in some special region with respect to shear correlations.  Our <span class="math notranslate nohighlight">\(P(0)=0\)</span>
+is essentially setting the integrated power below our minimum k value to zero.  The
+implications of the discrete representation, and the <span class="math notranslate nohighlight">\(P(0)=0\)</span> choice, are discussed in
+more detail in <code class="docutils literal notranslate"><span class="pre">devel/modules/lensing_engine.pdf</span></code>.</p>
+<p>The effective shear correlation function for the gridded points will be modified both because of
+the DFT approach to representing shears according to a power spectrum, and because of the power
+cutoff below and above the minimum k values.  The latter effect can be particularly important on
+large scales, so the <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> method has some keywords that can be used to reduce the
+impact of the minimum k set by the grid extent.  The calculateXi() method can be used to
+calculate the expected shear correlation functions given the minimum and maximum k for some grid
+(but ignoring the discrete vs. continuous Fourier transform effects), for comparison with some
+ideal theoretical correlation function given an infinite k range.</p>
+<p>When interpolating the shears to non-gridded points, the shear correlation function and power
+spectrum are modified; see the <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> and other “get” method docstrings for more details.</p>
+<p><strong>The power spectra to be used</strong>:</p>
+<p>When creating a PowerSpectrum instance, you must specify at least one of the E or B mode power
+spectra, which is normally given as a function <span class="math notranslate nohighlight">\(P(k)\)</span>.  The typical thing is to just use a lambda
+function in Python (i.e., a function that is not associated with a name); for example, to define
+<span class="math notranslate nohighlight">\(P(k)=k^2\)</span>, one would use <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">k</span> <span class="pre">:</span> <span class="pre">k**2</span></code>.  But the power spectra can also be more complicated
+user-defined functions that take a single argument <code class="docutils literal notranslate"><span class="pre">k</span></code> and return the power at that <code class="docutils literal notranslate"><span class="pre">k</span></code>
+value, or they can be instances of the <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> class for power spectra that are known at
+particular <code class="docutils literal notranslate"><span class="pre">k</span></code> values but for which there is not a simple analytic form.</p>
+<p>Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
+(ell), i.e., the <span class="math notranslate nohighlight">\(C_\ell\)</span> values.  In the flat-sky limit, we can replace <span class="math notranslate nohighlight">\(\ell\)</span>
+with <span class="math notranslate nohighlight">\(k\)</span> and <span class="math notranslate nohighlight">\(C_\ell\)</span> with <span class="math notranslate nohighlight">\(P(k)\)</span>.  Thus, <span class="math notranslate nohighlight">\(k\)</span> and <span class="math notranslate nohighlight">\(P(k)\)</span> have
+dimensions of inverse angle and angle^2, respectively.  It is quite common for people to plot
+<span class="math notranslate nohighlight">\(\ell(\ell+1) C_\ell/2\pi\)</span>, a dimensionless quantity; the analogous flat-sky
+quantity is <span class="math notranslate nohighlight">\(\Delta^2 = k^2 P(k)/2\pi\)</span>.</p>
+<p>By default, the PowerSpectrum object assumes it is getting <span class="math notranslate nohighlight">\(P(k)\)</span>, but it is possible to
+instead give it <span class="math notranslate nohighlight">\(\Delta^2\)</span> by setting the optional keyword <code class="docutils literal notranslate"><span class="pre">delta2</span> <span class="pre">=</span> <span class="pre">True</span></code> in the
+constructor.</p>
+<p>The power functions must return a list/array that is the same size as what they are given, e.g.,
+in the case of no power or constant power, a function that just returns a float would not be
+permitted; it would have to return an array of floats all with the same value.</p>
+<p>It is important to note that the power spectra used to initialize the PowerSpectrum object
+should use the same units for k and <span class="math notranslate nohighlight">\(P(k)\)</span>, i.e., if k is in inverse radians then
+<span class="math notranslate nohighlight">\(P(k)\)</span> should be in radians^2 (as is natural for outputs from a cosmological shear power
+spectrum calculator).  However, when we actually draw images, there is a natural scale that
+defines the pitch of the image, which is typically taken to be arcsec.  This definition of a
+specific length scale means that by default we assume all quantities to the PowerSpectrum are
+in arcsec, and those are the units used for internal calculations, but the <code class="docutils literal notranslate"><span class="pre">units</span></code> keyword
+can be used to specify different input units for <span class="math notranslate nohighlight">\(P(k)\)</span> (again, within the constraint
+that k and <span class="math notranslate nohighlight">\(P(k)\)</span> must be consistent).  If the <code class="docutils literal notranslate"><span class="pre">delta2</span></code> keyword is set to specify that
+the input is actually the dimensionless power <span class="math notranslate nohighlight">\(\Delta^2\)</span>, then the input <code class="docutils literal notranslate"><span class="pre">units</span></code> are
+taken to apply only to the k values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>e_power_function</strong> – A function or other callable that accepts a NumPy array of abs(k)
+values, and returns the E-mode power spectrum P_E(abs(k)) in an array of
+the same shape.  The function should return the power spectrum desired
+in the E (gradient) mode of the image.
+It may also be a string that can be converted to a function using
+<code class="docutils literal notranslate"><span class="pre">eval('lambda</span> <span class="pre">k</span> <span class="pre">:</span> <span class="pre">'+e_power_function)</span></code>, a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a>, or
+<code class="docutils literal notranslate"><span class="pre">file_name</span></code> from which to read in a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a>.  If a <code class="docutils literal notranslate"><span class="pre">file_name</span></code>
+is given, the resulting <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> uses the defaults for the
+<a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> class, namely spline interpolation in <span class="math notranslate nohighlight">\(P(k)\)</span>.
+Users who wish to deviate from those defaults (for example, to
+interpolate in log(P) and log(k), as might be more natural for
+power-law functions) should instead read in the file to create a
+<a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> using the necessary non-default settings. [default: None,
+which means no E-mode power.]</p></li>
+<li><p><strong>b_power_function</strong> – A function or other callable that accepts a NumPy array of abs(k)
+values, and returns the B-mode power spectrum P_B(abs(k)) in an array of
+the same shape.  The function should return the power spectrum desired
+in the B (curl) mode of the image.  See description of
+<code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> for input format options.  [default: None, which
+means no B-mode power.]</p></li>
+<li><p><strong>delta2</strong> – Is the power actually given as dimensionless <span class="math notranslate nohighlight">\(\Delta^2\)</span>, which
+requires us to multiply by <span class="math notranslate nohighlight">\(2\pi / k^2\)</span> to get the shear power
+<span class="math notranslate nohighlight">\(P(k)\)</span> in units of angle^2?  [default: False]</p></li>
+<li><p><strong>units</strong> – The angular units used for the power spectrum (i.e. the units of
+k^-1 and sqrt(P)). This should be either an <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AngleUnit</span></code></a> instance
+(e.g. galsim.radians) or a string (e.g. ‘radians’). [default: arcsec]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum._getShear">
+<span class="sig-name descname"><span class="pre">_getShear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum._getShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum._getShear" title="Permalink to this definition"></a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, but without some sanity checks and the positions must be
+given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>reduced</strong> – Whether returned shear(s) should be reduced shears. [default: True]</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum._getConvergence">
+<span class="sig-name descname"><span class="pre">_getConvergence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum._getConvergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum._getConvergence" title="Permalink to this definition"></a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.PowerSpectrum.getConvergence" title="galsim.PowerSpectrum.getConvergence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getConvergence</span></code></a>, but without some sanity checks and the positions must be
+given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the convergence, kappa (either a scalar or a numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum._getMagnification">
+<span class="sig-name descname"><span class="pre">_getMagnification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum._getMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum._getMagnification" title="Permalink to this definition"></a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.PowerSpectrum.getMagnification" title="galsim.PowerSpectrum.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getMagnification</span></code></a>, but without some sanity checks and the positions must
+be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the magnification, mu (either a scalar or a numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum._getLensing">
+<span class="sig-name descname"><span class="pre">_getLensing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum._getLensing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum._getLensing" title="Permalink to this definition"></a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.PowerSpectrum.getLensing" title="galsim.PowerSpectrum.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getLensing</span></code></a>, but without some sanity checks and the positions must
+be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the reduced shear and magnification as a tuple (g1,g2,mu) (either scalars or
+numpy arrays)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.buildGrid">
+<span class="sig-name descname"><span class="pre">buildGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">galsim.PositionD(x=0.0,</span> <span class="pre">y=0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_convergence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandlimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.buildGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.buildGrid" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a realization of the current power spectrum on the specified grid.</p>
+<p><strong>Basic functionality</strong>:</p>
+<p>This function will generate a Gaussian random realization of the specified E and B mode
+shear power spectra at a grid of positions, specified by the input parameters
+<code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> (distance between grid points) and <code class="docutils literal notranslate"><span class="pre">ngrid</span></code> (number of grid points in
+each direction.)  Units for <code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> and <code class="docutils literal notranslate"><span class="pre">center</span></code> can be specified using the
+<code class="docutils literal notranslate"><span class="pre">units</span></code> keyword; the default is arcsec, which is how all values are stored internally.
+It automatically computes and stores grids for the shears and convergence.  However, since
+many users are primarily concerned with shape distortion due to shear, the default is to
+return only the shear components; the <code class="docutils literal notranslate"><span class="pre">get_convergence</span></code> keyword can be used to also
+return the convergence.</p>
+<p>The quantities that are returned are the theoretical shears and convergences, usually
+denoted gamma and kappa, respectively.  Users who wish to obtain the more
+observationally-relevant reduced shear and magnification (that describe real lensing
+distortions) can either use the <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, <a class="reference internal" href="#galsim.PowerSpectrum.getMagnification" title="galsim.PowerSpectrum.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getMagnification</span></code></a>, or <a class="reference internal" href="#galsim.PowerSpectrum.getLensing" title="galsim.PowerSpectrum.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getLensing</span></code></a> methods
+after <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>, or can use the convenience function <a class="reference internal" href="#galsim.lensing_ps.theoryToObserved" title="galsim.lensing_ps.theoryToObserved"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.lensing_ps.theoryToObserved</span></code></a>
+to convert from theoretical to observed quantities.</p>
+<p><strong>Caveats of the DFT approach</strong>:</p>
+<p>Note that the shears generated using this method correspond to the PowerSpectrum multiplied
+by a sharp bandpass filter, set by the dimensions of the grid.</p>
+<p>The filter sets <span class="math notranslate nohighlight">\(P(k) = 0\)</span> for:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">abs</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">k2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">kmin</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>and:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">abs</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">k2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">kmax</span> <span class="o">+</span> <span class="n">kmin</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>where:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kmin</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">ngrid</span> <span class="o">*</span> <span class="n">grid_spacing</span><span class="p">)</span>
+<span class="n">kmax</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">grid_spacing</span>
+</pre></div>
+</div>
+<p>and where we have adopted the convention that grid points at a given <code class="docutils literal notranslate"><span class="pre">k</span></code> represent the
+interval between (k - dk/2) and (k + dk/2) (noting that the grid spacing dk in k space
+is equivalent to <code class="docutils literal notranslate"><span class="pre">kmin</span></code>).</p>
+<p>It is worth remembering that this bandpass filter will <em>not</em> look like a circular annulus
+in 2D <code class="docutils literal notranslate"><span class="pre">k</span></code> space, but is rather more like a thick-sided picture frame, having a small
+square central cutout of dimensions <code class="docutils literal notranslate"><span class="pre">kmin</span></code> by <code class="docutils literal notranslate"><span class="pre">kmin</span></code>.  These properties are visible in
+the shears generated by this method.</p>
+<p>If you care about these effects and want to ameliorate their effect, there are two
+optional kwargs you can provide: <code class="docutils literal notranslate"><span class="pre">kmin_factor</span></code> and <code class="docutils literal notranslate"><span class="pre">kmax_factor</span></code>, both of which are 1
+by default.  These should be integers &gt;= 1 that specify some factor smaller or larger
+(for kmin and kmax respectively) you want the code to use for the underlying grid in
+fourier space.  The final shear grid is returned using the specified <code class="docutils literal notranslate"><span class="pre">ngrid</span></code> and
+<code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> parameters.  But the intermediate grid in Fourier space will be larger
+by the specified factors.</p>
+<p>Note: These are really just for convenience, since you could easily get the same effect
+by providing different values of ngrid and grid_spacing and then take a subset of them.
+The <code class="docutils literal notranslate"><span class="pre">kmin_factor</span></code> and <code class="docutils literal notranslate"><span class="pre">kmax_factor</span></code> just handle the scalings appropriately for you.</p>
+<p>Use of <code class="docutils literal notranslate"><span class="pre">kmin_factor</span></code> and <code class="docutils literal notranslate"><span class="pre">kmax_factor</span></code> should depend on the desired application.  For
+accurate representation of power spectra, one should not change these values from their
+defaults of 1.  Changing them from one means the E- and B-mode power spectra that are input
+will be valid for the larger intermediate grids that get generated in Fourier space, but not
+necessarily for the smaller ones that get returned to the user.  However, for accurate
+representation of cosmological shear correlation functions, use of <code class="docutils literal notranslate"><span class="pre">kmin_factor</span></code> larger
+than one can be helpful in getting the shear correlations closer to the ideal theoretical
+ones (see <code class="docutils literal notranslate"><span class="pre">devel/module/lensing_engine.pdf</span></code> for details).</p>
+<p><strong>Aliasing</strong>:</p>
+<p>If the user provides a power spectrum that does not include a cutoff at kmax, then our
+method of generating shears will result in aliasing that will show up in both E- and
+B-modes.  Thus the <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> method accepts an optional keyword argument called
+<code class="docutils literal notranslate"><span class="pre">bandlimit</span></code> that can tell the PowerSpectrum object to cut off power above kmax
+automatically, where the relevant kmax is larger than the grid Nyquist frequency by a factor
+of <code class="docutils literal notranslate"><span class="pre">kmax_factor</span></code>.  The allowed values for <code class="docutils literal notranslate"><span class="pre">bandlimit</span></code> are None (i.e., do nothing),
+<code class="docutils literal notranslate"><span class="pre">hard</span></code> (set power to zero above the band limit), or <code class="docutils literal notranslate"><span class="pre">soft</span></code> (use an arctan-based
+softening function to make the power go gradually to zero above the band limit).  By
+default, <code class="docutils literal notranslate"><span class="pre">bandlimit=hard</span></code>.  Use of this keyword does nothing to the internal
+representation of the power spectrum, so if the user calls the <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> method again,
+they will need to set <code class="docutils literal notranslate"><span class="pre">bandlimit</span></code> again (and if their grid setup is different in a way
+that changes <code class="docutils literal notranslate"><span class="pre">kmax</span></code>, then that’s fine).</p>
+<p><strong>Interpolation</strong>:</p>
+<p>If the grid is being created for the purpose of later interpolating to random positions, the
+following findings should be kept in mind: since the interpolant modifies the effective
+shear correlation function on scales comparable to &lt;~3x the grid spacing, the grid spacing
+should be chosen to be at least 3 times smaller than the minimum scales on which the user
+wishes to reproduce the shear correlation function accurately.  Ideally, the grid should be
+somewhat larger than the region in which shears at random points are needed, so that edge
+effects in the interpolation will not be important.  For this purpose, there should be &gt;~5
+grid points outside of the region in which interpolation will take place.  Ignoring this
+edge effect and using the grid for interpolation out to its edges can suppress shear
+correlations on all scales by an amount that depends on the grid size; for a 100x100 grid,
+the suppression is ~2-3%.  Note that the above numbers came from tests that use a
+cosmological shear power spectrum; precise figures for this suppression can also depend on
+the shear correlation function itself.</p>
+<p><strong>Sign conventions and other info</strong>:</p>
+<p>Note also that the convention for axis orientation differs from that for the GREAT10
+challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
+shear component must be flipped.</p>
+<p>For more information on the effects of finite grid representation of the power spectrum
+see <code class="docutils literal notranslate"><span class="pre">devel/modules/lensing_engine.pdf</span></code>.</p>
+<p><strong>Examples</strong>:</p>
+<ol class="arabic">
+<li><p>Get shears on a grid of points separated by 1 arcsec:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_ps</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PowerSpectrum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span> <span class="p">:</span> <span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span><span class="n">grid_spacing</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">ngrid</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The returned g1, g2 are 2-d NumPy arrays of values, corresponding to the values of
+g1 and g2 at the locations of the grid points.</p>
+<p>For a given value of <code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> and <code class="docutils literal notranslate"><span class="pre">ngrid</span></code>, we could get the x and y values on
+the grid using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">min</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">ngrid</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">grid_spacing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">max</span> <span class="o">=</span> <span class="p">(</span><span class="n">ngrid</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">grid_spacing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span><span class="nb">max</span><span class="o">+</span><span class="n">grid_spacing</span><span class="p">,</span><span class="n">grid_spacing</span><span class="p">),</span>
+<span class="gp">... </span>                   <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span><span class="nb">max</span><span class="o">+</span><span class="n">grid_spacing</span><span class="p">,</span><span class="n">grid_spacing</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where the center of the grid is taken to be (0,0).</p>
+</li>
+<li><p>Rebuild the grid using a particular rng and set the location of the center of the grid
+to be something other than the default (0,0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span><span class="n">grid_spacing</span> <span class="o">=</span> <span class="mf">8.</span><span class="p">,</span> <span class="n">ngrid</span> <span class="o">=</span> <span class="mi">65</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">rng</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">BaseDeviate</span><span class="p">(</span><span class="mi">1413231</span><span class="p">),</span>
+<span class="gp">... </span>                         <span class="n">center</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">256.5</span><span class="p">,</span> <span class="mf">256.5</span><span class="p">)</span> <span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Make a <a class="reference internal" href="#galsim.PowerSpectrum" title="galsim.PowerSpectrum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrum</span></code></a> from a tabulated <span class="math notranslate nohighlight">\(P(k)\)</span> that gets interpolated to find the
+power at all necessary values of k, then generate shears and convergences on a grid, and
+convert to reduced shear and magnification so they can be used to transform galaxy
+images.  E.g., assuming that k and P_k are NumPy arrays containing k and <span class="math notranslate nohighlight">\(P(k)\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tab_pk</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">LookupTable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">P_k</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_ps</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">tab_pk</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">kappa</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span><span class="n">grid_spacing</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">ngrid</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">get_convergence</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1_r</span><span class="p">,</span> <span class="n">g2_r</span><span class="p">,</span> <span class="n">mu</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">lensing_ps</span><span class="o">.</span><span class="n">theoryToObserved</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">kappa</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid_spacing</strong> – Spacing for an evenly spaced grid of points, by default in arcsec
+for consistency with the natural length scale of images created
+using the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.  Other units can be
+specified using the <code class="docutils literal notranslate"><span class="pre">units</span></code> keyword.</p></li>
+<li><p><strong>ngrid</strong> – Number of grid points in each dimension.  [Must be an integer]</p></li>
+<li><p><strong>rng</strong> – A <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object for drawing the random numbers.
+[default: None]</p></li>
+<li><p><strong>interpolant</strong> – <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> that will be used for interpolating the gridded shears
+by methods like <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, <a class="reference internal" href="#galsim.PowerSpectrum.getConvergence" title="galsim.PowerSpectrum.getConvergence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getConvergence</span></code></a>, etc. if they are
+later called. [default: galsim.Lanczos(5)]</p></li>
+<li><p><strong>center</strong> – If setting up a new grid, define what position you want to consider
+the center of that grid.  Units must be consistent with those for
+<code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code>.  [default: galsim.PositionD(0,0)]</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default: arcsec]</p></li>
+<li><p><strong>get_convergence</strong> – Return the convergence in addition to the shear?  Regardless of the
+value of <code class="docutils literal notranslate"><span class="pre">get_convergence</span></code>, the convergence will still be computed
+and stored for future use. [default: False]</p></li>
+<li><p><strong>kmin_factor</strong> – <p>Factor by which the grid spacing in fourier space is smaller than
+the default.  i.e.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kmin</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">ngrid</span> <span class="o">*</span> <span class="n">grid_spacing</span><span class="p">)</span> <span class="o">/</span> <span class="n">kmin_factor</span>
+</pre></div>
+</div>
+<p>[default: 1; must be an integer]</p>
+</p></li>
+<li><p><strong>kmax_factor</strong> – <p>Factor by which the overall grid in fourier space is larger than
+the default.  i.e.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kmax</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">grid_spacing</span> <span class="o">*</span> <span class="n">kmax_factor</span>
+</pre></div>
+</div>
+<p>[default: 1; must be an integer]</p>
+</p></li>
+<li><p><strong>bandlimit</strong> – Keyword determining how to handle power <span class="math notranslate nohighlight">\(P(k)\)</span> above the
+limiting k value, kmax.  The options None, ‘hard’, and ‘soft’
+correspond to doing nothing (i.e., allow P(&gt;kmax) to be aliased to
+lower k values), cutting off all power above kmax, and applying a
+softening filter to gradually cut off power above kmax.  Use of
+this keyword does not modify the internally-stored power spectrum,
+just the shears generated for this particular call to <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>.
+[default: “hard”]</p></li>
+<li><p><strong>variance</strong> – Optionally renormalize the variance of the output shears to a
+given value.  This is useful if you know the functional form of
+the power spectrum you want, but not the normalization.  This lets
+you set the normalization separately.  The resulting shears should
+have var(g1) + var(g2) ~= variance.  If only <code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> is
+given, then this is also the variance of kappa.  Otherwise, the
+variance of kappa may be smaller than the specified variance.
+[default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the tuple (g1,g2[,kappa]), where each is a 2-d NumPy array and kappa is included
+iff <code class="docutils literal notranslate"><span class="pre">get_convergence</span></code> is set to True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.calculateXi">
+<span class="sig-name descname"><span class="pre">calculateXi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandlimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hard'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.calculateXi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.calculateXi" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate shear correlation functions for the current power spectrum on the specified
+grid.</p>
+<p>This function will calculate the theoretical shear correlation functions, <span class="math notranslate nohighlight">\(\xi_+\)</span>
+and <span class="math notranslate nohighlight">\(\xi_-\)</span>, for this power spectrum and the grid configuration specified using
+keyword arguments, taking into account the minimum and maximum k range implied by the grid
+parameters, <code class="docutils literal notranslate"><span class="pre">kmin_factor</span></code> and <code class="docutils literal notranslate"><span class="pre">kmax_factor</span></code>.  Most theoretical correlation function
+calculators assume an infinite k range, so this utility can be used to check how close the
+chosen grid parameters (and the implied minimum and maximum k) come to the “ideal” result.
+This is particularly useful on large scales, since in practice the finite grid extent
+limits the minimum k value and therefore can suppress shear correlations on large scales.
+Note that the actual shear correlation function in the generated shears will still differ
+from the one calculated here due to differences between the discrete and continuous Fourier
+transform.</p>
+<p>The quantities that are returned are three NumPy arrays: separation theta (in the adopted
+units), <span class="math notranslate nohighlight">\(\xi_+\)</span>, and <span class="math notranslate nohighlight">\(\xi_-\)</span>.  These are defined in terms of the E- and B-mode
+shear power spectrum as in the document <code class="docutils literal notranslate"><span class="pre">devel/modules/lensing_engine.pdf</span></code>, equations 2
+and 3.  The values that are returned are for a particular theta value, not an average over
+a range of theta values in some bin of finite width.</p>
+<p>This method has been tested with cosmological shear power spectra; users should check for
+sanity of outputs if attempting to use power spectra that have very different scalings with
+k.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid_spacing</strong> – Spacing for an evenly spaced grid of points, by default in arcsec
+for consistency with the natural length scale of images created
+using the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.  Other units can be specified
+using the <code class="docutils literal notranslate"><span class="pre">units</span></code> keyword.</p></li>
+<li><p><strong>ngrid</strong> – Number of grid points in each dimension.  [Must be an integer]</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default = arcsec]</p></li>
+<li><p><strong>kmin_factor</strong> – <p>(Optional) Factor by which the grid spacing in fourier space is
+smaller than the default.  i.e.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kmin</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">ngrid</span> <span class="o">*</span> <span class="n">grid_spacing</span><span class="p">)</span> <span class="o">/</span> <span class="n">kmin_factor</span>
+</pre></div>
+</div>
+<p>[default <code class="docutils literal notranslate"><span class="pre">kmin_factor</span> <span class="pre">=</span> <span class="pre">1</span></code>; must be an integer]</p>
+</p></li>
+<li><p><strong>kmax_factor</strong> – <p>(Optional) Factor by which the overall grid in fourier space is
+larger than the default.  i.e.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kmax</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">grid_spacing</span> <span class="o">*</span> <span class="n">kmax_factor</span>
+</pre></div>
+</div>
+<p>[default <code class="docutils literal notranslate"><span class="pre">kmax_factor</span> <span class="pre">=</span> <span class="pre">1</span></code>; must be an integer]</p>
+</p></li>
+<li><p><strong>n_theta</strong> – (Optional) Number of logarithmically spaced bins in angular
+separation. [default <code class="docutils literal notranslate"><span class="pre">n_theta=100</span></code>]</p></li>
+<li><p><strong>bandlimit</strong> – (Optional) Keyword determining how to handle power <span class="math notranslate nohighlight">\(P(k)\)</span> above
+the limiting k value, kmax.  The options None, ‘hard’, and ‘soft’
+correspond to doing nothing (i.e., allow P(&gt;kmax) to be aliased to
+lower k values), cutting off all power above kmax, and applying a
+softening filter to gradually cut off power above kmax.  Use of this
+keyword does not modify the internally-stored power spectrum, just
+the result generated by this particular call to <a class="reference internal" href="#galsim.PowerSpectrum.calculateXi" title="galsim.PowerSpectrum.calculateXi"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">calculateXi</span></code></a>.
+[default <code class="docutils literal notranslate"><span class="pre">bandlimit=&quot;hard&quot;</span></code>]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the tuple (theta, xi_p, xi_m), 1-d NumPy arrays for the angular separation theta
+and the two shear correlation functions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.getConvergence">
+<span class="sig-name descname"><span class="pre">getConvergence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.getConvergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.getConvergence" title="Permalink to this definition"></a></dt>
+<dd><p>This function can interpolate between grid positions to find the convergence values for a
+given list of input positions (or just a single position).  Before calling this function,
+you must call <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> first to define the grid of convergences on which to interpolate.
+The docstring for <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> provides some guidance on appropriate grid configurations to
+use when building a grid that is to be later interpolated to random positions.</p>
+<p>Note that the interpolation (specified when calling <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>) modifies the effective
+2-point functions of these quantities.  See docstring for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> docstring for caveats
+about interpolation.  The user is advised to be very careful about deviating from the
+default Lanczos-5 interpolant.</p>
+<p>The usage of getConvergence() is the same as for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, except that it returns only a
+single quantity (convergence value or array of convergence values) rather than two
+quantities.  See documentation for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> for some examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – <p>Position(s) of the source(s), assumed to be post-lensing!
+Valid ways to input this:</p>
+<ul>
+<li><p>single <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instance</p></li>
+<li><p>tuple of floats: (x,y)</p></li>
+<li><p>list or array of <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instances</p></li>
+<li><p>tuple of lists/arrays: ( xlist, ylist )</p></li>
+</ul>
+</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default: arcsec]</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid, which will wrap them around if they
+are outside the bounds of the original grid on which shears and
+convergences were defined.  If not, then convergences are set to zero
+for positions outside the original grid.  [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the convergence, kappa (either a scalar or a numpy array)</p>
+</dd>
+</dl>
+<p>If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a single position, kappa is the convergence value.
+If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a list/array of positions, kappa is a NumPy array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.getLensing">
+<span class="sig-name descname"><span class="pre">getLensing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.getLensing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.getLensing" title="Permalink to this definition"></a></dt>
+<dd><p>This function can interpolate between grid positions to find the lensing observable
+quantities (reduced shears g1 and g2, and magnification mu) for a given list of input
+positions (or just a single position).  Before calling this function, you must call
+<a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> first to define the grid of shears and convergences on which to interpolate.
+The docstring for <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> provides some guidance on appropriate grid configurations to
+use when building a grid that is to be later interpolated to random positions.</p>
+<p>Note that the interpolation (specified when calling <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>) modifies the effective
+2-point functions of these quantities.  See docstring for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> docstring for caveats
+about interpolation.  The user is advised to be very careful about deviating from the
+default Lanczos-5 interpolant.</p>
+<p>The usage of <a class="reference internal" href="#galsim.PowerSpectrum.getLensing" title="galsim.PowerSpectrum.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getLensing</span></code></a> is the same as for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, except that it returns three
+quantities (two reduced shear components and magnification) rather than two.  See
+documentation for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> for some examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – <p>Position(s) of the source(s), assumed to be post-lensing!
+Valid ways to input this:</p>
+<ul>
+<li><p>single <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instance</p></li>
+<li><p>tuple of floats: (x,y)</p></li>
+<li><p>list/array of <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instances</p></li>
+<li><p>tuple of lists/arrays: ( xlist, ylist )</p></li>
+</ul>
+</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default: arcsec]</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being
+defined with respect to a periodic grid, which will wrap them around
+if they are outside the bounds of the original grid on which shears
+and convergences were defined.  If not, then shear is set to zero
+and magnification is set to 1 for positions outside the original
+grid.  [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>shear and magnification as a tuple (g1,g2,mu).</p>
+</dd>
+</dl>
+<p>If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a single position, the return values are the shear and
+magnification values at that position.
+If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a list/array of positions, they are NumPy arrays.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.getMagnification">
+<span class="sig-name descname"><span class="pre">getMagnification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.getMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.getMagnification" title="Permalink to this definition"></a></dt>
+<dd><p>This function can interpolate between grid positions to find the lensing magnification (mu)
+values for a given list of input positions (or just a single position).  Before calling this
+function, you must call <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> first to define the grid of shears and convergences on
+which to interpolate.  The docstring for <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> provides some guidance on appropriate
+grid configurations to use when building a grid that is to be later interpolated to random
+positions.</p>
+<p>Note that the interpolation (specified when calling <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>) modifies the effective
+2-point functions of these quantities.  See docstring for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> docstring for caveats
+about interpolation.  The user is advised to be very careful about deviating from the
+default Lanczos-5 interpolant.</p>
+<p>The usage of <a class="reference internal" href="#galsim.PowerSpectrum.getMagnification" title="galsim.PowerSpectrum.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getMagnification</span></code></a> is the same as for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, except that it returns only
+a single quantity (a magnification value or array of magnification values) rather than a
+pair of quantities.  See documentation for <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a> for some examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – <p>Position(s) of the source(s), assumed to be post-lensing!
+Valid ways to input this:</p>
+<ul>
+<li><p>single <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instance</p></li>
+<li><p>tuple of floats: (x,y)</p></li>
+<li><p>list/array of <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instances</p></li>
+<li><p>tuple of lists/arrays: ( xlist, ylist )</p></li>
+</ul>
+</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default: arcsec]</p></li>
+<li><p><strong>periodic</strong> – Whether the interpolation should treat the positions as being
+defined with respect to a periodic grid, which will wrap them around
+if they are outside the bounds of the original grid on which shears
+and convergences were defined.  If not, then magnification is set to
+1 for positions outside the original grid.  [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the magnification, mu (either a scalar or a numpy array)</p>
+</dd>
+</dl>
+<p>If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a single position, mu is the magnification value.
+If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a list/array of positions, mu is a NumPy array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.getShear">
+<span class="sig-name descname"><span class="pre">getShear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.getShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.getShear" title="Permalink to this definition"></a></dt>
+<dd><p>This function can interpolate between grid positions to find the shear values for a given
+list of input positions (or just a single position).  Before calling this function, you must
+call <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> first to define the grid of shears and convergences on which to
+interpolate.  The docstring for <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> provides some guidance on appropriate grid
+configurations to use when building a grid that is to be later interpolated to random
+positions.</p>
+<p>By default, this method returns the reduced shear, which is defined in terms of shear and
+convergence as reduced shear <code class="docutils literal notranslate"><span class="pre">g=gamma/(1-kappa)</span></code>; the <code class="docutils literal notranslate"><span class="pre">reduced</span></code> keyword can be set to
+False in order to return the non-reduced shear.</p>
+<p>Note that the interpolation (specified when calling <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a>) modifies the effective
+shear power spectrum and correlation function somewhat, though the effects can be limited
+by careful choice of grid parameters (see buildGrid() docstring for details).  Assuming
+those guidelines are followed, then the shear correlation function modifications due to use
+of the quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the
+grid spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
+interpolants perform significantly more poorly, with modifications of the correlation
+functions that can reach tens of percent on the scales where the recommended interpolants
+perform well.  Thus, the default interpolant is Lanczos-5, and users should think carefully
+about the acceptability of significant modification of the shear correlation function before
+changing to use linear, cubic, or nearest.</p>
+<p>Users who wish to ensure that the shear power spectrum is preserved post-interpolation
+should consider using the <code class="docutils literal notranslate"><span class="pre">periodic</span></code> interpolation option, which assumes the shear field
+is periodic (i.e., the sky is tiled with many copies of the given shear field).  Those who
+care about the correlation function should not use this option, and for this reason it’s
+not the default.</p>
+<p><strong>Examples</strong>:</p>
+<ol class="arabic">
+<li><p>Get the shear for a particular point:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">getShear</span><span class="p">(</span><span class="n">pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">412</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This time the returned values are just floats and correspond to the shear for the
+provided position.</p>
+</li>
+<li><p>You can also provide a position as a tuple to save the explicit PositionD construction:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">getShear</span><span class="p">(</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">412</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+<li><p>Get the shears for a bunch of points at once:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xlist</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">141</span><span class="p">,</span> <span class="mi">313</span><span class="p">,</span>  <span class="mi">12</span><span class="p">,</span> <span class="mi">241</span><span class="p">,</span> <span class="mi">342</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ylist</span> <span class="o">=</span> <span class="p">[</span>  <span class="mi">75</span><span class="p">,</span> <span class="mi">199</span><span class="p">,</span> <span class="mi">306</span><span class="p">,</span> <span class="mi">225</span><span class="p">,</span> <span class="mi">489</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poslist</span> <span class="o">=</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">xlist</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">ylist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xlist</span><span class="p">))</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">getShear</span><span class="p">(</span> <span class="n">poslist</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">my_ps</span><span class="o">.</span><span class="n">getShear</span><span class="p">(</span> <span class="p">(</span><span class="n">xlist</span><span class="p">,</span> <span class="n">ylist</span><span class="p">)</span> <span class="p">)</span>
+</pre></div>
+</div>
+<p>Both calls do the same thing.  The returned g1, g2 this time are numpy arrays of g1, g2
+values.  The arrays are the same length as the number of input positions.</p>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – <p>Position(s) of the source(s), assumed to be post-lensing!
+Valid ways to input this:</p>
+<ul>
+<li><p>single <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instance</p></li>
+<li><p>tuple of floats: (x,y)</p></li>
+<li><p>list/array of <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instances</p></li>
+<li><p>tuple of lists/arrays: ( xlist, ylist )</p></li>
+</ul>
+</p></li>
+<li><p><strong>units</strong> – The angular units used for the positions.  [default: arcsec]</p></li>
+<li><p><strong>reduced</strong> – Whether returned shear(s) should be reduced shears. [default: True]</p></li>
+<li><p><strong>periodi</strong> – Whether the interpolation should treat the positions as being defined
+with respect to a periodic grid, which will wrap them around if they
+are outside the bounds of the original grid on which shears were
+defined.  If not, then shears are set to zero for positions outside the
+original grid. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the shear as a tuple, (g1,g2)</p>
+</dd>
+</dl>
+<p>If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a single position, (g1,g2) are the two shear components.
+If the input <code class="docutils literal notranslate"><span class="pre">pos</span></code> is given a list/array of positions, they are NumPy arrays.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.PowerSpectrum.nRandCallsForBuildGrid">
+<span class="sig-name descname"><span class="pre">nRandCallsForBuildGrid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrum.nRandCallsForBuildGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PowerSpectrum.nRandCallsForBuildGrid" title="Permalink to this definition"></a></dt>
+<dd><p>Return the number of times the rng() was called the last time <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">buildGrid</span></code></a> was called.</p>
+<p>This can be useful for keeping rngs in sync if the connection between them is broken
+(e.g. when calling the function through a Proxy object).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="galsim.lensing_ps.PowerSpectrumRealizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.lensing_ps.</span></span><span class="sig-name descname"><span class="pre">PowerSpectrumRealizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_B</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrumRealizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.lensing_ps.PowerSpectrumRealizer" title="Permalink to this definition"></a></dt>
+<dd><p>Class for generating realizations of power spectra with any area and pixel size.</p>
+<p>This class is not one that end-users should expect to interact with.  It is designed to quickly
+generate many realizations of the same shear power spectra on a square grid.  The initializer
+sets up the grids in k-space and computes the power on them.  It also computes spin weighting
+terms.  You can alter any of the setup properties later.  It currently only works for square
+grids (at least, much of the internals would be incorrect for non-square grids), so while it
+nominally contains arrays that could be allowed to be non-square, the constructor itself
+enforces squareness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ngrid</strong> – The size of the grid in one dimension.</p></li>
+<li><p><strong>pixel_size</strong> – The size of the pixel sides, in units consistent with the units expected
+by the power spectrum functions.</p></li>
+<li><p><strong>p_E</strong> – Equivalent to <code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> in the documentation for the
+<a class="reference internal" href="#galsim.PowerSpectrum" title="galsim.lensing_ps.PowerSpectrum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrum</span></code></a> class.</p></li>
+<li><p><strong>p_B</strong> – Equivalent to <code class="docutils literal notranslate"><span class="pre">b_power_function</span></code> in the documentation for the
+<a class="reference internal" href="#galsim.PowerSpectrum" title="galsim.lensing_ps.PowerSpectrum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrum</span></code></a> class.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="galsim.lensing_ps.PowerSpectrumRealizer.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#PowerSpectrumRealizer.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.lensing_ps.PowerSpectrumRealizer.__call__" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a realization of the current power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gd</strong> – A Gaussian deviate to use when generating the shear fields.</p></li>
+<li><p><strong>variance</strong> – Optionally renormalize the variance of the output shears to a
+given value.  This is useful if you know the functional form of
+the power spectrum you want, but not the normalization.  This lets
+you set the normalization separately.  The resulting shears should
+have var(g1) + var(g2) ~= variance.  If only <code class="docutils literal notranslate"><span class="pre">e_power_function</span></code> is
+given, then this is also the variance of kappa.  Otherwise, the
+variance of kappa may be smaller than the specified variance.
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<p>&#64;return a tuple of NumPy arrays (g1,g2,kappa) for the shear and convergence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="galsim.lensing_ps.theoryToObserved">
+<span class="sig-prename descclassname"><span class="pre">galsim.lensing_ps.</span></span><span class="sig-name descname"><span class="pre">theoryToObserved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/lensing_ps.html#theoryToObserved"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.lensing_ps.theoryToObserved" title="Permalink to this definition"></a></dt>
+<dd><p>Helper function to convert theoretical lensing quantities to observed ones.</p>
+<p>This helper function is used internally by the methods <a class="reference internal" href="#galsim.PowerSpectrum.getShear" title="galsim.PowerSpectrum.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PowerSpectrum.getShear</span></code></a>,
+<a class="reference internal" href="#galsim.PowerSpectrum.getMagnification" title="galsim.PowerSpectrum.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PowerSpectrum.getMagnification</span></code></a>, and <a class="reference internal" href="#galsim.PowerSpectrum.getLensing" title="galsim.PowerSpectrum.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PowerSpectrum.getLensing</span></code></a> to convert from theoretical
+quantities (shear and convergence) to observable ones (reduced shear and magnification).
+Users of <a class="reference internal" href="#galsim.PowerSpectrum.buildGrid" title="galsim.PowerSpectrum.buildGrid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PowerSpectrum.buildGrid</span></code></a> outputs can also apply this method directly to the outputs
+in order to get the values of reduced shear and magnification on the output grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma1</strong> – The first shear component, which must be the NON-reduced shear.  This and
+all other inputs may be supplied either as individual floating point
+numbers or lists/arrays of floats.</p></li>
+<li><p><strong>gamma2</strong> – The second (x) shear component, which must be the NON-reduced shear.</p></li>
+<li><p><strong>kappa</strong> – The convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the reduced shear and magnification as a tuple (g1, g2, mu)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="shear.html" class="btn btn-neutral float-left" title="The Shear class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nfwhalo.html" class="btn btn-neutral float-right" title="NFW Halo Shears" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.nfw_halo &mdash; GalSim 2.7.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GalSim
+          </a>
+              <div class="version">
+                2.7
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">galsim.nfw_halo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.nfw_halo</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;NFWHalo&#39;</span><span class="p">,</span> <span class="s1">&#39;Cosmology&#39;</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+
+<div class="viewcode-block" id="Cosmology"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology">[docs]</a><span class="k">class</span> <span class="nc">Cosmology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic cosmology calculations.</span>
+
+<span class="sd">    Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a</span>
+<span class="sd">    LambdaCDM universe.  Radiation is assumed to be zero and Dark Energy constant with w = -1 (no</span>
+<span class="sd">    quintessence), but curvature is arbitrary.</span>
+
+<span class="sd">    Based on Matthias Bartelmann&#39;s libastro.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        omega_m:    Present day energy density of matter relative to critical density.</span>
+<span class="sd">                    [default: 0.3]</span>
+<span class="sd">        omega_lam:  Present day density of Dark Energy relative to critical density.</span>
+<span class="sd">                    [default: 0.7]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_m</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="c1"># no quintessence, no radiation in this universe!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span> <span class="o">=</span> <span class="n">omega_m</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span> <span class="o">=</span> <span class="n">omega_lam</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">omega_m</span> <span class="o">-</span> <span class="n">omega_lam</span><span class="p">)</span>
+        <span class="c1">#self.omega_r = 0</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(omega_m=</span><span class="si">%r</span><span class="s2">, omega_lam=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Cosmology.a"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute scale factor.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            z:  Redshift</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cosmology.E"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.E">[docs]</a>    <span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluates expansion function.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            a:  Scale factor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \</span>
+        <span class="c1">#        self.omega_lam)**0.5</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span></div>
+
+    <span class="k">def</span> <span class="nf">__angKernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Integration kernel for angular diameter distance computation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="n">x</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span><span class="o">**-</span><span class="mi">1</span>
+
+<div class="viewcode-block" id="Cosmology.Da"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.Da">[docs]</a>    <span class="k">def</span> <span class="nf">Da</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z_ref</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute angular diameter distance between two redshifts in units of c/H0.</span>
+
+<span class="sd">        In order to get the distance in Mpc/h, multiply by c/H0~3000.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            z:      Redshift.</span>
+<span class="sd">            z_ref:  Reference redshift, with z_ref &lt;= z. [default: 0]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">da</span><span class="p">)):</span>
+                <span class="n">da</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">z_ref</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">da</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Redshift z must be &gt;= 0&quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="n">z_ref</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Redshift z must be &gt;= the reference redshift&quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z_ref</span><span class="p">)</span>
+
+            <span class="n">d</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__angKernel</span><span class="p">,</span> <span class="n">z_ref</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># check for curvature</span>
+            <span class="n">rk</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">rk</span><span class="o">*</span><span class="n">d</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">rk</span><span class="o">*</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="n">rk</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rk</span><span class="o">*</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="n">rk</span>
+            <span class="k">return</span> <span class="n">d</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="NFWHalo"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo">[docs]</a><span class="k">class</span> <span class="nc">NFWHalo</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class describing NFW halos.</span>
+
+<span class="sd">    This class computes the lensing fields shear and convergence of a spherically symmetric NFW</span>
+<span class="sd">    halo of given mass, concentration, redshift, assuming a particular cosmology.</span>
+<span class="sd">    No mass-concentration relation is employed.</span>
+
+<span class="sd">    Based on Matthias Bartelmann&#39;s libastro.</span>
+
+<span class="sd">    The cosmology to use can be set either by providing a `Cosmology` instance as cosmo,</span>
+<span class="sd">    or by providing omega_m and/or omega_lam.</span>
+<span class="sd">    If only one of the latter is provided, the other is taken to be one minus that.</span>
+<span class="sd">    If no cosmology parameters are set, a default `Cosmology` is constructed.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        mass:       Mass defined using a spherical overdensity of 200 times the critical density</span>
+<span class="sd">                    of the universe, in units of M_solar/h.</span>
+<span class="sd">        conc:       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.</span>
+<span class="sd">        redshift:   Redshift of the halo.</span>
+<span class="sd">        halo_pos:   `Position` of halo center (in arcsec). [default: PositionD(0,0)]</span>
+<span class="sd">        omega_m:    Omega_matter to pass to `Cosmology` constructor. [default: None]</span>
+<span class="sd">        omega_lam:  Omega_lambda to pass to `Cosmology` constructor. [default: None]</span>
+<span class="sd">        cosmo:      A `Cosmology` instance. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;mass&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;conc&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;redshift&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;halo_pos&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">,</span> <span class="s1">&#39;omega_m&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;omega_lam&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">conc</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">halo_pos</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+                 <span class="n">omega_m</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cosmo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">omega_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">omega_lam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cosmo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;NFWHalo constructor received both cosmo and omega parameters&quot;</span><span class="p">,</span>
+                    <span class="n">cosmo</span><span class="o">=</span><span class="n">cosmo</span><span class="p">,</span> <span class="n">omega_m</span><span class="o">=</span><span class="n">omega_m</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="n">omega_lam</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">omega_m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">omega_m</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">-</span><span class="n">omega_lam</span>
+            <span class="k">if</span> <span class="n">omega_lam</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">omega_lam</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">-</span><span class="n">omega_m</span>
+            <span class="n">cosmo</span> <span class="o">=</span> <span class="n">Cosmology</span><span class="p">(</span><span class="n">omega_m</span><span class="o">=</span><span class="n">omega_m</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="n">omega_lam</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cosmo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cosmo</span> <span class="o">=</span> <span class="n">Cosmology</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cosmo</span><span class="p">,</span><span class="n">Cosmology</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid cosmo parameter in NFWHalo constructor&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Make sure things are the right types.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">conc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">redshift</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">halo_pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span> <span class="o">=</span> <span class="n">cosmo</span>
+
+        <span class="c1"># calculate scale radius</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+        <span class="c1"># First we get the virial radius, which is defined for some spherical overdensity as</span>
+        <span class="c1"># 3 M / [4 pi (r_vir)^3] = overdensity</span>
+        <span class="c1"># Here we have overdensity = 200 * rhocrit, to determine R200. The factor of 1.63e-5 comes</span>
+        <span class="c1"># from the following set of prefactors: (3 / (4 pi * 200 * rhocrit))^(1/3)</span>
+        <span class="c1"># where rhocrit = 2.8e11 h^2 M_solar / Mpc^3.  The mass in the equation below is in</span>
+        <span class="c1"># M_solar/h, which is how the final units are Mpc/h.</span>
+        <span class="n">R200</span> <span class="o">=</span> <span class="mf">1.63e-5</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__omega</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">__omega</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.3333</span> <span class="c1"># in Mpc/h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">=</span> <span class="n">R200</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span>
+
+        <span class="c1"># convert scale radius in arcsec</span>
+        <span class="n">dl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="mf">3000.</span> <span class="c1"># in Mpc/h</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">/</span> <span class="n">dl</span>
+        <span class="n">arcsec2rad</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">206265</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span> <span class="o">=</span> <span class="n">scale</span><span class="o">/</span><span class="n">arcsec2rad</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.NFWHalo(mass=</span><span class="si">%r</span><span class="s2">, conc=</span><span class="si">%r</span><span class="s2">, redshift=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, halo_pos=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span> <span class="o">!=</span> <span class="n">Cosmology</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, cosmo=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.NFWHalo(mass=</span><span class="si">%s</span><span class="s2">, conc=</span><span class="si">%s</span><span class="s2">, redshift=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matter density at scale factor a.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">omega_m</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__farcth</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Numerical implementation of integral functions of a spherical NFW profile.</span>
+
+<span class="sd">        All expressions are a function of ``x``, which is the radius r in units of the NFW scale</span>
+<span class="sd">        radius, r_s.  For the derivation of these functions, see for example Wright &amp; Brainerd</span>
+<span class="sd">        (2000, ApJ, 534, 34).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># 3 cases: x &gt; 1, x &lt; 1, and |x-1| &lt; 0.001</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.999</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Equivalent but usually faster than `mask = (x &lt; 0.999)`</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="mf">1.</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">+</span><span class="mf">1.</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mf">1.</span><span class="o">+</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">1.001</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">+</span><span class="mf">1.</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+
+        <span class="c1"># the approximation below has a maximum fractional error of 2.3e-7</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="mf">0.999</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">1.001</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.</span><span class="o">/</span><span class="mf">6.</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">/</span><span class="mf">3.</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">__kappa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ks</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate convergence of halo.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x:      Radial coordinate in units of rs (scale radius of halo), i.e., ``x=r/rs``.</span>
+<span class="sd">            ks:     Lensing strength prefactor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># convenience: call with single number</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># 3 cases: x &gt; 1, x &lt; 1, and |x-1| &lt; 0.001</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.999</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">a</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">1.001</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="c1"># the approximation below has a maximum fractional error of 7.4e-7</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="mf">0.999</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">1.001</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">22.</span><span class="o">/</span><span class="mf">15.</span> <span class="o">-</span> <span class="mf">0.8</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">__gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ks</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate tangential shear of halo.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x:      Radial coordinate in units of rs (scale radius of halo), i.e., ``x=r/rs``.</span>
+<span class="sd">            ks:     Lensing strength prefactor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># convenience: call with single number</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gamma</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">__farcth</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]))</span> <span class="o">*</span> \
+            <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+
+        <span class="c1"># the approximation below has a maximum fractional error of 1.1e-7</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">0.01</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">ks</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.125</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.25</span> <span class="o">+</span> <span class="mf">3.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">__ks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z_s</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lensing strength of halo as function of source redshift.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># critical density and surface density</span>
+        <span class="n">rho_c</span> <span class="o">=</span> <span class="mf">2.7722e11</span>
+        <span class="n">Sigma_c</span> <span class="o">=</span> <span class="mf">5.5444e14</span>
+        <span class="c1"># density contrast of halo at redshift z</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">ez</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">d0</span> <span class="o">=</span> <span class="mf">200.</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">))</span>
+        <span class="n">rho_s</span> <span class="o">=</span> <span class="n">rho_c</span> <span class="o">*</span> <span class="n">ez</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span><span class="n">d0</span>
+
+        <span class="c1"># lensing weights: the only thing that depends on z_s</span>
+        <span class="c1"># this does takes some time...</span>
+        <span class="n">dl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="n">z_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="n">z_s</span><span class="p">)</span>
+        <span class="n">k_s</span> <span class="o">=</span> <span class="n">dl</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">*</span> <span class="n">rho_s</span> <span class="o">/</span> <span class="n">Sigma_c</span>
+        <span class="k">return</span> <span class="n">k_s</span>
+
+<div class="viewcode-block" id="NFWHalo.getShear"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate (reduced) shear of halo at specified positions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            po:         Position(s) of the source(s), assumed to be post-lensing!</span>
+<span class="sd">                        Valid ways to input this:</span>
+
+<span class="sd">                        - single `Position` instance</span>
+<span class="sd">                        - tuple of floats: (x,y)</span>
+<span class="sd">                        - list/array of `Position` instances</span>
+<span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
+
+<span class="sd">            z_s:        Source redshift(s).</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
+<span class="sd">            reduced:    Whether returned shear(s) should be reduced shears. [default: True]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the (possibly reduced) shears as a tuple (g1,g2)</span>
+
+<span class="sd">        If the input ``pos`` is given a single position, (g1,g2) are the two shear components.</span>
+<span class="sd">        If the input ``pos`` is given a list/array of positions, they are NumPy arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getShear&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getShear</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">reduced</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NFWHalo._getShear"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo._getShear">[docs]</a>    <span class="k">def</span> <span class="nf">_getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getShear`, but without some sanity checks and the positions must be</span>
+<span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            pos_y:      y position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            z_s:        Source redshift(s).</span>
+<span class="sd">            reduced:    Whether returned shear(s) should be reduced shears. [default: True]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span>
+        <span class="c1"># compute strength of lensing fields</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ks</span><span class="p">(</span><span class="n">z_s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="n">ks</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gamma</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="c1"># convert to observable = reduced shear</span>
+        <span class="k">if</span> <span class="n">reduced</span><span class="p">:</span>
+            <span class="n">kappa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">kappa</span>
+
+        <span class="c1"># pure tangential shear, no cross component</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">drsq</span> <span class="o">=</span> <span class="n">dx</span><span class="o">*</span><span class="n">dx</span><span class="o">+</span><span class="n">dy</span><span class="o">*</span><span class="n">dy</span>
+        <span class="c1"># Avoid division by 0</span>
+        <span class="n">cos2phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">dx</span><span class="o">*</span><span class="n">dx</span><span class="o">-</span><span class="n">dy</span><span class="o">*</span><span class="n">dy</span><span class="p">,</span> <span class="n">drsq</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">drsq</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">))</span>
+        <span class="n">sin2phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="n">dy</span><span class="p">,</span> <span class="n">drsq</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">drsq</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">))</span>
+        <span class="n">g1</span> <span class="o">=</span> <span class="o">-</span><span class="n">g</span><span class="o">*</span><span class="n">cos2phi</span>
+        <span class="n">g2</span> <span class="o">=</span> <span class="o">-</span><span class="n">g</span><span class="o">*</span><span class="n">sin2phi</span>
+        <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span></div>
+
+
+<div class="viewcode-block" id="NFWHalo.getConvergence"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate convergence of halo at specified positions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
+<span class="sd">                        Valid ways to input this:</span>
+
+<span class="sd">                        - single `Position` instance</span>
+<span class="sd">                        - tuple of floats: (x,y)</span>
+<span class="sd">                        - list/array of `Position` instances</span>
+<span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
+
+<span class="sd">            z_s:        Source redshift(s).</span>
+<span class="sd">            unit:       Angular units of coordinates. [default: galsim.arcsec]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the convergence, kappa</span>
+
+<span class="sd">        If the input ``pos`` is given a single position, kappa is the convergence value.</span>
+<span class="sd">        If the input ``pos`` is given a list/array of positions, kappa is a NumPy array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Convert to numpy arrays for internal usage:</span>
+        <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getKappa&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getConvergence</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NFWHalo._getConvergence"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo._getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">_getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getConvergence`, but without some sanity checks and the positions must be</span>
+<span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            pos_y:      y position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            z_s:        Source redshift(s).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the convergence as either a scalar or a numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span>
+        <span class="c1"># compute strength of lensing fields</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ks</span><span class="p">(</span><span class="n">z_s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="n">ks</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kappa</span></div>
+
+<div class="viewcode-block" id="NFWHalo.getMagnification"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate magnification of halo at specified positions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
+<span class="sd">                        Valid ways to input this:</span>
+
+<span class="sd">                        - single `Position` instance</span>
+<span class="sd">                        - tuple of floats: (x,y)</span>
+<span class="sd">                        - list/array of `Position` instances</span>
+<span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
+
+<span class="sd">            z_s:        Source redshift(s).</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the magnification mu</span>
+
+<span class="sd">        If the input ``pos`` is given a single position, mu is the magnification value.</span>
+<span class="sd">        If the input ``pos`` is given a list/array of positions, mu is a NumPy array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert to numpy arrays for internal usage:</span>
+        <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getMagnification&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMagnification</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NFWHalo._getMagnification"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo._getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">_getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getMagnification`, but without some sanity checks and the positions must</span>
+<span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            pos_y:      y position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            z_s:        Source redshift(s).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the magnification as either a scalar or a numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span>
+        <span class="c1"># compute strength of lensing fields</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ks</span><span class="p">(</span><span class="n">z_s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="n">ks</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gamma</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="n">mu</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">g</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mu</span></div>
+
+<div class="viewcode-block" id="NFWHalo.getLensing"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate lensing shear and magnification of halo at specified positions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
+<span class="sd">                        Valid ways to input this:</span>
+
+<span class="sd">                        - single `Position` instance</span>
+<span class="sd">                        - tuple of floats: (x,y)</span>
+<span class="sd">                        - list/array of `Position` instances</span>
+<span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
+
+<span class="sd">            z_s:        Source redshift(s).</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the reduced shears and magnifications as a tuple (g1,g2,mu)</span>
+
+<span class="sd">        If the input ``pos`` is given a single position, the return values are the shear and</span>
+<span class="sd">        magnification values at that position.</span>
+<span class="sd">        If the input ``pos`` is given a list/array of positions, they are NumPy arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert to numpy arrays for internal usage:</span>
+        <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getLensing&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getLensing</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NFWHalo._getLensing"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo._getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">_getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">z_s</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `getLensing`, but without some sanity checks and the positions must</span>
+<span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            pos_y:      y position in arcsec (either a scalar or a numpy array)</span>
+<span class="sd">            z_s:        Source redshift(s).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the reduced shears and magnifications as a tuple (g1,g2,mu) (each being</span>
+<span class="sd">            either a scalar or a numpy array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span>
+        <span class="c1"># compute strength of lensing fields</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ks</span><span class="p">(</span><span class="n">z_s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="n">ks</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gamma</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="n">mu</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">g</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
+        <span class="n">g</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">kappa</span>
+        <span class="c1"># Get the tangential shear (no x component)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">pos_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">pos_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">drsq</span> <span class="o">=</span> <span class="n">dx</span><span class="o">*</span><span class="n">dx</span><span class="o">+</span><span class="n">dy</span><span class="o">*</span><span class="n">dy</span>
+        <span class="c1"># Avoid division by 0</span>
+        <span class="n">cos2phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">dx</span><span class="o">*</span><span class="n">dx</span><span class="o">-</span><span class="n">dy</span><span class="o">*</span><span class="n">dy</span><span class="p">,</span> <span class="n">drsq</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">drsq</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">))</span>
+        <span class="n">sin2phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="n">dy</span><span class="p">,</span> <span class="n">drsq</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">drsq</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">))</span>
+        <span class="n">g1</span> <span class="o">=</span> <span class="o">-</span><span class="n">g</span><span class="o">*</span><span class="n">cos2phi</span>
+        <span class="n">g2</span> <span class="o">=</span> <span class="o">-</span><span class="n">g</span><span class="o">*</span><span class="n">sin2phi</span>
+        <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
