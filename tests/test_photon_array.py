@@ -714,7 +714,7 @@ def test_dcr():
     config['sky_pos'] = galsim.CelestialCoord(15 * galsim.degrees, -25 * galsim.degrees)
     galsim.config.RemoveCurrent(config)
     im2d = galsim.config.BuildImage(config)
-    assert im2c == im2
+    assert im2d == im2
 
     # Should work with fft, but not quite match (because of inexact photon locations).
     im3 = galsim.ImageF(50, 50, scale=pixel_scale)
