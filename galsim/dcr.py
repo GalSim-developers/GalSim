@@ -131,6 +131,7 @@ def parse_dcr_angles(**kwargs):
     if 'zenith_angle' in kwargs:
         zenith_angle = kwargs.pop('zenith_angle')
         parallactic_angle = kwargs.pop('parallactic_angle', 0.0*degrees)
+        kwargs.pop('obj_coord', None)  # Ok if present, but want to make sure we remove it.
         if not isinstance(zenith_angle, Angle):
             raise TypeError("zenith_angle must be a galsim.Angle.")
         if not isinstance(parallactic_angle, Angle):
