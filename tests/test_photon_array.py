@@ -710,6 +710,12 @@ def test_dcr():
     im2c = galsim.config.BuildImage(config)
     assert im2c == im2
 
+    # Make sure it's ok if sky_pos is set.  (This used to be a bug.)
+    config['sky_pos'] = galsim.CelestialCoord(15 * galsim.degrees, -25 * galsim.degrees)
+    galsim.config.RemoveCurrent(config)
+    im2d = galsim.config.BuildImage(config)
+    assert im2c == im2
+
     # Should work with fft, but not quite match (because of inexact photon locations).
     im3 = galsim.ImageF(50, 50, scale=pixel_scale)
     achrom.drawImage(image=im3, method='fft', rng=rng, photon_ops=photon_ops)
