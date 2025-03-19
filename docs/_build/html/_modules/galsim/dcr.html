@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.dcr &mdash; GalSim 2.7.0 documentation</title>
+  <title>galsim.dcr &mdash; GalSim 2.7.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -223,6 +223,7 @@
     <span class="k">if</span> <span class="s1">&#39;zenith_angle&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;zenith_angle&#39;</span><span class="p">)</span>
         <span class="n">parallactic_angle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;parallactic_angle&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">degrees</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;obj_coord&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Ok if present, but want to make sure we remove it.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;zenith_angle must be a galsim.Angle.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parallactic_angle</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
