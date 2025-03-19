@@ -36,3 +36,9 @@ Bug Fixes
 ---------
 
 - Fixed an error in the `Spergel` stepk calculation. (#1324, #1325)
+
+
+Changes from v2.7.0 to v2.7.1
+-----------------------------
+
+- Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)
