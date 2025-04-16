@@ -268,8 +268,8 @@ namespace galsim {
     }
 
     void Silicon::updatePixelBounds(int nx, int ny, size_t k,
-                                    Bounds<double>* pixelInnerBoundsData,
-                                    Bounds<double>* pixelOuterBoundsData,
+                                    Bounds<float>* pixelInnerBoundsData,
+                                    Bounds<float>* pixelOuterBoundsData,
                                     Position<float>* horizontalBoundaryPointsData,
                                     Position<float>* verticalBoundaryPointsData)
     {
@@ -279,7 +279,7 @@ namespace galsim {
         int y = k % ny;
 
         // compute outer bounds first
-        pixelOuterBoundsData[k] = Bounds<double>();
+        pixelOuterBoundsData[k] = Bounds<float>();
 
         // iterate over pixel boundary
         int n, idx;
@@ -517,8 +517,8 @@ namespace galsim {
             }
         }
 
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+        Bounds<float>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<float>* pixelOuterBoundsData = _pixelOuterBounds.data();
 #ifdef _OPENMP
 #ifndef GALSIM_USE_GPU
 #pragma omp parallel for
@@ -663,8 +663,8 @@ namespace galsim {
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               Bounds<int>& targetBounds, bool* off_edge,
                               int emptypolySize,
-                              Bounds<double>* pixelInnerBoundsData,
-                              Bounds<double>* pixelOuterBoundsData,
+                              Bounds<float>* pixelInnerBoundsData,
+                              Bounds<float>* pixelOuterBoundsData,
                               Position<float>* horizontalBoundaryPointsData,
                               Position<float>* verticalBoundaryPointsData,
                               Position<double>* emptypolyData) const
@@ -880,8 +880,8 @@ namespace galsim {
 
     bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
                          Bounds<int>& targetBounds, int& step, int emptypolysize,
-                         Bounds<double>* pixelInnerBoundsData,
-                         Bounds<double>* pixelOuterBoundsData,
+                         Bounds<float>* pixelInnerBoundsData,
+                         Bounds<float>* pixelOuterBoundsData,
                          Position<float>* horizontalBoundaryPointsData,
                          Position<float>* verticalBoundaryPointsData,
                          Position<double>* emptypolyData)
@@ -1164,8 +1164,8 @@ namespace galsim {
         int emptypolySize = _emptypoly.size();
         Position<double>* emptypolyData = _emptypolyGPU.data();
 
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+        Bounds<float>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<float>* pixelOuterBoundsData = _pixelOuterBounds.data();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
@@ -1183,8 +1183,8 @@ namespace galsim {
     void Silicon::finalize()
     {
 #ifdef GALSIM_USE_GPU
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+        Bounds<float>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<float>* pixelOuterBoundsData = _pixelOuterBounds.data();
 
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
@@ -1383,8 +1383,8 @@ namespace galsim {
         int emptypolySize = _emptypoly.size();
 
         double* deltaData = _delta.getData();
-        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
-        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+        Bounds<float>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<float>* pixelOuterBoundsData = _pixelOuterBounds.data();
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
 

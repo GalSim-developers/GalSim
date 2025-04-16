@@ -46,8 +46,8 @@ namespace galsim
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          Bounds<int>& targetBounds, bool* off_edge,
                          int emptypolySize,
-                         Bounds<double>* pixelInnerBoundsData,
-                         Bounds<double>* pixelOuterBoundsData,
+                         Bounds<float>* pixelInnerBoundsData,
+                         Bounds<float>* pixelOuterBoundsData,
                          Position<float>* horizontalBoundaryPointsData,
                          Position<float>* verticalBoundaryPointsData,
                          Position<double>* emptypolyData) const;
@@ -261,8 +261,8 @@ namespace galsim
         void initializeBoundaryPoints(int nx, int ny);
 
         void updatePixelBounds(int nx, int ny, size_t k,
-                               Bounds<double>* pixelInnerBoundsData,
-                               Bounds<double>* pixelOuterBoundsData,
+                               Bounds<float>* pixelInnerBoundsData,
+                               Bounds<float>* pixelOuterBoundsData,
                                Position<float>* horizontalBoundaryPointsData,
                                Position<float>* verticalBoundaryPointsData);
 
@@ -270,8 +270,8 @@ namespace galsim
 
         std::vector<Position<float> > _horizontalBoundaryPoints;
         std::vector<Position<float> > _verticalBoundaryPoints;
-        std::vector<Bounds<double> > _pixelInnerBounds;
-        std::vector<Bounds<double> > _pixelOuterBounds;
+        std::vector<Bounds<float> > _pixelInnerBounds;
+        std::vector<Bounds<float> > _pixelOuterBounds;
         std::vector<Position<float> > _horizontalDistortions;
         std::vector<Position<float> > _verticalDistortions;
         int _numVertices, _nx, _ny, _nv, _qDist;
