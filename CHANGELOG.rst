@@ -42,3 +42,8 @@ Changes from v2.7.0 to v2.7.1
 -----------------------------
 
 - Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)
+
+Changes from v2.7.1 to v2.7.2
+-----------------------------
+
+- Reduced memory use in the Silicon class. (#1331)
