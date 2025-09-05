@@ -26,6 +26,7 @@ import os
 import sys
 import logging
 import shutil
+import pytest
 
 import galsim
 
@@ -65,8 +66,10 @@ def check_same(f1, f2):
 
 logging.basicConfig(format="%(message)s", stream=sys.stdout)
 
+@pytest.fixture(scope="module", autouse=True)
 @in_examples
 def setup():
+    print("Removing output dirs")
     remove_dir('output')
     remove_dir('output_yaml')
     remove_dir('output_json')
