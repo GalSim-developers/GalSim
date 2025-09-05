@@ -148,7 +148,7 @@ jobs:
 
                 # Do these three first to clarify potential conflicts
                 pip install -U numpy
-                pip install -U "setuptools<72"
+                pip install -U setuptools
                 pip install -U wheel
 
                 # Standard dependencies
@@ -217,16 +217,6 @@ jobs:
                 test -d build/shared_clib
                 ls build/shared_clib
                 ls build/shared_clib/libgalsim.*
-
-                # For now, use `python setup.py test` to test linking to the shared library.
-                # We run some C++ tests there, and we use the shared library for linking.
-                # Caveats:
-                #  1. The C++ tests are not very comprehensive, so it won't catch all errors.
-                #  2. Apparently setup.py test is deprecated.  I'm getting warnings when I run
-                #     it that indicate it may go away at some point.  So whenever that happens,
-                #     we'll have to revisit this test to find another way to build and run
-                #     the C++ tests.
-                GALSIM_TEST_PY=0 python setup.py test
 
             - name: Upload coverage to codecov
               if: matrix.py != 'pypy-3.7'
