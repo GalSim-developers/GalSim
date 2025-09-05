@@ -160,12 +160,6 @@ jobs:
 
                 pip install -U matplotlib
 
-            - name: Install astroplan
-              # astroplan isn't yet numpy 2.0 compatible.  So don't install that on 3.9+.
-              # I'm also getting errors with starlink, which I think may be related to
-              # numpy 2.0.
-              if: (matrix.py == 3.8) || (matrix.py == 3.9)
-              run: |
                 pip install -U astroplan
                 pip install -U starlink-pyast
 
