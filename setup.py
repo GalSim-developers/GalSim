@@ -1345,7 +1345,7 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros,
               extra_link_args = ["-lfftw3"])
 
-build_dep = ['setuptools>=38,<72', 'pybind11>=2.2', 'numpy>=1.17']
+build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy', 'pyyaml']
 
