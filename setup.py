@@ -1198,6 +1198,9 @@ class my_build_ext(build_ext):
         if int(os.environ.get('GALSIM_BUILD_SHARED', 0)):
             self.run_command("build_shared_clib")
 
+        if int(os.environ.get('GALSIM_RUN_TEST', 0)):
+            self.run_command("run_cpp_test")
+
 
 class my_install(install):
     user_options = install.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
@@ -1229,24 +1232,9 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
         install_scripts.run(self)
         self.distribution.script_install_dir = self.install_dir
 
-class my_test(test):
-    # TODO: setuptools v72 deprecated python setup.py test, so we need to figure out another
-    # way to test the C++ code.  For now, we are pinning setuptools to <72.
+class my_run_cpp_test(my_build_ext):
 
-    # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
-    user_options = [('njobs=', 'j', "Number of jobs to use in py.test")]
-
-    def initialize_options(self):
-        test.initialize_options(self)
-        self.pytest_args = None
-        self.njobs = None
-
-    def finalize_options(self):
-        test.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_cpp_tests(self):
+    def run(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
         cflags, lflags = fix_compiler(compiler, 1)
@@ -1307,32 +1295,6 @@ class my_test(test):
         if p.returncode != 0:
             raise RuntimeError("C++ tests failed")
         print("All C++ tests passed.")
-
-    def run_tests(self):
-
-        if int(os.environ.get('GALSIM_TEST_PY', 1)):
-            njobs = parse_njobs(self.njobs, 'pytest', 'test')
-            pytest_args = ['-n=%d'%njobs, '--timeout=60']
-            original_dir = os.getcwd()
-            os.chdir('tests')
-            test_files = glob.glob('test*.py')
-
-            import pytest
-            pytest.main(['--version'])
-            errno = pytest.main(pytest_args + test_files)
-            py_err = errno != 0
-
-            os.chdir(original_dir)
-
-        # Build and run the C++ tests
-        if int(os.environ.get('GALSIM_TEST_CPP', 1)):
-            self.run_cpp_tests()
-
-        if int(os.environ.get('GALSIM_TEST_PY', 1)):
-            if py_err:
-                raise RuntimeError("Some Python tests failed")
-            else:
-                print("All python tests passed.")
 
 
 lib=("galsim", {'sources' : cpp_sources,
@@ -1434,7 +1396,7 @@ dist = setup(name="GalSim",
                 'install': my_install,
                 'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
-                'test': my_test,
+                'run_cpp_test': my_run_cpp_test,
                 },
     entry_points = {'console_scripts' : [
             'galsim = galsim.__main__:run_main',
