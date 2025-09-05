@@ -107,7 +107,7 @@ jobs:
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
                 # it gets downloaded and installed properly if it isn't installed.
-                if ${{ matrix.py != 3.8 }}; then sudo -H apt install -y libeigen3-dev; fi
+                if ${{ matrix.py != 3.12 }}; then sudo -H apt install -y libeigen3-dev; fi
 
                 # Need this for the mpeg tests
                 sudo -H apt install -y ffmpeg
@@ -189,7 +189,7 @@ jobs:
                 FFTW_DIR=$FFTW_DIR pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
-              if: matrix.py == 3.8 && github.base_ref != ''
+              if: matrix.py == 3.12 && github.base_ref != ''
               run: |
                 git status
                 git --no-pager log --graph --pretty=oneline --abbrev-commit | head -50
@@ -206,9 +206,9 @@ jobs:
                        # Less confusing to include it explicitly.
 
             - name: Check shared library
-              if: matrix.py == 3.8
+              if: matrix.py == 3.12
               run: |
-                # On a few systems (arbitrarily py3.8, where we also check mac and clang),
+                # On a few systems (arbitrarily py3.12, where we also check mac and clang),
                 # check the shared library creation and link.
                 GALSIM_BUILD_SHARED=1 python setup.py build
 
