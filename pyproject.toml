@@ -1,2 +1,7 @@
 [build-system]
 requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
