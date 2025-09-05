@@ -102,10 +102,12 @@ lopt =  {
 }
 
 # If we build with debug, undefine NDEBUG flag
-# Note: setuptools stopped allowing --debug, so if we need this, we'll need to find another
-# mechanism.
+# Note: setuptools stopped allowing --debug, so edit this manually if you want debugging.
+# (The other debug variable is just for verbose output to debug this setup script.)
+full_debug = False
+
 undef_macros = []
-if "--debug" in sys.argv:
+if full_debug:
     undef_macros+=['NDEBUG']
     for name in copt.keys():
         if name != 'unknown':
@@ -118,7 +120,7 @@ else:
 
 # Verbose is the default for setuptools logging, but if it's on the command line, we take it
 # to mean that we should also be verbose.
-if "--debug" in sys.argv or "--verbose" in sys.argv:
+if full_debug or "--verbose" in sys.argv:
     debug = True
 
 local_tmp = 'tmp'
