@@ -1330,7 +1330,7 @@ else:
 print('GalSim version is %s'%(galsim_version))
 
 # Write a Version.h file that has this information for people using the C++ library.
-vi = re.split('\.|-',galsim_version)
+vi = re.split(r'\.|-',galsim_version)
 version_info = tuple([int(x) for x in vi if x.isdigit()])
 if len(version_info) == 2:
     version_info = version_info + (0,)
