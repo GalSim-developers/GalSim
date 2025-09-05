@@ -210,13 +210,16 @@ jobs:
               run: |
                 # On a few systems (arbitrarily py3.8, where we also check mac and clang),
                 # check the shared library creation and link.
-                GALSIM_BUILD_SHARED=1 python setup.py install
+                GALSIM_BUILD_SHARED=1 python setup.py build
 
                 # These directories/files should now exist.
                 echo "Look for the shared library:"
                 test -d build/shared_clib
                 ls build/shared_clib
                 ls build/shared_clib/libgalsim.*
+
+                # Build and run the C++ test suite
+                GALSIM_RUN_TEST=1 python setup.py build
 
             - name: Upload coverage to codecov
               if: matrix.py != 'pypy-3.7'
