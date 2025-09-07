@@ -1789,7 +1789,10 @@ class Image:
     def __ipow__(self, other):
         if not isinstance(other, int) and not isinstance(other, float):
             raise TypeError("Can only raise an image to a float or int power!")
-        self.array[:,:] **= other
+        if not self.isinteger or isinstance(other, int):
+            self.array[:,:] **= other
+        else:
+            self.array[:,:] = self._safe_cast(self.array ** other)
         return self
 
     def __neg__(self):
