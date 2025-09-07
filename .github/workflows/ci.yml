@@ -161,6 +161,14 @@ jobs:
                 pip install -U matplotlib
 
                 pip install -U astroplan
+
+            # Starlink doesn't seem to work anymore.  Even with numpy 1.x, I'm getting
+            # "ModuleNotFoundError: No module named 'numpy'" when building the wheel.
+            # This after already installing numpy, so it should be there.
+            # Revisit from time to time to see if they fix it.
+            - name: Install starlink
+              if: 0
+              run: |
                 pip install -U starlink-pyast
 
             - name: Install CPython-only dependencies

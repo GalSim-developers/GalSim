@@ -307,7 +307,7 @@ class AstropyWCS(CelestialWCS):
         self._wcs = self._load_from_header(self.header)
 
 
-class PyAstWCS(CelestialWCS):
+class PyAstWCS(CelestialWCS): # pragma: no cover
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
     information from a FITS file.  It requires the starlink.Ast python module to be installed.
 
