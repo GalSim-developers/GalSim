@@ -1590,13 +1590,18 @@ class Image:
 
         # Find the first value with I < 0.5 * Imax
         k = np.argmax(data < 0.5 * Imax)
-        Ik = data[k] / Imax
+        # If there are duplicate rsq values, argmax won't be deterministic across numpy versions.
+        # To achieve consistent results, we take the average of all data values with the same rsq.
+        k2 = np.searchsorted(rsqf, rsqf[k], side='right')
+        Ik = np.mean(data[k:k2]) / Imax
 
         # Interpolate (linearly) between this and the previous value.
         if k == 0:
             rsqhm = rsqf[0] * (0.5 / Ik)
         else:
-            Ikm1 = data[k-1] / Imax
+            # Similarly, use the mean data for all rsq equal to rsqf[k-1].
+            k1 = np.searchsorted(rsqf, rsqf[k-1], side='left')
+            Ikm1 = np.mean(data[k1:k]) / Imax
             rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
 
         # This has all been done in pixels.  So normalize according to the pixel scale.
