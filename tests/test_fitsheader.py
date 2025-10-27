@@ -75,6 +75,11 @@ def test_read():
     header = galsim.FitsHeader(file_name=file_name, dir=dir, hdu=0)
     check_tpv(header)
     check_pickle(header)
+    # Can also pass the hdu itself.
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(hdu_list=hdu_list[0])
+    check_tpv(header)
+    check_pickle(header)
     # If you pass in a pyfits Header object, that should also work
     with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
         header = galsim.FitsHeader(header=hdu_list[0].header)
