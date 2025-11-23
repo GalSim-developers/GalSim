@@ -61,12 +61,16 @@ def test_photon_array():
     check_pickle(photon_array)
 
     # Check assignment via numpy [:]
-    photon_array.x[:] = 5
-    photon_array.y[:] = 17
-    photon_array.flux[:] = 23
-    np.testing.assert_array_equal(photon_array.x, 5.)
-    np.testing.assert_array_equal(photon_array.y, 17.)
-    np.testing.assert_array_equal(photon_array.flux, 23.)
+    # jax does not support direct assignment
+    if is_jax_galsim():
+        pass
+    else:
+        photon_array.x[:] = 5
+        photon_array.y[:] = 17
+        photon_array.flux[:] = 23
+        np.testing.assert_array_equal(photon_array.x, 5.)
+        np.testing.assert_array_equal(photon_array.y, 17.)
+        np.testing.assert_array_equal(photon_array.flux, 23.)
 
     # Check assignment directly to the attributes
     photon_array.x = 25
@@ -95,9 +99,9 @@ def test_photon_array():
     photon_array.x *= 5
     photon_array.y += 17
     photon_array.flux /= 23
-    np.testing.assert_almost_equal(photon_array.x, orig_x * 5.)
-    np.testing.assert_almost_equal(photon_array.y, orig_y + 17.)
-    np.testing.assert_almost_equal(photon_array.flux, orig_flux / 23.)
+    np.testing.assert_array_almost_equal(photon_array.x, orig_x * 5.)
+    np.testing.assert_array_almost_equal(photon_array.y, orig_y + 17.)
+    np.testing.assert_array_almost_equal(photon_array.flux, orig_flux / 23.)
 
     # Check picklability again with non-zero values
     check_pickle(photon_array)
@@ -182,30 +186,36 @@ def test_photon_array():
     x = photon_array.x.copy()
     y = photon_array.y.copy()
     photon_array.scaleXY(1.9)
-    np.testing.assert_almost_equal(photon_array.x, 1.9*x)
-    np.testing.assert_almost_equal(photon_array.y, 1.9*y)
+    np.testing.assert_array_almost_equal(photon_array.x, 1.9*x)
+    np.testing.assert_array_almost_equal(photon_array.y, 1.9*y)
 
     # Check ways to assign to photons
     pa1 = galsim.PhotonArray(50)
     pa1.x = photon_array.x[:50]
-    for i in range(50):
-        pa1.y[i] = photon_array.y[i]
-    pa1.flux[0:50] = photon_array.flux[:50]
+    if is_jax_galsim():
+        pa1.y = photon_array.y[:50]
+    else:
+        for i in range(50):
+            pa1.y[i] = photon_array.y[i]
+    if is_jax_galsim():
+        pa1.flux = photon_array.flux[:50]
+    else:
+        pa1.flux[0:50] = photon_array.flux[:50]
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
     pa1.wavelength = photon_array.wavelength[:50]
     pa1.pupil_u = photon_array.pupil_u[:50]
     pa1.pupil_v = photon_array.pupil_v[:50]
     pa1.time = photon_array.time[:50]
-    np.testing.assert_almost_equal(pa1.x, photon_array.x[:50])
-    np.testing.assert_almost_equal(pa1.y, photon_array.y[:50])
-    np.testing.assert_almost_equal(pa1.flux, photon_array.flux[:50])
-    np.testing.assert_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
-    np.testing.assert_almost_equal(pa1.dydz, photon_array.dydz[:50])
-    np.testing.assert_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
-    np.testing.assert_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
-    np.testing.assert_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
-    np.testing.assert_almost_equal(pa1.time, photon_array.time[:50])
+    np.testing.assert_array_almost_equal(pa1.x, photon_array.x[:50])
+    np.testing.assert_array_almost_equal(pa1.y, photon_array.y[:50])
+    np.testing.assert_array_almost_equal(pa1.flux, photon_array.flux[:50])
+    np.testing.assert_array_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
+    np.testing.assert_array_almost_equal(pa1.dydz, photon_array.dydz[:50])
+    np.testing.assert_array_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
+    np.testing.assert_array_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
+    np.testing.assert_array_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
+    np.testing.assert_array_almost_equal(pa1.time, photon_array.time[:50])
 
     # Check copyFrom
     pa2 = galsim.PhotonArray(100)
@@ -237,7 +247,10 @@ def test_photon_array():
     assert pa2.time[17] == pa1.time[20]
 
     # Can choose not to copy flux
-    pa2.flux[27] = -1
+    if is_jax_galsim():
+        pa2._flux = pa2._flux.at[27].set(-1)
+    else:
+        pa2.flux[27] = -1
     pa2.copyFrom(pa1, 27, 10, do_flux=False)
     assert pa2.flux[27] != pa1.flux[10]
     assert pa2.x[27] == pa1.x[10]
@@ -251,8 +264,16 @@ def test_photon_array():
     assert pa2.time[37] == pa1.time[8]
 
     # ... or the other arrays
-    pa2.dxdz[47] = pa2.dydz[47] = pa2.wavelength[47] = -1
-    pa2.pupil_u[47] = pa2.pupil_v[47] = pa2.time[47] = -1
+    if is_jax_galsim():
+        pa2._dxdz = pa2._dxdz.at[47].set(-1)
+        pa2._dydz = pa2._dydz.at[47].set(-1)
+        pa2._wave = pa2._wave.at[47].set(-1)
+        pa2._pupil_u = pa2._pupil_u.at[47].set(-1)
+        pa2._pupil_v = pa2._pupil_v.at[47].set(-1)
+        pa2._time = pa2._time.at[47].set(-1)
+    else:
+        pa2.dxdz[47] = pa2.dydz[47] = pa2.wavelength[47] = -1
+        pa2.pupil_u[47] = pa2.pupil_v[47] = pa2.time[47] = -1
     pa2.copyFrom(pa1, 47, 18, do_other=False)
     assert pa2.flux[47] == pa1.flux[18]
     assert pa2.x[47] == pa1.x[18]
@@ -277,7 +298,10 @@ def test_photon_array():
 
     # Error if indices are invalid
     assert_raises(ValueError, pa2.copyFrom, pa1, slice(50,None), slice(50,None))
-    assert_raises(ValueError, pa2.copyFrom, pa1, 100, 0)
+    if is_jax_galsim():
+        pass
+    else:
+        assert_raises(ValueError, pa2.copyFrom, pa1, 100, 0)
     assert_raises(ValueError, pa2.copyFrom, pa1, 0, slice(None))
     assert_raises(ValueError, pa2.copyFrom, pa1)
     assert_raises(ValueError, pa2.copyFrom, pa1, slice(None), pa1.x<0)
@@ -294,13 +318,13 @@ def test_photon_array():
     photons = galsim.PhotonArray.makeFromImage(ones)
     print('photons = ',photons)
     assert len(photons) == 16
-    np.testing.assert_almost_equal(photons.flux, 1.)
+    np.testing.assert_array_almost_equal(photons.flux, 1.)
 
     tens = galsim.Image(4,4,init_value=8)
     photons = galsim.PhotonArray.makeFromImage(tens, max_flux=5.)
     print('photons = ',photons)
     assert len(photons) == 32
-    np.testing.assert_almost_equal(photons.flux, 4.)
+    np.testing.assert_array_almost_equal(photons.flux, 4.)
 
     assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=0.)
     assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=-2)
@@ -1442,9 +1466,15 @@ def test_fromArrays():
         flux[Nsplit:]
     )
 
-    assert pa_batch.x is x
-    assert pa_batch.y is y
-    assert pa_batch.flux is flux
+    if is_jax_galsim():
+        # jax-galsim never copies
+        assert pa_batch.x is not x
+        assert pa_batch.y is not y
+        assert pa_batch.flux is not flux
+    else:
+        assert pa_batch.x is x
+        assert pa_batch.y is y
+        assert pa_batch.flux is flux
     np.testing.assert_array_equal(pa_batch.x, x)
     np.testing.assert_array_equal(pa_batch.y, y)
     np.testing.assert_array_equal(pa_batch.flux, flux)

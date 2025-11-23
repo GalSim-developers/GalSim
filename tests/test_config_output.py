@@ -1238,7 +1238,7 @@ def test_config():
     }
 
     # Test yaml
-    yaml_file_name = "output/test_config.yaml"
+    yaml_file_name = os.path.join(os.path.dirname(__file__), "output/test_config.yaml")
     with open(yaml_file_name, 'w') as fout:
         yaml.dump(config, fout, default_flow_style=True)
     # String None will be coverted to a real None.  Convert here in the comparison dict
@@ -1252,7 +1252,7 @@ def test_config():
     assert config == dict(config2)
 
     # Test json
-    json_file_name = "output/test_config.json"
+    json_file_name = os.path.join(os.path.dirname(__file__), "output/test_config.json")
     with open(json_file_name, 'w') as fout:
         json.dump(config, fout)
 

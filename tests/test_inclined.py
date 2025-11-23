@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import os
 from copy import deepcopy
 import numpy as np
 
@@ -28,7 +29,7 @@ save_profiles = False
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
-image_dir = './inclined_exponential_images'
+image_dir = os.path.join(os.path.dirname(__file__), './inclined_exponential_images')
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
 

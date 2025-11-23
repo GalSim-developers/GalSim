@@ -22,8 +22,8 @@ import os
 import galsim
 from galsim_test_helpers import *
 
-imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images.
+# Directory containing the reference images.
+imgdir = os.path.join(os.path.dirname(__file__), "SBProfile_comparison_images")
 
 @timer
 def test_convolve():
@@ -496,9 +496,9 @@ def test_deconvolve():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(inv_psf.centroid, cen)
-    np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
+    np.testing.assert_array_almost_equal(inv_psf.flux, 1./psf.flux)
     # This doesn't really have any meaning, but this is what we've assigned to a deconvolve max_sb.
-    np.testing.assert_almost_equal(inv_psf.max_sb, -psf.max_sb / psf.flux**2)
+    np.testing.assert_array_almost_equal(inv_psf.max_sb, -psf.max_sb / psf.flux**2)
 
     check_basic(inv_psf, "Deconvolve(Moffat)", do_x=False)
 

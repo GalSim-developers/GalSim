@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import numpy as np
 import galsim
 from galsim_test_helpers import *
 

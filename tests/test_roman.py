@@ -16,9 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
+import sys
 import logging
 import os
-import sys
 import numpy as np
 import datetime
 from unittest import mock
@@ -150,7 +150,7 @@ def test_roman_wcs(run_slow):
     # we compare that with the GalSim routines for finding SCAs.
     import datetime
     date = datetime.datetime(2025, 1, 12)
-    test_data_file = os.path.join('roman_files','chris_comparison.txt')
+    test_data_file = os.path.join(os.path.dirname(__file__), os.path.join('roman_files','chris_comparison.txt'))
     test_data = np.loadtxt(test_data_file).transpose()
 
     ra_cen = test_data[0,:]
