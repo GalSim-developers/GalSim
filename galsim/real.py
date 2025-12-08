@@ -548,8 +548,8 @@ class RealGalaxyCatalog:
         logger.debug('RealGalaxyCatalog %s has %d objects',self.file_name,self.nobjects)
 
         self._preload = preload
-        self.loaded_files = {}
         self.saved_noise_im = {}
+        self.loaded_files = {}
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
         self.gal_lock = Lock()  # Use this when accessing gal files
@@ -647,13 +647,22 @@ class RealGalaxyCatalog:
         self.close()
 
     def close(self):
+        """Close all loaded files.
+
+        Usually it is a performance improvement to keep the various input files open while using
+        the RealGalaxyCatalog, especially if the access of the galaxies is in semi-random order.
+        However, if you want to release the memory tied up in these files before the
+        RealGalaxyCatalog goes out of scope, then this method will release the memroy directly.
+        """
         # Need to close any open files.
         # Make sure to check if loaded_files exists, since the constructor could abort
         # before it gets to the place where loaded_files is built.
         if hasattr(self, 'loaded_files'):
             for f in self.loaded_files.values():
                 f.close()
-        self.loaded_files = {}
+            self.loaded_files.clear()
+            # Also release the memory in the noise images, even though this is usually negligible.
+            self.saved_noise_im.clear()
 
     def getNObjects(self) : return self.nobjects
     def __len__(self): return self.nobjects
