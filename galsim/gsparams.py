@@ -43,14 +43,16 @@ class GSParams:
     Parameters:
         minimum_fft_size:   The minimum size of any FFT that may need to be performed.
                             [default: 128]
-        maximum_fft_size:   The maximum allowed size of an image for performing an FFT.  This
-                            is more about memory use than accuracy.  We have this maximum
-                            value to help prevent the user from accidentally trying to perform
-                            an extremely large FFT that crashes the program. Instead, GalSim
-                            will raise an exception indicating that the image is too large,
-                            which is often a sign of an error in the user's code. However, if
-                            you have the memory to handle it, you can raise this limit to
-                            allow the calculation to happen. [default: 8192]
+        maximum_fft_size:   The maximum allowed size of an image for performing an FFT without
+                            warning.  This is more about memory use than accuracy.  We have this
+                            maximum value to inform a user who accidentally performs an extremely
+                            large FFT why they just crashed the program. GalSim used to
+                            raise an exception indicating that the image is too large,
+                            which is often a sign of an error in the user's code. However, we
+                            now just emit a warning about the large FFT, so if the code crashes
+                            you have some indication of why. If you have the memory to handle it,
+                            you can raise this limit to allow the calculation to happen without
+                            seeing the warning. [default: 8192]
         folding_threshold:  This sets a maximum amount of real space folding that is allowed,
                             an effect caused by the periodic nature of FFTs.  FFTs implicitly
                             use periodic boundary conditions, and a profile specified on a
