@@ -125,10 +125,6 @@ from contextlib import contextmanager
 # GalSimHSMError:       Use this for errors from the HSM algorithm.  They are emitted in C++, but
 #                       we use `with convert_cpp_errors(GalSimHSMError):` to convert them.
 #
-# GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size
-#                       for the object, so the recommendation is raise this parameter if that
-#                       is possible.
-#
 # GalSimConfigError:    Use this for errors processing a config dict.
 #
 # GalSimConfigValueError:   Use this when a config dict has a value that is invalid. Basically,
@@ -345,6 +341,9 @@ class GalSimFFTSizeError(GalSimError):
         mem:        The estimated memory that would be required (in GB) for the FFT.
     """
     def __init__(self, message, size):
+        from .deprecated import depr
+        depr(GalSimFFTSizeError, 2.7, '',
+             "Cases that used to raise GalSimFFTSizeError now emit a GalSimFFTSizeWarning instead.")
         self.message = message
         self.size = size
         self.mem = size * size * 24. / 1024**3
@@ -434,10 +433,8 @@ class GalSimFFTSizeWarning(GalSimWarning):
     def __reduce__(self):
         return GalSimFFTSizeWarning, (self.message, self.size)
 
-
 def galsim_warn_fft(message, size):
     warnings.warn(GalSimFFTSizeWarning(message, size))
-
 
 @contextmanager
 def convert_cpp_errors(error_type=GalSimError):
