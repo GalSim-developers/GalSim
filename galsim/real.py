@@ -508,6 +508,14 @@ class RealGalaxyCatalog:
        GalSim knows the location of the installation share directory, so it will automatically
        look for it there.
 
+    .. note::
+
+        A RealGalaxyCatalog instance will cache data from the input files that it loads.
+        Normally, this leads to a performance improvement, especially if objects are selected
+        from the catalog semi-randomly, since it is faster to access the data in memory.
+        If you want to free the cached memory before the RealGalaxyCatalog goes out of
+        scope, you can use the `close` method to do so.
+
     Parameters:
         file_name:  The file containing the catalog. [default: None, which will look for the
                     F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
