@@ -281,6 +281,17 @@ def test_galsim_deprecation_warning():
     assert isinstance(err, UserWarning)
     check_pickle(err)
 
+@timer
+def test_galsim_fftsize_warning():
+    """Test basic usage of GalSimDeprecationWarning
+    """
+    err = galsim.GalSimFFTSizeWarning("Test", 10240)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err).startswith("Test")
+    assert isinstance(err, UserWarning)
+    check_pickle(err)
+
 
 if __name__ == "__main__":
     runtests(__file__)
