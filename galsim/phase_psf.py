@@ -34,7 +34,7 @@ from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property, basestring
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
-from .errors import GalSimFFTSizeError, galsim_warn
+from .errors import galsim_warn, galsim_warn_fft
 from .photon_array import TimeSampler, PhotonArray
 from .airy import Airy
 from .second_kick import SecondKick
@@ -328,7 +328,7 @@ class Aperture:
 
         # Check FFT size
         if self._npix > self.gsparams.maximum_fft_size:
-            raise GalSimFFTSizeError("Created pupil plane array that is too large.",self._npix)
+            galsim_warn_fft("Created pupil plane array that is too large.",self._npix)
 
         # Shrink scale such that size = scale * npix exactly.
         self._pupil_plane_scale = self._pupil_plane_size / self._npix
@@ -383,7 +383,7 @@ class Aperture:
 
         # Check FFT size
         if self._npix > self.gsparams.maximum_fft_size:
-            raise GalSimFFTSizeError("Loaded pupil plane array that is too large.", self._npix)
+            galsim_warn_fft("Loaded pupil plane array that is too large.", self._npix)
 
         # Sanity checks
         if self._pupil_plane_im.array.shape[0] != self._pupil_plane_im.array.shape[1]:
