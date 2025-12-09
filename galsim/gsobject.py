@@ -27,7 +27,8 @@ from .gsparams import GSParams
 from .position import _PositionD, _PositionI, Position, parse_pos_args
 from ._utilities import lazy_property
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
+from .errors import GalSimNotImplementedError, convert_cpp_errors
+from .errors import galsim_warn, galsim_warn_fft
 from .image import Image, ImageD, ImageF, ImageCD, ImageCF
 from .shear import Shear, _Shear
 from .angle import Angle
@@ -1968,7 +1969,7 @@ class GSObject:
             Nk = int(np.ceil(maxk/dk)) * 2
 
         if Nk > self.gsparams.maximum_fft_size:
-            raise GalSimFFTSizeError("drawFFT requires an FFT that is too large.", Nk)
+            galsim_warn_fft("drawFFT requires a very large FFT.", Nk)
 
         bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
         if image.dtype in (np.complex128, np.float64, np.int32, np.uint32):

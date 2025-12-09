@@ -669,7 +669,7 @@ def test_sersic():
     # and would be rather slow.
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
-    with assert_raises(galsim.GalSimFFTSizeError):
+    with assert_warns(galsim.GalSimFFTSizeWarning):
         gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]

@@ -1493,7 +1493,7 @@ def test_gsparams():
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
     gal = galsim.Gaussian(fwhm=1, gsparams=gsparams) * bulge_SED
-    with assert_raises(galsim.GalSimFFTSizeError):
+    with assert_warns(galsim.GalSimFFTSizeWarning):
         gal.drawImage(bandpass)
     assert (galsim.Gaussian(fwhm=1) * bulge_SED) != gal
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(gsparams) == gal
@@ -1503,7 +1503,7 @@ def test_gsparams():
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
     psf = galsim.Gaussian(sigma=0.4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
-    with assert_raises(galsim.GalSimFFTSizeError):
+    with assert_warns(galsim.GalSimFFTSizeWarning):
         final.drawImage(bandpass)
 
     # Use a restrictive one this time, so we test the "most restrictive gsparams" feature
