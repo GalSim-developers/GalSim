@@ -986,6 +986,5 @@ def test_galsim_fft_size_error():
     assert isinstance(err, galsim.GalSimError)
 
 
-
 if __name__ == "__main__":
     runtests(__file__)
