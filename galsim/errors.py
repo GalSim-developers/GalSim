@@ -425,7 +425,7 @@ class GalSimFFTSizeWarning(GalSimWarning):
         self.mem = size * size * 24. / 1024**3
         message += "\nThe required FFT size would be {0} x {0}, which requires ".format(size)
         message += "{0:.2f} GB of memory.\n".format(self.mem)
-        message += "If you can handle the large FFT and want to suppress this warning, "
+        message += "If you can handle the large FFT and want to suppress this warning,\n"
         message += "you may update gsparams.maximum_fft_size."
         super(GalSimFFTSizeWarning, self).__init__(message)
     def __repr__(self):
