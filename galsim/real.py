@@ -652,7 +652,7 @@ class RealGalaxyCatalog:
         Usually it is a performance improvement to keep the various input files open while using
         the RealGalaxyCatalog, especially if the access of the galaxies is in semi-random order.
         However, if you want to release the memory tied up in these files before the
-        RealGalaxyCatalog goes out of scope, then this method will release the memroy directly.
+        RealGalaxyCatalog goes out of scope, then this method will release the memory directly.
         """
         # Need to close any open files.
         # Make sure to check if loaded_files exists, since the constructor could abort
