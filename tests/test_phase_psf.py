@@ -1539,8 +1539,8 @@ def test_t_persistence():
     nphot = 1_000_000
     photons = psf.drawImage(save_photons=True, method='phot', n_photons=nphot).photons
     assert photons.hasAllocatedTimes()
-    assert np.min(photons.time) > 10.0
-    assert np.max(photons.time) < 25.0
+    assert np.min(photons.time) >= 10.0
+    assert np.max(photons.time) <= 25.0 + 1.e-10  # slight slop to allow for numerical imprecision
 
 
 @timer
