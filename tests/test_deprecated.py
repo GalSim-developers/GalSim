@@ -17,6 +17,7 @@
 #
 
 import os
+import warnings
 import numpy as np
 
 import galsim
@@ -984,6 +985,10 @@ def test_galsim_fft_size_error():
     assert err.size == 10240
     np.testing.assert_almost_equal(err.mem, 2.34375)
     assert isinstance(err, galsim.GalSimError)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=galsim.GalSimDeprecationWarning)
+        check_pickle(err)
+
 
 
 if __name__ == "__main__":
