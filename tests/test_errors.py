@@ -283,7 +283,7 @@ def test_galsim_deprecation_warning():
 
 @timer
 def test_galsim_fftsize_warning():
-    """Test basic usage of GalSimDeprecationWarning
+    """Test basic usage of GalSimFFTSizeWarning
     """
     err = galsim.GalSimFFTSizeWarning("Test", 10240)
     print('str = ',str(err))
