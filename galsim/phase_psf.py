@@ -328,7 +328,7 @@ class Aperture:
 
         # Check FFT size
         if self._npix > self.gsparams.maximum_fft_size:
-            galsim_warn_fft("Created pupil plane array that is too large.",self._npix)
+            galsim_warn_fft("Created pupil plane array that will need a very large fft.",self._npix)
 
         # Shrink scale such that size = scale * npix exactly.
         self._pupil_plane_scale = self._pupil_plane_size / self._npix
@@ -383,7 +383,7 @@ class Aperture:
 
         # Check FFT size
         if self._npix > self.gsparams.maximum_fft_size:
-            galsim_warn_fft("Loaded pupil plane array that is too large.", self._npix)
+            galsim_warn_fft("Loaded pupil plane array that will need a very large fft.",self._npix)
 
         # Sanity checks
         if self._pupil_plane_im.array.shape[0] != self._pupil_plane_im.array.shape[1]:
