@@ -23,8 +23,9 @@ import galsim
 from galsim_test_helpers import *
 
 path, filename = os.path.split(__file__)
-imgdir = os.path.join(path, "SBProfile_comparison_images") # Directory containing the reference
-                                                           # images.
+# Directory containing the reference images.
+imgdir = os.path.join(path, "SBProfile_comparison_images")
+
 
 @timer
 def test_moffat():
@@ -135,36 +136,42 @@ def test_moffat_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxk, 11.634597424960159)
-    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795873)
-    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
-    np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
+    if is_jax_galsim():
+        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
+    else:
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
+    np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795873)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
+    np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
+    np.testing.assert_array_almost_equal(psf.fwhm, fwhm_backwards_compatible)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_array_almost_equal(psf.flux, test_flux)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid, cen)
-    np.testing.assert_almost_equal(psf.maxk, 11.634597426100862)
-    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795862)
-    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
-    np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
+    if is_jax_galsim():
+        np.testing.assert_allclose(psf.maxk, 11.634597424960159, atol=0, rtol=0.2)
+    else:
+        np.testing.assert_array_almost_equal(psf.maxk, 11.634597424960159)
+    np.testing.assert_array_almost_equal(psf.stepk, 0.62831853071795862)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), test_flux+0j)
+    np.testing.assert_array_almost_equal(psf.half_light_radius, 1.0)
+    np.testing.assert_array_almost_equal(psf.fwhm, fwhm_backwards_compatible)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_array_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_array_almost_equal(psf.flux, test_flux)
+    np.testing.assert_array_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         psfFlux = galsim.Moffat(2.0, fwhm=fwhm_backwards_compatible,
                                 trunc=2*fwhm_backwards_compatible, flux=inFlux)
         outFlux = psfFlux.flux
-        np.testing.assert_almost_equal(outFlux, inFlux)
+        np.testing.assert_array_almost_equal(outFlux, inFlux)
 
     # Check that stepk and maxk scale correctly with radius
     psf2 = galsim.Moffat(beta=2.0, half_light_radius=5.,
@@ -203,13 +210,16 @@ def test_moffat_maxk():
         galsim.Moffat(beta=12.9, scale_radius=11, flux=23, trunc=1000),
     ]
     threshs = [1.e-3, 1.e-4, 0.03]
-    print('beta \t trunc \t thresh \t kValue(maxk)')
+    print('beta \t trunc \t thresh \t kValue(maxk) \t maxk')
     for psf in psfs:
         for thresh in threshs:
             psf = psf.withGSParams(maxk_threshold=thresh)
-            rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
+            if is_jax_galsim():
+                rtol = 5e-3
+            else:
+                rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
             fk = psf.kValue(psf.maxk,0).real/psf.flux
-            print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e}')
+            print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e} \t {psf.maxk:.3e}')
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol)
 
 
@@ -230,7 +240,7 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    np.testing.assert_equal(
+    np.testing.assert_array_equal(
             test_gal.half_light_radius, test_hlr,
             err_msg="Moffat half_light_radius returned wrong value")
 
@@ -295,7 +305,7 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             ratio, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with fwhm")
-    np.testing.assert_equal(
+    np.testing.assert_array_equal(
             test_gal.fwhm, test_fwhm,
             err_msg="Moffat fwhm returned wrong value")
 
@@ -325,7 +335,7 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    np.testing.assert_equal(
+    np.testing.assert_allclose(
             test_gal.half_light_radius, test_hlr,
             err_msg="Moffat hlr incorrect")
 

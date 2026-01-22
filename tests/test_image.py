@@ -81,7 +81,7 @@ else:
     # it helps speed things up.
     nimages = 3
 
-datadir = os.path.join(".", "Image_comparison_images")
+datadir = os.path.join(os.path.dirname(__file__), "Image_comparison_images")
 
 
 @timer
@@ -103,8 +103,12 @@ def test_Image_basic():
         np.testing.assert_array_equal(im1.array, 0.)
         assert im1.array.shape == (nrow,ncol)
         assert im1.array.dtype.type == np_array_type
-        assert im1.array.flags.writeable == True
-        assert im1.array.flags.c_contiguous == True
+        if is_jax_galsim():
+            pass
+        else:
+            # jax arrays do not have flags
+            assert im1.array.flags.writeable == True
+            assert im1.array.flags.c_contiguous == True
         assert im1.dtype == np_array_type
         assert im1.ncol == ncol
         assert im1.nrow == nrow
@@ -201,16 +205,32 @@ def test_Image_basic():
                 assert im1.view()(x,y) == value
                 assert im1.view()(galsim.PositionI(x,y)) == value
                 assert im1.view(make_const=True)(x,y) == value
-                assert im2(x,y) == value
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2(x,y) != value
+                else:
+                    assert im2(x,y) == value
                 assert im2_view(x,y) == value
-                assert im2_cview(x,y) == value
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2_cview(x,y) != value
+                else:
+                    assert im2_cview(x,y) == value
                 assert im1.conjugate(x,y) == value
                 if tchar[i][0] == 'C':
                     # complex conjugate is not a view into the original.
                     assert im2_conj(x,y) == 23
-                    assert im2.conjugate(x,y) == value
+                    if is_jax_galsim():
+                        # no real views in jax
+                        assert im2.conjugate(x,y) != value
+                    else:
+                        assert im2.conjugate(x,y) == value
                 else:
-                    assert im2_conj(x,y) == value
+                    if is_jax_galsim():
+                        # no real views in jax
+                        assert im2_conj(x,y) != value
+                    else:
+                        assert im2_conj(x,y) == value
 
                 value2 = 53 + 12*x - 19*y
                 if tchar[i] in ['US', 'UI']:
@@ -220,16 +240,32 @@ def test_Image_basic():
                 assert im1.getValue(x,y) == value2
                 assert im1.view().getValue(x=x, y=y) == value2
                 assert im1.view(make_const=True).getValue(x,y) == value2
-                assert im2.getValue(x=x, y=y) == value2
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2.getValue(x=x, y=y) != value2
+                else:
+                    assert im2.getValue(x=x, y=y) == value2
                 assert im2_view.getValue(x,y) == value2
-                assert im2_cview._getValue(x,y) == value2
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2_cview._getValue(x,y) != value2
+                else:
+                    assert im2_cview._getValue(x,y) == value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
                 assert im1.view(make_const=True).real(x,y) == value2.real
-                assert im2.real(x,y) == value2.real
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2.real(x,y) != value2.real
+                else:
+                    assert im2.real(x,y) == value2.real
                 assert im2_view.real(x,y) == value2.real
-                assert im2_cview.real(x,y) == value2.real
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2_cview.real(x,y) != value2.real
+                else:
+                    assert im2_cview.real(x,y) == value2.real
                 assert im1.imag(x,y) == 0
                 assert im1.view().imag(x,y) == 0
                 assert im1.view(make_const=True).imag(x,y) == 0
@@ -237,15 +273,26 @@ def test_Image_basic():
                 assert im2_view.imag(x,y) == 0
                 assert im2_cview.imag(x,y) == 0
 
-                value3 = 10*x + y
+                if is_jax_galsim():
+                    value3 = 10*x + y + 111
+                else:
+                    value3 = 10*x + y
                 im1.addValue(x,y, np.int64(value3-value2))
                 im2_view[x,y] += np.int64(value3-value2)
                 assert im1[galsim.PositionI(x,y)] == value3
                 assert im1.view()[x,y] == value3
                 assert im1.view(make_const=True)[galsim.PositionI(x,y)] == value3
-                assert im2[x,y] == value3
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2[x,y] != value3
+                else:
+                    assert im2[x,y] == value3
                 assert im2_view[galsim.PositionI(x,y)] == value3
-                assert im2_cview[x,y] == value3
+                if is_jax_galsim():
+                    # no real views in jax
+                    assert im2_cview[x,y] != value3
+                else:
+                    assert im2_cview[x,y] == value3
 
         # Setting or getting the value outside the bounds should throw an exception.
         assert_raises(galsim.GalSimBoundsError,im1.setValue,0,0,1)
@@ -356,11 +403,19 @@ def test_Image_basic():
         assert im2.bounds == bounds
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                value3 = 10*x+y
+                if is_jax_galsim():
+                    value3 = 10*x+y + 111
+                else:
+                    value3 = 10*x+y
                 assert im1(x+dx,y+dy) == value3
                 assert im1_view(x,y) == value3
-                assert im2(x,y) == value3
+                if is_jax_galsim():
+                    assert im2(x,y) != value3
+                else:
+                    assert im2(x,y) == value3
                 assert im2_view(x+dx,y+dy) == value3
+                if is_jax_galsim():
+                    value3 = 10*x+y
                 assert im3_view(x+dx,y+dy) == value3
 
         assert_raises(TypeError, im1.shift, dx)
@@ -692,7 +747,7 @@ def test_Image_FITS_IO(run_slow):
         assert_raises(OSError, galsim.fits.read, test_file, compression='none')
 
     # Check a file with no WCS information
-    nowcs_file = 'fits_files/blankimg.fits'
+    nowcs_file = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     im = galsim.fits.read(nowcs_file)
     assert im.wcs == galsim.PixelScale(1.0)
 
@@ -1019,7 +1074,7 @@ def test_Image_MultiFITS_IO(run_slow):
         assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
 
     # Check a file with no WCS information
-    nowcs_file = 'fits_files/blankimg.fits'
+    nowcs_file = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     ims = galsim.fits.readMulti(nowcs_file)
     assert ims[0].wcs == galsim.PixelScale(1.0)
 
@@ -1349,7 +1404,7 @@ def test_Image_CubeFITS_IO(run_slow):
         assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
 
     # Check a file with no WCS information
-    nowcs_file = 'fits_files/blankimg.fits'
+    nowcs_file = os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits')
     ims = galsim.fits.readCube(nowcs_file)
     assert ims[0].wcs == galsim.PixelScale(1.0)
 
@@ -2217,7 +2272,7 @@ def test_subImage_persistence():
     """Test that a subimage is properly accessible even if the original image has gone out
     of scope.
     """
-    file_name = os.path.join('fits_files','tpv.fits')
+    file_name = os.path.join(os.path.dirname(__file__), os.path.join('fits_files','tpv.fits'))
     bounds = galsim.BoundsI(123, 133, 45, 55)  # Something random
 
     # In this case, the original image has gone out of scope.  At least on some systems,
@@ -2500,7 +2555,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 20)
     assert imv(11,19) == 20
-    assert im(11,19) == 20
+    if is_jax_galsim():
+        # jax-galsim does not support views
+        assert im(11,19) != 20
+    else:
+        assert im(11,19) == 20
     check_pickle(im)
     check_pickle(imv)
 
@@ -2512,7 +2571,11 @@ def test_Image_view():
     assert imv.bounds == galsim.BoundsI(0,24,0,24)
     imv.setValue(10,18, 30)
     assert imv(10,18) == 30
-    assert im(11,19) == 30
+    if is_jax_galsim():
+        # jax-galsim does not support views
+        assert im(11,19) != 20
+    else:
+        assert im(11,19) == 30
     imv2 = im.view()
     imv2.setOrigin(0,0)
     assert imv.bounds == imv2.bounds
@@ -2528,7 +2591,11 @@ def test_Image_view():
     assert imv.bounds == galsim.BoundsI(-12,12,-12,12)
     imv.setValue(-2,6, 40)
     assert imv(-2,6) == 40
-    assert im(11,19) == 40
+    if is_jax_galsim():
+        # jax-galsim does not support views
+        assert im(11,19) != 40
+    else:
+        assert im(11,19) == 40
     imv2 = im.view()
     imv2.setCenter(0,0)
     assert imv.bounds == imv2.bounds
@@ -2545,7 +2612,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 50)
     assert imv(11,19) == 50
-    assert im(11,19) == 50
+    if is_jax_galsim():
+        # jax-galsim does not support views
+        assert im(11,19) != 50
+    else:
+        assert im(11,19) == 50
     imv2 = im.view()
     with assert_raises(galsim.GalSimError):
         imv2.scale = 0.17   # Invalid if wcs is not PixelScale
@@ -2563,7 +2634,11 @@ def test_Image_view():
     assert imv.bounds == im.bounds
     imv.setValue(11,19, 60)
     assert imv(11,19) == 60
-    assert im(11,19) == 60
+    if is_jax_galsim():
+        # jax-galsim does not support views
+        assert im(11,19) != 60
+    else:
+        assert im(11,19) == 60
     imv2 = im.view()
     imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
     assert imv.bounds == imv2.bounds
@@ -2654,13 +2729,17 @@ def test_copy():
     assert im(3,8) != 11.
 
     # If copy=False is specified, then it shares the same array
-    im3b = galsim.Image(im, copy=False)
-    assert im3b.wcs == im.wcs
-    assert im3b.bounds == im.bounds
-    np.testing.assert_array_equal(im3b.array, im.array)
-    im3b.setValue(2,3,2.)
-    assert im3b(2,3) == 2.
-    assert im(2,3) == 2.
+    if is_jax_galsim():
+        # jax-galsim does not support references
+        pass
+    else:
+        im3b = galsim.Image(im, copy=False)
+        assert im3b.wcs == im.wcs
+        assert im3b.bounds == im.bounds
+        np.testing.assert_array_equal(im3b.array, im.array)
+        im3b.setValue(2,3,2.)
+        assert im3b(2,3) == 2.
+        assert im(2,3) == 2.
 
     # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
@@ -2711,13 +2790,17 @@ def test_copy():
     assert im_slice(2,3) != 11.
 
     # Can also copy by giving the array and specify copy=True
-    im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
-    assert im10.wcs == im.wcs
-    assert im10.bounds == im.bounds
-    np.testing.assert_array_equal(im10.array, im.array)
-    im10[2,3] = 17
-    assert im10(2,3) == 17.
-    assert im(2,3) == 17.
+    if is_jax_galsim():
+        # jax-galsim does not support references
+        pass
+    else:
+        im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
+        assert im10.wcs == im.wcs
+        assert im10.bounds == im.bounds
+        np.testing.assert_array_equal(im10.array, im.array)
+        im10[2,3] = 17
+        assert im10(2,3) == 17.
+        assert im(2,3) == 17.
 
     im10b = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=True)
     assert im10b.wcs == im.wcs
@@ -2768,39 +2851,82 @@ def test_complex_image():
                 assert im1(x,y) == value
                 assert im1.view()(x,y) == value
                 assert im1.view(make_const=True)(x,y) == value
-                assert im2(x,y) == value
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2(x,y) != value
+                else:
+                    assert im2(x,y) == value
                 assert im2_view(x,y) == value
-                assert im2_cview(x,y) == value
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2_cview(x,y) != value
+                else:
+                    assert im2_cview(x,y) == value
                 assert im1.conjugate(x,y) == np.conjugate(value)
 
                 # complex conjugate is not a view into the original.
                 assert im2_conj(x,y) == 23
-                assert im2.conjugate(x,y) == np.conjugate(value)
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2.conjugate(x,y) != np.conjugate(value)
+                else:
+                    assert im2.conjugate(x,y) == np.conjugate(value)
 
-                value2 = 10*x + y + 20j*x + 2j*y
+                if is_jax_galsim():
+                    value2 = 400000 + 10*x + y + 20j*x + 2j*y
+                else:
+                    value2 = 10*x + y + 20j*x + 2j*y
                 im1.setValue(x,y, value2)
                 im2_view.setValue(x=x, y=y, value=value2)
                 assert im1(x,y) == value2
                 assert im1.view()(x,y) == value2
                 assert im1.view(make_const=True)(x,y) == value2
-                assert im2(x,y) == value2
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2(x,y) != value2
+                else:
+                    assert im2(x,y) == value2
                 assert im2_view(x,y) == value2
-                assert im2_cview(x,y) == value2
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2_cview(x,y) != value2
+                else:
+                    assert im2_cview(x,y) == value2
 
                 assert im1.real(x,y) == value2.real
                 assert im1.view().real(x,y) == value2.real
                 assert im1.view(make_const=True).real(x,y) == value2.real
-                assert im2.real(x,y) == value2.real
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2.real(x,y) != value2.real
+                else:
+                    assert im2.real(x,y) == value2.real
                 assert im2_view.real(x,y) == value2.real
-                assert im2_cview.real(x,y) == value2.real
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2_cview.real(x,y) != value2.real
+                else:
+                    assert im2_cview.real(x,y) == value2.real
                 assert im1.imag(x,y) == value2.imag
                 assert im1.view().imag(x,y) == value2.imag
                 assert im1.view(make_const=True).imag(x,y) == value2.imag
-                assert im2.imag(x,y) == value2.imag
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2.imag(x,y) != value2.imag
+                else:
+                    assert im2.imag(x,y) == value2.imag
                 assert im2_view.imag(x,y) == value2.imag
-                assert im2_cview.imag(x,y) == value2.imag
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2_cview.imag(x,y) != value2.imag
+                else:
+                    assert im2_cview.imag(x,y) == value2.imag
                 assert im1.conjugate(x,y) == np.conjugate(value2)
-                assert im2.conjugate(x,y) == np.conjugate(value2)
+                if is_jax_galsim():
+                    # jax galsim does not support views
+                    assert im2.conjugate(x,y) != np.conjugate(value2)
+                else:
+                    assert im2.conjugate(x,y) == np.conjugate(value2)
 
                 rvalue3 = 12*x + y
                 ivalue3 = x + 21*y
@@ -2809,14 +2935,25 @@ def test_complex_image():
                 im1.imag.setValue(x,y, ivalue3)
                 im2_view.real.setValue(x,y, rvalue3)
                 im2_view.imag.setValue(x,y, ivalue3)
-                assert im1(x,y) == value3
-                assert im1.view()(x,y) == value3
-                assert im1.view(make_const=True)(x,y) == value3
-                assert im2(x,y) == value3
-                assert im2_view(x,y) == value3
-                assert im2_cview(x,y) == value3
-                assert im1.conjugate(x,y) == np.conjugate(value3)
-                assert im2.conjugate(x,y) == np.conjugate(value3)
+                # jax galsim does not support views
+                if is_jax_galsim():
+                    assert im1(x,y) != value3
+                    assert im1.view()(x,y) != value3
+                    assert im1.view(make_const=True)(x,y) != value3
+                    assert im2(x,y) != value3
+                    assert im2_view(x,y) != value3
+                    assert im2_cview(x,y) != value3
+                    assert im1.conjugate(x,y) != np.conjugate(value3)
+                    assert im2.conjugate(x,y) != np.conjugate(value3)
+                else:
+                    assert im1(x,y) == value3
+                    assert im1.view()(x,y) == value3
+                    assert im1.view(make_const=True)(x,y) == value3
+                    assert im2(x,y) == value3
+                    assert im2_view(x,y) == value3
+                    assert im2_cview(x,y) == value3
+                    assert im1.conjugate(x,y) == np.conjugate(value3)
+                    assert im2.conjugate(x,y) == np.conjugate(value3)
 
         # Check view of given data
         im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
@@ -2854,7 +2991,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
             err_msg="ImageD * complex is not correct")
     image2 = image1 / (2+5j)
-    np.testing.assert_array_equal(image2.array, ref_array / (2+5j),
+    np.testing.assert_allclose(image2.array, ref_array / (2+5j),
             err_msg="ImageD / complex is not correct")
 
     # Binary complex scalar op ImageD
@@ -2868,7 +3005,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
             err_msg="complex * ImageD is not correct")
     image2 = (2+5j) / image1
-    np.testing.assert_array_equal(image2.array, (2+5j) / ref_array.astype(float),
+    np.testing.assert_allclose(image2.array, (2+5j) / ref_array.astype(float),
             err_msg="complex / ImageD is not correct")
 
     image2 = image1 * (3+1j)
@@ -2884,7 +3021,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
             err_msg="ImageCD * complex is not correct")
     image3 = image2 / (2+5j)
-    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array / (2+5j),
+    np.testing.assert_allclose(image3.array, (3+1j)*ref_array / (2+5j),
             err_msg="ImageCD / complex is not correct")
 
     # Binary complex scalar op ImageCD
@@ -2898,7 +3035,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
             err_msg="complex * ImageCD is not correct")
     image3 = (2+5j) / image2
-    np.testing.assert_array_equal(image3.array, (2+5j) / ((3+1j)*ref_array),
+    np.testing.assert_allclose(image3.array, (2+5j) / ((3+1j)*ref_array),
             err_msg="complex / ImageCD is not correct")
 
     # Binary ImageD op ImageCD
@@ -2912,7 +3049,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
             err_msg="ImageD * ImageCD is not correct")
     image3 = image1 / image2
-    np.testing.assert_almost_equal(image3.array, 1./(3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image3.array, 1./(3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # Binary ImageCD op ImageD
@@ -2926,7 +3063,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
             err_msg="ImageD * ImageCD is not correct")
     image3 = image2 / image1
-    np.testing.assert_almost_equal(image3.array, (3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image3.array, (3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # Binary ImageCD op ImageCD
@@ -2941,7 +3078,7 @@ def test_complex_image_arith():
     np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
             err_msg="ImageCD * ImageCD is not correct")
     image4 = image2 / image3
-    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageCD / ImageCD is not correct")
 
     # In place ImageCD op complex scalar
@@ -2959,7 +3096,7 @@ def test_complex_image_arith():
             err_msg="ImageCD * complex is not correct")
     image4 = image2.copy()
     image4 /= (2+5j)
-    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array / (2+5j),
+    np.testing.assert_allclose(image4.array, (3+1j)*ref_array / (2+5j),
             err_msg="ImageCD / complex is not correct")
 
     # In place ImageCD op ImageD
@@ -2977,7 +3114,7 @@ def test_complex_image_arith():
             err_msg="ImageD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image1
-    np.testing.assert_almost_equal(image4.array, (3+1j), decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (3+1j), decimal=12,
             err_msg="ImageD / ImageCD is not correct")
 
     # In place ImageCD op ImageCD
@@ -2995,7 +3132,7 @@ def test_complex_image_arith():
             err_msg="ImageCD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image3
-    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+    np.testing.assert_array_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageCD / ImageCD is not correct")
 
 
@@ -3345,7 +3482,7 @@ def test_wrap():
     b = galsim.BoundsI(1,4,1,4)
     im_quad = im_orig[b]
     im_wrap = im.wrap(b)
-    np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
                                    "image.wrap() into first quadrant did not match expectation")
 
     # The same thing should work no matter where the lower left corner is:
@@ -3354,7 +3491,7 @@ def test_wrap():
         im_quad = im_orig[b]
         im = im_orig.copy()
         im_wrap = im.wrap(b)
-        np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+        np.testing.assert_array_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
                                        "image.wrap(%s) did not match expectation"%b)
         np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                       "image.wrap(%s) did not return the right subimage")
@@ -3376,7 +3513,7 @@ def test_wrap():
             jj = (j-b.ymin) % (b.ymax-b.ymin+1) + b.ymin
             im_test.addValue(ii,jj,val)
     im_wrap = im.wrap(b)
-    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, im_test.array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3423,7 +3560,7 @@ def test_wrap():
 
     im_wrap = im.wrap(b)
     #print("im_wrap = ",im_wrap.array)
-    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+    np.testing.assert_array_almost_equal(im_wrap.array, im_test.array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3434,7 +3571,7 @@ def test_wrap():
     #print('im_test = ',im_test[b2].array)
     #print('im2_wrap = ',im2_wrap.array)
     #print('diff = ',im2_wrap.array-im_test[b2].array)
-    np.testing.assert_almost_equal(im2_wrap.array, im_test[b2].array, 12,
+    np.testing.assert_array_almost_equal(im2_wrap.array, im_test[b2].array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im2_wrap.array, im2[b2].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3445,7 +3582,7 @@ def test_wrap():
     #print('im_test = ',im_test[b3].array)
     #print('im3_wrap = ',im3_wrap.array)
     #print('diff = ',im3_wrap.array-im_test[b3].array)
-    np.testing.assert_almost_equal(im3_wrap.array, im_test[b3].array, 12,
+    np.testing.assert_array_almost_equal(im3_wrap.array, im_test[b3].array, 12,
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im3_wrap.array, im3[b3].array,
                                   "image.wrap(%s) did not return the right subimage")
@@ -3625,7 +3762,7 @@ def test_fpack():
     """Test the functionality that we advertise as being equivalent to fpack/funpack
     """
     from astropy.io import fits
-    file_name0 = os.path.join('des_data','DECam_00158414_01.fits.fz')
+    file_name0 = os.path.join(os.path.dirname(__file__), 'des_data','DECam_00158414_01.fits.fz')
     hdulist = fits.open(file_name0)
 
     # Remove a few invalid header keys in the DECam fits file
