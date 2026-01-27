@@ -31,6 +31,10 @@ __all__ = [ 'GalSimError', 'GalSimValueError', 'GalSimKeyError', 'GalSimIndexErr
 import warnings
 from contextlib import contextmanager
 
+# Set this to True to have large FFTs raise a GalSimFFTSizeError  exception rather
+# merely emit a GalSimFFTSizeWarning.
+raise_fft_size_error = False
+
 # Note to developers about which exception to throw.
 #
 # Aside from the below classes, which should be preferred for most errors, we also
@@ -341,9 +345,6 @@ class GalSimFFTSizeError(GalSimError):
         mem:        The estimated memory that would be required (in GB) for the FFT.
     """
     def __init__(self, message, size):
-        from .deprecated import depr
-        depr(GalSimFFTSizeError, 2.7, '',
-             "Cases that used to raise GalSimFFTSizeError now emit a GalSimFFTSizeWarning instead.")
         self.message = message
         self.size = size
         self.mem = size * size * 24. / 1024**3
@@ -434,7 +435,10 @@ class GalSimFFTSizeWarning(GalSimWarning):
         return GalSimFFTSizeWarning, (self.message, self.size)
 
 def galsim_warn_fft(message, size):
-    warnings.warn(GalSimFFTSizeWarning(message, size))
+    if raise_fft_size_error:
+        raise GalSimFFTSizeError(message, size)
+    else:
+        warnings.warn(GalSimFFTSizeWarning(message, size))
 
 @contextmanager
 def convert_cpp_errors(error_type=GalSimError):

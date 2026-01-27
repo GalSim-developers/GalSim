@@ -53,6 +53,12 @@ class GSParams:
                             you have some indication of why. If you have the memory to handle it,
                             you can raise this limit to allow the calculation to happen without
                             seeing the warning. [default: 8192]
+
+                            .. note::
+
+                                To revert to the old behavior of raising an exception, you
+                                may set ``galsim.errors.raise_fft_size_error = True``.
+
         folding_threshold:  This sets a maximum amount of real space folding that is allowed,
                             an effect caused by the periodic nature of FFTs.  FFTs implicitly
                             use periodic boundary conditions, and a profile specified on a

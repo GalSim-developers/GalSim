@@ -672,6 +672,13 @@ def test_sersic():
     with assert_warns(galsim.GalSimFFTSizeWarning):
         gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
 
+    # If galsim.errors.raise_fft_size_error is True, then it raises an exception instead.
+    # (This was the behavior until version 2.7.)
+    galsim.errors.raise_fft_size_error = True
+    with assert_raises(galsim.GalSimFFTSizeError):
+        gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
+    galsim.errors.raise_fft_size_error = False
+
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
     gal7b = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3, gsparams=gsparams)

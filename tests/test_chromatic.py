@@ -1488,7 +1488,7 @@ def test_analytic_integrator():
 def test_gsparams():
     """Check that gsparams actually gets processed by ChromaticObjects.
     """
-    # Setting maximum_fft_size this low causes an exception to be raised for GSObjects, so
+    # Setting maximum_fft_size this low causes a warning to be emitted for GSObjects, so
     # make sure it does for ChromaticObjects too, thereby assuring that gsparams is really
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
@@ -1499,12 +1499,23 @@ def test_gsparams():
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(gsparams) == gal
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(maximum_fft_size=16) == gal
 
+    # Should raise an exception if raise_fft_size_error is True
+    galsim.errors.raise_fft_size_error = True
+    with assert_raises(galsim.GalSimFFTSizeError):
+        gal.drawImage(bandpass)
+    galsim.errors.raise_fft_size_error = False
+
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
     psf = galsim.Gaussian(sigma=0.4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
     with assert_warns(galsim.GalSimFFTSizeWarning):
         final.drawImage(bandpass)
+
+    galsim.errors.raise_fft_size_error = True
+    with assert_raises(galsim.GalSimFFTSizeError):
+        final.drawImage(bandpass)
+    galsim.errors.raise_fft_size_error = False
 
     # Use a restrictive one this time, so we test the "most restrictive gsparams" feature
     gsp2 = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)

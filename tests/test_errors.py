@@ -292,6 +292,20 @@ def test_galsim_fftsize_warning():
     assert isinstance(err, UserWarning)
     check_pickle(err)
 
+@timer
+def test_galsim_fft_size_error():
+    """Test basic usage of GalSimFFTSizeError
+    """
+    err = galsim.GalSimFFTSizeError("Test FFT is too big.", 10240)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == ("Test FFT is too big.\nThe required FFT size would be 10240 x 10240, "
+                        "which requires 2.34 GB of memory.\nIf you can handle "
+                        "the large FFT, you may update gsparams.maximum_fft_size.")
+    assert err.size == 10240
+    np.testing.assert_almost_equal(err.mem, 2.34375)
+    assert isinstance(err, galsim.GalSimError)
+
 
 if __name__ == "__main__":
     runtests(__file__)
