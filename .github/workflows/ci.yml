@@ -37,6 +37,7 @@ jobs:
                       CC: cc
                       CXX: c++
                       FFTW_DIR: "/opt/homebrew/lib/"
+                      MACOSX_DEPLOYMENT_TARGET: 15.0
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
