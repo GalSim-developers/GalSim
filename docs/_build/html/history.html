@@ -1,0 +1,216 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Revision History &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="v2.5" href="older.html" />
+    <link rel="prev" title="Shared Data" href="shared.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GalSim
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Revision History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-7-to-v2-8">Changes from v2.7 to v2.8</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dependency-changes">Dependency Changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api-changes">API Changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="older.html">v2.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-4">v2.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-1">v2.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-0">v2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-6">v1.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-5">v1.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-4">v1.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-3">v1.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-2">v1.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-1">v1.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v1-0">v1.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v0-5">v0.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v0-4">v0.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v0-3">v0.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v0-2">v0.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v0-1">v0.1</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Revision History</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/history.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="revision-history">
+<h1>Revision History<a class="headerlink" href="#revision-history" title="Link to this heading"></a></h1>
+<section id="changes-from-v2-7-to-v2-8">
+<h2>Changes from v2.7 to v2.8<a class="headerlink" href="#changes-from-v2-7-to-v2-8" title="Link to this heading"></a></h2>
+<p>We currently support Python 3.9 through 3.14.</p>
+<p>A complete list of all new features and changes is given below.
+<a class="reference external" href="https://github.com/GalSim-developers/GalSim/milestone/25?closed=1">Relevant PRs and Issues,</a>
+whose issue numbers are listed below for the relevant items.</p>
+<section id="dependency-changes">
+<h3>Dependency Changes<a class="headerlink" href="#dependency-changes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>No longer pinned to setuptools&lt;72, which had been required previously due to breaking changes
+that had been implemented then. We’ve now updated GalSim code to be compliant with the
+new behavior of setuptools. (#1335)</p></li>
+</ul>
+</section>
+<section id="api-changes">
+<h3>API Changes<a class="headerlink" href="#api-changes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Changed GalSim’s response to large FFTs to be a warning rather than an error. Given that
+people run GalSim on a wide variety of systems, some of which can handle the memory for
+quite large FFTs, it has become more of an annoyance than a help to have to predict the
+maximum size of all your FFTs using <code class="docutils literal notranslate"><span class="pre">maximum_fft_size</span></code>. So now, rather than give an
+error when you exceed that, GalSim will just emit a warning, so if your system crashes
+from the memory use, you can still see the warning message and trouble shoot.
+If you relied on the old behavior, you may re-enable it by setting
+<code class="docutils literal notranslate"><span class="pre">galsim.errors.raise_fft_size_error</span> <span class="pre">=</span> <span class="pre">True</span></code>  With this setting, you will get errors
+as in GalSim versions &lt;= 2.7.  (#1332, #1341)</p></li>
+</ul>
+</section>
+<section id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fixed a bug in <a class="reference internal" href="image_class.html#galsim.Image.calculateFWHM" title="galsim.Image.calculateFWHM"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.calculateFWHM</span></code></a> that started with numpy version 2.3. (#1336, #1337)</p></li>
+</ul>
+</section>
+</section>
+<section id="older-versions">
+<h2>Older Versions<a class="headerlink" href="#older-versions" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="older.html">v2.5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-4">v2.4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-1">v2.1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-0">v2.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-6">v1.6</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-5">v1.5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-4">v1.4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-3">v1.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-2">v1.2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-1">v1.1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v1-0">v1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v0-5">v0.5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v0-4">v0.4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v0-3">v0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v0-2">v0.2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v0-1">v0.1</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="shared.html" class="btn btn-neutral float-left" title="Shared Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="older.html" class="btn btn-neutral float-right" title="v2.5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
