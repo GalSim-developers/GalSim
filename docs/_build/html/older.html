@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>v2.5 &mdash; GalSim 2.8.0 documentation</title>
+  <title>v2.7 &mdash; GalSim 2.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -64,7 +64,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="history.html">Revision History</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="history.html#changes-from-v2-7-to-v2-8">Changes from v2.7 to v2.8</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="history.html#older-versions">Older Versions</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">v2.5</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">v2.7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-6">v2.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-5">v2.5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-4">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-3">v2.3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-2">v2.2</a></li>
@@ -103,7 +105,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="history.html">Revision History</a></li>
-      <li class="breadcrumb-item active">v2.5</li>
+      <li class="breadcrumb-item active">v2.7</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/older.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -118,6 +120,60 @@ Each version may also include various other minor changes and bug fixes not
 listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.</p>
+<section id="v2-7">
+<h1>v2.7<a class="headerlink" href="#v2-7" title="Link to this heading"></a></h1>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike.xycoef" title="galsim.zernike.DoubleZernike.xycoef"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">DoubleZernike.xycoef</span></code></a>. (#1327)</p></li>
+<li><p>Added a setter for the <a class="reference internal" href="image_class.html#galsim.Image.array" title="galsim.Image.array"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Image.array</span></code></a> property. (#1272, #1329)</p></li>
+<li><p>Added an option <code class="docutils literal notranslate"><span class="pre">recalc=True</span></code> to <a class="reference internal" href="sensor.html#galsim.SiliconSensor.accumulate" title="galsim.SiliconSensor.accumulate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SiliconSensor.accumulate</span></code></a>.  (#1328)</p></li>
+</ul>
+<p><em>Performance Improvements</em></p>
+<ul class="simple">
+<li><p>Switched to inbuilt operators on lists rather than numpy operators in a few places (#1316)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">robust=True</span></code> option to <a class="reference internal" href="zernike.html#galsim.zernike.Zernike.__call__" title="galsim.zernike.Zernike.__call__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Zernike.__call__</span></code></a>. (#1326, #1327)</p></li>
+<li><p>Reduced memory use in the Silicon class. (#1331)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed an error in the <a class="reference internal" href="gal.html#galsim.Spergel" title="galsim.Spergel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Spergel</span></code></a> stepk calculation. (#1324, #1325)</p></li>
+<li><p>Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)</p></li>
+</ul>
+</section>
+<section id="v2-6">
+<h1>v2.6<a class="headerlink" href="#v2-6" title="Link to this heading"></a></h1>
+<p><em>Dependency Change</em></p>
+<ul class="simple">
+<li><p>Removed an accidental implicit dependency we had on scipy in <a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a>. (#1253, #1305)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Changed the behavior of random_seed. cf. <a class="reference internal" href="config_image.html#image-field-attributes"><span class="std std-ref">Image Field Attributes</span></a>. (#1309)</p></li>
+</ul>
+<p><em>Config Updates</em></p>
+<ul class="simple">
+<li><p>Changed the behavior of random_seed to be less confusing and safer for most use cases. (#1309)</p></li>
+<li><p>Added Quantity and Unit types. (#1311)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="chromaticobject.html#galsim.InterpolatedChromaticObject.from_images" title="galsim.InterpolatedChromaticObject.from_images"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">InterpolatedChromaticObject.from_images</span></code></a>. (#1294, #1296)</p></li>
+<li><p>Allow PosixPath instances in constructors for <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> and <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>. (#1270, #1304)</p></li>
+<li><p>Added filter information for the Prism and Grism in the roman module. (#1307)</p></li>
+<li><p>Added options to give some unitful values as an astropy Quantity. (#1311)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed a bug in the config-layer parsing of Position items. (#1299, #1300)</p></li>
+<li><p>Fixed a bug in <a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike" title="galsim.zernike.DoubleZernike"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DoubleZernike</span></code></a> to handle integer arguments. (#1283, #1303)</p></li>
+<li><p>Fixed a bug in <a class="reference internal" href="chromaticobject.html#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> with a simple <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> and one with an inseparable SED.
+(#1302, #1306)</p></li>
+<li><p>Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)</p></li>
+<li><p>Fixed a bug for chromatic photon shooting if the realized flux is zero. (#1317)</p></li>
+<li><p>Fixed a bug that could occasionally cause singular matrix exceptions in <a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a>. (#1319)</p></li>
+<li><p>Fixed a bug in the object centering when drawing with nx, ny and center. (#1322, #1323)</p></li>
+</ul>
+</section>
 <section id="v2-5">
 <h1>v2.5<a class="headerlink" href="#v2-5" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
