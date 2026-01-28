@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.roman.roman_wcs &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.roman.roman_wcs &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.roman.roman_wcs</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -177,7 +174,9 @@
 <span class="c1"># File with SIP coefficients.</span>
 <span class="n">sip_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span> <span class="s1">&#39;sip_20210204.txt&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="getWCS"><a class="viewcode-back" href="../../../roman.html#galsim.roman.getWCS">[docs]</a><span class="k">def</span> <span class="nf">getWCS</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">SCAs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="getWCS">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.getWCS">[docs]</a>
+<span class="k">def</span> <span class="nf">getWCS</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">SCAs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This routine returns a dict containing a WCS for each of the Roman SCAs (Sensor Chip Array, the</span>
 <span class="sd">    equivalent of a chip in an optical CCD).  The Roman SCAs are labeled 1-18, so these numbers are</span>
@@ -330,7 +329,10 @@
 
     <span class="k">return</span> <span class="n">wcs_dict</span></div>
 
-<div class="viewcode-block" id="convertCenter"><a class="viewcode-back" href="../../../roman.html#galsim.roman.convertCenter">[docs]</a><span class="k">def</span> <span class="nf">convertCenter</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">):</span>
+
+<div class="viewcode-block" id="convertCenter">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.convertCenter">[docs]</a>
+<span class="k">def</span> <span class="nf">convertCenter</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a simple helper routine that takes an input position ``world_pos`` that is meant to</span>
 <span class="sd">    correspond to the position of the center of an SCA, and tells where the center of the focal</span>
@@ -399,7 +401,10 @@
 
     <span class="k">return</span> <span class="n">fpa_cent</span></div>
 
-<div class="viewcode-block" id="findSCA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.findSCA">[docs]</a><span class="k">def</span> <span class="nf">findSCA</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="findSCA">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.findSCA">[docs]</a>
+<span class="k">def</span> <span class="nf">findSCA</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a subroutine to take a dict of WCS (one per SCA) from galsim.roman.getWCS() and query</span>
 <span class="sd">    which SCA a particular real-world coordinate would be located on.  The position (``world_pos``)</span>
@@ -449,6 +454,7 @@
             <span class="k">break</span>
 
     <span class="k">return</span> <span class="n">sca</span></div>
+
 
 <span class="k">def</span> <span class="nf">_calculate_minmax_pix</span><span class="p">(</span><span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -667,7 +673,9 @@
 
     <span class="k">return</span> <span class="n">date</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">pa_obsy</span>
 
-<div class="viewcode-block" id="allowedPos"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allowedPos">[docs]</a><span class="k">def</span> <span class="nf">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<div class="viewcode-block" id="allowedPos">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.allowedPos">[docs]</a>
+<span class="k">def</span> <span class="nf">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This routine can be used to check whether Roman would be allowed to look at a particular</span>
 <span class="sd">    position (``world_pos``) on a given ``date``.   This is determined by the angle of this position</span>
@@ -701,7 +709,10 @@
     <span class="n">max_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">+</span> <span class="n">max_sun_angle</span>
     <span class="k">return</span> <span class="n">min_ang</span> <span class="o">&lt;=</span> <span class="n">angle_deg</span> <span class="o">&lt;=</span> <span class="n">max_ang</span></div>
 
-<div class="viewcode-block" id="bestPA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.bestPA">[docs]</a><span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+
+<div class="viewcode-block" id="bestPA">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.bestPA">[docs]</a>
+<span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This routine determines the best position angle for the observatory for a given observation date</span>
 <span class="sd">    and position on the sky.</span>
@@ -741,6 +752,7 @@
     <span class="n">north</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">(</span><span class="n">y_obs</span><span class="o">.</span><span class="n">ra</span><span class="p">,</span> <span class="mf">90.</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
     <span class="n">obs_pa</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">angleBetween</span><span class="p">(</span><span class="n">y_obs</span><span class="p">,</span> <span class="n">north</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">obs_pa</span></div>
+
 </pre></div>
 
            </div>

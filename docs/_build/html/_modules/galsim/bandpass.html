@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.bandpass &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.bandpass &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.bandpass</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -124,7 +121,9 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
 <span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
 
-<div class="viewcode-block" id="Bandpass"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass">[docs]</a><span class="k">class</span> <span class="nc">Bandpass</span><span class="p">:</span>
+<div class="viewcode-block" id="Bandpass">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass">[docs]</a>
+<span class="k">class</span> <span class="nc">Bandpass</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple bandpass object, which models the transmission fraction of incident light as a</span>
 <span class="sd">    function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and</span>
 <span class="sd">    refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.</span>
@@ -423,7 +422,9 @@
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
-<div class="viewcode-block" id="Bandpass.__call__"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+<div class="viewcode-block" id="Bandpass.__call__">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dimensionless throughput of bandpass at given wavelength in nanometers.</span>
 
 <span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
@@ -447,6 +448,7 @@
             <span class="n">np</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">wgood</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">wave</span><span class="p">[</span><span class="n">wgood</span><span class="p">]))</span>
             <span class="k">return</span> <span class="n">ret</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">effective_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The effective wavelength of the `Bandpass`.</span>
@@ -455,7 +457,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateEffectiveWavelength</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Bandpass.calculateEffectiveWavelength"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.calculateEffectiveWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">calculateEffectiveWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Bandpass.calculateEffectiveWavelength">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.calculateEffectiveWavelength">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateEffectiveWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate, store, and return the effective wavelength for this bandpass.</span>
 
 <span class="sd">        We define the effective wavelength as the throughput-weighted average wavelength, which is</span>
@@ -481,7 +485,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_effective_wavelength</span></div>
 
-<div class="viewcode-block" id="Bandpass.withZeropoint"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.withZeropoint">[docs]</a>    <span class="k">def</span> <span class="nf">withZeropoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeropoint</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bandpass.withZeropoint">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.withZeropoint">[docs]</a>
+    <span class="k">def</span> <span class="nf">withZeropoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeropoint</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Assign a zeropoint to this `Bandpass`.</span>
 
 <span class="sd">        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes::</span>
@@ -538,7 +545,10 @@
                         <span class="n">zeropoint</span><span class="o">=</span><span class="n">zeropoint</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
                         <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Bandpass.truncate"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.truncate">[docs]</a>    <span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_throughput</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Bandpass.truncate">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.truncate">[docs]</a>
+    <span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_throughput</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">preserve_zp</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a bandpass with its wavelength range truncated.</span>
 
@@ -637,7 +647,10 @@
                             <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
                             <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tp</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Bandpass.thin"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Bandpass.thin">
+<a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.thin">[docs]</a>
+    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
              <span class="n">preserve_zp</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Thin out the internal wavelengths of a `Bandpass` that uses a `LookupTable`.</span>
 
@@ -709,6 +722,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
+
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">)</span> <span class="ow">and</span>
@@ -753,6 +767,7 @@
         <span class="c1"># If _tp is already set, this is will just set func.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_tp</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_func</span><span class="p">()</span></div>
+
 </pre></div>
 
            </div>

@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C++ Layer &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>C++ Layer &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -73,7 +70,17 @@
 <li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linking-your-code">Linking Your Code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#version-control">Version control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-control">Version control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c.GALSIM_MAJOR"><code class="docutils literal notranslate"><span class="pre">GALSIM_MAJOR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c.GALSIM_MINOR"><code class="docutils literal notranslate"><span class="pre">GALSIM_MINOR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c.GALSIM_REVISION"><code class="docutils literal notranslate"><span class="pre">GALSIM_REVISION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv4N6galsim13major_versionEv"><code class="docutils literal notranslate"><span class="pre">major_version()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv4N6galsim13minor_versionEv"><code class="docutils literal notranslate"><span class="pre">minor_version()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv4N6galsim8revisionEv"><code class="docutils literal notranslate"><span class="pre">revision()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv4N6galsim7versionEv"><code class="docutils literal notranslate"><span class="pre">version()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv4N6galsim13check_versionEv"><code class="docutils literal notranslate"><span class="pre">check_version()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
@@ -105,7 +112,7 @@
            <div itemprop="articleBody">
              
   <section id="c-layer">
-<h1>C++ Layer<a class="headerlink" href="#c-layer" title="Permalink to this heading"></a></h1>
+<h1>C++ Layer<a class="headerlink" href="#c-layer" title="Link to this heading"></a></h1>
 <p>While GalSim is primarily a Python package, much of the implementation is done in C++
 for improved speed for the hard-core numerical calculations.</p>
 <p>If you would like to use the C++-layer functions in your own C++ project, you can do
@@ -147,7 +154,7 @@ from python by running the command:</p>
 </ul>
 </div>
 <section id="linking-your-code">
-<h2>Linking Your Code<a class="headerlink" href="#linking-your-code" title="Permalink to this heading"></a></h2>
+<h2>Linking Your Code<a class="headerlink" href="#linking-your-code" title="Link to this heading"></a></h2>
 <p>If you install GalSim using conda (see <a class="reference internal" href="install_conda.html#installing-with-conda"><span class="std std-ref">Installing With Conda</span></a>), then the appropriate
 C++ library file is included in the conda packaging.  It should be installed into either
 the main conda lib directory (e.g. <code class="docutils literal notranslate"><span class="pre">/anaconda/lib</span></code>) or the one for your conda environment
@@ -161,53 +168,53 @@ See <a class="reference internal" href="install_pip.html#installing-the-c-shared
 <p>You should link by specifying the appropriate directory with <code class="docutils literal notranslate"><span class="pre">-L</span></code> and link with <code class="docutils literal notranslate"><span class="pre">-lgalsim</span></code>.</p>
 </section>
 <section id="version-control">
-<h2>Version control<a class="headerlink" href="#version-control" title="Permalink to this heading"></a></h2>
+<h2>Version control<a class="headerlink" href="#version-control" title="Link to this heading"></a></h2>
 <p>We provide a number of functions to help you ensure that your code remains compatible with
 updates to GalSim.</p>
 <p>First, there are 3 MACROS that you can use to make a compile-time assert that you are
 coding to the right version:</p>
 <dl class="cpp macro">
 <dt class="sig sig-object cpp" id="c.GALSIM_MAJOR">
-<span class="target" id="_version_8h_1aba8bfb69e08b2f32809497fc291083cc"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MAJOR</span></span></span><a class="headerlink" href="#c.GALSIM_MAJOR" title="Permalink to this definition"></a><br /></dt>
+<span class="target" id="_version_8h_1aba8bfb69e08b2f32809497fc291083cc"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MAJOR</span></span></span><a class="headerlink" href="#c.GALSIM_MAJOR" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp macro">
 <dt class="sig sig-object cpp" id="c.GALSIM_MINOR">
-<span class="target" id="_version_8h_1a8a57b4a36cbbdd6bc38505eff9f08065"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MINOR</span></span></span><a class="headerlink" href="#c.GALSIM_MINOR" title="Permalink to this definition"></a><br /></dt>
+<span class="target" id="_version_8h_1a8a57b4a36cbbdd6bc38505eff9f08065"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_MINOR</span></span></span><a class="headerlink" href="#c.GALSIM_MINOR" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp macro">
 <dt class="sig sig-object cpp" id="c.GALSIM_REVISION">
-<span class="target" id="_version_8h_1adf74f7b6c355f60cfdb9059520b74212"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_REVISION</span></span></span><a class="headerlink" href="#c.GALSIM_REVISION" title="Permalink to this definition"></a><br /></dt>
+<span class="target" id="_version_8h_1adf74f7b6c355f60cfdb9059520b74212"></span><span class="sig-name descname"><span class="n"><span class="pre">GALSIM_REVISION</span></span></span><a class="headerlink" href="#c.GALSIM_REVISION" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <p>Then there are three functions that return the compiled versions of those same numbers:</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6galsim13major_versionEv">
-<span id="_CPPv3N6galsim13major_versionEv"></span><span id="_CPPv2N6galsim13major_versionEv"></span><span id="galsim::major_version"></span><span class="target" id="namespacegalsim_1a0415def675b95d81f0580b39eda266a8"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">major_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13major_versionEv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv3N6galsim13major_versionEv"></span><span id="_CPPv2N6galsim13major_versionEv"></span><span id="galsim::major_version"></span><span class="target" id="namespacegalsim_1a0415def675b95d81f0580b39eda266a8"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">major_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13major_versionEv" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6galsim13minor_versionEv">
-<span id="_CPPv3N6galsim13minor_versionEv"></span><span id="_CPPv2N6galsim13minor_versionEv"></span><span id="galsim::minor_version"></span><span class="target" id="namespacegalsim_1a8e916041a86750d878b3bd1c26d423e3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">minor_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13minor_versionEv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv3N6galsim13minor_versionEv"></span><span id="_CPPv2N6galsim13minor_versionEv"></span><span id="galsim::minor_version"></span><span class="target" id="namespacegalsim_1a8e916041a86750d878b3bd1c26d423e3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">minor_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13minor_versionEv" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6galsim8revisionEv">
-<span id="_CPPv3N6galsim8revisionEv"></span><span id="_CPPv2N6galsim8revisionEv"></span><span id="galsim::revision"></span><span class="target" id="namespacegalsim_1a69c8ce7a57f713c3e671eaa09ec9fc2d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">revision</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8revisionEv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv3N6galsim8revisionEv"></span><span id="_CPPv2N6galsim8revisionEv"></span><span id="galsim::revision"></span><span class="target" id="namespacegalsim_1a69c8ce7a57f713c3e671eaa09ec9fc2d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">revision</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8revisionEv" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <p>One can also get the full three-number version as a string (e.g. “1.4.2”)</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6galsim7versionEv">
-<span id="_CPPv3N6galsim7versionEv"></span><span id="_CPPv2N6galsim7versionEv"></span><span id="galsim::version"></span><span class="target" id="namespacegalsim_1a5571dbaed126caa1a6d33878c718e97f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7versionEv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv3N6galsim7versionEv"></span><span id="_CPPv2N6galsim7versionEv"></span><span id="galsim::version"></span><span class="target" id="namespacegalsim_1a5571dbaed126caa1a6d33878c718e97f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7versionEv" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <p>And finally, we provide a fucntion that checks that the header file being included matches
 the compiled values in the library being linked to:</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6galsim13check_versionEv">
-<span id="_CPPv3N6galsim13check_versionEv"></span><span id="_CPPv2N6galsim13check_versionEv"></span><span id="galsim::check_version"></span><span class="target" id="namespacegalsim_1a8088371cd33f94e7f5a3fa110802d041"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">check_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13check_versionEv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv3N6galsim13check_versionEv"></span><span id="_CPPv2N6galsim13check_versionEv"></span><span id="galsim::check_version"></span><span class="target" id="namespacegalsim_1a8088371cd33f94e7f5a3fa110802d041"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">galsim</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">check_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim13check_versionEv" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 </section>

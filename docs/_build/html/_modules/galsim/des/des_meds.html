@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.des.des_meds &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.des.des_meds &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.des.des_meds</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -136,7 +133,9 @@
 <span class="n">EMPTY_JAC_offdiag</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">EMPTY_SHIFT</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="MultiExposureObject"><a class="viewcode-back" href="../../../des.html#galsim.des.MultiExposureObject">[docs]</a><span class="k">class</span> <span class="nc">MultiExposureObject</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiExposureObject">
+<a class="viewcode-back" href="../../../des.html#galsim.des.MultiExposureObject">[docs]</a>
+<span class="k">class</span> <span class="nc">MultiExposureObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class containing exposures for single object, along with other information.</span>
 
@@ -276,7 +275,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span></div>
 
 
-<div class="viewcode-block" id="WriteMEDS"><a class="viewcode-back" href="../../../des.html#galsim.des.WriteMEDS">[docs]</a><span class="k">def</span> <span class="nf">WriteMEDS</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="WriteMEDS">
+<a class="viewcode-back" href="../../../des.html#galsim.des.WriteMEDS">[docs]</a>
+<span class="k">def</span> <span class="nf">WriteMEDS</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Writes a MEDS file from a list of `MultiExposureObject` instances.</span>
 
@@ -529,15 +531,20 @@
     <span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">))</span></div>
 
 
+
 <span class="c1"># Make the class that will</span>
-<div class="viewcode-block" id="MEDSBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a><span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
+<div class="viewcode-block" id="MEDSBuilder">
+<a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This class lets you use the `MultiExposureObject` very simply as a special ``output``</span>
 <span class="sd">    type when using config processing.</span>
 
 <span class="sd">    It requires the use of ``galsim.des`` in the config files ``modules`` section.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MEDSBuilder.buildImages"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.buildImages">[docs]</a>    <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<div class="viewcode-block" id="MEDSBuilder.buildImages">
+<a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.buildImages">[docs]</a>
+    <span class="k">def</span> <span class="nf">buildImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a meds file as specified in config.</span>
 
@@ -607,7 +614,10 @@
 
         <span class="k">return</span> <span class="n">obj_list</span></div>
 
-<div class="viewcode-block" id="MEDSBuilder.writeFile"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.writeFile">[docs]</a>    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MEDSBuilder.writeFile">
+<a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.writeFile">[docs]</a>
+    <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the data to a file.  In this case a MEDS file.</span>
 
 <span class="sd">        Parameters:</span>
@@ -619,7 +629,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">WriteMEDS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MEDSBuilder.getNImages"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.getNImages">[docs]</a>    <span class="k">def</span> <span class="nf">getNImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MEDSBuilder.getNImages">
+<a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder.getNImages">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNImages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">file_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># This gets called before starting work on the file, so we can use this opportunity</span>
         <span class="c1"># to make sure that weight and psf processing are turned on.</span>
         <span class="c1"># We just add these as empty dicts, so there is no hdu or file_name parameter, which</span>
@@ -639,31 +652,42 @@
         <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">ntot</span> <span class="o">=</span> <span class="n">nobjects</span> <span class="o">*</span> <span class="n">nstamps_per_object</span>
-        <span class="k">return</span> <span class="n">ntot</span></div></div>
+        <span class="k">return</span> <span class="n">ntot</span></div>
+</div>
+
 
 <span class="c1"># This extra output type simply saves the values of the image offsets when an</span>
 <span class="c1"># object is drawn into the stamp.</span>
-<div class="viewcode-block" id="OffsetBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a><span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
+<div class="viewcode-block" id="OffsetBuilder">
+<a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This &quot;extra&quot; output builder saves the stamp offset values for later use.</span>
 
 <span class="sd">    It is used as a ``meds_get_offset`` field in the ``output`` section.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># The function to call at the end of building each stamp</span>
-<div class="viewcode-block" id="OffsetBuilder.processStamp"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.processStamp">[docs]</a>    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<div class="viewcode-block" id="OffsetBuilder.processStamp">
+<a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.processStamp">[docs]</a>
+    <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
         <span class="n">stamp</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">+=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span></div>
 
+
     <span class="c1"># The function to call at the end of building each file to finalize the truth catalog</span>
-<div class="viewcode-block" id="OffsetBuilder.finalize"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<div class="viewcode-block" id="OffsetBuilder.finalize">
+<a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder.finalize">[docs]</a>
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">offsets_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">obj_nums</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
             <span class="n">offsets_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">offsets_list</span></div></div>
+        <span class="k">return</span> <span class="n">offsets_list</span></div>
+</div>
+
 
 <span class="c1"># Register these</span>
 <span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;MEDS&#39;</span><span class="p">,</span> <span class="n">MEDSBuilder</span><span class="p">())</span>

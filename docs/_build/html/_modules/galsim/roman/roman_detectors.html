@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.roman.roman_detectors &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.roman.roman_detectors &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.roman.roman_detectors</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -130,7 +127,9 @@
 <span class="k">def</span> <span class="nf">NLfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">nonlinearity_beta</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-<div class="viewcode-block" id="applyNonlinearity"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyNonlinearity">[docs]</a><span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+<div class="viewcode-block" id="applyNonlinearity">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.applyNonlinearity">[docs]</a>
+<span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies the Roman nonlinearity function to the supplied image ``im``.</span>
 
@@ -146,8 +145,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">img</span><span class="o">.</span><span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">NLfunc</span><span class="o">=</span><span class="n">NLfunc</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="addReciprocityFailure"><a class="viewcode-back" href="../../../roman.html#galsim.roman.addReciprocityFailure">[docs]</a><span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+
+<div class="viewcode-block" id="addReciprocityFailure">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.addReciprocityFailure">[docs]</a>
+<span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
     <span class="n">img</span><span class="o">.</span><span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">exp_time</span><span class="o">=</span><span class="n">exptime</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">reciprocity_alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></div>
+
 
 <span class="c1"># Note: Formatted doc strings don&#39;t work if put in the normal place.  Unless the function is</span>
 <span class="c1"># actually called, the formatting statement is never executed.  So put it here instead.</span>
@@ -169,7 +172,9 @@
 <span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="applyIPC"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyIPC">[docs]</a><span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="applyIPC">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.applyIPC">[docs]</a>
+<span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies the effect of interpixel capacitance (IPC) to the Image instance.</span>
 
@@ -190,7 +195,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">img</span><span class="o">.</span><span class="n">applyIPC</span><span class="p">(</span><span class="n">ipc_kernel</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="n">edge_treatment</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="applyPersistence"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyPersistence">[docs]</a><span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="applyPersistence">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.applyPersistence">[docs]</a>
+<span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In roman.applyPersistence, prev_exposures must be a list of Image instances&quot;</span><span class="p">)</span>
 
@@ -212,6 +220,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;applyPersistence only accepts &#39;linear&#39; or &#39;fermi&#39; methods, got&quot;</span><span class="p">,</span>
                                <span class="n">method</span><span class="p">)</span></div>
+
 
 <span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
 <span class="n">applyPersistence</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -274,7 +283,9 @@
     <span class="k">return</span> <span class="n">y</span>
 
 <span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
-<div class="viewcode-block" id="allDetectorEffects"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allDetectorEffects">[docs]</a><span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+<div class="viewcode-block" id="allDetectorEffects">
+<a class="viewcode-back" href="../../../roman.html#galsim.roman.allDetectorEffects">[docs]</a>
+<span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
     <span class="c1"># Make sure we don&#39;t have any negative values.</span>
     <span class="n">img</span><span class="o">.</span><span class="n">replaceNegative</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
 
@@ -317,6 +328,7 @@
     <span class="n">img</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">prev_exposures</span></div>
+
 
 <span class="n">allDetectorEffects</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">This utility applies all sources of noise and detector effects for Roman that are implemented</span>

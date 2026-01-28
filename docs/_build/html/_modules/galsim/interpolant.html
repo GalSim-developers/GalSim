@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.interpolant &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.interpolant &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.interpolant</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -122,7 +119,9 @@
 <span class="kn">from</span> <span class="nn">.integ</span> <span class="kn">import</span> <span class="n">int1d</span>
 <span class="kn">from</span> <span class="nn">.bessel</span> <span class="kn">import</span> <span class="n">si</span>
 
-<div class="viewcode-block" id="Interpolant"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant">[docs]</a><span class="k">class</span> <span class="nc">Interpolant</span><span class="p">:</span>
+<div class="viewcode-block" id="Interpolant">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant">[docs]</a>
+<span class="k">class</span> <span class="nc">Interpolant</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class that defines how interpolation should be done.</span>
 
 <span class="sd">    An Interpolant is needed for an `InterpolatedImage` to define how interpolation should be done</span>
@@ -133,7 +132,9 @@
             <span class="s2">&quot;The Interpolant base class should not be instantiated directly. &quot;</span>
             <span class="s2">&quot;Use one of the subclasses instead, or use the `from_name` factory function.&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Interpolant.from_name"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.from_name">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Interpolant.from_name">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.from_name">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A factory function to create an `Interpolant` of the correct type according to</span>
 <span class="sd">        the (string) name of the `Interpolant`.</span>
@@ -194,6 +195,7 @@
                                    <span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;cubic&#39;</span><span class="p">,</span> <span class="s1">&#39;quintic&#39;</span><span class="p">,</span> <span class="s1">&#39;lanczosN&#39;</span><span class="p">,</span> <span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">,</span>
                                     <span class="s1">&#39;sinc&#39;</span><span class="p">))</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The `GSParams` of the `Interpolant`</span>
@@ -216,13 +218,16 @@
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;interpolant.tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;interpolant.gsparams.kvalue_accuracy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">kvalue_accuracy</span>
 
-<div class="viewcode-block" id="Interpolant.withGSParams"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Interpolant.withGSParams">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.withGSParams">[docs]</a>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current interpolant with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -241,7 +246,9 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Interpolant.xval"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.xval">[docs]</a>    <span class="k">def</span> <span class="nf">xval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Interpolant.xval">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.xval">[docs]</a>
+    <span class="k">def</span> <span class="nf">xval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the value of the interpolant kernel at one or more x values</span>
 
 <span class="sd">        Parameters:</span>
@@ -263,7 +270,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_i</span><span class="o">.</span><span class="n">xvalMany</span><span class="p">(</span><span class="n">_xx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xx</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">xx</span></div>
 
-<div class="viewcode-block" id="Interpolant.kval"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.kval">[docs]</a>    <span class="k">def</span> <span class="nf">kval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Interpolant.kval">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.kval">[docs]</a>
+    <span class="k">def</span> <span class="nf">kval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the value of the interpolant kernel in Fourier space at one or more k values.</span>
 
 <span class="sd">        Parameters:</span>
@@ -286,7 +296,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_i</span><span class="o">.</span><span class="n">uvalMany</span><span class="p">(</span><span class="n">_u</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">u</span></div>
 
-<div class="viewcode-block" id="Interpolant.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Interpolant.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -306,12 +319,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">int1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xval</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span></div>
+</div>
+
 
     <span class="c1"># Sub-classes should define _i property, repr, and str</span>
 
 
-<div class="viewcode-block" id="Delta"><a class="viewcode-back" href="../../interpolant.html#galsim.Delta">[docs]</a><span class="k">class</span> <span class="nc">Delta</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+<div class="viewcode-block" id="Delta">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Delta">[docs]</a>
+<span class="k">class</span> <span class="nc">Delta</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Delta-function interpolation.</span>
 
 <span class="sd">    The interpolant for when you do not want to interpolate between samples.  It is not really</span>
@@ -360,7 +377,9 @@
 
     <span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Delta.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.Delta.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Delta.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Delta.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -371,10 +390,14 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            integrals:  An array of unit integrals of length max_len or smaller.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Nearest"><a class="viewcode-back" href="../../interpolant.html#galsim.Nearest">[docs]</a><span class="k">class</span> <span class="nc">Nearest</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Nearest">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Nearest">[docs]</a>
+<span class="k">class</span> <span class="nc">Nearest</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Nearest-neighbor interpolation (boxcar).</span>
 
 <span class="sd">    The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for</span>
@@ -424,7 +447,9 @@
 
     <span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Nearest.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.Nearest.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Nearest.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Nearest.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -435,10 +460,14 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            integrals:  An array of unit integrals of length max_len or smaller.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div>
+</div>
 
 
-<div class="viewcode-block" id="SincInterpolant"><a class="viewcode-back" href="../../interpolant.html#galsim.SincInterpolant">[docs]</a><span class="k">class</span> <span class="nc">SincInterpolant</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SincInterpolant">
+<a class="viewcode-back" href="../../interpolant.html#galsim.SincInterpolant">[docs]</a>
+<span class="k">class</span> <span class="nc">SincInterpolant</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sinc interpolation (inverse of nearest-neighbor).</span>
 
 <span class="sd">    The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited</span>
@@ -488,7 +517,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
 
-<div class="viewcode-block" id="SincInterpolant.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.SincInterpolant.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SincInterpolant.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.SincInterpolant.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -505,10 +536,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">si</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mf">0.5</span><span class="p">))</span> <span class="o">-</span> <span class="n">si</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Linear"><a class="viewcode-back" href="../../interpolant.html#galsim.Linear">[docs]</a><span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Linear">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Linear">[docs]</a>
+<span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear interpolation</span>
 
 <span class="sd">    The linear interpolant is a poor choice for FFT-based operations on interpolated images, as</span>
@@ -558,7 +593,9 @@
 
     <span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.125</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Linear.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.Linear.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Linear.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Linear.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -573,10 +610,14 @@
         <span class="c1">#    = 3/4</span>
         <span class="c1"># i1 = int(1-x, x=0.5..1)</span>
         <span class="c1">#    = 1/8</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Cubic"><a class="viewcode-back" href="../../interpolant.html#galsim.Cubic">[docs]</a><span class="k">class</span> <span class="nc">Cubic</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Cubic">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Cubic">[docs]</a>
+<span class="k">class</span> <span class="nc">Cubic</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Cubic interpolation</span>
 
 <span class="sd">    The cubic interpolant is exact to 3rd order Taylor expansion (from R. G. Keys, IEEE Trans.</span>
@@ -625,7 +666,9 @@
 
     <span class="n">_unit_integrals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">161.</span><span class="o">/</span><span class="mi">192</span><span class="p">,</span> <span class="mf">3.</span><span class="o">/</span><span class="mi">32</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.</span><span class="o">/</span><span class="mi">384</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Cubic.unit_integrals"><a class="viewcode-back" href="../../interpolant.html#galsim.Cubic.unit_integrals">[docs]</a>    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Cubic.unit_integrals">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Cubic.unit_integrals">[docs]</a>
+    <span class="k">def</span> <span class="nf">unit_integrals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the unit integrals of the real-space kernel.</span>
 
 <span class="sd">        integrals[i] = int(xval(x), i-0.5, i+0.5)</span>
@@ -642,10 +685,14 @@
         <span class="c1">#    = 47/384 - 11/384 = 3/32</span>
         <span class="c1"># i2 = -int(1/2 (x-1)*(x-2)^2, x=1.5..2)</span>
         <span class="c1">#    = -5/384</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_integrals</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Quintic"><a class="viewcode-back" href="../../interpolant.html#galsim.Quintic">[docs]</a><span class="k">class</span> <span class="nc">Quintic</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Quintic">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Quintic">[docs]</a>
+<span class="k">class</span> <span class="nc">Quintic</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fifth order interpolation</span>
 
 <span class="sd">    The quintic interpolant is exact to 5th order in the Taylor expansion and was found by</span>
@@ -693,7 +740,10 @@
         <span class="k">return</span> <span class="mf">1.6058208066649935</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">kvalue_accuracy</span><span class="o">**</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mf">3.</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Lanczos"><a class="viewcode-back" href="../../interpolant.html#galsim.Lanczos">[docs]</a><span class="k">class</span> <span class="nc">Lanczos</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Lanczos">
+<a class="viewcode-back" href="../../interpolant.html#galsim.Lanczos">[docs]</a>
+<span class="k">class</span> <span class="nc">Lanczos</span><span class="p">(</span><span class="n">Interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n)</span>
 
 <span class="sd">    The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff</span>
@@ -761,7 +811,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i</span><span class="o">.</span><span class="n">urange</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="convert_interpolant"><a class="viewcode-back" href="../../misc.html#galsim.convert_interpolant">[docs]</a><span class="k">def</span> <span class="nf">convert_interpolant</span><span class="p">(</span><span class="n">interpolant</span><span class="p">):</span>
+
+<div class="viewcode-block" id="convert_interpolant">
+<a class="viewcode-back" href="../../misc.html#galsim.convert_interpolant">[docs]</a>
+<span class="k">def</span> <span class="nf">convert_interpolant</span><span class="p">(</span><span class="n">interpolant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a given interpolant to an `Interpolant` if it is given as a string.</span>
 
 <span class="sd">    Parameter:</span>
@@ -775,6 +828,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Will raise an appropriate exception if this is invalid.</span>
         <span class="k">return</span> <span class="n">Interpolant</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">interpolant</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

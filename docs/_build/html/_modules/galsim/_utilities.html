@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim._utilities &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim._utilities &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim._utilities</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -121,7 +118,9 @@
 <span class="c1"># (Based on this SO answer: https://stackoverflow.com/a/33699705/1332281)</span>
 <span class="n">basestring</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">u</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../misc.html#galsim.utilities.lazy_property">[docs]</a><span class="k">class</span> <span class="nc">lazy_property</span><span class="p">:</span>
+<div class="viewcode-block" id="lazy_property">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.lazy_property">[docs]</a>
+<span class="k">class</span> <span class="nc">lazy_property</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This decorator will act similarly to @property, but will be efficient for multiple access</span>
 <span class="sd">    to values that require some significant calculation.</span>
@@ -152,7 +151,10 @@
         <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span></div>
 
-<div class="viewcode-block" id="doc_inherit"><a class="viewcode-back" href="../../misc.html#galsim.utilities.doc_inherit">[docs]</a><span class="k">class</span> <span class="nc">doc_inherit</span><span class="p">:</span>
+
+<div class="viewcode-block" id="doc_inherit">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.doc_inherit">[docs]</a>
+<span class="k">class</span> <span class="nc">doc_inherit</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    This decorator will grab a doc string from a base class version of a method.</span>
 <span class="sd">    Useful if the subclass doesn&#39;t change anything about the method API, but just has</span>
@@ -214,7 +216,10 @@
         <span class="k">return</span> <span class="n">func</span></div>
 
 
-<div class="viewcode-block" id="isinteger"><a class="viewcode-back" href="../../misc.html#galsim.utilities.isinteger">[docs]</a><span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+
+<div class="viewcode-block" id="isinteger">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.isinteger">[docs]</a>
+<span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a value is an integer type (including np.int64, long, etc.)</span>
 
 <span class="sd">    Specifically, it checks whether value == int(value).</span>
@@ -230,7 +235,10 @@
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="ensure_dir"><a class="viewcode-back" href="../../misc.html#galsim.utilities.ensure_dir">[docs]</a><span class="k">def</span> <span class="nf">ensure_dir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ensure_dir">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.ensure_dir">[docs]</a>
+<span class="k">def</span> <span class="nf">ensure_dir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Make sure the directory for the target location exists, watching for a race condition</span>
 
@@ -261,7 +269,10 @@
                       <span class="s2">&quot;name already exists&quot;</span> <span class="o">%</span> <span class="nb">dir</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="LRU_Cache"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache">[docs]</a><span class="k">class</span> <span class="nc">LRU_Cache</span><span class="p">:</span>
+
+<div class="viewcode-block" id="LRU_Cache">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache">[docs]</a>
+<span class="k">class</span> <span class="nc">LRU_Cache</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplified Least Recently Used Cache.</span>
 
 <span class="sd">    Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,</span>
@@ -331,7 +342,9 @@
         <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">oldroot</span>
         <span class="k">return</span> <span class="n">result</span>
 
-<div class="viewcode-block" id="LRU_Cache.resize"><a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache.resize">[docs]</a>    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">):</span>
+<div class="viewcode-block" id="LRU_Cache.resize">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.LRU_Cache.resize">[docs]</a>
+    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize the cache.</span>
 
 <span class="sd">        Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain</span>
@@ -363,10 +376,14 @@
                     <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
                     <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
                     <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span></div>
+</div>
 
 
-<div class="viewcode-block" id="math_eval"><a class="viewcode-back" href="../../misc.html#galsim.utilities.math_eval">[docs]</a><span class="k">def</span> <span class="nf">math_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">other_modules</span><span class="o">=</span><span class="p">()):</span>
+
+<div class="viewcode-block" id="math_eval">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.math_eval">[docs]</a>
+<span class="k">def</span> <span class="nf">math_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">other_modules</span><span class="o">=</span><span class="p">()):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate a string that may include numpy, np, or math commands.</span>
 
 <span class="sd">    Parameters:</span>
@@ -394,7 +411,10 @@
 
     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="WeakMethod"><a class="viewcode-back" href="../../misc.html#galsim.utilities.WeakMethod">[docs]</a><span class="k">class</span> <span class="nc">WeakMethod</span><span class="p">:</span>
+
+<div class="viewcode-block" id="WeakMethod">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.WeakMethod">[docs]</a>
+<span class="k">class</span> <span class="nc">WeakMethod</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a method in a weakref.</span>
 
 <span class="sd">    This is useful if you want to specialize a function if certain conditions hold.</span>
@@ -416,6 +436,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s1">&#39;Method called on dead object&#39;</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

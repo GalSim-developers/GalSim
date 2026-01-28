@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.sersic &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.sersic &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.sersic</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -118,7 +115,9 @@
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
-<div class="viewcode-block" id="Sersic"><a class="viewcode-back" href="../../gal.html#galsim.Sersic">[docs]</a><span class="k">class</span> <span class="nc">Sersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic">
+<a class="viewcode-back" href="../../gal.html#galsim.Sersic">[docs]</a>
+<span class="k">class</span> <span class="nc">Sersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Sersic profile.</span>
 
 <span class="sd">    The Sersic surface brightness profile is characterized by three properties: its Sersic index</span>
@@ -340,16 +339,22 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span>
 
-<div class="viewcode-block" id="Sersic.calculateIntegratedFlux"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateIntegratedFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic.calculateIntegratedFlux">
+<a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateIntegratedFlux">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the fraction of the total flux enclosed within a given radius, r&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SersicIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Sersic.calculateHLRFactor"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateHLRFactor">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLRFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Sersic.calculateHLRFactor">
+<a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateHLRFactor">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateHLRFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the half-light-radius in units of the scale radius.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SersicHLR</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span><span class="p">)</span></div>
+
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -453,12 +458,18 @@
         <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Sersic.withFlux"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="Sersic.withFlux">
+<a class="viewcode-back" href="../../gal.html#galsim.Sersic.withFlux">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
-                      <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+                      <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+</div>
 
-<div class="viewcode-block" id="DeVaucouleurs"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs">[docs]</a><span class="k">class</span> <span class="nc">DeVaucouleurs</span><span class="p">(</span><span class="n">Sersic</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DeVaucouleurs">
+<a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs">[docs]</a>
+<span class="k">class</span> <span class="nc">DeVaucouleurs</span><span class="p">(</span><span class="n">Sersic</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing DeVaucouleurs profile objects.</span>
 
 <span class="sd">    Surface brightness profile with</span>
@@ -513,10 +524,14 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="DeVaucouleurs.withFlux"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="DeVaucouleurs.withFlux">
+<a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs.withFlux">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DeVaucouleurs</span><span class="p">(</span><span class="n">scale_radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
-                             <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+                             <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
            </div>

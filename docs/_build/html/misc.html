@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Miscellaneous Utilities &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Miscellaneous Utilities &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,9 +35,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -187,15 +184,15 @@
            <div itemprop="articleBody">
              
   <section id="miscellaneous-utilities">
-<h1>Miscellaneous Utilities<a class="headerlink" href="#miscellaneous-utilities" title="Permalink to this heading"></a></h1>
+<h1>Miscellaneous Utilities<a class="headerlink" href="#miscellaneous-utilities" title="Link to this heading"></a></h1>
 <p>We have a whole bunch of miscellaneous helper functions and classes in the <code class="docutils literal notranslate"><span class="pre">galsim.utilities</span></code>
 module.  Most of these are probably not particularly useful for anything other than internal
 GalSim code.  But we highlight a few things that might be more widely useful beyond GalSim usage.</p>
 <section id="decorators">
-<h2>Decorators<a class="headerlink" href="#decorators" title="Permalink to this heading"></a></h2>
+<h2>Decorators<a class="headerlink" href="#decorators" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.lazy_property">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">lazy_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fget</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#lazy_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.lazy_property" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">lazy_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fget</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#lazy_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.lazy_property" title="Link to this definition"></a></dt>
 <dd><p>This decorator will act similarly to &#64;property, but will be efficient for multiple access
 to values that require some significant calculation.</p>
 <p>It works by replacing the attribute with the computed value, so after the first access,
@@ -214,7 +211,7 @@ repeated if anything about the instance changes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.doc_inherit">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">doc_inherit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mthd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#doc_inherit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.doc_inherit" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">doc_inherit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mthd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#doc_inherit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.doc_inherit" title="Link to this definition"></a></dt>
 <dd><p>This decorator will grab a doc string from a base class version of a method.
 Useful if the subclass doesn’t change anything about the method API, but just has
 a specialized implementation.  This lets the documentation live only in one place.</p>
@@ -241,17 +238,17 @@ not work properly with 2 levels of sub-classing (e.g. Pixel &lt;- Box &lt;- GSOb
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.timer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.timer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.timer" title="Link to this definition"></a></dt>
 <dd><p>A decorator that reports how long a function took to run.</p>
 <p>In GalSim we decorate all of our tests with this to try to watch for long-running tests.</p>
 </dd></dl>
 
 </section>
 <section id="openmp-utilties">
-<h2>OpenMP Utilties<a class="headerlink" href="#openmp-utilties" title="Permalink to this heading"></a></h2>
+<h2>OpenMP Utilties<a class="headerlink" href="#openmp-utilties" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.get_omp_threads">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">get_omp_threads</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#get_omp_threads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.get_omp_threads" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">get_omp_threads</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#get_omp_threads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.get_omp_threads" title="Link to this definition"></a></dt>
 <dd><p>Get the current number of OpenMP threads to be used in the C++ layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -262,7 +259,7 @@ not work properly with 2 levels of sub-classing (e.g. Pixel &lt;- Box &lt;- GSOb
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.set_omp_threads">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">set_omp_threads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_threads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#set_omp_threads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.set_omp_threads" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">set_omp_threads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_threads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#set_omp_threads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.set_omp_threads" title="Link to this definition"></a></dt>
 <dd><p>Set the number of OpenMP threads to use in the C++ layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -282,7 +279,7 @@ the requested number of threads.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.single_threaded">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">single_threaded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#single_threaded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.single_threaded" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">single_threaded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#single_threaded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.single_threaded" title="Link to this definition"></a></dt>
 <dd><p>A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.</p>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
@@ -312,10 +309,10 @@ to leave that as 1 (the default).</p>
 
 </section>
 <section id="lru-cache">
-<h2>LRU Cache<a class="headerlink" href="#lru-cache" title="Permalink to this heading"></a></h2>
+<h2>LRU Cache<a class="headerlink" href="#lru-cache" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.LRU_Cache">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">LRU_Cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#LRU_Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.LRU_Cache" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">LRU_Cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#LRU_Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.LRU_Cache" title="Link to this definition"></a></dt>
 <dd><p>Simplified Least Recently Used Cache.</p>
 <p>Mostly stolen from <a class="reference external" href="http://code.activestate.com/recipes/577970-simplified-lru-cache/">http://code.activestate.com/recipes/577970-simplified-lru-cache/</a>,
 but added a method for dynamic resizing.  The least recently used cached item is
@@ -341,7 +338,7 @@ overwritten on a cache miss.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.utilities.LRU_Cache.resize">
-<span class="sig-name descname"><span class="pre">resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maxsize</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#LRU_Cache.resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.LRU_Cache.resize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maxsize</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#LRU_Cache.resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.LRU_Cache.resize" title="Link to this definition"></a></dt>
 <dd><p>Resize the cache.</p>
 <p>Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain
 in the cache.  Decreasing the size of the cache will necessarily remove items from the
@@ -357,10 +354,10 @@ cache if the cache is already filled.  Items are removed in least recently used 
 
 </section>
 <section id="context-manager-for-writing-atmosphericscreen-pickles">
-<h2>Context Manager for writing AtmosphericScreen pickles<a class="headerlink" href="#context-manager-for-writing-atmosphericscreen-pickles" title="Permalink to this heading"></a></h2>
+<h2>Context Manager for writing AtmosphericScreen pickles<a class="headerlink" href="#context-manager-for-writing-atmosphericscreen-pickles" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.pickle_shared">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">pickle_shared</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#pickle_shared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.pickle_shared" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">pickle_shared</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#pickle_shared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.pickle_shared" title="Link to this definition"></a></dt>
 <dd><p>A context manager to flag that one wishes to include object state from shared memory in
 pickle objects.</p>
 <p>Example:</p>
@@ -382,10 +379,10 @@ pickle objects.</p>
 
 </section>
 <section id="other-possibly-useful-classes">
-<h2>Other Possibly Useful Classes<a class="headerlink" href="#other-possibly-useful-classes" title="Permalink to this heading"></a></h2>
+<h2>Other Possibly Useful Classes<a class="headerlink" href="#other-possibly-useful-classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.WeakMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">WeakMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#WeakMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.WeakMethod" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">WeakMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#WeakMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.WeakMethod" title="Link to this definition"></a></dt>
 <dd><p>Wrap a method in a weakref.</p>
 <p>This is useful if you want to specialize a function if certain conditions hold.
 You can check those conditions and return one of several possible implementations as
@@ -396,13 +393,13 @@ a <a class="reference internal" href="#galsim.utilities.lazy_property" title="ga
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.OrderedWeakRef">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">OrderedWeakRef</span></span><a class="reference internal" href="_modules/galsim/utilities.html#OrderedWeakRef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.OrderedWeakRef" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">OrderedWeakRef</span></span><a class="reference internal" href="_modules/galsim/utilities.html#OrderedWeakRef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.OrderedWeakRef" title="Link to this definition"></a></dt>
 <dd><p>Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.SimpleGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">SimpleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#SimpleGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.SimpleGenerator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">SimpleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#SimpleGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.SimpleGenerator" title="Link to this definition"></a></dt>
 <dd><p>A simple class that is constructed with an arbitrary object.
 Then generator() will return that object.</p>
 <p>This is useful as a way to use an already existing object in a multiprocessing Proxy,
@@ -412,10 +409,10 @@ just returns an already existing object.</p>
 
 </section>
 <section id="math-calculations">
-<h2>Math Calculations<a class="headerlink" href="#math-calculations" title="Permalink to this heading"></a></h2>
+<h2>Math Calculations<a class="headerlink" href="#math-calculations" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.horner">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">horner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#horner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.horner" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">horner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#horner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.horner" title="Link to this definition"></a></dt>
 <dd><p>Evaluate univariate polynomial using Horner’s method.</p>
 <p>I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
 A + x(B + x(C + x(D)))</p>
@@ -435,7 +432,7 @@ A + x(B + x(C + x(D)))</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities._horner">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">_horner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities._horner" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">_horner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities._horner" title="Link to this definition"></a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.utilities.horner" title="galsim.utilities.horner"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">coef</span></code>, and <code class="docutils literal notranslate"><span class="pre">result</span></code> must be contiguous arrays.</p>
 <p>In particular, <code class="docutils literal notranslate"><span class="pre">result</span></code> must be already allocated as an array in which to put the answer.
 This is the thing that is returned from the regular <a class="reference internal" href="#galsim.utilities.horner" title="galsim.utilities.horner"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner</span></code></a>.</p>
@@ -452,7 +449,7 @@ This is the thing that is returned from the regular <a class="reference internal
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.horner2d">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">horner2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triangle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#horner2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.horner2d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">horner2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triangle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#horner2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.horner2d" title="Link to this definition"></a></dt>
 <dd><p>Evaluate bivariate polynomial using nested Horner’s method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -475,7 +472,7 @@ of the array. [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities._horner2d">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">_horner2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triangle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities._horner2d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">_horner2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triangle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities._horner2d" title="Link to this definition"></a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.utilities.horner2d" title="galsim.utilities.horner2d"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner2d</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">coefs</span></code>, <code class="docutils literal notranslate"><span class="pre">result</span></code>, and <code class="docutils literal notranslate"><span class="pre">temp</span></code>
 must be contiguous arrays.</p>
 <p>In particular, <code class="docutils literal notranslate"><span class="pre">result</span></code> must be already allocated as an array in which to put the answer.
@@ -500,7 +497,7 @@ of the array. [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.binomial">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#binomial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.binomial" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#binomial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.binomial" title="Link to this definition"></a></dt>
 <dd><p>Return xy coefficients of (ax + by)^n ordered by descending powers of a.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3</span>
@@ -529,14 +526,14 @@ of the array. [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.nCr">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">nCr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#nCr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.nCr" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">nCr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#nCr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.nCr" title="Link to this definition"></a></dt>
 <dd><p>Combinations.  I.e., the number of ways to choose <code class="docutils literal notranslate"><span class="pre">r</span></code> distiguishable things from <code class="docutils literal notranslate"><span class="pre">n</span></code>
 distinguishable things.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>from.</strong> (<em>n       The number</em><em> of </em><em>options to choose</em>) – </p></li>
-<li><p><strong>choose</strong> (<em>r       The number</em><em> of </em><em>items to</em>) – </p></li>
+<li><p><strong>from.</strong> (<em>n       The number</em><em> of </em><em>options to choose</em>)</p></li>
+<li><p><strong>choose</strong> (<em>r       The number</em><em> of </em><em>items to</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -555,7 +552,7 @@ version of Python to potentially select a different algorithm in the two cases.<
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.rotate_xy">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rotate_xy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rotate_xy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rotate_xy" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rotate_xy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rotate_xy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rotate_xy" title="Link to this definition"></a></dt>
 <dd><p>Rotates points in the xy-Cartesian plane counter-clockwise through an angle <code class="docutils literal notranslate"><span class="pre">theta</span></code> about
 the origin of the Cartesian coordinate system.</p>
 <dl class="field-list simple">
@@ -574,7 +571,7 @@ the origin of the Cartesian coordinate system.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.g1g2_to_e1e2">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">g1g2_to_e1e2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#g1g2_to_e1e2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.g1g2_to_e1e2" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">g1g2_to_e1e2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#g1g2_to_e1e2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.g1g2_to_e1e2" title="Link to this definition"></a></dt>
 <dd><p>Convenience function for going from (g1, g2) -&gt; (e1, e2).</p>
 <p>Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a>
 for definitions of reduced shear and distortion in terms of axis ratios or other ways of
@@ -594,10 +591,10 @@ specifying ellipses.</p>
 
 </section>
 <section id="utilities-related-to-numpy-functions">
-<h2>Utilities Related to NumPy Functions<a class="headerlink" href="#utilities-related-to-numpy-functions" title="Permalink to this heading"></a></h2>
+<h2>Utilities Related to NumPy Functions<a class="headerlink" href="#utilities-related-to-numpy-functions" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.printoptions">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">printoptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#printoptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.printoptions" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">printoptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#printoptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.printoptions" title="Link to this definition"></a></dt>
 <dd><p>A context manager for using different numpy printoptions temporarily</p>
 <p>From <a class="reference external" href="http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array">http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array</a></p>
 <p>Usage:</p>
@@ -615,7 +612,7 @@ equivalent to using <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.roll2d">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">roll2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#roll2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.roll2d" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">roll2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#roll2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.roll2d" title="Link to this definition"></a></dt>
 <dd><p>Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -632,7 +629,7 @@ equivalent to using <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.kxky">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">kxky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#kxky"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.kxky" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">kxky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#kxky"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.kxky" title="Link to this definition"></a></dt>
 <dd><p>Return the tuple (kx, ky) corresponding to the DFT of a unit integer-sampled array of
 input shape.</p>
 <p>Uses the FFTW conventions for Fourier space, so k varies in approximate range (-pi, pi],
@@ -654,7 +651,7 @@ which also uses this convention.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.merge_sorted">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">merge_sorted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#merge_sorted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.merge_sorted" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">merge_sorted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#merge_sorted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.merge_sorted" title="Link to this definition"></a></dt>
 <dd><p>Merge 2 or more numpy arrays into a single merged array.</p>
 <p>Each of the input arrays must be already sorted.</p>
 <p>This is equivalent to np.unique(np.concatenate(arrays)), but much faster.</p>
@@ -670,10 +667,10 @@ which also uses this convention.</p>
 
 </section>
 <section id="test-suite-helper-functions-and-contexts">
-<h2>Test Suite Helper Functions and Contexts<a class="headerlink" href="#test-suite-helper-functions-and-contexts" title="Permalink to this heading"></a></h2>
+<h2>Test Suite Helper Functions and Contexts<a class="headerlink" href="#test-suite-helper-functions-and-contexts" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.check_pickle">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func=&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irreprable=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_pickle" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func=&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irreprable=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_pickle" title="Link to this definition"></a></dt>
 <dd><p>Check that the object is picklable.</p>
 <p>Also check some related desirable properties that we want for (almost) all galsim objects:</p>
 <ol class="arabic simple">
@@ -700,7 +697,7 @@ it has an rng attribute or it is a galsim.BaseDeviate]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.check_all_diff">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_all_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_all_diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_all_diff" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_all_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_all_diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_all_diff" title="Link to this definition"></a></dt>
 <dd><p>Test that all objects test as being unequal.</p>
 <p>It checks all pairs of objects in the list and asserts that obj1 != obj2.</p>
 <p>If check_hash=True, then it also checks that their hashes are different.</p>
@@ -716,7 +713,7 @@ it has an rng attribute or it is a galsim.BaseDeviate]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.CaptureLog">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">CaptureLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#CaptureLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.CaptureLog" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">CaptureLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#CaptureLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.CaptureLog" title="Link to this definition"></a></dt>
 <dd><p>A context manager that saves logging output into a string that is accessible for
 checking in unit tests.</p>
 <p>After exiting the context, the attribute <code class="docutils literal notranslate"><span class="pre">output</span></code> will have the logging output.</p>
@@ -730,7 +727,7 @@ checking in unit tests.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.utilities.Profile">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">Profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sortby</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tottime'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#Profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.Profile" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">Profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sortby</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tottime'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#Profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.Profile" title="Link to this definition"></a></dt>
 <dd><p>A context manager that profiles a snippet of code.</p>
 <p>Sample usage:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Profile</span><span class="p">():</span>
@@ -753,10 +750,10 @@ items at the bottom rather than the top. [default: False]</p></li>
 
 </section>
 <section id="other-helper-functions">
-<h2>Other Helper Functions<a class="headerlink" href="#other-helper-functions" title="Permalink to this heading"></a></h2>
+<h2>Other Helper Functions<a class="headerlink" href="#other-helper-functions" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.isinteger">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">isinteger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#isinteger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.isinteger" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">isinteger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#isinteger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.isinteger" title="Link to this definition"></a></dt>
 <dd><p>Check if a value is an integer type (including np.int64, long, etc.)</p>
 <p>Specifically, it checks whether value == int(value).</p>
 <dl class="simple">
@@ -772,7 +769,7 @@ items at the bottom rather than the top. [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.listify">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">listify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#listify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.listify" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">listify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#listify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.listify" title="Link to this definition"></a></dt>
 <dd><p>Turn argument into a list if not already iterable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -786,7 +783,7 @@ items at the bottom rather than the top. [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.dol_to_lod">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">dol_to_lod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalar_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#dol_to_lod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.dol_to_lod" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">dol_to_lod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalar_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#dol_to_lod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.dol_to_lod" title="Link to this definition"></a></dt>
 <dd><p>Generate list of dicts from dict of lists (with broadcasting).
 Specifically, generate “scalar-valued” kwargs dictionaries from a kwarg dictionary with values
 that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
@@ -810,7 +807,7 @@ be treated as lists of characters) [default: True]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.functionize">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">functionize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#functionize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.functionize" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">functionize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#functionize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.functionize" title="Link to this definition"></a></dt>
 <dd><p>Decorate a function <code class="docutils literal notranslate"><span class="pre">f</span></code> which accepts scalar positional or keyword arguments, to accept
 arguments that can be either scalars or _functions_.  If the arguments include univariate
 (N-variate) functions, then the output will be a univariate (N-variate) function.  While it’s
@@ -857,7 +854,7 @@ M-variate function arguments.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.ensure_dir">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">ensure_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#ensure_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.ensure_dir" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">ensure_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#ensure_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.ensure_dir" title="Link to this definition"></a></dt>
 <dd><p>Make sure the directory for the target location exists, watching for a race condition</p>
 <p>In particular check if the OS reported that the directory already exists when running
 makedirs, which can happen if another process creates it before this one can</p>
@@ -869,10 +866,10 @@ makedirs, which can happen if another process creates it before this one can</p>
 
 </section>
 <section id="galsim-specific-helper-functions">
-<h2>GalSim-specific Helper Functions<a class="headerlink" href="#galsim-specific-helper-functions" title="Permalink to this heading"></a></h2>
+<h2>GalSim-specific Helper Functions<a class="headerlink" href="#galsim-specific-helper-functions" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.interleaveImages">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">interleaveImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_offset_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#interleaveImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.interleaveImages" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">interleaveImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_offset_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#interleaveImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.interleaveImages" title="Link to this definition"></a></dt>
 <dd><p>Interleaves the pixel values from two or more images and into a single larger image.</p>
 <p>This routine converts a list of images taken at a series of (uniform) dither offsets into a
 single higher resolution image, where the value in each final pixel is the observed pixel
@@ -946,7 +943,7 @@ down the routine a little. [default: True]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.deInterleaveImage">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">deInterleaveImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conserve_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#deInterleaveImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.deInterleaveImage" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">deInterleaveImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conserve_flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#deInterleaveImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.deInterleaveImage" title="Link to this definition"></a></dt>
 <dd><p>The routine to do the opposite of what <a class="reference internal" href="#galsim.utilities.interleaveImages" title="galsim.utilities.interleaveImages"><code class="xref any py py-func docutils literal notranslate"><span class="pre">interleaveImages</span></code></a> routine does. It generates a
 (uniform) dither sequence of low resolution images from a high resolution image.</p>
 <p>Many pixel level detector effects, such as interpixel capacitance, persistence, charge
@@ -999,7 +996,7 @@ image (False)? [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.thin_tabulated_values">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.thin_tabulated_values" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.thin_tabulated_values" title="Link to this definition"></a></dt>
 <dd><p>Remove items from a set of tabulated f(x) values so that the error in the integral is still
 accurate to a given relative accuracy.</p>
 <p>The input <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">f</span></code> values can be lists, NumPy arrays, or really anything that can be
@@ -1036,7 +1033,7 @@ requirement.  [default: True]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.old_thin_tabulated_values">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">old_thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#old_thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.old_thin_tabulated_values" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">old_thin_tabulated_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preserve_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#old_thin_tabulated_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.old_thin_tabulated_values" title="Link to this definition"></a></dt>
 <dd><p>Remove items from a set of tabulated f(x) values so that the error in the integral is still
 accurate to a given relative accuracy.</p>
 <p>The input <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">f</span></code> values can be lists, NumPy arrays, or really anything that can be
@@ -1071,7 +1068,7 @@ significant? (False)  [default: False]</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.parse_pos_args">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">parse_pos_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#parse_pos_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.parse_pos_args" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">parse_pos_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#parse_pos_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.parse_pos_args" title="Link to this definition"></a></dt>
 <dd><p>Parse the args and kwargs of a function call to be some kind of position.</p>
 <p>We allow four options:</p>
 <blockquote>
@@ -1102,7 +1099,7 @@ be given as the parameter <code class="docutils literal notranslate"><span class
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.rand_arr">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rand_arr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rand_arr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rand_arr" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rand_arr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rand_arr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rand_arr" title="Link to this definition"></a></dt>
 <dd><p>Function to make a 2d array of random deviates (of any sort).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1121,7 +1118,7 @@ supplied deviate.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.convert_interpolant">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">convert_interpolant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#convert_interpolant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.convert_interpolant" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">convert_interpolant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#convert_interpolant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.convert_interpolant" title="Link to this definition"></a></dt>
 <dd><p>Convert a given interpolant to an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> if it is given as a string.</p>
 <dl class="simple">
 <dt>Parameter:</dt><dd><p>interpolant:    Either an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> or a string to convert.</p>
@@ -1136,7 +1133,7 @@ supplied deviate.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.structure_function">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">structure_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#structure_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.structure_function" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">structure_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#structure_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.structure_function" title="Link to this definition"></a></dt>
 <dd><p>Estimate the angularly-averaged structure function of a 2D random field.</p>
 <p>The angularly-averaged structure function D(r) of the 2D field phi is defined as:</p>
 <div class="math notranslate nohighlight">
@@ -1158,7 +1155,7 @@ function D(r).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.combine_wave_list">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">combine_wave_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#combine_wave_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.combine_wave_list" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">combine_wave_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#combine_wave_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.combine_wave_list" title="Link to this definition"></a></dt>
 <dd><p>Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
 red_limit attributes.  Should work with any combination of <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>, and
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
@@ -1174,7 +1171,7 @@ red_limit attributes.  Should work with any combination of <a class="reference i
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.math_eval">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">math_eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#math_eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.math_eval" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">math_eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/_utilities.html#math_eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.math_eval" title="Link to this definition"></a></dt>
 <dd><p>Evaluate a string that may include numpy, np, or math commands.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1193,7 +1190,7 @@ red_limit attributes.  Should work with any combination of <a class="reference i
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.unweighted_moments">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">unweighted_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#unweighted_moments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.unweighted_moments" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">unweighted_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#unweighted_moments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.unweighted_moments" title="Link to this definition"></a></dt>
 <dd><p>Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
 but ignores any scale or wcs.</p>
 <dl class="field-list simple">
@@ -1212,7 +1209,7 @@ but ignores any scale or wcs.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.unweighted_shape">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">unweighted_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#unweighted_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.unweighted_shape" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">unweighted_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#unweighted_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.unweighted_shape" title="Link to this definition"></a></dt>
 <dd><p>Computes unweighted second moment size and ellipticity given either an image or a dict of
 unweighted moments.</p>
 <dl class="simple">
@@ -1234,7 +1231,7 @@ e2 = 2*Mxy / rsqr</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.rand_with_replacement">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rand_with_replacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_choices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_n_rng_calls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rand_with_replacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rand_with_replacement" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">rand_with_replacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_choices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_n_rng_calls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#rand_with_replacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.rand_with_replacement" title="Link to this definition"></a></dt>
 <dd><p>Select some number of random choices from a list, with replacement, using a supplied RNG.</p>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> random choices with replacement are made assuming that those choices should range from 0
 to <code class="docutils literal notranslate"><span class="pre">n_choices-1</span></code>, so they can be used as indices in a list/array.  If <code class="docutils literal notranslate"><span class="pre">weight</span></code> is supplied,
@@ -1258,7 +1255,7 @@ random indices.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.check_share_file">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_share_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_share_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_share_file" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">check_share_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#check_share_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.check_share_file" title="Link to this definition"></a></dt>
 <dd><p>Find <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> or <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> file, possibly adding share_dir/subdir.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1276,7 +1273,7 @@ False, ‘’                   if not</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.utilities.find_out_of_bounds_position">
-<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">find_out_of_bounds_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#find_out_of_bounds_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.find_out_of_bounds_position" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.utilities.</span></span><span class="sig-name descname"><span class="pre">find_out_of_bounds_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#find_out_of_bounds_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.utilities.find_out_of_bounds_position" title="Link to this definition"></a></dt>
 <dd><p>Given arrays of x and y values that are known to contain at least one
 position that is out-of-bounds of the given bounds instance, return one
 such PositionD.</p>

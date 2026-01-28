@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photon Operators &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Photon Operators &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,9 +35,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -138,10 +135,10 @@
            <div itemprop="articleBody">
              
   <section id="photon-operators">
-<h1>Photon Operators<a class="headerlink" href="#photon-operators" title="Permalink to this heading"></a></h1>
+<h1>Photon Operators<a class="headerlink" href="#photon-operators" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PhotonOp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PhotonOp</span></span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonOp" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PhotonOp</span></span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonOp" title="Link to this definition"></a></dt>
 <dd><p>A base class for photon operators, which just defines the interface.</p>
 <p>Photon operators are designed to apply some physical effect to a bundle of photons.  They
 may adjust the fluxes in some way, or the positions, maybe in a wavelength-dependent way, etc.
@@ -149,7 +146,7 @@ They are typically applied via a <code class="docutils literal notranslate"><spa
 The order typically matters, so the operators are applied in the order they appear in the list.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.PhotonOp.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonOp.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonOp.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonOp.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonOp.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Apply the photon operator to a PhotonArray.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -167,7 +164,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.WavelengthSampler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">WavelengthSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandpass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WavelengthSampler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">WavelengthSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandpass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WavelengthSampler" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that uses sed.sampleWavelength to set the wavelengths array of a
 <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 <dl class="field-list simple">
@@ -186,7 +183,7 @@ tables. [default: None, which uses the <a class="reference internal" href="devia
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.WavelengthSampler.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WavelengthSampler.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WavelengthSampler.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Assign wavelengths to the photons sampled from the SED * Bandpass.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -204,7 +201,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.FRatioAngles">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FRatioAngles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obscuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FRatioAngles" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FRatioAngles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obscuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FRatioAngles" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that assigns photon directions based on the f/ratio and obscuration.</p>
 <p>Assigns arrival directions at the focal plane for photons, drawing from a uniform
 brightness distribution between the obscuration angle and the edge of the pupil defined
@@ -223,7 +220,7 @@ will be automatically constructed for you. [default: None]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.FRatioAngles.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FRatioAngles.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FRatioAngles.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Assign directions to the photons in photon_array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -241,7 +238,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PhotonDCR">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PhotonDCR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_wavelength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonDCR" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PhotonDCR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_wavelength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonDCR" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that applies the effect of differential chromatic refraction (DCR)
 and optionally the chromatic dilation due to atmospheric seeing.</p>
 <p>Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
@@ -304,7 +301,7 @@ of kiloPascals.  [default: 1.067 kPa]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.PhotonDCR.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonDCR.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PhotonDCR.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Apply the DCR effect to the photons</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -322,7 +319,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.FocusDepth">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FocusDepth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FocusDepth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FocusDepth" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FocusDepth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FocusDepth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FocusDepth" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that focuses/defocuses photons by changing the height of the focal
 surface with respect to the conical beam.</p>
 <dl class="field-list simple">
@@ -336,7 +333,7 @@ has converged.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.FocusDepth.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FocusDepth.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FocusDepth.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FocusDepth.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FocusDepth.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Adjust a photon bundle to account for the change in focal depth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -354,7 +351,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Refraction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Refraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index_ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#Refraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Refraction" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Refraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index_ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#Refraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Refraction" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that refracts photons (manipulating their dxdz and dydz values) at an
 interface, commonly the interface between vacuum and silicon at the surface of a CCD.</p>
 <p>Assumes that the surface normal is along the z-axis.  If the refraction would result in total
@@ -370,7 +367,7 @@ as input and return a numpy array of refractive index ratios.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Refraction.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#Refraction.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Refraction.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#Refraction.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Refraction.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Refract photons</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -388,7 +385,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PupilImageSampler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PupilImageSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diam</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilImageSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilImageSampler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PupilImageSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diam</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilImageSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilImageSampler" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that samples the pupil-plane positions given a pupil-plane image.
 Samples are drawn discretely from pupil plane image pixels marked as illuminated.</p>
 <dl class="field-list simple">
@@ -434,7 +431,7 @@ adjusting the pupil size.  [default: None]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.PupilImageSampler.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilImageSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilImageSampler.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilImageSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilImageSampler.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Sample the pupil plane u,v positions for each photon.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -452,7 +449,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PupilAnnulusSampler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PupilAnnulusSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R_outer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilAnnulusSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilAnnulusSampler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PupilAnnulusSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R_outer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilAnnulusSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilAnnulusSampler" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that uniformly samples an annular entrance pupil.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -464,7 +461,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.PupilAnnulusSampler.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilAnnulusSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilAnnulusSampler.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PupilAnnulusSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PupilAnnulusSampler.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Sample the pupil plane u,v positions for each photon.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -482,7 +479,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.TimeSampler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">TimeSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">TimeSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler" title="Link to this definition"></a></dt>
 <dd><p>A photon operator that uniformly samples photon time stamps within some interval.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -494,7 +491,7 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.TimeSampler.applyTo">
-<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler.applyTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">applyTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler.applyTo" title="Link to this definition"></a></dt>
 <dd><p>Add time stamps to photons.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

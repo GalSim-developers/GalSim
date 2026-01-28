@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.real &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.real &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.real</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -158,7 +155,9 @@
         <span class="s1">&#39;F160W&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;WFC3_ir_F160W.dat&#39;</span><span class="p">,</span> <span class="mf">25.9463</span><span class="p">)</span>
 <span class="p">}</span>
 
-<div class="viewcode-block" id="RealGalaxy"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy">[docs]</a><span class="k">class</span> <span class="nc">RealGalaxy</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<div class="viewcode-block" id="RealGalaxy">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy">[docs]</a>
+<span class="k">class</span> <span class="nc">RealGalaxy</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing real galaxies from some training dataset.  Its underlying implementation</span>
 <span class="sd">    uses a Convolution instance of an `InterpolatedImage` (for the observed galaxy) with a</span>
 <span class="sd">    `Deconvolution` of another `InterpolatedImage` (for the PSF).</span>
@@ -412,7 +411,9 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxy </span><span class="si">%d</span><span class="s1">: Finished building RealGalaxy&#39;</span><span class="p">,</span><span class="n">use_index</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RealGalaxy.withGSParams"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="RealGalaxy.withGSParams">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.withGSParams">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -422,7 +423,10 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_gal_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gal_noise</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="RealGalaxy.makeFromImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.makeFromImage">[docs]</a>    <span class="nd">@classmethod</span>
+
+<div class="viewcode-block" id="RealGalaxy.makeFromImage">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.makeFromImage">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">makeFromImage</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">PSF</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `RealGalaxy` directly from image, PSF, and noise description.</span>
 
@@ -438,6 +442,7 @@
         <span class="n">var</span> <span class="o">=</span> <span class="n">xi</span><span class="o">.</span><span class="n">getVariance</span><span class="p">()</span>
         <span class="n">psf_image</span> <span class="o">=</span> <span class="n">PSF</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;no_pixel&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">RealGalaxy</span><span class="p">((</span><span class="n">image</span><span class="p">,</span> <span class="n">psf_image</span><span class="p">,</span> <span class="n">noise_image</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -544,7 +549,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RealGalaxyCatalog"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog">[docs]</a><span class="k">class</span> <span class="nc">RealGalaxyCatalog</span><span class="p">:</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog">[docs]</a>
+<span class="k">class</span> <span class="nc">RealGalaxyCatalog</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class containing a catalog with information about real galaxy training data.</span>
 
 <span class="sd">    The RealGalaxyCatalog class reads in and stores information about a specific training sample of</span>
@@ -600,6 +608,14 @@
 <span class="sd">       GalSim knows the location of the installation share directory, so it will automatically</span>
 <span class="sd">       look for it there.</span>
 
+<span class="sd">    .. note::</span>
+
+<span class="sd">        A RealGalaxyCatalog instance will cache data from the input files that it loads.</span>
+<span class="sd">        Normally, this leads to a performance improvement, especially if objects are selected</span>
+<span class="sd">        from the catalog semi-randomly, since it is faster to access the data in memory.</span>
+<span class="sd">        If you want to free the cached memory before the RealGalaxyCatalog goes out of</span>
+<span class="sd">        scope, you can use the `close` method to do so.</span>
+
 <span class="sd">    Parameters:</span>
 <span class="sd">        file_name:  The file containing the catalog. [default: None, which will look for the</span>
 <span class="sd">                    F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an</span>
@@ -640,8 +656,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="n">preload</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># The pyfits commands aren&#39;t thread safe.  So we need to make sure the methods that</span>
         <span class="c1"># use pyfits are not run concurrently from multiple threads.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing gal files</span>
@@ -738,20 +754,34 @@
         <span class="c1"># Make sure to clean up pyfits open files if people forget to call close()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
+<div class="viewcode-block" id="RealGalaxyCatalog.close">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.close">[docs]</a>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close all loaded files.</span>
+
+<span class="sd">        Usually it is a performance improvement to keep the various input files open while using</span>
+<span class="sd">        the RealGalaxyCatalog, especially if the access of the galaxies is in semi-random order.</span>
+<span class="sd">        However, if you want to release the memory tied up in these files before the</span>
+<span class="sd">        RealGalaxyCatalog goes out of scope, then this method will release the memory directly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Need to close any open files.</span>
         <span class="c1"># Make sure to check if loaded_files exists, since the constructor could abort</span>
         <span class="c1"># before it gets to the place where loaded_files is built.</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;loaded_files&#39;</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="c1"># Also release the memory in the noise images, even though this is usually negligible.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
     <span class="k">def</span> <span class="nf">getFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getIndexForID"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getIndexForID">[docs]</a>    <span class="k">def</span> <span class="nf">getIndexForID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+<div class="viewcode-block" id="RealGalaxyCatalog.getIndexForID">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getIndexForID">[docs]</a>
+    <span class="k">def</span> <span class="nf">getIndexForID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal function to find which index number corresponds to the value ID in the ident</span>
 <span class="sd">        field.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -763,6 +793,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;ID not found in list of IDs&#39;</span><span class="p">,</span><span class="nb">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_maybe_preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Preload all files if desired.</span>
         <span class="c1"># This is delayed until the first time we might need it, since we might only need</span>
@@ -772,7 +803,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">preload</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Once we&#39;ve loaded them.  Don&#39;t do it again.</span>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.preload"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.preload">[docs]</a>    <span class="k">def</span> <span class="nf">preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RealGalaxyCatalog.preload">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.preload">[docs]</a>
+    <span class="k">def</span> <span class="nf">preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preload the files into memory.</span>
 
 <span class="sd">        There are memory implications to this, so we don&#39;t do this by default.  However, it can be</span>
@@ -796,6 +829,7 @@
                     <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                         <span class="n">hdu</span><span class="o">.</span><span class="n">data</span></div>
 
+
     <span class="k">def</span> <span class="nf">_getFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_preload</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
@@ -810,7 +844,9 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
         <span class="k">return</span> <span class="n">f</span>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getBandpass"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RealGalaxyCatalog.getBandpass">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getBandpass">[docs]</a>
+    <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a `Bandpass` object for the catalog.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -821,7 +857,10 @@
                                    <span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">real_galaxy_bandpasses</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">bp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">zeropoint</span><span class="o">=</span><span class="n">bp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getGalImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getGalImage">[docs]</a>    <span class="k">def</span> <span class="nf">getGalImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog.getGalImage">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getGalImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">getGalImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the galaxy at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">):</span>
@@ -832,7 +871,10 @@
         <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">im</span></div>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getPSFImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSFImage">[docs]</a>    <span class="k">def</span> <span class="nf">getPSFImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog.getPSFImage">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSFImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">getPSFImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">):</span>
@@ -842,7 +884,10 @@
             <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_hdu</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">data</span>
         <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getPSF"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog.getPSF">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSF">[docs]</a>
+    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as a `GSObject`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">psf_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPSFImage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -850,7 +895,10 @@
                                  <span class="n">x_interpolant</span><span class="o">=</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">k_interpolant</span><span class="p">,</span>
                                  <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getNoiseProperties"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoiseProperties">[docs]</a>    <span class="k">def</span> <span class="nf">getNoiseProperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog.getNoiseProperties">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoiseProperties">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNoiseProperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the components needed to make the noise correlation function at index ``i``.</span>
 <span class="sd">           Specifically, the noise image (or None), the pixel_scale, and the noise variance,</span>
 <span class="sd">           as a tuple (im, scale, var).</span>
@@ -876,7 +924,10 @@
 
         <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.getNoise"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoise">[docs]</a>    <span class="k">def</span> <span class="nf">getNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RealGalaxyCatalog.getNoise">
+<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoise">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseProperties</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -889,6 +940,7 @@
             <span class="n">cf</span> <span class="o">=</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
             <span class="n">cf</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">withVariance</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cf</span></div>
+
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.RealGalaxyCatalog(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
@@ -919,6 +971,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
         <span class="k">pass</span></div>
+
 
 <span class="k">def</span> <span class="nf">_parse_files_dirs</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">image_dir</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -960,7 +1013,9 @@
     <span class="k">return</span> <span class="n">full_file_name</span><span class="p">,</span> <span class="n">image_dir</span><span class="p">,</span> <span class="n">use_sample</span>
 
 
-<div class="viewcode-block" id="ChromaticRealGalaxy"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy">[docs]</a><span class="k">class</span> <span class="nc">ChromaticRealGalaxy</span><span class="p">(</span><span class="n">ChromaticSum</span><span class="p">):</span>
+<div class="viewcode-block" id="ChromaticRealGalaxy">
+<a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy">[docs]</a>
+<span class="k">class</span> <span class="nc">ChromaticRealGalaxy</span><span class="p">(</span><span class="n">ChromaticSum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing real galaxies over multiple wavelengths, using some multi-band training</span>
 <span class="sd">    dataset.  The underlying implementation models multi-band images of individual galaxies</span>
 <span class="sd">    as chromatic PSF convolutions (and integrations over wavelength) with a sum of profiles</span>
@@ -1163,7 +1218,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">xis</span><span class="p">,</span> <span class="n">PSFs</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ChromaticRealGalaxy.makeFromImages"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy.makeFromImages">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ChromaticRealGalaxy.makeFromImages">
+<a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticRealGalaxy.makeFromImages">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">makeFromImages</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">PSFs</span><span class="p">,</span> <span class="n">xis</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `ChromaticRealGalaxy` directly from images, bandpasses, PSFs, and noise</span>
 <span class="sd">        descriptions.  See the `ChromaticRealGalaxy` docstring for more information.</span>
@@ -1236,6 +1293,7 @@
 
         <span class="n">obj</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">xis</span><span class="p">,</span> <span class="n">PSFs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">obj</span></div>
+
 
     <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">xis</span><span class="p">,</span> <span class="n">PSFs</span><span class="p">,</span>
                     <span class="n">SEDs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">area_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
@@ -1412,6 +1470,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.ChromaticRealGalaxy(</span><span class="si">%r</span><span class="s2">, SEDs=</span><span class="si">%r</span><span class="s2">, index=</span><span class="si">%r</span><span class="s2">, k_interpolant=</span><span class="si">%r</span><span class="s2">, &quot;</span>
                 <span class="s2">&quot;area_norm=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
                                               <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span></div>
+
 
 <span class="c1"># Put this at the bottom to avoid circular import error.</span>
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>

@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.sed &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.sed &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.sed</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -126,7 +123,9 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">gsobject</span>
 
-<div class="viewcode-block" id="SED"><a class="viewcode-back" href="../../sed.html#galsim.SED">[docs]</a><span class="k">class</span> <span class="nc">SED</span><span class="p">:</span>
+<div class="viewcode-block" id="SED">
+<a class="viewcode-back" href="../../sed.html#galsim.SED">[docs]</a>
+<span class="k">class</span> <span class="nc">SED</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Object to represent the spectral energy distributions of stars and galaxies.</span>
 
 <span class="sd">    SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of</span>
@@ -454,11 +453,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span>
 
-<div class="viewcode-block" id="SED.check_spectral"><a class="viewcode-back" href="../../sed.html#galsim.SED.check_spectral">[docs]</a>    <span class="k">def</span> <span class="nf">check_spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.check_spectral">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.check_spectral">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return boolean indicating if SED has units compatible with a spectral density.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">SED</span><span class="o">.</span><span class="n">_fphotons</span><span class="p">,</span> <span class="n">SED</span><span class="o">.</span><span class="n">_spec_nm</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.check_dimensionless"><a class="viewcode-back" href="../../sed.html#galsim.SED.check_dimensionless">[docs]</a>    <span class="k">def</span> <span class="nf">check_dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.check_dimensionless">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.check_dimensionless">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return boolean indicating if SED is dimensionless.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">SED</span><span class="o">.</span><span class="n">_dimensionless</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_type</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
@@ -467,6 +471,7 @@
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># for convenience</span>
@@ -564,7 +569,9 @@
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_to_photons</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">rest_wave_native</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
-<div class="viewcode-block" id="SED.__call__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.__call__">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return photon flux density or dimensionless normalization at wavelength ``wave``.</span>
 
 <span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
@@ -584,7 +591,10 @@
             <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">ret</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="SED._mul_sed"><a class="viewcode-back" href="../../sed.html#galsim.SED._mul_sed">[docs]</a>    <span class="k">def</span> <span class="nf">_mul_sed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED._mul_sed">
+<a class="viewcode-back" href="../../sed.html#galsim.SED._mul_sed">[docs]</a>
+    <span class="k">def</span> <span class="nf">_mul_sed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to self * other when other is an SED, but no sanity checks.&quot;&quot;&quot;</span>
         <span class="c1"># There should only be one SED with a non-trivial redshift, so adding them</span>
         <span class="c1"># should always give us the right net redshift to use.</span>
@@ -622,7 +632,10 @@
         <span class="k">return</span> <span class="n">SED</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">flux_type</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="n">redshift</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
                    <span class="n">_blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">_red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED._mul_bandpass"><a class="viewcode-back" href="../../sed.html#galsim.SED._mul_bandpass">[docs]</a>    <span class="k">def</span> <span class="nf">_mul_bandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED._mul_bandpass">
+<a class="viewcode-back" href="../../sed.html#galsim.SED._mul_bandpass">[docs]</a>
+    <span class="k">def</span> <span class="nf">_mul_bandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to self * other when other is a Bandpass&quot;&quot;&quot;</span>
         <span class="n">wave_list</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">combine_wave_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
         <span class="n">zfactor</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span> <span class="o">/</span> <span class="n">other</span><span class="o">.</span><span class="n">wave_factor</span>
@@ -643,7 +656,10 @@
                    <span class="n">_blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">_red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SED._mul_scalar"><a class="viewcode-back" href="../../sed.html#galsim.SED._mul_scalar">[docs]</a>    <span class="k">def</span> <span class="nf">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">spectral</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED._mul_scalar">
+<a class="viewcode-back" href="../../sed.html#galsim.SED._mul_scalar">[docs]</a>
+    <span class="k">def</span> <span class="nf">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">spectral</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to self * other when other is a scalar&quot;&quot;&quot;</span>
         <span class="c1"># If other is a scalar and self._spec a LookupTable, then remake that LookupTable.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">):</span>
@@ -669,7 +685,10 @@
                    <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SED.__mul__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.__mul__">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.__mul__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Multiply the SED by something.</span>
 
 <span class="sd">        There are several possibilities:</span>
@@ -727,6 +746,7 @@
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply an SED by </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">other</span>
@@ -810,7 +830,9 @@
         <span class="c1"># Subtract two SEDs, with the same caveats as adding two SEDs.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SED.withFluxDensity"><a class="viewcode-back" href="../../sed.html#galsim.SED.withFluxDensity">[docs]</a>    <span class="k">def</span> <span class="nf">withFluxDensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux_density</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.withFluxDensity">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.withFluxDensity">[docs]</a>
+    <span class="k">def</span> <span class="nf">withFluxDensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux_density</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `SED` with flux density set to ``target_flux_density`` at wavelength</span>
 <span class="sd">        ``wavelength``.</span>
 
@@ -838,7 +860,10 @@
         <span class="n">factor</span> <span class="o">=</span> <span class="n">target_flux_density</span> <span class="o">/</span> <span class="n">current_flux_density</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">factor</span></div>
 
-<div class="viewcode-block" id="SED.withFlux"><a class="viewcode-back" href="../../sed.html#galsim.SED.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.withFlux">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.withFlux">[docs]</a>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `SED` with flux through the `Bandpass` ``bandpass`` set to ``target_flux``.</span>
 
 <span class="sd">        See `ChromaticObject` docstring for information about how `SED` normalization affects</span>
@@ -855,7 +880,10 @@
         <span class="n">norm</span> <span class="o">=</span> <span class="n">target_flux</span><span class="o">/</span><span class="n">current_flux</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
-<div class="viewcode-block" id="SED.withMagnitude"><a class="viewcode-back" href="../../sed.html#galsim.SED.withMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">withMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_magnitude</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.withMagnitude">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.withMagnitude">[docs]</a>
+    <span class="k">def</span> <span class="nf">withMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_magnitude</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `SED` with magnitude through the `Bandpass` ``bandpass`` set to</span>
 <span class="sd">        ``target_magnitude``.</span>
 
@@ -877,7 +905,10 @@
         <span class="n">norm</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="o">*</span><span class="p">(</span><span class="n">target_magnitude</span> <span class="o">-</span> <span class="n">current_magnitude</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
-<div class="viewcode-block" id="SED.atRedshift"><a class="viewcode-back" href="../../sed.html#galsim.SED.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.atRedshift">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.atRedshift">[docs]</a>
+    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `SED` with redshifted wavelengths.</span>
 
 <span class="sd">        Parameters:</span>
@@ -898,7 +929,10 @@
         <span class="k">return</span> <span class="n">SED</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast</span><span class="p">,</span>
                    <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">_red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.calculateFlux"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.calculateFlux">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.calculateFlux">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the flux (photons/cm^2/s) of the `SED` through the `Bandpass` bandpass.</span>
 
 <span class="sd">        Parameters:</span>
@@ -944,7 +978,10 @@
             <span class="k">return</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="p">(</span><span class="n">w</span><span class="p">),</span>
                                <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.calculateMagnitude"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.calculateMagnitude">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.calculateMagnitude">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the `SED` magnitude through a `Bandpass` ``bandpass``.</span>
 
 <span class="sd">        Note that this requires ``bandpass`` to have been assigned a zeropoint using</span>
@@ -967,7 +1004,10 @@
         <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
         <span class="k">return</span> <span class="o">-</span><span class="mf">2.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="o">+</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">zeropoint</span></div>
 
-<div class="viewcode-block" id="SED.thin"><a class="viewcode-back" href="../../sed.html#galsim.SED.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.thin">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.thin">[docs]</a>
+    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove some tabulated values while keeping the integral over the set of tabulated values</span>
 <span class="sd">        still accurate to ``rel_err``.</span>
 
@@ -1015,7 +1055,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="SED.calculateDCRMomentShifts"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateDCRMomentShifts">[docs]</a>    <span class="k">def</span> <span class="nf">calculateDCRMomentShifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.calculateDCRMomentShifts">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.calculateDCRMomentShifts">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateDCRMomentShifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates shifts in first and second moments of PSF due to differential chromatic</span>
 <span class="sd">        refraction (DCR).</span>
 
@@ -1084,7 +1127,10 @@
         <span class="n">V</span> <span class="o">=</span> <span class="n">rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">V</span><span class="p">]]))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Rbar</span><span class="p">,</span> <span class="n">V</span></div>
 
-<div class="viewcode-block" id="SED.calculateSeeingMomentRatio"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateSeeingMomentRatio">[docs]</a>    <span class="k">def</span> <span class="nf">calculateSeeingMomentRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SED.calculateSeeingMomentRatio">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.calculateSeeingMomentRatio">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateSeeingMomentRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the relative size of a PSF compared to the monochromatic PSF size at</span>
 <span class="sd">        wavelength ``base_wavelength``.</span>
 
@@ -1120,11 +1166,14 @@
             <span class="k">return</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">weight</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel</span><span class="p">(</span><span class="n">w</span><span class="p">),</span>
                                <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span> <span class="o">/</span> <span class="n">flux</span></div>
 
+
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_cache_deviate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
 
-<div class="viewcode-block" id="SED.sampleWavelength"><a class="viewcode-back" href="../../sed.html#galsim.SED.sampleWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">sampleWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nphotons</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.sampleWavelength">
+<a class="viewcode-back" href="../../sed.html#galsim.SED.sampleWavelength">[docs]</a>
+    <span class="k">def</span> <span class="nf">sampleWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nphotons</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a number of random wavelength values from the `SED`, possibly as observed through</span>
 <span class="sd">        a `Bandpass` bandpass.</span>
 
@@ -1172,6 +1221,7 @@
                 <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">ret</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -1227,7 +1277,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_funcs</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="EmissionLine"><a class="viewcode-back" href="../../sed.html#galsim.EmissionLine">[docs]</a><span class="k">class</span> <span class="nc">EmissionLine</span><span class="p">(</span><span class="n">SED</span><span class="p">):</span>
+
+<div class="viewcode-block" id="EmissionLine">
+<a class="viewcode-back" href="../../sed.html#galsim.EmissionLine">[docs]</a>
+<span class="k">class</span> <span class="nc">EmissionLine</span><span class="p">(</span><span class="n">SED</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Emission line SED.</span>
 
 <span class="sd">    Creates a simple triangle-shaped emission line with a given wavelength and</span>
@@ -1280,7 +1333,9 @@
             <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="EmissionLine.atRedshift"><a class="viewcode-back" href="../../sed.html#galsim.EmissionLine.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+<div class="viewcode-block" id="EmissionLine.atRedshift">
+<a class="viewcode-back" href="../../sed.html#galsim.EmissionLine.atRedshift">[docs]</a>
+    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `EmissionLine` with redshifted wavelengths.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1302,6 +1357,7 @@
             <span class="n">redshift</span><span class="o">=</span><span class="n">redshift</span><span class="p">,</span>
             <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fast</span>
         <span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
@@ -1363,6 +1419,7 @@
             <span class="n">outstr</span> <span class="o">+=</span> <span class="s1">&#39;, redshift=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">redshift</span>
         <span class="n">outstr</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">outstr</span></div>
+
 
 
 <span class="c1"># Put this at the bottom to avoid circular import errors.</span>

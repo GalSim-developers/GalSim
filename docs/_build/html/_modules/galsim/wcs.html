@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.wcs &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.wcs &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.wcs</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -125,7 +122,9 @@
 <span class="kn">from</span> <span class="nn">._utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">math_eval</span>
 <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
 
-<div class="viewcode-block" id="BaseWCS"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS">[docs]</a><span class="k">class</span> <span class="nc">BaseWCS</span><span class="p">:</span>
+<div class="viewcode-block" id="BaseWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseWCS</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The base class for all other kinds of WCS transformations.</span>
 
 <span class="sd">    All the functions the user will typically need are defined here.  Most subclasses just</span>
@@ -269,7 +268,9 @@
 <span class="sd">            &gt;&gt;&gt; wcs.isCelestial()   # are the world coordinates on the celestial sphere?</span>
 <span class="sd">            &gt;&gt;&gt; wcs.isPixelScale()  # is this either a PixelScale or an OffsetWCS?</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="BaseWCS.toWorld"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.toWorld">[docs]</a>    <span class="k">def</span> <span class="nf">toWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.toWorld">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.toWorld">[docs]</a>
+    <span class="k">def</span> <span class="nf">toWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert from image coordinates to world coordinates.</span>
 
 <span class="sd">        There are essentially four overloaded versions of this function here.</span>
@@ -329,7 +330,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;toWorld() takes either 1 or 2 positional arguments&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.posToWorld"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.posToWorld">[docs]</a>    <span class="k">def</span> <span class="nf">posToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.posToWorld">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.posToWorld">[docs]</a>
+    <span class="k">def</span> <span class="nf">posToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a position from image coordinates to world coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toWorld(image_pos)``.</span>
@@ -351,7 +355,10 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;image_pos must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_posToWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.profileToWorld"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.profileToWorld">[docs]</a>    <span class="k">def</span> <span class="nf">profileToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_profile</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<div class="viewcode-block" id="BaseWCS.profileToWorld">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.profileToWorld">[docs]</a>
+    <span class="k">def</span> <span class="nf">profileToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_profile</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a profile from image coordinates to world coordinates.</span>
 
@@ -370,7 +377,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_profileToWorld</span><span class="p">(</span>
                     <span class="n">image_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="BaseWCS.shearToWorld"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shearToWorld">[docs]</a>    <span class="k">def</span> <span class="nf">shearToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shear</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.shearToWorld">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shearToWorld">[docs]</a>
+    <span class="k">def</span> <span class="nf">shearToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shear</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a shear measured in image coordinates to world coordinates</span>
 
 <span class="sd">        This is equivalent to ``wcs.toWorld(shear, ...)``.</span>
@@ -398,7 +408,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_shearToWorld</span><span class="p">(</span><span class="n">image_shear</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.toImage"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.toImage">[docs]</a>    <span class="k">def</span> <span class="nf">toImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.toImage">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.toImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">toImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert from world coordinates to image coordinates</span>
 
 <span class="sd">        There are essentially three overloaded versions of this function here.</span>
@@ -459,7 +472,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;toImage() takes either 1 or 2 positional arguments&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.posToImage"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.posToImage">[docs]</a>    <span class="k">def</span> <span class="nf">posToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.posToImage">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.posToImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">posToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a position from world coordinates to image coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toImage(world_pos)``.</span>
@@ -475,7 +491,10 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;world_pos must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_posToImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.profileToImage"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.profileToImage">[docs]</a>    <span class="k">def</span> <span class="nf">profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_profile</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<div class="viewcode-block" id="BaseWCS.profileToImage">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.profileToImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_profile</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a profile from world coordinates to image coordinates.</span>
 
@@ -494,7 +513,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_profileToImage</span><span class="p">(</span>
                     <span class="n">world_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="BaseWCS.shearToImage"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shearToImage">[docs]</a>    <span class="k">def</span> <span class="nf">shearToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_shear</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.shearToImage">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shearToImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">shearToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_shear</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a shear measured in world coordinates to image coordinates</span>
 
 <span class="sd">        This is equivalent to ``wcs.toImage(shear, ...)``.</span>
@@ -513,7 +535,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_shearToImage</span><span class="p">(</span><span class="n">world_shear</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.pixelArea"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.pixelArea">[docs]</a>    <span class="k">def</span> <span class="nf">pixelArea</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.pixelArea">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.pixelArea">[docs]</a>
+    <span class="k">def</span> <span class="nf">pixelArea</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the area of a pixel in arcsec**2 (or in whatever units you are using for</span>
 <span class="sd">        world coordinates if it is a `EuclideanWCS`).</span>
 
@@ -532,7 +557,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_pixelArea</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseWCS.minLinearScale"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.minLinearScale">[docs]</a>    <span class="k">def</span> <span class="nf">minLinearScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.minLinearScale">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.minLinearScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">minLinearScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the minimum linear scale of the transformation in any direction.</span>
 
 <span class="sd">        This is basically the semi-minor axis of the Jacobian.  Sometimes you need a</span>
@@ -554,7 +582,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_minScale</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseWCS.maxLinearScale"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.maxLinearScale">[docs]</a>    <span class="k">def</span> <span class="nf">maxLinearScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.maxLinearScale">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.maxLinearScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">maxLinearScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the maximum linear scale of the transformation in any direction.</span>
 
 <span class="sd">        This is basically the semi-major axis of the Jacobian.  Sometimes you need a</span>
@@ -576,7 +607,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_maxScale</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseWCS.isPixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isPixelScale">[docs]</a>    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.isPixelScale">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isPixelScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether the WCS transformation is a simple `PixelScale` or `OffsetWCS`.</span>
 
 <span class="sd">        These are the simplest two WCS transformations.  `PixelScale` is local and `OffsetWCS`</span>
@@ -589,44 +623,56 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isPixelScale</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>   <span class="c1"># Overridden by PixelScale and OffsetWCS</span>
 
-<div class="viewcode-block" id="BaseWCS.isLocal"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isLocal">[docs]</a>    <span class="k">def</span> <span class="nf">isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.isLocal">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isLocal">[docs]</a>
+    <span class="k">def</span> <span class="nf">isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether the WCS transformation is a local, linear approximation.</span>
 
 <span class="sd">        ``wcs.isLocal()`` is shorthand for ``isinstance(wcs, galsim.LocalWCS)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isLocal</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>   <span class="c1"># Overridden by LocalWCS</span>
 
-<div class="viewcode-block" id="BaseWCS.isUniform"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isUniform">[docs]</a>    <span class="k">def</span> <span class="nf">isUniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.isUniform">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isUniform">[docs]</a>
+    <span class="k">def</span> <span class="nf">isUniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether the pixels in this WCS have uniform size and shape.</span>
 
 <span class="sd">        ``wcs.isUniform()`` is shorthand for ``isinstance(wcs, galsim.UniformWCS)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isUniform</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_isUniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>   <span class="c1"># Overridden by UniformWCS</span>
 
-<div class="viewcode-block" id="BaseWCS.isCelestial"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isCelestial">[docs]</a>    <span class="k">def</span> <span class="nf">isCelestial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.isCelestial">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.isCelestial">[docs]</a>
+    <span class="k">def</span> <span class="nf">isCelestial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether the world coordinates are `CelestialCoord` (i.e. ra,dec).</span>
 
 <span class="sd">        ``wcs.isCelestial()`` is shorthand for ``isinstance(wcs, galsim.CelestialWCS)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isCelestial</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_isCelestial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>   <span class="c1"># Overridden by CelestialWCS</span>
 
-<div class="viewcode-block" id="BaseWCS.local"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.local">[docs]</a>    <span class="k">def</span> <span class="nf">local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.local">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.local">[docs]</a>
+    <span class="k">def</span> <span class="nf">local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the local linear approximation of the WCS at a given point.</span>
 
 <span class="sd">        Parameters:</span>
@@ -649,7 +695,10 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;image_pos must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.jacobian"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.jacobian">[docs]</a>    <span class="k">def</span> <span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.jacobian">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.jacobian">[docs]</a>
+    <span class="k">def</span> <span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the local `JacobianWCS` of the WCS at a given point.</span>
 
 <span class="sd">        This is basically the same as local(), but the return value is guaranteed to be a</span>
@@ -677,7 +726,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span><span class="o">.</span><span class="n">_toJacobian</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="BaseWCS.affine"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.affine">[docs]</a>    <span class="k">def</span> <span class="nf">affine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.affine">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.affine">[docs]</a>
+    <span class="k">def</span> <span class="nf">affine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the local `AffineTransform` of the WCS at a given point.</span>
 
 <span class="sd">        This returns a linearized version of the current WCS at a given point.  It</span>
@@ -737,7 +789,10 @@
                 <span class="n">world_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">jac</span><span class="o">.</span><span class="n">withOrigin</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BaseWCS.shiftOrigin"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shiftOrigin">[docs]</a>    <span class="k">def</span> <span class="nf">shiftOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.shiftOrigin">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.shiftOrigin">[docs]</a>
+    <span class="k">def</span> <span class="nf">shiftOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shift the origin of the current WCS function, returning the new WCS.</span>
 
 <span class="sd">        This function creates a new WCS instance (always a non-local WCS) that shifts the</span>
@@ -788,12 +843,15 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;origin must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shiftOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">withOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;withOrigin&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;shiftOrigin&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shiftOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BaseWCS.fixColor"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.fixColor">[docs]</a>    <span class="k">def</span> <span class="nf">fixColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseWCS.fixColor">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.fixColor">[docs]</a>
+    <span class="k">def</span> <span class="nf">fixColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fix the color to a particular value.</span>
 
 <span class="sd">        This changes a color-dependent WCS into the corresponding color-independent WCS</span>
@@ -809,7 +867,10 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="n">color</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="BaseWCS.writeToFitsHeader"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.writeToFitsHeader">[docs]</a>    <span class="k">def</span> <span class="nf">writeToFitsHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.writeToFitsHeader">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.writeToFitsHeader">[docs]</a>
+    <span class="k">def</span> <span class="nf">writeToFitsHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write this WCS function to a FITS header.</span>
 
 <span class="sd">        This is normally called automatically from within the galsim.fits.write() function.</span>
@@ -866,7 +927,10 @@
                     <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;COMMENT&#39;</span> <span class="ow">and</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;HISTORY&#39;</span><span class="p">):</span>
                     <span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="BaseWCS.makeSkyImage"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.makeSkyImage">[docs]</a>    <span class="k">def</span> <span class="nf">makeSkyImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">sky_level</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BaseWCS.makeSkyImage">
+<a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS.makeSkyImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">makeSkyImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">sky_level</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make an image of the sky, correctly accounting for the pixel area, which might be</span>
 <span class="sd">        variable over the image.</span>
 
@@ -885,6 +949,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_makeSkyImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sky_level</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
 
 
+
     <span class="c1"># A lot of classes will need these checks, so consolidate them here</span>
     <span class="k">def</span> <span class="nf">_set_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -901,7 +966,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span> <span class="o">=</span> <span class="n">world_origin</span></div>
 
 
-<div class="viewcode-block" id="readFromFitsHeader"><a class="viewcode-back" href="../../wcs.html#galsim.readFromFitsHeader">[docs]</a><span class="k">def</span> <span class="nf">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="readFromFitsHeader">
+<a class="viewcode-back" href="../../wcs.html#galsim.readFromFitsHeader">[docs]</a>
+<span class="k">def</span> <span class="nf">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a WCS function from a FITS header.</span>
 
 <span class="sd">    This is normally called automatically from within the `galsim.fits.read` function, but</span>
@@ -974,6 +1042,7 @@
     <span class="k">return</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span></div>
 
 
+
 <span class="c1">#########################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># Our class hierarchy is:</span>
@@ -990,7 +1059,9 @@
 <span class="c1">#########################################################################################</span>
 
 
-<div class="viewcode-block" id="EuclideanWCS"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS">[docs]</a><span class="k">class</span> <span class="nc">EuclideanWCS</span><span class="p">(</span><span class="n">BaseWCS</span><span class="p">):</span>
+<div class="viewcode-block" id="EuclideanWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">EuclideanWCS</span><span class="p">(</span><span class="n">BaseWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A EuclideanWCS is a `BaseWCS` whose world coordinates are on a Euclidean plane.</span>
 <span class="sd">    We usually use the notation (u,v) to refer to positions in world coordinates, and</span>
 <span class="sd">    they use the class `PositionD`.</span>
@@ -1022,7 +1093,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="o">.</span><span class="n">y</span>
 
-<div class="viewcode-block" id="EuclideanWCS.xyTouv"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.xyTouv">[docs]</a>    <span class="k">def</span> <span class="nf">xyTouv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="EuclideanWCS.xyTouv">
+<a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.xyTouv">[docs]</a>
+    <span class="k">def</span> <span class="nf">xyTouv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert x,y from image coordinates to world coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toWorld(x,y)``.</span>
@@ -1042,7 +1115,10 @@
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xyTouv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="EuclideanWCS.uvToxy"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.uvToxy">[docs]</a>    <span class="k">def</span> <span class="nf">uvToxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="EuclideanWCS.uvToxy">
+<a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.uvToxy">[docs]</a>
+    <span class="k">def</span> <span class="nf">uvToxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert u,v from world coordinates to image coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toWorld(u,v)``.</span>
@@ -1058,6 +1134,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uvToxy</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
+
 
     <span class="c1"># Simple.  Just call _u, _v.</span>
     <span class="k">def</span> <span class="nf">_posToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
@@ -1204,7 +1281,10 @@
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="UniformWCS"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS">[docs]</a><span class="k">class</span> <span class="nc">UniformWCS</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UniformWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">UniformWCS</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A UniformWCS is a `EuclideanWCS` which has a uniform pixel size and shape.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@property</span>
@@ -1226,11 +1306,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span>
 
     <span class="c1"># UniformWCS transformations can be inverted easily, so might as well provide that function.</span>
-<div class="viewcode-block" id="UniformWCS.inverse"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS.inverse">[docs]</a>    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UniformWCS.inverse">
+<a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS.inverse">[docs]</a>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the inverse transformation, i.e. the transformation that swaps the roles of</span>
 <span class="sd">        the &quot;image&quot; and &quot;world&quot; coordinates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse</span><span class="p">()</span></div>
+
 
     <span class="c1"># We&#39;ll override this for LocalWCS classes. Non-local UniformWCS classes can use that function</span>
     <span class="c1"># do the inversion.</span>
@@ -1250,11 +1333,16 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">world_origin</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="LocalWCS"><a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS">[docs]</a><span class="k">class</span> <span class="nc">LocalWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LocalWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">LocalWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A LocalWCS is a `UniformWCS` in which (0,0) in image coordinates is at the same place</span>
 <span class="sd">    as (0,0) in world coordinates</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="LocalWCS.withOrigin"><a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS.withOrigin">[docs]</a>    <span class="k">def</span> <span class="nf">withOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LocalWCS.withOrigin">
+<a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS.withOrigin">[docs]</a>
+    <span class="k">def</span> <span class="nf">withOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Recenter the current WCS function at a new origin location, returning the new WCS.</span>
 
 <span class="sd">        This function creates a new WCS instance (a non-local WCS) with the same local</span>
@@ -1301,6 +1389,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;world_origin must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_newOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -1341,7 +1430,10 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
-<div class="viewcode-block" id="CelestialWCS"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS">[docs]</a><span class="k">class</span> <span class="nc">CelestialWCS</span><span class="p">(</span><span class="n">BaseWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CelestialWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">CelestialWCS</span><span class="p">(</span><span class="n">BaseWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A CelestialWCS is a `BaseWCS` whose world coordinates are on the celestial sphere.</span>
 <span class="sd">    We use the `CelestialCoord` class for the world coordinates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1363,7 +1455,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span>
 
-<div class="viewcode-block" id="CelestialWCS.xyToradec"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.xyToradec">[docs]</a>    <span class="k">def</span> <span class="nf">xyToradec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CelestialWCS.xyToradec">
+<a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.xyToradec">[docs]</a>
+    <span class="k">def</span> <span class="nf">xyToradec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert x,y from image coordinates to world coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toWorld(x,y, units=units)``.</span>
@@ -1393,7 +1487,10 @@
                                     <span class="n">AngleUnit</span><span class="o">.</span><span class="n">valid_names</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xyToradec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CelestialWCS.radecToxy"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.radecToxy">[docs]</a>    <span class="k">def</span> <span class="nf">radecToxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CelestialWCS.radecToxy">
+<a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.radecToxy">[docs]</a>
+    <span class="k">def</span> <span class="nf">radecToxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert ra,dec from world coordinates to image coordinates.</span>
 
 <span class="sd">        This is equivalent to ``wcs.toImage(ra,dec, units=units)``.</span>
@@ -1416,6 +1513,7 @@
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;units must be either an AngleUnit or a string&quot;</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span>
                                     <span class="n">AngleUnit</span><span class="o">.</span><span class="n">valid_names</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radecToxy</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span></div>
+
 
     <span class="c1"># This is a bit simpler than the EuclideanWCS version, since there is no world_origin.</span>
     <span class="k">def</span> <span class="nf">_shiftOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
@@ -1545,6 +1643,7 @@
 
 
 
+
 <span class="c1">#########################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># Local WCS classes are those where (x,y) = (0,0) corresponds to (u,v) = (0,0).</span>
@@ -1578,7 +1677,9 @@
 <span class="c1">#</span>
 <span class="c1">#########################################################################################</span>
 
-<div class="viewcode-block" id="PixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale">[docs]</a><span class="k">class</span> <span class="nc">PixelScale</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
+<div class="viewcode-block" id="PixelScale">
+<a class="viewcode-back" href="../../wcs.html#galsim.PixelScale">[docs]</a>
+<span class="k">class</span> <span class="nc">PixelScale</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This is the simplest possible WCS transformation.  It only involves a unit conversion</span>
 <span class="sd">    from pixels to arcsec (or whatever units you want to take for your world coordinate system).</span>
 
@@ -1696,7 +1797,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="ShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS">[docs]</a><span class="k">class</span> <span class="nc">ShearWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ShearWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">ShearWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS is a uniformly sheared coordinate system.</span>
 
 <span class="sd">    The shear is given as the shape that a round object has when observed in image coordinates.</span>
@@ -1830,7 +1934,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="JacobianWCS"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS">[docs]</a><span class="k">class</span> <span class="nc">JacobianWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="JacobianWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">JacobianWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS is the most general local linear WCS implementing a 2x2 Jacobian matrix.</span>
 
 <span class="sd">    The conversion functions are:</span>
@@ -1955,7 +2062,9 @@
     <span class="k">def</span> <span class="nf">_pixelArea</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_det</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JacobianWCS.getMatrix"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.getMatrix">[docs]</a>    <span class="k">def</span> <span class="nf">getMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="JacobianWCS.getMatrix">
+<a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.getMatrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">getMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the Jacobian as a NumPy matrix:</span>
 
 <span class="sd">                numpy.array( [[ dudx, dudy ],</span>
@@ -1964,7 +2073,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span> <span class="p">],</span>
                          <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span> <span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="JacobianWCS.getDecomposition"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.getDecomposition">[docs]</a>    <span class="k">def</span> <span class="nf">getDecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="JacobianWCS.getDecomposition">
+<a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.getDecomposition">[docs]</a>
+    <span class="k">def</span> <span class="nf">getDecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the equivalent expansion, shear, rotation and possible flip corresponding to</span>
 <span class="sd">        this Jacobian transformation.</span>
 
@@ -2038,6 +2150,7 @@
 
         <span class="k">return</span> <span class="n">scale</span><span class="p">,</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">),</span> <span class="n">theta</span><span class="p">,</span> <span class="n">flip</span></div>
 
+
     <span class="k">def</span> <span class="nf">_minScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># min scale is scale * (1-|g|) / sqrt(1-|g|^2)</span>
         <span class="c1"># We could get this from the decomposition, but some algebra finds that this</span>
@@ -2094,6 +2207,7 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
+
 <span class="c1">#########################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># Non-local UniformWCS classes are those where (x,y) = (0,0) does not (necessarily)</span>
@@ -2119,7 +2233,9 @@
 <span class="c1">#########################################################################################</span>
 
 
-<div class="viewcode-block" id="OffsetWCS"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS">[docs]</a><span class="k">class</span> <span class="nc">OffsetWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
+<div class="viewcode-block" id="OffsetWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">OffsetWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS is similar to `PixelScale`, except the origin is not necessarily (0,0) in both</span>
 <span class="sd">    the image and world coordinates.</span>
 
@@ -2201,7 +2317,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="OffsetShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS">[docs]</a><span class="k">class</span> <span class="nc">OffsetShearWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OffsetShearWCS">
+<a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS">[docs]</a>
+<span class="k">class</span> <span class="nc">OffsetShearWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS is a uniformly sheared coordinate system with image and world origins</span>
 <span class="sd">    that are not necessarily coincident.</span>
 
@@ -2296,7 +2415,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="AffineTransform"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform">[docs]</a><span class="k">class</span> <span class="nc">AffineTransform</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AffineTransform">
+<a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform">[docs]</a>
+<span class="k">class</span> <span class="nc">AffineTransform</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS is the most general linear transformation.  It involves a 2x2 Jacobian</span>
 <span class="sd">    matrix and an offset.  You can provide the offset in terms of either the ``image_pos``</span>
 <span class="sd">    (x0,y0) where (u,v) = (0,0), or the ``world_pos`` (u0,v0) where (x,y) = (0,0).</span>
@@ -2423,6 +2545,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.AffineTransform(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, origin=</span><span class="si">%r</span><span class="s2">, world_origin=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
 
 
 <span class="c1">#########################################################################################</span>
@@ -2582,7 +2705,9 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="UVFunction"><a class="viewcode-back" href="../../wcs.html#galsim.UVFunction">[docs]</a><span class="k">class</span> <span class="nc">UVFunction</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
+<div class="viewcode-block" id="UVFunction">
+<a class="viewcode-back" href="../../wcs.html#galsim.UVFunction">[docs]</a>
+<span class="k">class</span> <span class="nc">UVFunction</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS takes two arbitrary functions for u(x,y) and v(x,y).</span>
 
 <span class="sd">    The ufunc and vfunc parameters may be:</span>
@@ -2858,7 +2983,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="RaDecFunction"><a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction">[docs]</a><span class="k">class</span> <span class="nc">RaDecFunction</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RaDecFunction">
+<a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction">[docs]</a>
+<span class="k">class</span> <span class="nc">RaDecFunction</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This WCS takes an arbitrary function for the Right Ascension (ra) and Declination (dec).</span>
 
 <span class="sd">    In many cases, it can be more convenient to calculate both ra and dec in a single function,</span>
@@ -3003,7 +3131,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="compatible"><a class="viewcode-back" href="../../wcs.html#galsim.compatible">[docs]</a><span class="k">def</span> <span class="nf">compatible</span><span class="p">(</span><span class="n">wcs1</span><span class="p">,</span> <span class="n">wcs2</span><span class="p">):</span>
+
+<div class="viewcode-block" id="compatible">
+<a class="viewcode-back" href="../../wcs.html#galsim.compatible">[docs]</a>
+<span class="k">def</span> <span class="nf">compatible</span><span class="p">(</span><span class="n">wcs1</span><span class="p">,</span> <span class="n">wcs2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility to check the compatibility of two WCS.  In particular, if two WCS are consistent with</span>
 <span class="sd">    each other modulo a shifted origin, we consider them to be compatible, even though they are not</span>
@@ -3013,6 +3144,7 @@
         <span class="k">return</span> <span class="n">wcs1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">()</span> <span class="o">==</span> <span class="n">wcs2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">wcs1</span> <span class="o">==</span> <span class="n">wcs2</span><span class="o">.</span><span class="n">shiftOrigin</span><span class="p">(</span><span class="n">wcs1</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">wcs1</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span></div>
+
 
 
 <span class="c1"># Put these at the bottom to avoid circular import errors.</span>

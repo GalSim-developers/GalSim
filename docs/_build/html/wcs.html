@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>World Coordinate Systems &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>World Coordinate Systems &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,9 +35,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -266,7 +263,7 @@
            <div itemprop="articleBody">
              
   <section id="world-coordinate-systems">
-<h1>World Coordinate Systems<a class="headerlink" href="#world-coordinate-systems" title="Permalink to this heading"></a></h1>
+<h1>World Coordinate Systems<a class="headerlink" href="#world-coordinate-systems" title="Link to this heading"></a></h1>
 <p>The World Coordinate System (or WCS) is the traditional term for the mapping from pixel coordinates
 to the coordinate system on the sky.
 (I know, the world’s down here, and the sky’s up there, so you’d think it would
@@ -286,10 +283,10 @@ up into the sky, if north is up, then west is to the right.)</p></li>
 <p>The classes in this file provide a mapping from image coordinates (in pixels) to one of these
 two kinds of world coordinates.  We use the labels <code class="docutils literal notranslate"><span class="pre">(x,y)</span></code> for the image coordinates.</p>
 <section id="wcs-base-classes">
-<h2>WCS Base Classes<a class="headerlink" href="#wcs-base-classes" title="Permalink to this heading"></a></h2>
+<h2>WCS Base Classes<a class="headerlink" href="#wcs-base-classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.BaseWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">BaseWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">BaseWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS" title="Link to this definition"></a></dt>
 <dd><p>The base class for all other kinds of WCS transformations.</p>
 <p>All the functions the user will typically need are defined here.  Most subclasses just
 define helper functions to implement each particular WCS definition.  So this base
@@ -433,7 +430,7 @@ the transformed values may not agree as you get farther from the given point.</p
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.affine">
-<span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.affine" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.affine" title="Link to this definition"></a></dt>
 <dd><p>Return the local <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> of the WCS at a given point.</p>
 <p>This returns a linearized version of the current WCS at a given point.  It
 returns an <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> that is locally approximately the same as the WCS in
@@ -481,7 +478,7 @@ local affine transform. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.fixColor">
-<span class="sig-name descname"><span class="pre">fixColor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.fixColor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.fixColor" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fixColor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.fixColor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.fixColor" title="Link to this definition"></a></dt>
 <dd><p>Fix the color to a particular value.</p>
 <p>This changes a color-dependent WCS into the corresponding color-independent WCS
 for the given color.</p>
@@ -497,21 +494,21 @@ for the given color.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.isCelestial">
-<span class="sig-name descname"><span class="pre">isCelestial</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isCelestial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isCelestial" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">isCelestial</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isCelestial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isCelestial" title="Link to this definition"></a></dt>
 <dd><p>Return whether the world coordinates are <a class="reference internal" href="#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> (i.e. ra,dec).</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isCelestial()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">galsim.CelestialWCS)</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.isLocal">
-<span class="sig-name descname"><span class="pre">isLocal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isLocal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isLocal" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">isLocal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isLocal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isLocal" title="Link to this definition"></a></dt>
 <dd><p>Return whether the WCS transformation is a local, linear approximation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isLocal()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">galsim.LocalWCS)</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.isPixelScale">
-<span class="sig-name descname"><span class="pre">isPixelScale</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isPixelScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isPixelScale" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">isPixelScale</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isPixelScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isPixelScale" title="Link to this definition"></a></dt>
 <dd><p>Return whether the WCS transformation is a simple <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>.</p>
 <p>These are the simplest two WCS transformations.  <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> is local and <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>
 is non-local.  If an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> has one of these WCS transformations as its WCS, then
@@ -523,14 +520,14 @@ TypeError exception.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.isUniform">
-<span class="sig-name descname"><span class="pre">isUniform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isUniform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isUniform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">isUniform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isUniform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.isUniform" title="Link to this definition"></a></dt>
 <dd><p>Return whether the pixels in this WCS have uniform size and shape.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isUniform()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">galsim.UniformWCS)</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.jacobian">
-<span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.jacobian" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.jacobian" title="Link to this definition"></a></dt>
 <dd><p>Return the local <a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a> of the WCS at a given point.</p>
 <p>This is basically the same as local(), but the return value is guaranteed to be a
 <a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a>, which can be useful in some situations, since you can access the values
@@ -561,7 +558,7 @@ local jacobian. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.local">
-<span class="sig-name descname"><span class="pre">local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.local" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.local" title="Link to this definition"></a></dt>
 <dd><p>Return the local linear approximation of the WCS at a given point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -580,7 +577,7 @@ local WCS. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.makeSkyImage">
-<span class="sig-name descname"><span class="pre">makeSkyImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sky_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.makeSkyImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.makeSkyImage" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">makeSkyImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sky_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.makeSkyImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.makeSkyImage" title="Link to this definition"></a></dt>
 <dd><p>Make an image of the sky, correctly accounting for the pixel area, which might be
 variable over the image.</p>
 <dl class="simple">
@@ -603,7 +600,7 @@ sky image. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.maxLinearScale">
-<span class="sig-name descname"><span class="pre">maxLinearScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.maxLinearScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.maxLinearScale" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">maxLinearScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.maxLinearScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.maxLinearScale" title="Link to this definition"></a></dt>
 <dd><p>Return the maximum linear scale of the transformation in any direction.</p>
 <p>This is basically the semi-major axis of the Jacobian.  Sometimes you need a
 linear scale size for some calculation.  This function returns the largest
@@ -627,7 +624,7 @@ scale. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.minLinearScale">
-<span class="sig-name descname"><span class="pre">minLinearScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.minLinearScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.minLinearScale" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">minLinearScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.minLinearScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.minLinearScale" title="Link to this definition"></a></dt>
 <dd><p>Return the minimum linear scale of the transformation in any direction.</p>
 <p>This is basically the semi-minor axis of the Jacobian.  Sometimes you need a
 linear scale size for some calculation.  This function returns the smallest
@@ -651,7 +648,7 @@ scale. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.pixelArea">
-<span class="sig-name descname"><span class="pre">pixelArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.pixelArea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.pixelArea" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pixelArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.pixelArea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.pixelArea" title="Link to this definition"></a></dt>
 <dd><p>Return the area of a pixel in arcsec**2 (or in whatever units you are using for
 world coordinates if it is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a>).</p>
 <p>For non-uniform WCS transforms, you must provide either <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>
@@ -673,7 +670,7 @@ pixel area. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.posToImage">
-<span class="sig-name descname"><span class="pre">posToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.posToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.posToImage" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">posToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.posToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.posToImage" title="Link to this definition"></a></dt>
 <dd><p>Convert a position from world coordinates to image coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toImage(world_pos)</span></code>.</p>
 <dl class="field-list simple">
@@ -688,7 +685,7 @@ pixel area. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.posToWorld">
-<span class="sig-name descname"><span class="pre">posToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.posToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.posToWorld" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">posToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.posToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.posToWorld" title="Link to this definition"></a></dt>
 <dd><p>Convert a position from image coordinates to world coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(image_pos)</span></code>.</p>
 <dl class="field-list simple">
@@ -711,7 +708,7 @@ than returning a <a class="reference internal" href="#galsim.CelestialCoord" tit
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.profileToImage">
-<span class="sig-name descname"><span class="pre">profileToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.profileToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.profileToImage" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">profileToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.profileToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.profileToImage" title="Link to this definition"></a></dt>
 <dd><p>Convert a profile from world coordinates to image coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toImage(world_profile,</span> <span class="pre">...)</span></code>.</p>
 <dl class="field-list simple">
@@ -731,7 +728,7 @@ than returning a <a class="reference internal" href="#galsim.CelestialCoord" tit
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.profileToWorld">
-<span class="sig-name descname"><span class="pre">profileToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.profileToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.profileToWorld" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">profileToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.profileToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.profileToWorld" title="Link to this definition"></a></dt>
 <dd><p>Convert a profile from image coordinates to world coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(image_profile,</span> <span class="pre">...)</span></code>.</p>
 <dl class="field-list simple">
@@ -751,7 +748,7 @@ than returning a <a class="reference internal" href="#galsim.CelestialCoord" tit
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.shearToImage">
-<span class="sig-name descname"><span class="pre">shearToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shearToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shearToImage" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">shearToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shearToImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shearToImage" title="Link to this definition"></a></dt>
 <dd><p>Convert a shear measured in world coordinates to image coordinates</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toImage(shear,</span> <span class="pre">...)</span></code>.</p>
 <p>This reverses the process described in <a class="reference internal" href="#galsim.BaseWCS.shearToWorld" title="galsim.BaseWCS.shearToWorld"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shearToWorld</span></code></a>.</p>
@@ -775,7 +772,7 @@ than returning a <a class="reference internal" href="#galsim.CelestialCoord" tit
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.shearToWorld">
-<span class="sig-name descname"><span class="pre">shearToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shearToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shearToWorld" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">shearToWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shearToWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shearToWorld" title="Link to this definition"></a></dt>
 <dd><p>Convert a shear measured in image coordinates to world coordinates</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(shear,</span> <span class="pre">...)</span></code>.</p>
 <p>Specifically, the input shear is taken to be defined such that +e1 means elongated along
@@ -806,7 +803,7 @@ by many, but not all, codes and catalogs that use or report shears on the spheri
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.shiftOrigin">
-<span class="sig-name descname"><span class="pre">shiftOrigin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shiftOrigin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shiftOrigin" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">shiftOrigin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.shiftOrigin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.shiftOrigin" title="Link to this definition"></a></dt>
 <dd><p>Shift the origin of the current WCS function, returning the new WCS.</p>
 <p>This function creates a new WCS instance (always a non-local WCS) that shifts the
 origin by the given amount.  In other words, it treats the image position <code class="docutils literal notranslate"><span class="pre">origin</span></code>
@@ -858,7 +855,7 @@ between the current origin and world_origin. [default: None]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.toImage">
-<span class="sig-name descname"><span class="pre">toImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.toImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.toImage" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">toImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.toImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.toImage" title="Link to this definition"></a></dt>
 <dd><p>Convert from world coordinates to image coordinates</p>
 <p>There are essentially three overloaded versions of this function here.</p>
 <ol class="arabic">
@@ -908,7 +905,7 @@ namely in the local coordinates where north is up and west is to the right.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.toWorld">
-<span class="sig-name descname"><span class="pre">toWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.toWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.toWorld" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">toWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.toWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.toWorld" title="Link to this definition"></a></dt>
 <dd><p>Convert from image coordinates to world coordinates.</p>
 <p>There are essentially four overloaded versions of this function here.</p>
 <ol class="arabic">
@@ -957,7 +954,7 @@ namely in the local coordinates where north is up and west is to the right.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.BaseWCS.writeToFitsHeader">
-<span class="sig-name descname"><span class="pre">writeToFitsHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.writeToFitsHeader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.writeToFitsHeader" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">writeToFitsHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.writeToFitsHeader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseWCS.writeToFitsHeader" title="Link to this definition"></a></dt>
 <dd><p>Write this WCS function to a FITS header.</p>
 <p>This is normally called automatically from within the galsim.fits.write() function.</p>
 <p>The code will attempt to write standard FITS WCS keys so that the WCS will be readable
@@ -981,13 +978,13 @@ reconstruct the WCS correctly.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">CelestialWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">CelestialWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.BaseWCS" title="galsim.wcs.BaseWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a></p>
 <p>A CelestialWCS is a <a class="reference internal" href="#galsim.BaseWCS" title="galsim.wcs.BaseWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a> whose world coordinates are on the celestial sphere.
 We use the <a class="reference internal" href="#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> class for the world coordinates.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS.radecToxy">
-<span class="sig-name descname"><span class="pre">radecToxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.radecToxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.radecToxy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">radecToxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.radecToxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.radecToxy" title="Link to this definition"></a></dt>
 <dd><p>Convert ra,dec from world coordinates to image coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toImage(ra,dec,</span> <span class="pre">units=units)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToImage(galsim.CelestialCoord(ra</span> <span class="pre">*</span> <span class="pre">units,</span> <span class="pre">dec</span> <span class="pre">*</span> <span class="pre">units))</span></code>
@@ -1008,13 +1005,13 @@ the pos interface.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS.x0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x0</span></span><a class="headerlink" href="#galsim.wcs.CelestialWCS.x0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x0</span></span><a class="headerlink" href="#galsim.wcs.CelestialWCS.x0" title="Link to this definition"></a></dt>
 <dd><p>The x coordinate of self.origin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS.xyToradec">
-<span class="sig-name descname"><span class="pre">xyToradec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.xyToradec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.xyToradec" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">xyToradec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.xyToradec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.xyToradec" title="Link to this definition"></a></dt>
 <dd><p>Convert x,y from image coordinates to world coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(x,y,</span> <span class="pre">units=units)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToWorld(galsim.PositionD(x,y)).rad</span></code> when x and y are
@@ -1039,7 +1036,7 @@ The units to use for the returned ra, dec values.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.CelestialWCS.y0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y0</span></span><a class="headerlink" href="#galsim.wcs.CelestialWCS.y0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y0</span></span><a class="headerlink" href="#galsim.wcs.CelestialWCS.y0" title="Link to this definition"></a></dt>
 <dd><p>The y coordinate of self.origin.</p>
 </dd></dl>
 
@@ -1047,20 +1044,20 @@ The units to use for the returned ra, dec values.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">EuclideanWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">EuclideanWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.BaseWCS" title="galsim.wcs.BaseWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a></p>
 <p>A EuclideanWCS is a <a class="reference internal" href="#galsim.BaseWCS" title="galsim.wcs.BaseWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a> whose world coordinates are on a Euclidean plane.
 We usually use the notation (u,v) to refer to positions in world coordinates, and
 they use the class <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.u0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">u0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.u0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">u0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.u0" title="Link to this definition"></a></dt>
 <dd><p>The x component of self.world_origin (aka u).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.uvToxy">
-<span class="sig-name descname"><span class="pre">uvToxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.uvToxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.uvToxy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">uvToxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.uvToxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.uvToxy" title="Link to this definition"></a></dt>
 <dd><p>Convert u,v from world coordinates to image coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(u,v)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToImage(galsim.PositionD(u,v))</span></code> when u and v are scalars;
@@ -1079,19 +1076,19 @@ will be vectorized, which is often much faster than using the pos interface.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.v0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.v0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.v0" title="Link to this definition"></a></dt>
 <dd><p>The y component of self.world_origin (aka v).</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.x0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.x0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.x0" title="Link to this definition"></a></dt>
 <dd><p>The x component of self.origin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.xyTouv">
-<span class="sig-name descname"><span class="pre">xyTouv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.xyTouv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.xyTouv" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">xyTouv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.xyTouv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.xyTouv" title="Link to this definition"></a></dt>
 <dd><p>Convert x,y from image coordinates to world coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(x,y)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToWorld(galsim.PositionD(x,y))</span></code> when x and y are scalars;
@@ -1113,7 +1110,7 @@ will be vectorized, which is often much faster than using the pos interface.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.EuclideanWCS.y0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.y0" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y0</span></span><a class="headerlink" href="#galsim.wcs.EuclideanWCS.y0" title="Link to this definition"></a></dt>
 <dd><p>The y component of self.origin.</p>
 </dd></dl>
 
@@ -1121,12 +1118,12 @@ will be vectorized, which is often much faster than using the pos interface.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.wcs.UniformWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">UniformWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.UniformWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">UniformWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.UniformWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a></p>
 <p>A UniformWCS is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a> which has a uniform pixel size and shape.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.UniformWCS.inverse">
-<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.UniformWCS.inverse" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.UniformWCS.inverse" title="Link to this definition"></a></dt>
 <dd><p>Return the inverse transformation, i.e. the transformation that swaps the roles of
 the “image” and “world” coordinates.</p>
 </dd></dl>
@@ -1135,19 +1132,19 @@ the “image” and “world” coordinates.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.wcs.LocalWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">LocalWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#LocalWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.LocalWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">LocalWCS</span></span><a class="reference internal" href="_modules/galsim/wcs.html#LocalWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.LocalWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a></p>
 <p>A LocalWCS is a <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a> in which (0,0) in image coordinates is at the same place
 as (0,0) in world coordinates</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.LocalWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.wcs.LocalWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.wcs.LocalWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.wcs.LocalWCS.withOrigin">
-<span class="sig-name descname"><span class="pre">withOrigin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#LocalWCS.withOrigin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.LocalWCS.withOrigin" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withOrigin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#LocalWCS.withOrigin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.LocalWCS.withOrigin" title="Link to this definition"></a></dt>
 <dd><p>Recenter the current WCS function at a new origin location, returning the new WCS.</p>
 <p>This function creates a new WCS instance (a non-local WCS) with the same local
 behavior as the current WCS, but with the given origin.  In other words, you are
@@ -1194,7 +1191,7 @@ between the current origin and world_origin. [default: None]</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.wcs.LocalWCS.world_origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.wcs.LocalWCS.world_origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.wcs.LocalWCS.world_origin" title="Link to this definition"></a></dt>
 <dd><p>The world coordinate position to use as the origin.</p>
 </dd></dl>
 
@@ -1202,10 +1199,10 @@ between the current origin and world_origin. [default: None]</p></li>
 
 </section>
 <section id="euclidean-wcs-s">
-<h2>Euclidean WCS’s<a class="headerlink" href="#euclidean-wcs-s" title="Permalink to this heading"></a></h2>
+<h2>Euclidean WCS’s<a class="headerlink" href="#euclidean-wcs-s" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PixelScale">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PixelScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PixelScale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PixelScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PixelScale" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a></p>
 <p>This is the simplest possible WCS transformation.  It only involves a unit conversion
 from pixels to arcsec (or whatever units you want to take for your world coordinate system).</p>
@@ -1225,7 +1222,7 @@ v = y * scale</p>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.PixelScale.scale">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.PixelScale.scale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.PixelScale.scale" title="Link to this definition"></a></dt>
 <dd><p>The pixel scale</p>
 </dd></dl>
 
@@ -1233,7 +1230,7 @@ v = y * scale</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.OffsetWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">OffsetWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.OffsetWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">OffsetWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.OffsetWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a></p>
 <p>This WCS is similar to <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>, except the origin is not necessarily (0,0) in both
 the image and world coordinates.</p>
@@ -1261,19 +1258,19 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.OffsetWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.OffsetWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetWCS.scale">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.OffsetWCS.scale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.OffsetWCS.scale" title="Link to this definition"></a></dt>
 <dd><p>The pixel scale.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetWCS.world_origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.OffsetWCS.world_origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.OffsetWCS.world_origin" title="Link to this definition"></a></dt>
 <dd><p>The world coordinate position to use as the origin.</p>
 </dd></dl>
 
@@ -1281,7 +1278,7 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.ShearWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">ShearWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ShearWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">ShearWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.ShearWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a></p>
 <p>This WCS is a uniformly sheared coordinate system.</p>
 <p>The shear is given as the shape that a round object has when observed in image coordinates.</p>
@@ -1311,13 +1308,13 @@ v = (y + g1 y - g2 x) * scale / sqrt(1-g1**2-g2**2)</p>
 transformation represented by the ShearWCS will conserve object area also.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.ShearWCS.scale">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.ShearWCS.scale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.ShearWCS.scale" title="Link to this definition"></a></dt>
 <dd><p>The pixel scale.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.ShearWCS.shear">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shear</span></span><a class="headerlink" href="#galsim.ShearWCS.shear" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shear</span></span><a class="headerlink" href="#galsim.ShearWCS.shear" title="Link to this definition"></a></dt>
 <dd><p>The applied <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a>.</p>
 </dd></dl>
 
@@ -1325,7 +1322,7 @@ transformation represented by the ShearWCS will conserve object area also.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.OffsetShearWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">OffsetShearWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.OffsetShearWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">OffsetShearWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.OffsetShearWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a></p>
 <p>This WCS is a uniformly sheared coordinate system with image and world origins
 that are not necessarily coincident.</p>
@@ -1356,25 +1353,25 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetShearWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetShearWCS.scale">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.scale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.scale" title="Link to this definition"></a></dt>
 <dd><p>The pixel scale.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetShearWCS.shear">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shear</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.shear" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shear</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.shear" title="Link to this definition"></a></dt>
 <dd><p>The applied <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.OffsetShearWCS.world_origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.world_origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.OffsetShearWCS.world_origin" title="Link to this definition"></a></dt>
 <dd><p>The world coordinate position to use as the origin.</p>
 </dd></dl>
 
@@ -1382,7 +1379,7 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.JacobianWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">JacobianWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">JacobianWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a></p>
 <p>This WCS is the most general local linear WCS implementing a 2x2 Jacobian matrix.</p>
 <p>The conversion functions are:</p>
@@ -1417,31 +1414,31 @@ this transformation.  See the docstring for that method for more information.</p
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.dudx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudx</span></span><a class="headerlink" href="#galsim.JacobianWCS.dudx" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudx</span></span><a class="headerlink" href="#galsim.JacobianWCS.dudx" title="Link to this definition"></a></dt>
 <dd><p>du/dx</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.dudy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudy</span></span><a class="headerlink" href="#galsim.JacobianWCS.dudy" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudy</span></span><a class="headerlink" href="#galsim.JacobianWCS.dudy" title="Link to this definition"></a></dt>
 <dd><p>du/dy</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.dvdx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdx</span></span><a class="headerlink" href="#galsim.JacobianWCS.dvdx" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdx</span></span><a class="headerlink" href="#galsim.JacobianWCS.dvdx" title="Link to this definition"></a></dt>
 <dd><p>dv/dx</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.dvdy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdy</span></span><a class="headerlink" href="#galsim.JacobianWCS.dvdy" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdy</span></span><a class="headerlink" href="#galsim.JacobianWCS.dvdy" title="Link to this definition"></a></dt>
 <dd><p>dv/dy</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.getDecomposition">
-<span class="sig-name descname"><span class="pre">getDecomposition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.getDecomposition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS.getDecomposition" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">getDecomposition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.getDecomposition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS.getDecomposition" title="Link to this definition"></a></dt>
 <dd><p>Get the equivalent expansion, shear, rotation and possible flip corresponding to
 this Jacobian transformation.</p>
 <p>A non-singular real matrix can always be decomposed into a symmetric positive definite
@@ -1474,7 +1471,7 @@ float, shear is a <a class="reference internal" href="shear.html#galsim.Shear" t
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.JacobianWCS.getMatrix">
-<span class="sig-name descname"><span class="pre">getMatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.getMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS.getMatrix" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">getMatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.getMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.JacobianWCS.getMatrix" title="Link to this definition"></a></dt>
 <dd><p>Get the Jacobian as a NumPy matrix:</p>
 <dl class="simple">
 <dt>numpy.array( [[ dudx, dudy ],</dt><dd><p>[ dvdx, dvdy ]] )</p>
@@ -1486,7 +1483,7 @@ float, shear is a <a class="reference internal" href="shear.html#galsim.Shear" t
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.AffineTransform">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AffineTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AffineTransform" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AffineTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AffineTransform" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a></p>
 <p>This WCS is the most general linear transformation.  It involves a 2x2 Jacobian
 matrix and an offset.  You can provide the offset in terms of either the <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>
@@ -1522,37 +1519,37 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.dudx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudx</span></span><a class="headerlink" href="#galsim.AffineTransform.dudx" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudx</span></span><a class="headerlink" href="#galsim.AffineTransform.dudx" title="Link to this definition"></a></dt>
 <dd><p>du/dx</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.dudy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudy</span></span><a class="headerlink" href="#galsim.AffineTransform.dudy" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dudy</span></span><a class="headerlink" href="#galsim.AffineTransform.dudy" title="Link to this definition"></a></dt>
 <dd><p>du/dy</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.dvdx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdx</span></span><a class="headerlink" href="#galsim.AffineTransform.dvdx" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdx</span></span><a class="headerlink" href="#galsim.AffineTransform.dvdx" title="Link to this definition"></a></dt>
 <dd><p>dv/dx</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.dvdy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdy</span></span><a class="headerlink" href="#galsim.AffineTransform.dvdy" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvdy</span></span><a class="headerlink" href="#galsim.AffineTransform.dvdy" title="Link to this definition"></a></dt>
 <dd><p>dv/dy</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.AffineTransform.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.AffineTransform.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AffineTransform.world_origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.AffineTransform.world_origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.AffineTransform.world_origin" title="Link to this definition"></a></dt>
 <dd><p>The world coordinate position to use as the origin.</p>
 </dd></dl>
 
@@ -1560,7 +1557,7 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.UVFunction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">UVFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ufunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vfunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UVFunction" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">UVFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ufunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vfunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UVFunction" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a></p>
 <p>This WCS takes two arbitrary functions for u(x,y) and v(x,y).</p>
 <dl class="simple">
@@ -1603,37 +1600,37 @@ the color values you use when using the wcs.) [default: False]</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.UVFunction.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.UVFunction.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.ufunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ufunc</span></span><a class="headerlink" href="#galsim.UVFunction.ufunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ufunc</span></span><a class="headerlink" href="#galsim.UVFunction.ufunc" title="Link to this definition"></a></dt>
 <dd><p>The input ufunc</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.vfunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vfunc</span></span><a class="headerlink" href="#galsim.UVFunction.vfunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vfunc</span></span><a class="headerlink" href="#galsim.UVFunction.vfunc" title="Link to this definition"></a></dt>
 <dd><p>The input vfunc</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.world_origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.UVFunction.world_origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world_origin</span></span><a class="headerlink" href="#galsim.UVFunction.world_origin" title="Link to this definition"></a></dt>
 <dd><p>The world coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.xfunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xfunc</span></span><a class="headerlink" href="#galsim.UVFunction.xfunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xfunc</span></span><a class="headerlink" href="#galsim.UVFunction.xfunc" title="Link to this definition"></a></dt>
 <dd><p>The input xfunc</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.UVFunction.yfunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">yfunc</span></span><a class="headerlink" href="#galsim.UVFunction.yfunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">yfunc</span></span><a class="headerlink" href="#galsim.UVFunction.yfunc" title="Link to this definition"></a></dt>
 <dd><p>The input yfunc</p>
 </dd></dl>
 
@@ -1641,10 +1638,10 @@ the color values you use when using the wcs.) [default: False]</p></li>
 
 </section>
 <section id="celestial-wcs-s">
-<h2>Celestial WCS’s<a class="headerlink" href="#celestial-wcs-s" title="Permalink to this heading"></a></h2>
+<h2>Celestial WCS’s<a class="headerlink" href="#celestial-wcs-s" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.RaDecFunction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RaDecFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RaDecFunction" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RaDecFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RaDecFunction" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a></p>
 <p>This WCS takes an arbitrary function for the Right Ascension (ra) and Declination (dec).</p>
 <p>In many cases, it can be more convenient to calculate both ra and dec in a single function,
@@ -1687,13 +1684,13 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.RaDecFunction.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.RaDecFunction.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.RaDecFunction.origin" title="Link to this definition"></a></dt>
 <dd><p>The image coordinate position to use as the origin.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.RaDecFunction.radec_func">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radec_func</span></span><a class="headerlink" href="#galsim.RaDecFunction.radec_func" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radec_func</span></span><a class="headerlink" href="#galsim.RaDecFunction.radec_func" title="Link to this definition"></a></dt>
 <dd><p>The input radec_func</p>
 </dd></dl>
 
@@ -1701,7 +1698,7 @@ If provided, it should be a <a class="reference internal" href="pos.html#galsim.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.AstropyWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AstropyWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AstropyWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AstropyWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AstropyWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a></p>
 <p>This WCS uses astropy.wcs to read WCS information from a FITS file.
 It requires the astropy.wcs python module to be installed.</p>
@@ -1750,13 +1747,13 @@ If provided, it should be a PositionD or PositionI.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AstropyWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.AstropyWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.AstropyWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The origin in image coordinates of the WCS function.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AstropyWCS.wcs">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wcs</span></span><a class="headerlink" href="#galsim.AstropyWCS.wcs" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wcs</span></span><a class="headerlink" href="#galsim.AstropyWCS.wcs" title="Link to this definition"></a></dt>
 <dd><p>The underlying <code class="docutils literal notranslate"><span class="pre">astropy.wcs.WCS</span></code> object.</p>
 </dd></dl>
 
@@ -1764,7 +1761,7 @@ If provided, it should be a PositionD or PositionI.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.PyAstWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PyAstWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcsinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PyAstWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">PyAstWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcsinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PyAstWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a></p>
 <p>This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
 information from a FITS file.  It requires the starlink.Ast python module to be installed.</p>
@@ -1809,13 +1806,13 @@ If provided, it should be a PositionD or PositionI.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.PyAstWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.PyAstWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.PyAstWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The origin in image coordinates of the WCS function.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.PyAstWCS.wcsinfo">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wcsinfo</span></span><a class="headerlink" href="#galsim.PyAstWCS.wcsinfo" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wcsinfo</span></span><a class="headerlink" href="#galsim.PyAstWCS.wcsinfo" title="Link to this definition"></a></dt>
 <dd><p>The underlying <code class="docutils literal notranslate"><span class="pre">starlink.Ast.FrameSet</span></code> for this object.</p>
 </dd></dl>
 
@@ -1823,7 +1820,7 @@ If provided, it should be a PositionD or PositionI.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.WcsToolsWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">WcsToolsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WcsToolsWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">WcsToolsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WcsToolsWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a></p>
 <p>This WCS uses wcstools executables to perform the appropriate WCS transformations
 for a given FITS file.  It requires wcstools command line functions to be installed.</p>
@@ -1850,13 +1847,13 @@ If provided, it should be a PositionD or PositionI.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.WcsToolsWCS.file_name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_name</span></span><a class="headerlink" href="#galsim.WcsToolsWCS.file_name" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_name</span></span><a class="headerlink" href="#galsim.WcsToolsWCS.file_name" title="Link to this definition"></a></dt>
 <dd><p>The file name of the FITS file with the WCS information.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.WcsToolsWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.WcsToolsWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.WcsToolsWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The origin in image coordinates of the WCS function.</p>
 </dd></dl>
 
@@ -1864,7 +1861,7 @@ If provided, it should be a PositionD or PositionI.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.GSFitsWCS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">GSFitsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_doiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSFitsWCS" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">GSFitsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_doiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GSFitsWCS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a></p>
 <p>This WCS uses a GalSim implementation to read a WCS from a FITS file.</p>
 <p>It doesn’t do nearly as many WCS types as the other options, and it does not try to be
@@ -1907,7 +1904,7 @@ If provided, it should be a PositionD or PositionI.
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.GSFitsWCS.origin">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.GSFitsWCS.origin" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#galsim.GSFitsWCS.origin" title="Link to this definition"></a></dt>
 <dd><p>The origin in image coordinates of the WCS function.</p>
 </dd></dl>
 
@@ -1915,7 +1912,7 @@ If provided, it should be a PositionD or PositionI.
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.FitsWCS">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FitsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#FitsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FitsWCS" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FitsWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#FitsWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FitsWCS" title="Link to this definition"></a></dt>
 <dd><p>This factory function will try to read the WCS from a FITS file and return a WCS that will
 work.  It tries a number of different WCS classes until it finds one that succeeds in reading
 the file.</p>
@@ -1957,7 +1954,7 @@ called from one of the galsim.fits.read* functions.)</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.TanWCS">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">TanWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#TanWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TanWCS" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">TanWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#TanWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TanWCS" title="Link to this definition"></a></dt>
 <dd><p>This is a function that returns a <a class="reference internal" href="#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a> object for a TAN WCS projection.</p>
 <p>The TAN projection is essentially an affine transformation from image coordinates to
 Euclidean (u,v) coordinates on a tangent plane, and then a “deprojection” of this plane
@@ -1983,7 +1980,7 @@ tangent plane is centered.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.FittedSIPWCS">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FittedSIPWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TAN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#FittedSIPWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FittedSIPWCS" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">FittedSIPWCS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TAN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#FittedSIPWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.FittedSIPWCS" title="Link to this definition"></a></dt>
 <dd><p>A WCS constructed from a list of reference celestial and image
 coordinates.</p>
 <dl class="field-list simple">
@@ -2009,7 +2006,7 @@ use the average position of the list of reference stars]</p></li>
 
 </section>
 <section id="celestial-coordinates">
-<h2>Celestial Coordinates<a class="headerlink" href="#celestial-coordinates" title="Permalink to this heading"></a></h2>
+<h2>Celestial Coordinates<a class="headerlink" href="#celestial-coordinates" title="Link to this heading"></a></h2>
 <p>Our <a class="reference internal" href="#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> class is currently hosted as part of the <code class="docutils literal notranslate"><span class="pre">LSSTDESC.Coord</span></code> package:</p>
 <p><a class="reference external" href="https://github.com/LSSTDESC/Coord">https://github.com/LSSTDESC/Coord</a></p>
 <p>An earlier version of this code was originally implemented in GalSim, so we
@@ -2017,7 +2014,7 @@ still import the relevant classes into the <code class="docutils literal notrans
 use either <code class="docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code> or <code class="docutils literal notranslate"><span class="pre">coord.CelestialCoord</span></code> as they are equivalent.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.CelestialCoord">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">CelestialCoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">CelestialCoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord" title="Link to this definition"></a></dt>
 <dd><p>This class defines a position on the celestial sphere, normally given by two angles,
 <code class="docutils literal notranslate"><span class="pre">ra</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code>.</p>
 <p>This class can be used to perform various calculations in spherical coordinates, such
@@ -2121,7 +2118,7 @@ method:</p>
 </div></blockquote>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.angleBetween">
-<span class="sig-name descname"><span class="pre">angleBetween</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.angleBetween"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.angleBetween" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">angleBetween</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.angleBetween"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.angleBetween" title="Link to this definition"></a></dt>
 <dd><p>Find the open angle at the location of the current coord between <code class="docutils literal notranslate"><span class="pre">coord2</span></code> and <code class="docutils literal notranslate"><span class="pre">coord3</span></code>.</p>
 <p>The current coordinate along with the two other coordinates form a spherical triangle
 on the sky.  This function calculates the angle between the two sides at the location of
@@ -2145,7 +2142,7 @@ current coordinate.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.area">
-<span class="sig-name descname"><span class="pre">area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.area" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.area" title="Link to this definition"></a></dt>
 <dd><p>Find the area of a spherical triangle in steradians.</p>
 <p>The current coordinate along with the two other coordinates form a spherical triangle
 on the sky.  This function calculates the area of that spherical triangle, which is
@@ -2165,13 +2162,13 @@ measured in steradians (i.e. surface area of the triangle on the unit sphere).</
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.dec">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dec</span></span><a class="headerlink" href="#galsim.CelestialCoord.dec" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dec</span></span><a class="headerlink" href="#galsim.CelestialCoord.dec" title="Link to this definition"></a></dt>
 <dd><p>A read-only attribute, giving the Declination as an Angle</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.deproject">
-<span class="sig-name descname"><span class="pre">deproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">deproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject" title="Link to this definition"></a></dt>
 <dd><p>Do the reverse process from the project() function.</p>
 <p>i.e. This takes in a position (u,v) and returns the corresponding celestial
 coordinate, using the current coordinate as the center point of the tangent plane
@@ -2195,7 +2192,7 @@ docstring for other options]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.deproject_rad">
-<span class="sig-name descname"><span class="pre">deproject_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject_rad" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">deproject_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject_rad" title="Link to this definition"></a></dt>
 <dd><p>This is basically identical to the deproject() function except that the output <code class="docutils literal notranslate"><span class="pre">ra</span></code>,
 <code class="docutils literal notranslate"><span class="pre">dec</span></code> are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord
 object and <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> are in radians rather than Angle instances.</p>
@@ -2218,7 +2215,7 @@ docstring for other options]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.distanceTo">
-<span class="sig-name descname"><span class="pre">distanceTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.distanceTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.distanceTo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">distanceTo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.distanceTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.distanceTo" title="Link to this definition"></a></dt>
 <dd><p>Returns the great circle distance between this coord and another one.
 The return value is an Angle object</p>
 <dl class="field-list simple">
@@ -2233,7 +2230,7 @@ The return value is an Angle object</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.ecliptic">
-<span class="sig-name descname"><span class="pre">ecliptic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.ecliptic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.ecliptic" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">ecliptic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.ecliptic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.ecliptic" title="Link to this definition"></a></dt>
 <dd><p>Get the longitude and latitude in ecliptic coordinates corresponding to this position.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">epoch</span></code> parameter is used to get an accurate value for the (time-varying) obliquity of
 the ecliptic.  The formulae for this are quite straightforward.  It requires just a single
@@ -2258,7 +2255,7 @@ that date.  If None, then return the true ecliptic coordiantes.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.from_ecliptic">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_ecliptic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_ecliptic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_ecliptic" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_ecliptic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_ecliptic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_ecliptic" title="Link to this definition"></a></dt>
 <dd><p>Create a CelestialCoord from the given ecliptic coordinates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2282,7 +2279,7 @@ that date.  If None, then return the true ecliptic coordiantes.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.from_galactic">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_galactic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_galactic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_galactic" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_galactic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_galactic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_galactic" title="Link to this definition"></a></dt>
 <dd><p>Create a CelestialCoord from the given galactic coordinates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2300,7 +2297,7 @@ that date.  If None, then return the true ecliptic coordiantes.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.from_xyz">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_xyz" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.from_xyz" title="Link to this definition"></a></dt>
 <dd><p>Construct a CelestialCoord from a given (x,y,z) position in three dimensions.</p>
 <p>The 3D (x,y,z) position does not need to fall on the unit sphere.  The RA, Dec will
 be inferred from the relations:</p>
@@ -2325,7 +2322,7 @@ z &amp;= r \sin(dec)\end{split}\]</div>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.galactic">
-<span class="sig-name descname"><span class="pre">galactic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.galactic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.galactic" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">galactic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.galactic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.galactic" title="Link to this definition"></a></dt>
 <dd><p>Get the longitude and latitude in galactic coordinates corresponding to this position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2339,7 +2336,7 @@ z &amp;= r \sin(dec)\end{split}\]</div>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.get_xyz">
-<span class="sig-name descname"><span class="pre">get_xyz</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.get_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.get_xyz" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_xyz</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.get_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.get_xyz" title="Link to this definition"></a></dt>
 <dd><p>Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}x &amp;= \cos(dec) \cos(ra)  \\
@@ -2354,7 +2351,7 @@ z &amp;= \sin(dec)\end{split}\]</div>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.greatCirclePoint">
-<span class="sig-name descname"><span class="pre">greatCirclePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.greatCirclePoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.greatCirclePoint" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">greatCirclePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.greatCirclePoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.greatCirclePoint" title="Link to this definition"></a></dt>
 <dd><p>Returns a point on the great circle connecting self and coord2.</p>
 <p>Two points, c1 and c2, on the unit sphere define a great circle (so long as the two points
 are not either coincident or antipodal).  We can define points on this great circle by
@@ -2377,7 +2374,7 @@ c2 is <code class="docutils literal notranslate"><span class="pre">coord2</span>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.jac_deproject">
-<span class="sig-name descname"><span class="pre">jac_deproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jac_deproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject" title="Link to this definition"></a></dt>
 <dd><p>Return the jacobian of the deprojection.</p>
 <p>i.e. if the input position is (u,v) then the return matrix is</p>
 <div class="math notranslate nohighlight">
@@ -2403,7 +2400,7 @@ docstring for other options]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.jac_deproject_rad">
-<span class="sig-name descname"><span class="pre">jac_deproject_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject_rad" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jac_deproject_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject_rad" title="Link to this definition"></a></dt>
 <dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">jac_deproject</span></code>, but the inputs are in radians and may be numpy
 arrays.</p>
 <dl class="field-list simple">
@@ -2423,7 +2420,7 @@ docstring for other options]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.normal">
-<span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.normal" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.normal" title="Link to this definition"></a></dt>
 <dd><p>Return the coordinate in the “normal” convention of having 0 &lt;= ra &lt; 24 hours.</p>
 <p>This convention is not enforced on construction, so this function exists to make it
 easy to convert if desired.</p>
@@ -2432,7 +2429,7 @@ easy to convert if desired.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.precess">
-<span class="sig-name descname"><span class="pre">precess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.precess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.precess" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">precess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.precess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.precess" title="Link to this definition"></a></dt>
 <dd><dl class="simple">
 <dt>This function precesses equatorial ra and dec from one epoch to another.</dt><dd><p>It is adapted from a set of fortran subroutines based on (a) pages 30-34 of
 the Explanatory Supplement to the AE, (b) Lieske, et al. (1977) A&amp;A 58, 1-16,
@@ -2454,7 +2451,7 @@ and (c) Lieske (1979) A&amp;A 73, 282-284.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.project">
-<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.project" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.project" title="Link to this definition"></a></dt>
 <dd><p>Use the currect coord as the center point of a tangent plane projection to project
 the <code class="docutils literal notranslate"><span class="pre">coord2</span></code> coordinate onto that plane.</p>
 <p>This function return a tuple (u,v) in the Euclidean coordinate system defined by
@@ -2505,7 +2502,7 @@ for other options]</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.project_rad">
-<span class="sig-name descname"><span class="pre">project_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.project_rad" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">project_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project_rad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.project_rad" title="Link to this definition"></a></dt>
 <dd><p>This is basically identical to the project() function except that the input <code class="docutils literal notranslate"><span class="pre">ra</span></code>, <code class="docutils literal notranslate"><span class="pre">dec</span></code>
 are given in radians rather than packaged as a CelestialCoord object and the returned
 u,v are given in radians.</p>
@@ -2528,19 +2525,19 @@ docstring for other options]</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.ra">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ra</span></span><a class="headerlink" href="#galsim.CelestialCoord.ra" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ra</span></span><a class="headerlink" href="#galsim.CelestialCoord.ra" title="Link to this definition"></a></dt>
 <dd><p>A read-only attribute, giving the Right Ascension as an Angle</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.rad">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rad</span></span><a class="headerlink" href="#galsim.CelestialCoord.rad" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rad</span></span><a class="headerlink" href="#galsim.CelestialCoord.rad" title="Link to this definition"></a></dt>
 <dd><p>A convenience property, giving a tuple (ra.rad, dec.rad)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.radec_to_xyz">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radec_to_xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.radec_to_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.radec_to_xyz" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radec_to_xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.radec_to_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.radec_to_xyz" title="Link to this definition"></a></dt>
 <dd><p>Convert ra, dec (in radians) to 3D x,y,z coordinates on the unit sphere.</p>
 <p>The connection between (ra,dec) and (x,y,z) are given by the following formulae:
 .. math:</p>
@@ -2580,7 +2577,7 @@ arrays, in which case, the return values will also be numpy arrays.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.CelestialCoord.xyz_to_radec">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xyz_to_radec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.xyz_to_radec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.xyz_to_radec" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xyz_to_radec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.xyz_to_radec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CelestialCoord.xyz_to_radec" title="Link to this definition"></a></dt>
 <dd><p>Convert 3D x,y,z coordinates to ra, dec (in radians).</p>
 <p>The connection between (ra,dec) and (x,y,z) are given by the following formulae:
 .. math:</p>
@@ -2625,10 +2622,10 @@ arrays, in which case, the return values will also be numpy arrays.</p>
 
 </section>
 <section id="wcs-utilities">
-<h2>WCS Utilities<a class="headerlink" href="#wcs-utilities" title="Permalink to this heading"></a></h2>
+<h2>WCS Utilities<a class="headerlink" href="#wcs-utilities" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.wcs.readFromFitsHeader">
-<span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">readFromFitsHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#readFromFitsHeader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.readFromFitsHeader" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">readFromFitsHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#readFromFitsHeader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.readFromFitsHeader" title="Link to this definition"></a></dt>
 <dd><p>Read a WCS function from a FITS header.</p>
 <p>This is normally called automatically from within the <a class="reference internal" href="fits.html#galsim.fits.read" title="galsim.fits.read"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.read</span></code></a> function, but
 you can also call it directly as:</p>
@@ -2680,7 +2677,7 @@ FITS header, so the WCS defaulted to either a <a class="reference internal" href
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.wcs.compatible">
-<span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wcs1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.compatible" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.wcs.</span></span><span class="sig-name descname"><span class="pre">compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wcs1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.wcs.compatible" title="Link to this definition"></a></dt>
 <dd><p>A utility to check the compatibility of two WCS.  In particular, if two WCS are consistent with
 each other modulo a shifted origin, we consider them to be compatible, even though they are not
 equal.</p>

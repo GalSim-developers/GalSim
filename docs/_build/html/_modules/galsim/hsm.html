@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.hsm &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.hsm &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.hsm</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -117,7 +114,9 @@
 <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageD</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
-<div class="viewcode-block" id="ShapeData"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a><span class="k">class</span> <span class="nc">ShapeData</span><span class="p">:</span>
+<div class="viewcode-block" id="ShapeData">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a>
+<span class="k">class</span> <span class="nc">ShapeData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to contain the outputs of the HSM shape and moments measurement routines.</span>
 
 <span class="sd">    The ShapeData class contains the following information about moment measurement (from either</span>
@@ -326,7 +325,9 @@
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">state</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ShapeData.applyWCS"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData.applyWCS">[docs]</a>    <span class="k">def</span> <span class="nf">applyWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
+<div class="viewcode-block" id="ShapeData.applyWCS">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData.applyWCS">[docs]</a>
+    <span class="k">def</span> <span class="nf">applyWCS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert moments in pixel coordinates to moments in sky coordinates.</span>
 
 <span class="sd">        Natively, the HSM algorithm computes second moments in (x,y) coordinates in the</span>
@@ -379,12 +380,16 @@
                          <span class="n">moments_centroid</span><span class="o">=</span><span class="n">moments_centroid</span><span class="p">,</span>
                          <span class="n">moments_rho4</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_rho4</span><span class="p">,</span>
                          <span class="n">moments_n_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_n_iter</span><span class="p">,</span>
-                         <span class="n">error_message</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">error_message</span><span class="p">)</span></div></div>
+                         <span class="n">error_message</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">error_message</span><span class="p">)</span></div>
+</div>
+
                          <span class="c1"># The other values are reset to the defaults, since they are</span>
                          <span class="c1"># results from EstimateShear.</span>
 
 
-<div class="viewcode-block" id="HSMParams"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams">[docs]</a><span class="k">class</span> <span class="nc">HSMParams</span><span class="p">:</span>
+<div class="viewcode-block" id="HSMParams">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams">[docs]</a>
+<span class="k">class</span> <span class="nc">HSMParams</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A collection of parameters that govern how the HSM functions operate.</span>
 
 <span class="sd">    HSMParams stores a set of numbers that determine how the moments/shape estimation</span>
@@ -543,7 +548,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">failed_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_failed_moments</span>
 
-<div class="viewcode-block" id="HSMParams.check"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams.check">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="HSMParams.check">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.HSMParams.check">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">hsmparams</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that hsmparams is either a valid HSMParams instance or None.</span>
 
@@ -556,6 +563,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid HSMParams: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">hsmparams</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">hsmparams</span></div>
+
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.hsm.HSMParams(&#39;</span> <span class="o">+</span> <span class="mi">14</span><span class="o">*</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1">,&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
@@ -576,6 +584,7 @@
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_make_hsmp</span><span class="p">()</span></div>
+
 
 <span class="c1"># We use the default a lot, so make it a class attribute.</span>
 <span class="n">HSMParams</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">HSMParams</span><span class="p">()</span>
@@ -652,7 +661,9 @@
     <span class="k">return</span> <span class="n">image</span>
 
 
-<div class="viewcode-block" id="EstimateShear"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.EstimateShear">[docs]</a><span class="k">def</span> <span class="nf">EstimateShear</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">PSF_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_var</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<div class="viewcode-block" id="EstimateShear">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.EstimateShear">[docs]</a>
+<span class="k">def</span> <span class="nf">EstimateShear</span><span class="p">(</span><span class="n">gal_image</span><span class="p">,</span> <span class="n">PSF_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_var</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                   <span class="n">shear_est</span><span class="o">=</span><span class="s2">&quot;REGAUSS&quot;</span><span class="p">,</span> <span class="n">recompute_flux</span><span class="o">=</span><span class="s2">&quot;FIT&quot;</span><span class="p">,</span> <span class="n">guess_sig_gal</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
                   <span class="n">guess_sig_PSF</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -793,7 +804,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="FindAdaptiveMom"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.FindAdaptiveMom">[docs]</a><span class="k">def</span> <span class="nf">FindAdaptiveMom</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_sig</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
+
+<div class="viewcode-block" id="FindAdaptiveMom">
+<a class="viewcode-back" href="../../hsm.html#galsim.hsm.FindAdaptiveMom">[docs]</a>
+<span class="k">def</span> <span class="nf">FindAdaptiveMom</span><span class="p">(</span><span class="n">object_image</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_sig</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
                     <span class="n">guess_centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">round_moments</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hsmparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">use_sky_coords</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure adaptive moments of an object.</span>
@@ -933,6 +947,7 @@
             <span class="k">raise</span> <span class="n">GalSimHSMError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span> <span class="kn">from</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">ShapeData</span><span class="p">(</span><span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
+
 
 <span class="c1"># make FindAdaptiveMom a method of Image class</span>
 <span class="n">Image</span><span class="o">.</span><span class="n">FindAdaptiveMom</span> <span class="o">=</span> <span class="n">FindAdaptiveMom</span>

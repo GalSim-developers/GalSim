@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Galaxies &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Galaxies &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,9 +35,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -137,15 +134,15 @@
            <div itemprop="articleBody">
              
   <section id="galaxies">
-<h1>Galaxies<a class="headerlink" href="#galaxies" title="Permalink to this heading"></a></h1>
+<h1>Galaxies<a class="headerlink" href="#galaxies" title="Link to this heading"></a></h1>
 <p>There are a number of profiles that are designed to be used for galaxy profiles.
 Again though, there is nothing restricting these classes to be used only for that purpose
 if you have another use case for which one would be relevant.</p>
 <section id="exponenatial-profile">
-<h2>Exponenatial Profile<a class="headerlink" href="#exponenatial-profile" title="Permalink to this heading"></a></h2>
+<h2>Exponenatial Profile<a class="headerlink" href="#exponenatial-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Exponential">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Exponential" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Exponential" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class describing an exponential profile.</p>
 <p>Surface brightness profile with</p>
@@ -170,19 +167,19 @@ without lookup tables.</p>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Exponential.half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Exponential.half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Exponential.half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>The half-light radius of the profile.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Exponential.scale_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Exponential.scale_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Exponential.scale_radius" title="Link to this definition"></a></dt>
 <dd><p>The scale radius of the profile.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Exponential.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Exponential.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Exponential.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -203,10 +200,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="de-vaucouleurs-profile">
-<h2>De Vaucouleurs Profile<a class="headerlink" href="#de-vaucouleurs-profile" title="Permalink to this heading"></a></h2>
+<h2>De Vaucouleurs Profile<a class="headerlink" href="#de-vaucouleurs-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.DeVaucouleurs">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">DeVaucouleurs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeVaucouleurs" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">DeVaucouleurs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeVaucouleurs" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.Sersic" title="galsim.sersic.Sersic"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a></p>
 <p>A class describing DeVaucouleurs profile objects.</p>
 <p>Surface brightness profile with</p>
@@ -237,7 +234,7 @@ untruncated profile? See the docstring for Sersic for more details.
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.DeVaucouleurs.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeVaucouleurs.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeVaucouleurs.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -258,10 +255,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="sersic-profile">
-<h2>Sersic Profile<a class="headerlink" href="#sersic-profile" title="Permalink to this heading"></a></h2>
+<h2>Sersic Profile<a class="headerlink" href="#sersic-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Sersic">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Sersic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Sersic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class describing a Sersic profile.</p>
 <p>The Sersic surface brightness profile is characterized by three properties: its Sersic index
@@ -411,43 +408,43 @@ untruncated profile? See below for more details. [default: False]</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Sersic.calculateHLRFactor">
-<span class="sig-name descname"><span class="pre">calculateHLRFactor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateHLRFactor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.calculateHLRFactor" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculateHLRFactor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateHLRFactor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.calculateHLRFactor" title="Link to this definition"></a></dt>
 <dd><p>Calculate the half-light-radius in units of the scale radius.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Sersic.calculateIntegratedFlux">
-<span class="sig-name descname"><span class="pre">calculateIntegratedFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateIntegratedFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.calculateIntegratedFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculateIntegratedFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateIntegratedFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.calculateIntegratedFlux" title="Link to this definition"></a></dt>
 <dd><p>Return the fraction of the total flux enclosed within a given radius, r</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Sersic.half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Sersic.half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Sersic.half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>The half-light radius.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Sersic.n">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n</span></span><a class="headerlink" href="#galsim.Sersic.n" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n</span></span><a class="headerlink" href="#galsim.Sersic.n" title="Link to this definition"></a></dt>
 <dd><p>The Sersic parameter n.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Sersic.scale_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Sersic.scale_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Sersic.scale_radius" title="Link to this definition"></a></dt>
 <dd><p>The scale radius.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Sersic.trunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trunc</span></span><a class="headerlink" href="#galsim.Sersic.trunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trunc</span></span><a class="headerlink" href="#galsim.Sersic.trunc" title="Link to this definition"></a></dt>
 <dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Sersic.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sersic.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -468,10 +465,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="inclined-exponential-profile">
-<h2>Inclined Exponential Profile<a class="headerlink" href="#inclined-exponential-profile" title="Permalink to this heading"></a></h2>
+<h2>Inclined Exponential Profile<a class="headerlink" href="#inclined-exponential-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.InclinedExponential">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InclinedExponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inclination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_h_over_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedExponential" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InclinedExponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inclination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_h_over_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedExponential" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class describing an inclined exponential profile.</p>
 <p>The Inclined Exponential surface brightness profile is characterized by three properties: its
@@ -514,37 +511,37 @@ scale height to the scale radius. [default: 0.1]</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.disk_half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk_half_light_radius</span></span><a class="headerlink" href="#galsim.InclinedExponential.disk_half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk_half_light_radius</span></span><a class="headerlink" href="#galsim.InclinedExponential.disk_half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>The half-light radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.inclination">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inclination</span></span><a class="headerlink" href="#galsim.InclinedExponential.inclination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inclination</span></span><a class="headerlink" href="#galsim.InclinedExponential.inclination" title="Link to this definition"></a></dt>
 <dd><p>The inclination angle.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.scale_h_over_r">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_h_over_r</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_h_over_r" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_h_over_r</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_h_over_r" title="Link to this definition"></a></dt>
 <dd><p>The ratio scale_height / scale_radius</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.scale_height">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_height</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_height" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_height</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_height" title="Link to this definition"></a></dt>
 <dd><p>The scale height of the disk.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.scale_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.InclinedExponential.scale_radius" title="Link to this definition"></a></dt>
 <dd><p>The scale radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.InclinedExponential.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedExponential.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedExponential.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -565,10 +562,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="inclined-sersic-profile">
-<h2>Inclined Sersic Profile<a class="headerlink" href="#inclined-sersic-profile" title="Permalink to this heading"></a></h2>
+<h2>Inclined Sersic Profile<a class="headerlink" href="#inclined-sersic-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.InclinedSersic">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InclinedSersic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_h_over_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedSersic" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">InclinedSersic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_h_over_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_untruncated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedSersic" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class describing an inclined sersic profile. This class is general, and so for certain
 special cases, more specialized classes will be more efficient. For the case where n==1
@@ -626,49 +623,49 @@ more details. [default: False]</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.disk_half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk_half_light_radius</span></span><a class="headerlink" href="#galsim.InclinedSersic.disk_half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk_half_light_radius</span></span><a class="headerlink" href="#galsim.InclinedSersic.disk_half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>The half-light radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.inclination">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inclination</span></span><a class="headerlink" href="#galsim.InclinedSersic.inclination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inclination</span></span><a class="headerlink" href="#galsim.InclinedSersic.inclination" title="Link to this definition"></a></dt>
 <dd><p>The inclination angle.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.n">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n</span></span><a class="headerlink" href="#galsim.InclinedSersic.n" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n</span></span><a class="headerlink" href="#galsim.InclinedSersic.n" title="Link to this definition"></a></dt>
 <dd><p>The Sersic parameter n.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.scale_h_over_r">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_h_over_r</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_h_over_r" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_h_over_r</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_h_over_r" title="Link to this definition"></a></dt>
 <dd><p>The ratio scale_height / scale_radius.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.scale_height">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_height</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_height" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_height</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_height" title="Link to this definition"></a></dt>
 <dd><p>The scale height of the disk.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.scale_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.InclinedSersic.scale_radius" title="Link to this definition"></a></dt>
 <dd><p>The scale radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.trunc">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trunc</span></span><a class="headerlink" href="#galsim.InclinedSersic.trunc" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trunc</span></span><a class="headerlink" href="#galsim.InclinedSersic.trunc" title="Link to this definition"></a></dt>
 <dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.InclinedSersic.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedSersic.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.InclinedSersic.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -689,10 +686,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="spergel-profile">
-<h2>Spergel Profile<a class="headerlink" href="#spergel-profile" title="Permalink to this heading"></a></h2>
+<h2>Spergel Profile<a class="headerlink" href="#spergel-profile" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Spergel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Spergel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Spergel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class describing a Spergel profile.</p>
 <p>The Spergel surface brightness profile is characterized by three properties: its Spergel index
@@ -750,37 +747,37 @@ modified Bessel function of the second kind.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Spergel.calculateFluxRadius">
-<span class="sig-name descname"><span class="pre">calculateFluxRadius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateFluxRadius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.calculateFluxRadius" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculateFluxRadius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateFluxRadius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.calculateFluxRadius" title="Link to this definition"></a></dt>
 <dd><p>Return the radius within which the total flux is f</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Spergel.calculateIntegratedFlux">
-<span class="sig-name descname"><span class="pre">calculateIntegratedFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateIntegratedFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.calculateIntegratedFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculateIntegratedFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateIntegratedFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.calculateIntegratedFlux" title="Link to this definition"></a></dt>
 <dd><p>Return the integrated flux out to a given radius, r</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Spergel.half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Spergel.half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">half_light_radius</span></span><a class="headerlink" href="#galsim.Spergel.half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>The half-light radius</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Spergel.nu">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nu</span></span><a class="headerlink" href="#galsim.Spergel.nu" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nu</span></span><a class="headerlink" href="#galsim.Spergel.nu" title="Link to this definition"></a></dt>
 <dd><p>The Spergel index, nu</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Spergel.scale_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Spergel.scale_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_radius</span></span><a class="headerlink" href="#galsim.Spergel.scale_radius" title="Link to this definition"></a></dt>
 <dd><p>The scale radius</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Spergel.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Spergel.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -801,10 +798,10 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 </section>
 <section id="knots-of-star-formation">
-<h2>Knots of Star Formation<a class="headerlink" href="#knots-of-star-formation" title="Permalink to this heading"></a></h2>
+<h2>Knots of Star Formation<a class="headerlink" href="#knots-of-star-formation" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.RandomKnots">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RandomKnots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">npoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">RandomKnots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">npoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class for generating a set of point sources, following either a <a class="reference internal" href="simple.html#galsim.Gaussian" title="galsim.Gaussian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gaussian</span></code></a> profile or a
 specified input profile.</p>
@@ -859,13 +856,13 @@ mechanism, which allows the knots to trace any profile, not just a <a class="ref
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.calculateHLR">
-<span class="sig-name descname"><span class="pre">calculateHLR</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.calculateHLR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.calculateHLR" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculateHLR</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.calculateHLR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.calculateHLR" title="Link to this definition"></a></dt>
 <dd><p>calculate the half-light radius of the generated points</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.dilate">
-<span class="sig-name descname"><span class="pre">dilate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.dilate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.dilate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">dilate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.dilate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.dilate" title="Link to this definition"></a></dt>
 <dd><p>Dilate the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
 flux.</p>
 <p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
@@ -883,7 +880,7 @@ changes the flux.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.expand">
-<span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.expand" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.expand" title="Link to this definition"></a></dt>
 <dd><p>Expand the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
 surface brightness.</p>
 <p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
@@ -906,7 +903,7 @@ brightness.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.RandomKnots.input_half_light_radius">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_half_light_radius</span></span><a class="headerlink" href="#galsim.RandomKnots.input_half_light_radius" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_half_light_radius</span></span><a class="headerlink" href="#galsim.RandomKnots.input_half_light_radius" title="Link to this definition"></a></dt>
 <dd><p>Get the input half light radius (HLR).</p>
 <p>Note the input HLR is not necessarily the realized HLR,
 due to the finite number of points used in the profile.</p>
@@ -918,13 +915,13 @@ method.  That value will be valid in all cases.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.RandomKnots.npoints">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">npoints</span></span><a class="headerlink" href="#galsim.RandomKnots.npoints" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">npoints</span></span><a class="headerlink" href="#galsim.RandomKnots.npoints" title="Link to this definition"></a></dt>
 <dd><p>The number of point sources.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.rotate">
-<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.rotate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.rotate" title="Link to this definition"></a></dt>
 <dd><p>Rotate this object by an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -938,7 +935,7 @@ method.  That value will be valid in all cases.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.shear">
-<span class="sig-name descname"><span class="pre">shear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.shear" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">shear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.shear" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with an area-preserving shear applied to it.</p>
 <p>The arguments may be either a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance or arguments to be used to initialize one.</p>
 <p>For more details about the allowed keyword arguments, see the <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> docstring.</p>
@@ -958,7 +955,7 @@ parameters do construct a shear directly.  eg. <code class="docutils literal not
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.shift">
-<span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.shift" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.shift" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object shifted by some amount in real space.</p>
 <p>After this call, the caller’s type will be a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
 This means that if the caller was a derived type that had extra methods or properties
@@ -1001,7 +998,7 @@ the two components separately if that is more convenient.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.transform" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with an arbitrary Jacobian matrix transformation
 applied to it.</p>
 <p>This applies a Jacobian matrix to the coordinate system in which this object
@@ -1035,7 +1032,7 @@ not flux.  If you want to preserve flux, you should also do:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.withFlux">
-<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.withFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.withFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -1054,7 +1051,7 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RandomKnots.withScaledFlux">
-<span class="sig-name descname"><span class="pre">withScaledFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withScaledFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.withScaledFlux" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withScaledFlux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux_ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withScaledFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RandomKnots.withScaledFlux" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with the flux scaled by the given <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code>.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withFlux(flux_ratio</span> <span class="pre">*</span> <span class="pre">obj.flux)</span></code>.  Indeed, withFlux()
 is implemented in terms of this one.</p>

@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Values &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Config Values &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -133,7 +130,7 @@
            <div itemprop="articleBody">
              
   <section id="config-values">
-<h1>Config Values<a class="headerlink" href="#config-values" title="Permalink to this heading"></a></h1>
+<h1>Config Values<a class="headerlink" href="#config-values" title="Link to this heading"></a></h1>
 <p>There are seven kinds of values that are used within the configuration apparatus, which we
 have been designating using the following italic names:</p>
 <ul class="simple">
@@ -146,8 +143,8 @@ have been designating using the following italic names:</p>
 <li><p><em>pos_value</em> corresponds to a GalSim <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance.  See <a class="reference internal" href="#pos-value"><span class="std std-ref">pos_value</span></a></p></li>
 <li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
 <li><p><em>table_value</em> corresponds to a GalSim <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> instance.  See <a class="reference internal" href="#table-value"><span class="std std-ref">table_value</span></a></p></li>
-<li><p><em>quantity_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code></a> instance.  See <a class="reference internal" href="#quantity-value"><span class="std std-ref">quantity_value</span></a></p></li>
-<li><p><em>unit_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></a> instance.  See <a class="reference internal" href="#unit-value"><span class="std std-ref">unit_value</span></a></p></li>
+<li><p><em>quantity_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code></a> instance.  See <a class="reference internal" href="#quantity-value"><span class="std std-ref">quantity_value</span></a></p></li>
+<li><p><em>unit_value</em> corresponds to an Astropy <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code></a> instance.  See <a class="reference internal" href="#unit-value"><span class="std std-ref">unit_value</span></a></p></li>
 </ul>
 <p>Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim <em>angle_value</em> and <em>pos_value</em> also have
@@ -159,7 +156,7 @@ to evaluate a string.  The <a class="reference internal" href="#eval-type"><span
 <p>In addition to all of these, you can also write your own <a class="reference internal" href="#custom-value-types"><span class="std std-ref">Custom Value Types</span></a>
 and register them to be used by the config parser.</p>
 <section id="float-value">
-<h2>float_value<a class="headerlink" href="#float-value" title="Permalink to this heading"></a></h2>
+<h2>float_value<a class="headerlink" href="#float-value" title="Link to this heading"></a></h2>
 <p>Options are:</p>
 <ul>
 <li><p>A normal float value (e.g. 1.8)</p></li>
@@ -365,7 +362,7 @@ repeat starting with <code class="docutils literal notranslate"><span class="pre
 </ul>
 </section>
 <section id="int-value">
-<h2>int_value<a class="headerlink" href="#int-value" title="Permalink to this heading"></a></h2>
+<h2>int_value<a class="headerlink" href="#int-value" title="Link to this heading"></a></h2>
 <p>Options are:</p>
 <ul>
 <li><p>A normal int value (e.g. 8)</p></li>
@@ -490,7 +487,7 @@ repeat starting with <code class="docutils literal notranslate"><span class="pre
 </ul>
 </section>
 <section id="bool-value">
-<h2>bool_value<a class="headerlink" href="#bool-value" title="Permalink to this heading"></a></h2>
+<h2>bool_value<a class="headerlink" href="#bool-value" title="Link to this heading"></a></h2>
 <p>Options are:</p>
 <ul>
 <li><p>A normal bool value (i.e. True or False)</p></li>
@@ -581,7 +578,7 @@ would normally be used for random booleans with a different probability of True.
 </ul>
 </section>
 <section id="str-value">
-<h2>str_value<a class="headerlink" href="#str-value" title="Permalink to this heading"></a></h2>
+<h2>str_value<a class="headerlink" href="#str-value" title="Link to this heading"></a></h2>
 <p>Options are:</p>
 <ul>
 <li><p>A normal str value (e.g. ‘out.fits’)</p></li>
@@ -660,7 +657,7 @@ would normally be used for random booleans with a different probability of True.
 </ul>
 </section>
 <section id="angle-value">
-<h2>angle_value<a class="headerlink" href="#angle-value" title="Permalink to this heading"></a></h2>
+<h2>angle_value<a class="headerlink" href="#angle-value" title="Link to this heading"></a></h2>
 <p>These represent <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
@@ -719,7 +716,7 @@ would normally be used for random booleans with a different probability of True.
 </ul>
 </section>
 <section id="shear-value">
-<h2>shear_value<a class="headerlink" href="#shear-value" title="Permalink to this heading"></a></h2>
+<h2>shear_value<a class="headerlink" href="#shear-value" title="Link to this heading"></a></h2>
 <p>These represent <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
@@ -844,7 +841,7 @@ observer (perhaps within the telescope).</p>
 </ul>
 </section>
 <section id="pos-value">
-<h2>pos_value<a class="headerlink" href="#pos-value" title="Permalink to this heading"></a></h2>
+<h2>pos_value<a class="headerlink" href="#pos-value" title="Link to this heading"></a></h2>
 <p>These represent <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> values, usually for a location on the image.</p>
 <p>Options are:</p>
 <ul>
@@ -918,7 +915,7 @@ preferentially pick locations near the center of the circle.</p>
 </ul>
 </section>
 <section id="sky-value">
-<h2>sky_value<a class="headerlink" href="#sky-value" title="Permalink to this heading"></a></h2>
+<h2>sky_value<a class="headerlink" href="#sky-value" title="Link to this heading"></a></h2>
 <p>These represent <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> values for a location in the sky.</p>
 <p>Options are:</p>
 <ul>
@@ -947,7 +944,7 @@ preferentially pick locations near the center of the circle.</p>
 </ul>
 </section>
 <section id="table-value">
-<h2>table_value<a class="headerlink" href="#table-value" title="Permalink to this heading"></a></h2>
+<h2>table_value<a class="headerlink" href="#table-value" title="Link to this heading"></a></h2>
 <p>These represent <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> values to provide some kind of unary function, although in some
 cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
 function.</p>
@@ -997,12 +994,12 @@ ordinates.</p></li>
 </ul>
 </section>
 <section id="quantity-value">
-<h2>quantity_value<a class="headerlink" href="#quantity-value" title="Permalink to this heading"></a></h2>
-<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> values, which are a combination of a float and a unit (specifically, an <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a>).</p>
+<h2>quantity_value<a class="headerlink" href="#quantity-value" title="Link to this heading"></a></h2>
+<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> values, which are a combination of a float and a unit (specifically, an <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a>).</p>
 <p>Options are:</p>
 <ul>
-<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> value (e.g. ‘8.7*u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
-<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> (e.g. ‘8.7 m’)</p></li>
+<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> value (e.g. ‘8.7*u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
+<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> (e.g. ‘8.7 m’)</p></li>
 <li><p>A dict with:</p>
 <blockquote>
 <div><ul>
@@ -1028,12 +1025,12 @@ ordinates.</p></li>
 </ul>
 </section>
 <section id="unit-value">
-<h2>unit_value<a class="headerlink" href="#unit-value" title="Permalink to this heading"></a></h2>
-<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> values.</p>
+<h2>unit_value<a class="headerlink" href="#unit-value" title="Link to this heading"></a></h2>
+<p>These represent <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
-<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> value (e.g. ‘u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
-<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.0)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> (e.g. ‘m’)</p></li>
+<li><p>An <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> value (e.g. ‘u.m’, where ‘u’ is the <a class="reference external" href="https://docs.astropy.org/en/stable/units/ref_api.html#module-astropy.units" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units</span></code></a> module)</p></li>
+<li><p>A string interpretable by <a class="reference external" href="https://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v7.2)"><code class="xref any docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a> (e.g. ‘m’)</p></li>
 <li><p>A dict with:</p>
 <blockquote>
 <div><ul>
@@ -1058,7 +1055,7 @@ ordinates.</p></li>
 </ul>
 </section>
 <section id="eval-type">
-<h2>Eval type<a class="headerlink" href="#eval-type" title="Permalink to this heading"></a></h2>
+<h2>Eval type<a class="headerlink" href="#eval-type" title="Link to this heading"></a></h2>
 <p>Every kind of value has ‘Eval’ as one of its allowed types.  This works a little bit differently
 than the other types, so we describe it here in its own section.</p>
 <p>The only required attribute to go along with an ‘Eval’ is <code class="docutils literal notranslate"><span class="pre">str</span></code>, which is the string to be
@@ -1069,7 +1066,7 @@ calculates <code class="docutils literal notranslate"><span class="pre">lam_over
 If you later wanted to change to a 6.5m telescope, it would be very clear what to change,
 as opposed to if the value were listed as 0.041253.</p>
 <section id="preset-variables">
-<h3>Preset variables<a class="headerlink" href="#preset-variables" title="Permalink to this heading"></a></h3>
+<h3>Preset variables<a class="headerlink" href="#preset-variables" title="Link to this heading"></a></h3>
 <p>The ‘Eval’ type gets even more powerful when you use variables.  The file demo10.yaml has some
 examples that use the <code class="docutils literal notranslate"><span class="pre">pos</span></code> variable, the position of the galaxy relative to the center of the
 image, which GalSim will make available for you for any
@@ -1199,7 +1196,7 @@ position on the image.</p>
 </ul>
 </section>
 <section id="available-modules">
-<h3>Available Modules<a class="headerlink" href="#available-modules" title="Permalink to this heading"></a></h3>
+<h3>Available Modules<a class="headerlink" href="#available-modules" title="Link to this heading"></a></h3>
 <p>Python modules that GalSim will import for you to use:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">math</span></code></p></li>
@@ -1210,7 +1207,7 @@ position on the image.</p>
 </ul>
 </section>
 <section id="user-defined-variables">
-<h3>User-defined variables<a class="headerlink" href="#user-defined-variables" title="Permalink to this heading"></a></h3>
+<h3>User-defined variables<a class="headerlink" href="#user-defined-variables" title="Link to this heading"></a></h3>
 <p>It is also possible to define your own variables to use in your expression simply by
 defining more attributes in addition to <code class="docutils literal notranslate"><span class="pre">str</span></code>.  The first letter of the attribute
 declares what type it should be evaluated to.  Then the rest of the attribute name is
@@ -1249,7 +1246,7 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 </ul>
 </section>
 <section id="the-eval-variables-field">
-<h3>The eval-variables field<a class="headerlink" href="#the-eval-variables-field" title="Permalink to this heading"></a></h3>
+<h3>The eval-variables field<a class="headerlink" href="#the-eval-variables-field" title="Link to this heading"></a></h3>
 <p>Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code>.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.</p>
 <p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.</p>
 <p>It can be convenient to combine the YAML naming scheme with our <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code> setup in the following way:</p>
@@ -1274,7 +1271,7 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 </div>
 </section>
 <section id="module-defined-variables">
-<h3>Module-defined variables<a class="headerlink" href="#module-defined-variables" title="Permalink to this heading"></a></h3>
+<h3>Module-defined variables<a class="headerlink" href="#module-defined-variables" title="Link to this heading"></a></h3>
 <p>If you are using any user-defined modules (loaded in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field), then they are
 allowed to add to the list of <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>. The mechanism for this is to append items
 to the list <code class="docutils literal notranslate"><span class="pre">galsim.config.eval_base_variables</span></code>.  This list includes all of the variables
@@ -1294,7 +1291,7 @@ to add it when your module is imported.</p>
 ones listed in <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>.</p>
 </section>
 <section id="shorthand-notation">
-<h3>Shorthand notation<a class="headerlink" href="#shorthand-notation" title="Permalink to this heading"></a></h3>
+<h3>Shorthand notation<a class="headerlink" href="#shorthand-notation" title="Link to this heading"></a></h3>
 <p>It can be a bit cumbersome at times to write out a full dict with <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">:</span> <span class="pre">Eval</span></code> and the
 <code class="docutils literal notranslate"><span class="pre">str</span></code> item you want to evaluate.  To streamline this, we also allow for a shorthand notation
 for both Eval and Current types.</p>
@@ -1319,7 +1316,7 @@ variables, you will need to use the regular dict notation.</p>
 </section>
 </section>
 <section id="custom-value-types">
-<h2>Custom Value Types<a class="headerlink" href="#custom-value-types" title="Permalink to this heading"></a></h2>
+<h2>Custom Value Types<a class="headerlink" href="#custom-value-types" title="Link to this heading"></a></h2>
 <p>To define your own value type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
 be something you have installed in your Python distro) with a function that will be used
@@ -1364,7 +1361,7 @@ give a list of all valid value types that are allowed for this function:</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.config.RegisterValueType">
-<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterValueType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.config.</span></span><span class="sig-name descname"><span class="pre">RegisterValueType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Link to this definition"></a></dt>
 <dd><p>Register a value type for use by the config apparatus.</p>
 <p>A few notes about the signature of the generating function:</p>
 <ol class="arabic simple">
@@ -1437,10 +1434,10 @@ of valid value types.</p>
 </div>
 <p>For examples of custom values, see:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/log_normal.py"><code class="file docutils literal notranslate"><span class="pre">log_normal.py</span> </code></a></p></li>
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/hsm_shape_measure.py"><code class="file docutils literal notranslate"><span class="pre">hsm_shape_measure.py</span> </code></a></p></li>
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/excluded_random.py"><code class="file docutils literal notranslate"><span class="pre">excluded_random.py</span> </code></a></p></li>
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/great3_reject.py"><code class="file docutils literal notranslate"><span class="pre">great3_reject</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/log_normal.py"><code class="file docutils literal notranslate"><span class="pre">log_normal.py</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/hsm_shape_measure.py"><code class="file docutils literal notranslate"><span class="pre">hsm_shape_measure.py</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/excluded_random.py"><code class="file docutils literal notranslate"><span class="pre">excluded_random.py</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/great3/great3_reject.py"><code class="file docutils literal notranslate"><span class="pre">great3_reject</span> </code></a></p></li>
 </ul>
 </section>
 </section>

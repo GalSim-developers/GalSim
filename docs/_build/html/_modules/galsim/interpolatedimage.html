@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.interpolatedimage &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.interpolatedimage &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.interpolatedimage</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -131,7 +128,9 @@
 <span class="kn">from</span> <span class="nn">.noise</span> <span class="kn">import</span> <span class="n">GaussianNoise</span>
 
 
-<div class="viewcode-block" id="InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedImage">
+<a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage">[docs]</a>
+<span class="k">class</span> <span class="nc">InterpolatedImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified using an `Image`, which can be</span>
 <span class="sd">    interpolated for the purpose of carrying out transformations.</span>
 
@@ -474,7 +473,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getStepK</span><span class="p">(</span><span class="n">calculate_stepk</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span>
 
-<div class="viewcode-block" id="InterpolatedImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="InterpolatedImage.withGSParams">
+<a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.withGSParams">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -486,6 +487,7 @@
         <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">maxk_threshold</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">maxk_threshold</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_maxk</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -827,7 +829,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="_InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span>
+
+<div class="viewcode-block" id="_InterpolatedImage">
+<a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedImage">[docs]</a>
+<span class="k">def</span> <span class="nf">_InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span>
                        <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedImage`, but with fewer options and no sanity checks.</span>
@@ -904,7 +909,10 @@
     <span class="k">return</span> <span class="n">ret</span></div>
 
 
-<div class="viewcode-block" id="InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedKImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InterpolatedKImage">
+<a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage">[docs]</a>
+<span class="k">class</span> <span class="nc">InterpolatedKImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified by samples of their complex Fourier</span>
 <span class="sd">    transform.</span>
 
@@ -1081,13 +1089,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="InterpolatedKImage.withGSParams">
+<a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.withGSParams">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1181,7 +1192,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="_InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedKImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_InterpolatedKImage">
+<a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedKImage">[docs]</a>
+<span class="k">def</span> <span class="nf">_InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedKImage`, but with fewer options and no sanity</span>
 <span class="sd">    checks.</span>
 
@@ -1198,6 +1212,7 @@
     <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ret</span></div>
+
 </pre></div>
 
            </div>

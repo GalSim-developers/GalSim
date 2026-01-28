@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.zernike &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.zernike &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.zernike</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -120,7 +117,9 @@
 <span class="c1"># Start off with the Zernikes up to j=15</span>
 <span class="n">_noll_n</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
 <span class="n">_noll_m</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
-<div class="viewcode-block" id="noll_to_zern"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.noll_to_zern">[docs]</a><span class="k">def</span> <span class="nf">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+<div class="viewcode-block" id="noll_to_zern">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.noll_to_zern">[docs]</a>
+<span class="k">def</span> <span class="nf">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert linear Noll index to tuple of Zernike indices.</span>
 <span class="sd">    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike</span>
 <span class="sd">    index.</span>
@@ -149,6 +148,7 @@
             <span class="n">m</span> <span class="o">+=</span> <span class="mi">2</span>
 
     <span class="k">return</span> <span class="n">_noll_n</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">_noll_m</span><span class="p">[</span><span class="n">j</span><span class="p">]</span></div>
+
 
 <span class="k">def</span> <span class="nf">_zern_norm</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Normalization coefficient for zernike (n, m).</span>
@@ -496,7 +496,9 @@
 <span class="n">_annular_zern_rho_coefs</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__annular_zern_rho_coefs</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="describe_zernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.describe_zernike">[docs]</a><span class="k">def</span> <span class="nf">describe_zernike</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+<div class="viewcode-block" id="describe_zernike">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.describe_zernike">[docs]</a>
+<span class="k">def</span> <span class="nf">describe_zernike</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate</span>
 <span class="sd">    polynomial in x and y.</span>
 
@@ -539,7 +541,10 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="Zernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike">[docs]</a><span class="k">class</span> <span class="nc">Zernike</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Zernike">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike">[docs]</a>
+<span class="k">class</span> <span class="nc">Zernike</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class to represent a Zernike polynomial series</span>
 <span class="sd">    (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).</span>
 
@@ -613,7 +618,9 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="n">R_inner</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-<div class="viewcode-block" id="Zernike.__add__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__add__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__add__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add two Zernikes.</span>
 
 <span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
@@ -643,14 +650,20 @@
                 <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.__sub__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.__sub__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Subtract two Zernikes.</span>
 
 <span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">rhs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.__neg__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__neg__">[docs]</a>    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.__neg__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__neg__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Negate a Zernike.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;coef&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
@@ -665,7 +678,10 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="Zernike.__mul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.__mul__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__mul__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Multiply two Zernikes, or multiply a Zernike by a scalar.</span>
 
 <span class="sd">        If both operands are Zernikes, then the ``R_outer`` and ``R_inner`` attributes of each must</span>
@@ -712,9 +728,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernike by type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)))</span></div>
 
-<div class="viewcode-block" id="Zernike.__rmul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.__rmul__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to obj * rhs.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">rhs</span></div>
+
 
     <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
@@ -813,7 +833,9 @@
         <span class="n">newCoef</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Zernike.__call__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">robust</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__call__">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">robust</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</span>
 <span class="sd">        Synonym for `evalCartesian`.</span>
 
@@ -830,7 +852,10 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalCartesianRobust</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.evalCartesianRobust"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesianRobust">[docs]</a>    <span class="k">def</span> <span class="nf">evalCartesianRobust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.evalCartesianRobust">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesianRobust">[docs]</a>
+    <span class="k">def</span> <span class="nf">evalCartesianRobust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y using a more</span>
 <span class="sd">        robust method than the default `evalCartesian`.</span>
 
@@ -848,7 +873,10 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="n">_noll_coef_array</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
         <span class="k">return</span> <span class="n">horner2d</span><span class="p">(</span><span class="n">rhosq</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span><span class="o">.</span><span class="n">real</span></div>
 
-<div class="viewcode-block" id="Zernike.evalCartesian"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesian">[docs]</a>    <span class="k">def</span> <span class="nf">evalCartesian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.evalCartesian">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesian">[docs]</a>
+    <span class="k">def</span> <span class="nf">evalCartesian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</span>
 
 <span class="sd">        Parameters:</span>
@@ -861,7 +889,10 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span>
         <span class="k">return</span> <span class="n">horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.evalPolar"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalPolar">[docs]</a>    <span class="k">def</span> <span class="nf">evalPolar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.evalPolar">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalPolar">[docs]</a>
+    <span class="k">def</span> <span class="nf">evalPolar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at polar coordinates rho and theta.</span>
 
 <span class="sd">        Parameters:</span>
@@ -876,7 +907,10 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.evalCartesianGrad"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesianGrad">[docs]</a>    <span class="k">def</span> <span class="nf">evalCartesianGrad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.evalCartesianGrad">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesianGrad">[docs]</a>
+    <span class="k">def</span> <span class="nf">evalCartesianGrad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate the gradient of this Zernike polynomial series at cartesian coordinates</span>
 <span class="sd">        x and y.</span>
 
@@ -888,7 +922,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradY</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.rotate"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Zernike.rotate">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.rotate">[docs]</a>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return new Zernike polynomial series rotated by angle theta.</span>
 
 <span class="sd">        For example::</span>
@@ -905,6 +942,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">zernikeRotMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -927,7 +965,10 @@
         <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="zernikeRotMatrix"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeRotMatrix">[docs]</a><span class="k">def</span> <span class="nf">zernikeRotMatrix</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+
+<div class="viewcode-block" id="zernikeRotMatrix">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeRotMatrix">[docs]</a>
+<span class="k">def</span> <span class="nf">zernikeRotMatrix</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct Zernike basis rotation matrix.  This matrix can be used to convert a set of Zernike</span>
 <span class="sd">    polynomial series coefficients expressed in one coordinate system to an equivalent set of</span>
 <span class="sd">    coefficients expressed in a rotated coordinate system.</span>
@@ -991,7 +1032,10 @@
     <span class="k">return</span> <span class="n">R</span></div>
 
 
-<div class="viewcode-block" id="zernikeBasis"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeBasis">[docs]</a><span class="k">def</span> <span class="nf">zernikeBasis</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+
+<div class="viewcode-block" id="zernikeBasis">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeBasis">[docs]</a>
+<span class="k">def</span> <span class="nf">zernikeBasis</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct basis of Zernike polynomial series up to Noll index ``jmax``, evaluated at a</span>
 <span class="sd">    specific set of points ``x`` and ``y``.</span>
 
@@ -1034,7 +1078,10 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="zernikeGradBases"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeGradBases">[docs]</a><span class="k">def</span> <span class="nf">zernikeGradBases</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+
+<div class="viewcode-block" id="zernikeGradBases">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeGradBases">[docs]</a>
+<span class="k">def</span> <span class="nf">zernikeGradBases</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct bases of Zernike polynomial series gradients up to Noll index ``jmax``, evaluated</span>
 <span class="sd">    at a specific set of points ``x`` and ``y``.</span>
 
@@ -1076,7 +1123,10 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dzkdx</span><span class="p">,</span> <span class="n">dzkdy</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="DoubleZernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike">[docs]</a><span class="k">class</span> <span class="nc">DoubleZernike</span><span class="p">:</span>
+
+<div class="viewcode-block" id="DoubleZernike">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike">[docs]</a>
+<span class="k">class</span> <span class="nc">DoubleZernike</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The Cartesian product of two (annular) Zernike polynomial series.  Each</span>
 <span class="sd">    double Zernike term is the product of two single Zernike polynomials over</span>
 <span class="sd">    separate annuli:</span>
@@ -1336,7 +1386,9 @@
                     <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
                     <span class="k">return</span> <span class="n">horner4d</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_uvxy</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DoubleZernike.xycoef"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike.xycoef">[docs]</a>    <span class="k">def</span> <span class="nf">xycoef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<div class="viewcode-block" id="DoubleZernike.xycoef">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike.xycoef">[docs]</a>
+    <span class="k">def</span> <span class="nf">xycoef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the xy Zernike coefficients for a given uv point or points.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1349,6 +1401,7 @@
         <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span><span class="p">(</span><span class="n">uu</span><span class="p">,</span> <span class="n">vv</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xy_series</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
         <span class="n">out</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Zero out piston term</span>
         <span class="k">return</span> <span class="n">out</span></div>
+
 
     <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Negate a DoubleZernike.&quot;&quot;&quot;</span>
@@ -1597,7 +1650,9 @@
             <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_coef</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jmax</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_inner</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DoubleZernike.rotate"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">theta_uv</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">theta_xy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<div class="viewcode-block" id="DoubleZernike.rotate">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.DoubleZernike.rotate">[docs]</a>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">theta_uv</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">theta_xy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Rotate the DoubleZernike by the given angle(s).</span>
 
 <span class="sd">        For example:</span>
@@ -1624,10 +1679,14 @@
             <span class="n">coef</span><span class="p">,</span>
             <span class="n">uv_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">uv_outer</span><span class="p">,</span> <span class="n">uv_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">uv_inner</span><span class="p">,</span>
             <span class="n">xy_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_outer</span><span class="p">,</span> <span class="n">xy_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_inner</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="doubleZernikeBasis"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.doubleZernikeBasis">[docs]</a><span class="k">def</span> <span class="nf">doubleZernikeBasis</span><span class="p">(</span>
+
+<div class="viewcode-block" id="doubleZernikeBasis">
+<a class="viewcode-back" href="../../zernike.html#galsim.zernike.doubleZernikeBasis">[docs]</a>
+<span class="k">def</span> <span class="nf">doubleZernikeBasis</span><span class="p">(</span>
     <span class="n">kmax</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">uv_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">uv_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xy_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">xy_inner</span><span class="o">=</span><span class="mf">0.0</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct basis of DoubleZernike polynomial series up to Noll indices</span>
@@ -1653,6 +1712,7 @@
         <span class="n">zernikeBasis</span><span class="p">(</span><span class="n">kmax</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="n">uv_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="n">uv_inner</span><span class="p">),</span>
         <span class="n">zernikeBasis</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="n">xy_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="n">xy_inner</span><span class="p">)</span>
     <span class="p">)</span></div>
+
 </pre></div>
 
            </div>

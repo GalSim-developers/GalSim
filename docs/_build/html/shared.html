@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shared Data &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Shared Data &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,13 +99,13 @@
            <div itemprop="articleBody">
              
   <section id="shared-data">
-<h1>Shared Data<a class="headerlink" href="#shared-data" title="Permalink to this heading"></a></h1>
+<h1>Shared Data<a class="headerlink" href="#shared-data" title="Link to this heading"></a></h1>
 <p>GalSim includes some ancillary data along with the installed code.  They are installed in
 the sub-directory <code class="docutils literal notranslate"><span class="pre">share</span></code> wherever your GalSim module is installed.</p>
 <p>The location of these files are given by the variable</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="galsim.meta_data.share_dir">
-<span class="sig-prename descclassname"><span class="pre">galsim.meta_data.</span></span><span class="sig-name descname"><span class="pre">share_dir</span></span><a class="headerlink" href="#galsim.meta_data.share_dir" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.meta_data.</span></span><span class="sig-name descname"><span class="pre">share_dir</span></span><a class="headerlink" href="#galsim.meta_data.share_dir" title="Link to this definition"></a></dt>
 <dd><p>The installed location of your <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.</p>
 </dd></dl>
 
@@ -129,7 +126,7 @@ name to the given file name when trying to open the file.</p>
 <p>The following files are distributed in the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  In each case, we provide the
 command you would typically use to load the file with the appropriate GalSim class or function.</p>
 <section id="shared-sed-files">
-<h2>Shared SED files<a class="headerlink" href="#shared-sed-files" title="Permalink to this heading"></a></h2>
+<h2>Shared SED files<a class="headerlink" href="#shared-sed-files" title="Link to this heading"></a></h2>
 <dl>
 <dt>vega.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('vega.txt',</span> <span class="pre">wave_type='nm',</span> <span class="pre">flux_type='flam')</span></code></p>
 <p>Specrum of the star Vega (aka Alpha Lyra), derived from HST CALSPEC data.
@@ -187,7 +184,7 @@ with fast_search=False.  See devel/modules/getSEDs.py for details.</p>
 </div></blockquote>
 </section>
 <section id="shared-bandpass-files">
-<h2>Shared Bandpass files<a class="headerlink" href="#shared-bandpass-files" title="Permalink to this heading"></a></h2>
+<h2>Shared Bandpass files<a class="headerlink" href="#shared-bandpass-files" title="Link to this heading"></a></h2>
 <dl>
 <dt>ACS_wfc_F435W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F435W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
 <p>ACS wfc_F435W total throughput
@@ -300,7 +297,7 @@ with fast_search=False.</p>
 </div></blockquote>
 </section>
 <section id="shared-sensor-models">
-<h2>Shared Sensor models<a class="headerlink" href="#shared-sensor-models" title="Permalink to this heading"></a></h2>
+<h2>Shared Sensor models<a class="headerlink" href="#shared-sensor-models" title="Link to this heading"></a></h2>
 <dl>
 <dt>lsst_itl_8</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SiliconSensor('lsst_itl_8')</span></code></p>
 <p>The ITL sensor being used for LSST, using 8 points along each side of the
@@ -318,14 +315,14 @@ updated in the future.)</p>
 </dl>
 </section>
 <section id="shared-hst-noise-model">
-<h2>Shared HST noise model<a class="headerlink" href="#shared-hst-noise-model" title="Permalink to this heading"></a></h2>
+<h2>Shared HST noise model<a class="headerlink" href="#shared-hst-noise-model" title="Link to this heading"></a></h2>
 <dl class="simple">
 <dt>acs_I_unrot_sci_20_cf.fits</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.getCOSMOSNoise()</span></code></p>
 </dd>
 </dl>
 </section>
 <section id="shared-roman-st-files">
-<h2>Shared Roman ST files<a class="headerlink" href="#shared-roman-st-files" title="Permalink to this heading"></a></h2>
+<h2>Shared Roman ST files<a class="headerlink" href="#shared-roman-st-files" title="Link to this heading"></a></h2>
 <dl>
 <dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_01.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(1,</span> <span class="pre">bandpass)</span></code></p>
 <p>Roman PSF information for SCA 1</p>
@@ -398,7 +395,7 @@ Relevant for bands F184 and W149</p>
 </dl>
 </section>
 <section id="shared-cosmos-files">
-<h2>Shared COSMOS files<a class="headerlink" href="#shared-cosmos-files" title="Permalink to this heading"></a></h2>
+<h2>Shared COSMOS files<a class="headerlink" href="#shared-cosmos-files" title="Link to this heading"></a></h2>
 <p>These files are not shipped with GalSim, but can be installed into the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory
 by the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.  See <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a> for details.</p>
 <dl>

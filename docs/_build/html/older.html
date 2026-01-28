@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>v2.5 &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>v2.7 &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -33,9 +33,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -67,7 +64,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="history.html">Revision History</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="history.html#changes-from-v2-6-to-v2-7">Changes from v2.6 to v2.7</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="history.html#older-versions">Older Versions</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">v2.5</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">v2.7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-6">v2.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-5">v2.5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-4">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-3">v2.3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-2">v2.2</a></li>
@@ -106,7 +105,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="history.html">Revision History</a></li>
-      <li class="breadcrumb-item active">v2.5</li>
+      <li class="breadcrumb-item active">v2.7</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/older.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -121,8 +120,62 @@ Each version may also include various other minor changes and bug fixes not
 listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.</p>
+<section id="v2-7">
+<h1>v2.7<a class="headerlink" href="#v2-7" title="Link to this heading"></a></h1>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike.xycoef" title="galsim.zernike.DoubleZernike.xycoef"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">DoubleZernike.xycoef</span></code></a>. (#1327)</p></li>
+<li><p>Added a setter for the <a class="reference internal" href="image_class.html#galsim.Image.array" title="galsim.Image.array"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Image.array</span></code></a> property. (#1272, #1329)</p></li>
+<li><p>Added an option <code class="docutils literal notranslate"><span class="pre">recalc=True</span></code> to <a class="reference internal" href="sensor.html#galsim.SiliconSensor.accumulate" title="galsim.SiliconSensor.accumulate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SiliconSensor.accumulate</span></code></a>.  (#1328)</p></li>
+</ul>
+<p><em>Performance Improvements</em></p>
+<ul class="simple">
+<li><p>Switched to inbuilt operators on lists rather than numpy operators in a few places (#1316)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">robust=True</span></code> option to <a class="reference internal" href="zernike.html#galsim.zernike.Zernike.__call__" title="galsim.zernike.Zernike.__call__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Zernike.__call__</span></code></a>. (#1326, #1327)</p></li>
+<li><p>Reduced memory use in the Silicon class. (#1331)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed an error in the <a class="reference internal" href="gal.html#galsim.Spergel" title="galsim.Spergel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Spergel</span></code></a> stepk calculation. (#1324, #1325)</p></li>
+<li><p>Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)</p></li>
+</ul>
+</section>
+<section id="v2-6">
+<h1>v2.6<a class="headerlink" href="#v2-6" title="Link to this heading"></a></h1>
+<p><em>Dependency Change</em></p>
+<ul class="simple">
+<li><p>Removed an accidental implicit dependency we had on scipy in <a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a>. (#1253, #1305)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Changed the behavior of random_seed. cf. <a class="reference internal" href="config_image.html#image-field-attributes"><span class="std std-ref">Image Field Attributes</span></a>. (#1309)</p></li>
+</ul>
+<p><em>Config Updates</em></p>
+<ul class="simple">
+<li><p>Changed the behavior of random_seed to be less confusing and safer for most use cases. (#1309)</p></li>
+<li><p>Added Quantity and Unit types. (#1311)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="chromaticobject.html#galsim.InterpolatedChromaticObject.from_images" title="galsim.InterpolatedChromaticObject.from_images"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">InterpolatedChromaticObject.from_images</span></code></a>. (#1294, #1296)</p></li>
+<li><p>Allow PosixPath instances in constructors for <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> and <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>. (#1270, #1304)</p></li>
+<li><p>Added filter information for the Prism and Grism in the roman module. (#1307)</p></li>
+<li><p>Added options to give some unitful values as an astropy Quantity. (#1311)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed a bug in the config-layer parsing of Position items. (#1299, #1300)</p></li>
+<li><p>Fixed a bug in <a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike" title="galsim.zernike.DoubleZernike"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DoubleZernike</span></code></a> to handle integer arguments. (#1283, #1303)</p></li>
+<li><p>Fixed a bug in <a class="reference internal" href="chromaticobject.html#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> with a simple <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> and one with an inseparable SED.
+(#1302, #1306)</p></li>
+<li><p>Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)</p></li>
+<li><p>Fixed a bug for chromatic photon shooting if the realized flux is zero. (#1317)</p></li>
+<li><p>Fixed a bug that could occasionally cause singular matrix exceptions in <a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a>. (#1319)</p></li>
+<li><p>Fixed a bug in the object centering when drawing with nx, ny and center. (#1322, #1323)</p></li>
+</ul>
+</section>
 <section id="v2-5">
-<h1>v2.5<a class="headerlink" href="#v2-5" title="Permalink to this heading"></a></h1>
+<h1>v2.5<a class="headerlink" href="#v2-5" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
 <ul class="simple">
 <li><p>Deprecated the use of filter W149 in roman module.  New name is W146. (#1017)</p></li>
@@ -187,7 +240,7 @@ photon shooting. (#1242)</p></li>
 </ul>
 </section>
 <section id="v2-4">
-<h1>v2.4<a class="headerlink" href="#v2-4" title="Permalink to this heading"></a></h1>
+<h1>v2.4<a class="headerlink" href="#v2-4" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
 <ul class="simple">
 <li><p>Removed CppEllipse, AstronomicalConstants.h in C++ layer. (#1129)</p></li>
@@ -272,7 +325,7 @@ normal BuildFile processing.</p></li>
 </ul>
 </section>
 <section id="v2-3">
-<h1>v2.3<a class="headerlink" href="#v2-3" title="Permalink to this heading"></a></h1>
+<h1>v2.3<a class="headerlink" href="#v2-3" title="Link to this heading"></a></h1>
 <p><em>Dependency Changes</em></p>
 <ul class="simple">
 <li><p>Removed future as a dependency. (#1082)</p></li>
@@ -361,7 +414,7 @@ Poisson code calculations. (#1077, #1081)</p></li>
 </ul>
 </section>
 <section id="v2-2">
-<h1>v2.2<a class="headerlink" href="#v2-2" title="Permalink to this heading"></a></h1>
+<h1>v2.2<a class="headerlink" href="#v2-2" title="Link to this heading"></a></h1>
 <p><em>Deprecated Features</em></p>
 <ul class="simple">
 <li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">galsim.correlatednoise._BaseCorrelatedNoise</span></code>. (#160)</p></li>
@@ -422,7 +475,7 @@ data in the pickle file. (#1057)</p></li>
 </ul>
 </section>
 <section id="v2-1">
-<h1>v2.1<a class="headerlink" href="#v2-1" title="Permalink to this heading"></a></h1>
+<h1>v2.1<a class="headerlink" href="#v2-1" title="Link to this heading"></a></h1>
 <p><em>Deprecated Features</em></p>
 <ul class="simple">
 <li><p>Deprecated PhaseScreenPSF attributes img and finalized. (#990)</p></li>
@@ -452,7 +505,7 @@ and range_division_for_extreama. (#993)</p></li>
 </ul>
 </section>
 <section id="v2-0">
-<h1>v2.0<a class="headerlink" href="#v2-0" title="Permalink to this heading"></a></h1>
+<h1>v2.0<a class="headerlink" href="#v2-0" title="Link to this heading"></a></h1>
 <p><em>Installation Changes</em></p>
 <ul class="simple">
 <li><p>Now installable via pip or setup.py install. (#809)</p></li>
@@ -490,7 +543,7 @@ and range_division_for_extreama. (#993)</p></li>
 </ul>
 </section>
 <section id="v1-6">
-<h1>v1.6<a class="headerlink" href="#v1-6" title="Permalink to this heading"></a></h1>
+<h1>v1.6<a class="headerlink" href="#v1-6" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
 <ul class="simple">
 <li><p>Delayed AtmosphericScreen instantiation until its first use. (#864)</p></li>
@@ -527,7 +580,7 @@ getConvergence, getMagnification, and getLensing. (#855)</p></li>
 </ul>
 </section>
 <section id="v1-5">
-<h1>v1.5<a class="headerlink" href="#v1-5" title="Permalink to this heading"></a></h1>
+<h1>v1.5<a class="headerlink" href="#v1-5" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
 <ul class="simple">
 <li><p>Simplified the return value of galsim.config.ReadConfig. (#580)</p></li>
@@ -672,7 +725,7 @@ like galsim.config.BuildGSObject.  (#820)</p></li>
 </ul>
 </section>
 <section id="v1-4">
-<h1>v1.4<a class="headerlink" href="#v1-4" title="Permalink to this heading"></a></h1>
+<h1>v1.4<a class="headerlink" href="#v1-4" title="Link to this heading"></a></h1>
 <p><em>API Changes</em></p>
 <ul class="simple">
 <li><p>Changed the galsim.Bandpass and galsim.SED classes to require formerly
@@ -754,7 +807,7 @@ single element. (#763)</p></li>
 </ul>
 </section>
 <section id="v1-3">
-<h1>v1.3<a class="headerlink" href="#v1-3" title="Permalink to this heading"></a></h1>
+<h1>v1.3<a class="headerlink" href="#v1-3" title="Link to this heading"></a></h1>
 <p><em>Installation Changes</em></p>
 <ul class="simple">
 <li><p>Require functionality in TMV 0.72. (#616)</p></li>
@@ -841,7 +894,7 @@ of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)</p></l
 </ul>
 </section>
 <section id="v1-2">
-<h1>v1.2<a class="headerlink" href="#v1-2" title="Permalink to this heading"></a></h1>
+<h1>v1.2<a class="headerlink" href="#v1-2" title="Link to this heading"></a></h1>
 <p><em>New Features</em></p>
 <ul class="simple">
 <li><p>Changed name of noise whitening routine from noise.applyWhiteningTo(image)
@@ -887,7 +940,7 @@ RandomChi2 random number generators. (#537)</p></li>
 </ul>
 </section>
 <section id="v1-1">
-<h1>v1.1<a class="headerlink" href="#v1-1" title="Permalink to this heading"></a></h1>
+<h1>v1.1<a class="headerlink" href="#v1-1" title="Link to this heading"></a></h1>
 <p><em>Non-backward-compatible API changes</em></p>
 <ul class="simple">
 <li><p>Changed Pixel to take a single scale parameter. (#364)</p></li>
@@ -950,7 +1003,7 @@ and allow all of the options that exist for image.draw_method. (#535)</p></li>
 </ul>
 </section>
 <section id="v1-0">
-<h1>v1.0<a class="headerlink" href="#v1-0" title="Permalink to this heading"></a></h1>
+<h1>v1.0<a class="headerlink" href="#v1-0" title="Link to this heading"></a></h1>
 <p><em>Notable bug fixes and improvements</em></p>
 <ul class="simple">
 <li><p>Fixed bug in the rendering of shifted images. (#424)</p></li>
@@ -994,7 +1047,7 @@ galsim.des explicitly or load with galsim -m des … (#460)</p></li>
 </ul>
 </section>
 <section id="v0-5">
-<h1>v0.5<a class="headerlink" href="#v0-5" title="Permalink to this heading"></a></h1>
+<h1>v0.5<a class="headerlink" href="#v0-5" title="Link to this heading"></a></h1>
 <p><em>New features</em></p>
 <ul class="simple">
 <li><p>Added Shapelet class. (#350)</p></li>
@@ -1036,7 +1089,7 @@ image_pos, and added a new sky_pos item. (#380)</p></li>
 </ul>
 </section>
 <section id="v0-4">
-<h1>v0.4<a class="headerlink" href="#v0-4" title="Permalink to this heading"></a></h1>
+<h1>v0.4<a class="headerlink" href="#v0-4" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p>Added ability to pad images for InterpolatedImage or RealGalaxy with either
 correlated or uncorrelated noise. (#238)</p></li>
@@ -1057,7 +1110,7 @@ GaussianNoise, PoissonNoise, DeviateNoise. (#349)</p></li>
 </ul>
 </section>
 <section id="v0-3">
-<h1>v0.3<a class="headerlink" href="#v0-3" title="Permalink to this heading"></a></h1>
+<h1>v0.3<a class="headerlink" href="#v0-3" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p>Fixed several bugs in the Sersic class that had been causing ringing.
 (#319, #330)</p></li>
@@ -1076,7 +1129,7 @@ times faster. (#331, #332)</p></li>
 </ul>
 </section>
 <section id="v0-2">
-<h1>v0.2<a class="headerlink" href="#v0-2" title="Permalink to this heading"></a></h1>
+<h1>v0.2<a class="headerlink" href="#v0-2" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p>Significant revamping and commenting of demos, including both python and
 config versions (#243, #285, #289).</p></li>
@@ -1090,7 +1143,7 @@ numpy.int32 types), and made Image handling generally more robust (#293, #294).<
 </ul>
 </section>
 <section id="v0-1">
-<h1>v0.1<a class="headerlink" href="#v0-1" title="Permalink to this heading"></a></h1>
+<h1>v0.1<a class="headerlink" href="#v0-1" title="Link to this heading"></a></h1>
 <p>Initial version of GalSim with most of the basic functionality.</p>
 </section>
 

@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_psf &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.phase_psf &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.phase_psf</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -126,14 +123,16 @@
 <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">basestring</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span><span class="p">,</span> <span class="n">galsim_warn_fft</span>
 <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">TimeSampler</span><span class="p">,</span> <span class="n">PhotonArray</span>
 <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
 <span class="kn">from</span> <span class="nn">.second_kick</span> <span class="kn">import</span> <span class="n">SecondKick</span>
 <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
 
 
-<div class="viewcode-block" id="Aperture"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a><span class="k">class</span> <span class="nc">Aperture</span><span class="p">:</span>
+<div class="viewcode-block" id="Aperture">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a>
+<span class="k">class</span> <span class="nc">Aperture</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
 <span class="sd">    with the `PhaseScreenPSF` class to create PSFs via Fourier or geometric optics.</span>
 
@@ -420,7 +419,7 @@
 
         <span class="c1"># Check FFT size</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;Created pupil plane array that is too large.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
+            <span class="n">galsim_warn_fft</span><span class="p">(</span><span class="s2">&quot;Created pupil plane array that will need a very large fft.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
 
         <span class="c1"># Shrink scale such that size = scale * npix exactly.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_size</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span>
@@ -475,7 +474,7 @@
 
         <span class="c1"># Check FFT size</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;Loaded pupil plane array that is too large.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
+            <span class="n">galsim_warn_fft</span><span class="p">(</span><span class="s2">&quot;Loaded pupil plane array that will need a very large fft.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
 
         <span class="c1"># Sanity checks</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
@@ -547,13 +546,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
-<div class="viewcode-block" id="Aperture.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.withGSParams">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.withGSParams">[docs]</a>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current aperture with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="c1"># Used in Aperture.__str__ and OpticalPSF.__str__</span>
     <span class="k">def</span> <span class="nf">_geometry_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -719,7 +721,9 @@
             <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_illuminated&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">d</span>
 
-<div class="viewcode-block" id="Aperture.samplePupil"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.samplePupil">[docs]</a>    <span class="k">def</span> <span class="nf">samplePupil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.samplePupil">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.samplePupil">[docs]</a>
+    <span class="k">def</span> <span class="nf">samplePupil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the pupil_u and pupil_v values in the PhotonArray by sampling the current aperture.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_photons</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">photons</span><span class="p">)</span>
@@ -734,6 +738,7 @@
         <span class="n">vscale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">pupil_u</span> <span class="o">+=</span> <span class="n">gen</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">uscale</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span><span class="n">uscale</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">n_photons</span><span class="p">)</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">pupil_v</span> <span class="o">+=</span> <span class="n">gen</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">vscale</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span><span class="n">vscale</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">n_photons</span><span class="p">)</span></div>
+
 
     <span class="c1"># Some quick notes for Josh:</span>
     <span class="c1"># - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)</span>
@@ -800,7 +805,10 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">lam</span><span class="o">*</span><span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_scale</span> <span class="o">*</span> <span class="n">radians</span><span class="o">/</span><span class="n">scale_unit</span></div>
 
 
-<div class="viewcode-block" id="PhaseScreenList"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList">[docs]</a><span class="k">class</span> <span class="nc">PhaseScreenList</span><span class="p">:</span>
+
+<div class="viewcode-block" id="PhaseScreenList">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList">[docs]</a>
+<span class="k">class</span> <span class="nc">PhaseScreenList</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of phase screens that can be turned into a PSF.  Screens can be either atmospheric</span>
 <span class="sd">    layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using</span>
 <span class="sd">    the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can</span>
@@ -915,7 +923,9 @@
                 <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
-<div class="viewcode-block" id="PhaseScreenList.instantiate"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.instantiate">[docs]</a>    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenList.instantiate">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.instantiate">[docs]</a>
+    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the screens in this `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
@@ -940,6 +950,7 @@
                 <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                     <span class="k">pass</span>
                 <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">_delayCalculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add psf to delayed calculation list.&quot;&quot;&quot;</span>
@@ -982,7 +993,9 @@
                     <span class="n">psf</span><span class="o">.</span><span class="n">_finalize</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>
 
-<div class="viewcode-block" id="PhaseScreenList.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
+<div class="viewcode-block" id="PhaseScreenList.wavefront">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute cumulative wavefront due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
@@ -1009,7 +1022,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wavefront</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PhaseScreenList.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
+
+<div class="viewcode-block" id="PhaseScreenList.wavefront_gradient">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront_gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1034,6 +1050,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wavefront_gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">layer</span><span class="o">.</span><span class="n">_wavefront</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -1048,7 +1065,9 @@
             <span class="n">grady</span> <span class="o">+=</span> <span class="n">gy</span>
         <span class="k">return</span> <span class="n">gradx</span><span class="p">,</span> <span class="n">grady</span>
 
-<div class="viewcode-block" id="PhaseScreenList.makePSF"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.makePSF">[docs]</a>    <span class="k">def</span> <span class="nf">makePSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenList.makePSF">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.makePSF">[docs]</a>
+    <span class="k">def</span> <span class="nf">makePSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a PSF from the current `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1150,6 +1169,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
+
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">r0_500_effective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Effective r0_500 for set of screens in list that define an r0_500 attribute.&quot;&quot;&quot;</span>
@@ -1184,7 +1204,10 @@
         <span class="k">return</span> <span class="n">d</span></div>
 
 
-<div class="viewcode-block" id="PhaseScreenPSF"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF">[docs]</a><span class="k">class</span> <span class="nc">PhaseScreenPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PhaseScreenPSF">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF">[docs]</a>
+<span class="k">class</span> <span class="nc">PhaseScreenPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A PSF surface brightness profile constructed by integrating over time the instantaneous PSF</span>
 <span class="sd">    derived from a set of phase screens and an aperture.</span>
 
@@ -1507,7 +1530,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span>
 
-<div class="viewcode-block" id="PhaseScreenPSF.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="PhaseScreenPSF.withGSParams">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withGSParams">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1524,6 +1549,7 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">_delayCalculation</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%s</span><span class="s2">, lam=</span><span class="si">%s</span><span class="s2">, exptime=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span>
@@ -1703,7 +1729,9 @@
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;finalized&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;This functionality has been removed.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span>
 
-<div class="viewcode-block" id="PhaseScreenPSF.withFlux"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="PhaseScreenPSF.withFlux">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withFlux">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span><span class="p">:</span>
             <span class="c1"># Then it&#39;s probably not faster to rebuild with a different flux.</span>
@@ -1711,10 +1739,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
                                   <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
-                                  <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+                                  <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="OpticalPSF"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF">[docs]</a><span class="k">class</span> <span class="nc">OpticalPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OpticalPSF">
+<a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF">[docs]</a>
+<span class="k">class</span> <span class="nc">OpticalPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class describing aberrated PSFs due to telescope optics.  Its underlying implementation</span>
 <span class="sd">    uses an InterpolatedImage to characterize the profile.</span>
 
@@ -2154,7 +2186,9 @@
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OpticalPSF.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="OpticalPSF.withFlux">
+<a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.withFlux">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
         <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span>
         <span class="k">return</span> <span class="n">OpticalPSF</span><span class="p">(</span>
@@ -2162,7 +2196,9 @@
                 <span class="n">aberrations</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">,</span>
                 <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span>
                 <span class="n">ii_pad_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="n">fft_sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span>
-                <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div></div>
+                <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+</div>
+
 
 <span class="c1"># Put this at the bottom to avoid circular import errors.</span>
 <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="kn">import</span> <span class="n">AtmosphericScreen</span><span class="p">,</span> <span class="n">OpticalScreen</span>

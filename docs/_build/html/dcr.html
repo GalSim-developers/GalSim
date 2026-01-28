@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Differential Chromatic Refraction &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Differential Chromatic Refraction &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -113,12 +110,12 @@
            <div itemprop="articleBody">
              
   <section id="differential-chromatic-refraction">
-<h1>Differential Chromatic Refraction<a class="headerlink" href="#differential-chromatic-refraction" title="Permalink to this heading"></a></h1>
+<h1>Differential Chromatic Refraction<a class="headerlink" href="#differential-chromatic-refraction" title="Link to this heading"></a></h1>
 <p>These utilities are used for our various classes and functions that implement differential
 chromatic refraction (DCR).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.dcr.air_refractive_index_minus_one">
-<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">air_refractive_index_minus_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">69.328</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">293.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2O_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.067</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#air_refractive_index_minus_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.air_refractive_index_minus_one" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">air_refractive_index_minus_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">69.328</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">293.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2O_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.067</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#air_refractive_index_minus_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.air_refractive_index_minus_one" title="Link to this definition"></a></dt>
 <dd><p>Return the refractive index of air as function of wavelength.</p>
 <p>Uses the formulae given in Filippenko (1982), which appear to come from Edlen (1953),
 and Coleman, Bozman, and Meggers (1960).  The units of the original formula are non-SI,
@@ -144,7 +141,7 @@ observatories.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.dcr.get_refraction">
-<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">get_refraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#get_refraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.get_refraction" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">get_refraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#get_refraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.get_refraction" title="Link to this definition"></a></dt>
 <dd><p>Compute the angle of refraction for a photon entering the atmosphere.</p>
 <p>Photons refract when transitioning from space, where the refractive index n = 1.0 exactly, to
 air, where the refractive index is slightly greater than 1.0.  This function computes the
@@ -167,7 +164,7 @@ pressure, temperature, and/or H2O_pressure.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.dcr.zenith_parallactic_angles">
-<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">zenith_parallactic_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_coord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#zenith_parallactic_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.zenith_parallactic_angles" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">zenith_parallactic_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_coord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#zenith_parallactic_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.zenith_parallactic_angles" title="Link to this definition"></a></dt>
 <dd><p>Compute the zenith angle and parallactic angle of a celestial coordinate, given either
 the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
 the latitude of the observer.  This is useful for the function <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a>.</p>
@@ -190,7 +187,7 @@ zenith and parallactic angles will be computed.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.dcr.parse_dcr_angles">
-<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">parse_dcr_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#parse_dcr_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.parse_dcr_angles" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></span><span class="sig-name descname"><span class="pre">parse_dcr_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#parse_dcr_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.parse_dcr_angles" title="Link to this definition"></a></dt>
 <dd><p>Parse the various options for specifying the zenith angle and parallactic angle
 in <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a>.</p>
 <dl class="field-list simple">

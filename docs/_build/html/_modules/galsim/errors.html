@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.errors &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.errors &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.errors</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -117,11 +114,15 @@
             <span class="s1">&#39;GalSimSEDError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimHSMError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimFFTSizeError&#39;</span><span class="p">,</span>
             <span class="s1">&#39;GalSimConfigError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimConfigValueError&#39;</span><span class="p">,</span>
             <span class="s1">&#39;GalSimNotImplementedError&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;GalSimWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimDeprecationWarning&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;convert_cpp_errors&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn&#39;</span><span class="p">,</span> <span class="p">]</span>
+            <span class="s1">&#39;GalSimWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimDeprecationWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimFFTSizeWarning&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;convert_cpp_errors&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn_fft&#39;</span> <span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+
+<span class="c1"># Set this to True to have large FFTs raise a GalSimFFTSizeError  exception rather</span>
+<span class="c1"># merely emit a GalSimFFTSizeWarning.</span>
+<span class="n">raise_fft_size_error</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Note to developers about which exception to throw.</span>
 <span class="c1">#</span>
@@ -217,10 +218,6 @@
 <span class="c1"># GalSimHSMError:       Use this for errors from the HSM algorithm.  They are emitted in C++, but</span>
 <span class="c1">#                       we use `with convert_cpp_errors(GalSimHSMError):` to convert them.</span>
 <span class="c1">#</span>
-<span class="c1"># GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size</span>
-<span class="c1">#                       for the object, so the recommendation is raise this parameter if that</span>
-<span class="c1">#                       is possible.</span>
-<span class="c1">#</span>
 <span class="c1"># GalSimConfigError:    Use this for errors processing a config dict.</span>
 <span class="c1">#</span>
 <span class="c1"># GalSimConfigValueError:   Use this when a config dict has a value that is invalid. Basically,</span>
@@ -231,7 +228,9 @@
 <span class="c1">#                             be implemented someday. So it&#39;s not a necessarily invalid usage, just</span>
 <span class="c1">#                             something that doesn&#39;t work currently.</span>
 
-<div class="viewcode-block" id="GalSimError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimError">[docs]</a><span class="k">class</span> <span class="nc">GalSimError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<div class="viewcode-block" id="GalSimError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The base class for GalSim-specific run-time errors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Minimal version of these to make GalSimError reprable and picklable.</span>
@@ -240,7 +239,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="GalSimValueError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimValueError">[docs]</a><span class="k">class</span> <span class="nc">GalSimValueError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimValueError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimValueError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimValueError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that some user-input value is invalid.</span>
 
 <span class="sd">    Attributes:</span>
@@ -263,7 +265,10 @@
         <span class="k">return</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_values</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimKeyError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimKeyError">[docs]</a><span class="k">class</span> <span class="nc">GalSimKeyError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimKeyError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimKeyError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimKeyError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating an attempt to access a dict-like object</span>
 <span class="sd">    with an invalid key.</span>
 
@@ -282,7 +287,10 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimKeyError(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimIndexError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimIndexError">[docs]</a><span class="k">class</span> <span class="nc">GalSimIndexError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimIndexError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimIndexError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimIndexError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating an attempt to access a list-like object</span>
 <span class="sd">    with an invalid index.</span>
 
@@ -301,7 +309,10 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimIndexError(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimRangeError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimRangeError">[docs]</a><span class="k">class</span> <span class="nc">GalSimRangeError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimRangeError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimRangeError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimRangeError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that some user-input value is</span>
 <span class="sd">    outside of the allowed range of values.</span>
 
@@ -325,7 +336,10 @@
         <span class="k">return</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimBoundsError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimBoundsError">[docs]</a><span class="k">class</span> <span class="nc">GalSimBoundsError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimBoundsError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimBoundsError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimBoundsError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that some user-input position is</span>
 <span class="sd">    outside of the allowed bounds.</span>
 
@@ -347,7 +361,10 @@
         <span class="k">return</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimUndefinedBoundsError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimUndefinedBoundsError">[docs]</a><span class="k">class</span> <span class="nc">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimUndefinedBoundsError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimUndefinedBoundsError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating an attempt to access the extent of</span>
 <span class="sd">    a `Bounds` instance that has not yet been defined.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -355,7 +372,10 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimUndefinedBoundsError(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="GalSimImmutableError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimImmutableError">[docs]</a><span class="k">class</span> <span class="nc">GalSimImmutableError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimImmutableError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimImmutableError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimImmutableError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating an attempt to modify an immutable image.</span>
 
 <span class="sd">    Attributes:</span>
@@ -374,7 +394,10 @@
         <span class="k">return</span> <span class="n">GalSimImmutableError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimIncompatibleValuesError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimIncompatibleValuesError">[docs]</a><span class="k">class</span> <span class="nc">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimIncompatibleValuesError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimIncompatibleValuesError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that 2 or more user-input values are</span>
 <span class="sd">    incompatible as given.</span>
 
@@ -400,7 +423,10 @@
         <span class="k">return</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimSEDError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimSEDError">[docs]</a><span class="k">class</span> <span class="nc">GalSimSEDError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimSEDError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimSEDError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimSEDError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating an attempt to do something invalid for the</span>
 <span class="sd">    kind of `SED` that is present.  Typically involving a dimensionless `SED` where a spectral</span>
 <span class="sd">    `SED` is required (or vice versa).</span>
@@ -421,14 +447,20 @@
         <span class="k">return</span> <span class="n">GalSimSEDError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimHSMError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimHSMError">[docs]</a><span class="k">class</span> <span class="nc">GalSimHSMError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimHSMError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimHSMError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimHSMError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating some kind of failure of the HSM algorithms</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimHSMError(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="GalSimFFTSizeError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimFFTSizeError">[docs]</a><span class="k">class</span> <span class="nc">GalSimFFTSizeError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimFFTSizeError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimFFTSizeError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimFFTSizeError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that a requested FFT exceeds the relevant</span>
 <span class="sd">    maximum_fft_size.</span>
 
@@ -451,7 +483,10 @@
         <span class="k">return</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimConfigError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimConfigError">[docs]</a><span class="k">class</span> <span class="nc">GalSimConfigError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimConfigError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimConfigError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimConfigError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating some kind of failure processing a</span>
 <span class="sd">    configuration file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -459,7 +494,10 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimConfigError(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="GalSimConfigValueError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimConfigValueError">[docs]</a><span class="k">class</span> <span class="nc">GalSimConfigValueError</span><span class="p">(</span><span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimConfigError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimConfigValueError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimConfigValueError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimConfigValueError</span><span class="p">(</span><span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimConfigError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that a config entry has an invalid value.</span>
 
 <span class="sd">    Attributes:</span>
@@ -473,7 +511,10 @@
         <span class="k">return</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_values</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GalSimNotImplementedError"><a class="viewcode-back" href="../../errors.html#galsim.GalSimNotImplementedError">[docs]</a><span class="k">class</span> <span class="nc">GalSimNotImplementedError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GalSimNotImplementedError">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimNotImplementedError">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimNotImplementedError</span><span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific exception class indicating that the feature being attempted is not</span>
 <span class="sd">    currently implemented.</span>
 
@@ -487,8 +528,11 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.GalSimNotImplementedError(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
+
 <span class="c1"># Note: Can use galsim_warn to raise warnings with this warning class.</span>
-<div class="viewcode-block" id="GalSimWarning"><a class="viewcode-back" href="../../errors.html#galsim.GalSimWarning">[docs]</a><span class="k">class</span> <span class="nc">GalSimWarning</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
+<div class="viewcode-block" id="GalSimWarning">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimWarning">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimWarning</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The base class for GalSim-emitted warnings.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.GalSimWarning(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
@@ -496,13 +540,45 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
+
 <span class="c1"># Note: By default python ignores DeprecationWarnings.  Apparently they are really</span>
 <span class="c1">#       for python system deprecations.  GalSim deprecations are thus only subclassed from</span>
 <span class="c1">#       GalSimWarning, not DeprecationWarning.</span>
-<div class="viewcode-block" id="GalSimDeprecationWarning"><a class="viewcode-back" href="../../errors.html#galsim.GalSimDeprecationWarning">[docs]</a><span class="k">class</span> <span class="nc">GalSimDeprecationWarning</span><span class="p">(</span><span class="n">GalSimWarning</span><span class="p">):</span>
+<div class="viewcode-block" id="GalSimDeprecationWarning">
+<a class="viewcode-back" href="../../errors.html#galsim.GalSimDeprecationWarning">[docs]</a>
+<span class="k">class</span> <span class="nc">GalSimDeprecationWarning</span><span class="p">(</span><span class="n">GalSimWarning</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific warning class used for deprecation warnings.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.GalSimDeprecationWarning(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+
+<span class="k">class</span> <span class="nc">GalSimFFTSizeWarning</span><span class="p">(</span><span class="n">GalSimWarning</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific warning class indicating that a requested FFT exceeds the relevant</span>
+<span class="sd">    maximum_fft_size.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        size:       The size that was deemed too large</span>
+<span class="sd">        mem:        The estimated memory that would be required (in GB) for the FFT.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mem</span> <span class="o">=</span> <span class="n">size</span> <span class="o">*</span> <span class="n">size</span> <span class="o">*</span> <span class="mf">24.</span> <span class="o">/</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">The required FFT size would be </span><span class="si">{0}</span><span class="s2"> x </span><span class="si">{0}</span><span class="s2">, which requires &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2"> GB of memory.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mem</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;If you can handle the large FFT and want to suppress this warning,</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;you may update gsparams.maximum_fft_size.&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GalSimFFTSizeWarning</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.GalSimFFTSizeWarning(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GalSimFFTSizeWarning</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">galsim_warn_fft</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">raise_fft_size_error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">GalSimFFTSizeWarning</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
 
 <span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">convert_cpp_errors</span><span class="p">(</span><span class="n">error_type</span><span class="o">=</span><span class="n">GalSimError</span><span class="p">):</span>

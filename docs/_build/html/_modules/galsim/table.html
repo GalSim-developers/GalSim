@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.table &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.table &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.table</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -132,7 +129,9 @@
     <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">edgeitems</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LookupTable"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable">[docs]</a><span class="k">class</span> <span class="nc">LookupTable</span><span class="p">:</span>
+<div class="viewcode-block" id="LookupTable">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable">[docs]</a>
+<span class="k">class</span> <span class="nc">LookupTable</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LookupTable represents a lookup table to store function values that may be slow to calculate,</span>
 <span class="sd">    for which interpolating from a lookup table is sufficiently accurate.</span>
@@ -291,7 +290,9 @@
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LookupTable.__call__"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="LookupTable.__call__">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Interpolate the `LookupTable` to get ``f(x)`` at some ``x`` value(s).</span>
 
 <span class="sd">        When the `LookupTable` object is called with a single argument, it returns the value at that</span>
@@ -345,7 +346,10 @@
             <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">f</span></div>
 
-<div class="viewcode-block" id="LookupTable.integrate"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.integrate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LookupTable.integrate">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.integrate">[docs]</a>
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function from x_min to x_max:</span>
 
 <span class="sd">        .. math::</span>
@@ -404,7 +408,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">x_max</span><span class="p">,</span> <span class="n">x_min</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LookupTable.integrate_product"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.integrate_product">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_factor</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LookupTable.integrate_product">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.integrate_product">[docs]</a>
+    <span class="k">def</span> <span class="nf">integrate_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_factor</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate an estimate of the integral of the tabulated function multiplied by a second</span>
 <span class="sd">        function from x_min to x_max:</span>
 
@@ -480,6 +487,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span><span class="o">.</span><span class="n">integrate_product</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">x_min</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">x_max</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">x_factor</span><span class="p">))</span></div>
 
+
     <span class="k">def</span> <span class="nf">_check_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">slop</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.e-6</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">initial</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span> <span class="o">-</span> <span class="n">slop</span><span class="p">:</span>
@@ -539,7 +547,9 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="LookupTable.from_file"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.from_file">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LookupTable.from_file">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.from_file">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a file of x, f values.</span>
 
@@ -577,7 +587,10 @@
             <span class="n">f</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">amplitude</span>
         <span class="k">return</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="n">interpolant</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="n">x_log</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="n">f_log</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LookupTable.from_func"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.from_func">[docs]</a>    <span class="nd">@classmethod</span>
+
+<div class="viewcode-block" id="LookupTable.from_func">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable.from_func">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_func</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span>
                   <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a `LookupTable` from a callable function</span>
@@ -605,6 +618,7 @@
         <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">func</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="n">x</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="n">interpolant</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="n">x_log</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="n">f_log</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_tab&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
@@ -612,6 +626,7 @@
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span></div>
+
 
 <span class="k">def</span> <span class="nf">_LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a `LookupTable` but without using any of the sanity checks or array manipulation used</span>
@@ -647,7 +662,9 @@
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<div class="viewcode-block" id="trapz"><a class="viewcode-back" href="../../table.html#galsim.utilities.trapz">[docs]</a><span class="k">def</span> <span class="nf">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="trapz">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.trapz">[docs]</a>
+<span class="k">def</span> <span class="nf">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate f(x) using the trapezoidal rule.</span>
 
 <span class="sd">    Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,</span>
@@ -668,7 +685,10 @@
         <span class="k">return</span> <span class="mf">0.</span></div>
 
 
-<div class="viewcode-block" id="LookupTable2D"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D">[docs]</a><span class="k">class</span> <span class="nc">LookupTable2D</span><span class="p">:</span>
+
+<div class="viewcode-block" id="LookupTable2D">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D">[docs]</a>
+<span class="k">class</span> <span class="nc">LookupTable2D</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow</span>
 <span class="sd">    to calculate, for which interpolating from a lookup table is sufficiently accurate.  A</span>
@@ -1030,7 +1050,9 @@
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_args</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_inbounds</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LookupTable2D.__call__"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="LookupTable2D.__call__">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Interpolate at an arbitrary point or points.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1043,7 +1065,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            a scalar value if x and y are scalar, or a numpy array if x and y are arrays.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">&quot;2.0&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">&quot;2.0&quot;</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
             <span class="c1"># I&#39;m not sure if there is a simpler way to do this in 2.0.</span>
             <span class="c1"># We want a copy when edge_mode == wrap. Otherwise, only copy if dtype changes or</span>
             <span class="c1"># x,y aren&#39;t already arrays. That used to be simple...</span>
@@ -1070,6 +1092,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">grid</span><span class="p">:</span>
                 <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">f</span></div>
+
 
     <span class="k">def</span> <span class="nf">_gradient_inbounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">grid</span><span class="p">:</span>
@@ -1147,7 +1170,9 @@
             <span class="n">dfdy</span><span class="p">[</span><span class="n">good</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp2</span>
             <span class="k">return</span> <span class="n">dfdx</span><span class="p">,</span> <span class="n">dfdy</span>
 
-<div class="viewcode-block" id="LookupTable2D.gradient"><a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="LookupTable2D.gradient">
+<a class="viewcode-back" href="../../table.html#galsim.utilities.LookupTable2D.gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the gradient of the function at an arbitrary point or points.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1163,7 +1188,7 @@
 <span class="sd">            A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single</span>
 <span class="sd">            values) or numpy arrays.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">&quot;2.0&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">&quot;2.0&quot;</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
             <span class="n">copy</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_mode</span><span class="o">==</span><span class="s1">&#39;wrap&#39;</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_mode</span><span class="o">==</span><span class="s1">&#39;wrap&#39;</span>
@@ -1188,6 +1213,7 @@
                 <span class="n">dfdx</span> <span class="o">=</span> <span class="n">dfdx</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
                 <span class="n">dfdy</span> <span class="o">=</span> <span class="n">dfdy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dfdx</span><span class="p">,</span> <span class="n">dfdy</span></div>
+
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.LookupTable2D(x=</span><span class="si">%s</span><span class="s2">, y=</span><span class="si">%s</span><span class="s2">, f=[</span><span class="si">%s</span><span class="s2">,...,</span><span class="si">%s</span><span class="s2">], interpolant=</span><span class="si">%r</span><span class="s2">, edge_mode=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
@@ -1240,7 +1266,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span></div>
 
 
-<div class="viewcode-block" id="_LookupTable2D"><a class="viewcode-back" href="../../table.html#galsim.utilities._LookupTable2D">[docs]</a><span class="k">def</span> <span class="nf">_LookupTable2D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="p">,</span> <span class="n">edge_mode</span><span class="p">,</span> <span class="n">constant</span><span class="p">,</span>
+
+<div class="viewcode-block" id="_LookupTable2D">
+<a class="viewcode-back" href="../../table.html#galsim.utilities._LookupTable2D">[docs]</a>
+<span class="k">def</span> <span class="nf">_LookupTable2D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="p">,</span> <span class="n">edge_mode</span><span class="p">,</span> <span class="n">constant</span><span class="p">,</span>
                    <span class="n">dfdx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dfdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d2fdxdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xperiod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yperiod</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a `LookupTable2D` but without using any of the sanity checks or array manipulation used</span>
@@ -1266,7 +1295,10 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_interp2d</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">interpolant</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="find_out_of_bounds_position"><a class="viewcode-back" href="../../misc.html#galsim.utilities.find_out_of_bounds_position">[docs]</a><span class="k">def</span> <span class="nf">find_out_of_bounds_position</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="find_out_of_bounds_position">
+<a class="viewcode-back" href="../../misc.html#galsim.utilities.find_out_of_bounds_position">[docs]</a>
+<span class="k">def</span> <span class="nf">find_out_of_bounds_position</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Given arrays of x and y values that are known to contain at least one</span>
 <span class="sd">    position that is out-of-bounds of the given bounds instance, return one</span>
 <span class="sd">    such PositionD.</span>
@@ -1296,6 +1328,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
     <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;No out-of-bounds position&quot;</span><span class="p">)</span></div>
+
 
 </pre></div>
 

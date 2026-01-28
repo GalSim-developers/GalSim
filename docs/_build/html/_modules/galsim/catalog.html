@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.catalog &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.catalog &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.catalog</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -123,7 +120,9 @@
 <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
 <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
 
-<div class="viewcode-block" id="Catalog"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog">[docs]</a><span class="k">class</span> <span class="nc">Catalog</span><span class="p">:</span>
+<div class="viewcode-block" id="Catalog">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog">[docs]</a>
+<span class="k">class</span> <span class="nc">Catalog</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class storing the data from an input catalog.</span>
 
 <span class="sd">    Each row corresponds to a different object to be built, and each column stores some item of</span>
@@ -199,7 +198,9 @@
     <span class="k">def</span> <span class="nf">isFits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isfits</span>
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
 
-<div class="viewcode-block" id="Catalog.readAscii"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readAscii">[docs]</a>    <span class="k">def</span> <span class="nf">readAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Catalog.readAscii">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readAscii">[docs]</a>
+    <span class="k">def</span> <span class="nf">readAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in an input catalog from an ASCII file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -217,6 +218,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">isfits</span> <span class="o">=</span> <span class="kc">False</span></div>
 
+
     <span class="k">def</span> <span class="nf">finishReadAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Read in the data using the numpy convenience function</span>
         <span class="c1"># Note: we leave the data as str, rather than convert to float, so that if</span>
@@ -229,7 +231,9 @@
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ncols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Catalog.readFits"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readFits">[docs]</a>    <span class="k">def</span> <span class="nf">readFits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Catalog.readFits">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog.readFits">[docs]</a>
+    <span class="k">def</span> <span class="nf">readFits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read in an input catalog from a FITS file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
@@ -239,7 +243,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">isfits</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Catalog.get"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Catalog.get">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog.get">[docs]</a>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` in its native type.</span>
 
 <span class="sd">        For ASCII catalogs, ``col`` is the column number.</span>
@@ -268,15 +275,22 @@
                 <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s2">&quot;Index is invalid for catalog </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Catalog.getFloat"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getFloat">[docs]</a>    <span class="k">def</span> <span class="nf">getFloat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Catalog.getFloat">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getFloat">[docs]</a>
+    <span class="k">def</span> <span class="nf">getFloat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as a float if possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="n">col</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Catalog.getInt"><a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getInt">[docs]</a>    <span class="k">def</span> <span class="nf">getInt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Catalog.getInt">
+<a class="viewcode-back" href="../../catalog.html#galsim.Catalog.getInt">[docs]</a>
+    <span class="k">def</span> <span class="nf">getInt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the data for the given ``index`` and ``col`` as an int if possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="n">col</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.Catalog(file_name=</span><span class="si">%r</span><span class="s2">, file_type=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span><span class="p">)</span>
@@ -292,7 +306,10 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Dict"><a class="viewcode-back" href="../../catalog.html#galsim.Dict">[docs]</a><span class="k">class</span> <span class="nc">Dict</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Dict">
+<a class="viewcode-back" href="../../catalog.html#galsim.Dict">[docs]</a>
+<span class="k">class</span> <span class="nc">Dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that reads a python dict from a file.</span>
 
 <span class="sd">    After construction, it behaves like a regular python dict, with one exception.</span>
@@ -439,7 +456,10 @@
 
 
 
-<div class="viewcode-block" id="OutputCatalog"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog">[docs]</a><span class="k">class</span> <span class="nc">OutputCatalog</span><span class="p">:</span>
+
+<div class="viewcode-block" id="OutputCatalog">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog">[docs]</a>
+<span class="k">class</span> <span class="nc">OutputCatalog</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for building up a catalog for output, typically storing truth information</span>
 <span class="sd">    about a simulation.</span>
 
@@ -488,23 +508,40 @@
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
 
     <span class="c1"># Again, when we use this through a proxy, we need getters for the attributes.</span>
-<div class="viewcode-block" id="OutputCatalog.getNames"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNames">[docs]</a>    <span class="k">def</span> <span class="nf">getNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OutputCatalog.getNames">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNames">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span></div>
-<div class="viewcode-block" id="OutputCatalog.getTypes"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getTypes">[docs]</a>    <span class="k">def</span> <span class="nf">getTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.getTypes">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getTypes">[docs]</a>
+    <span class="k">def</span> <span class="nf">getTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.types.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span></div>
-<div class="viewcode-block" id="OutputCatalog.setTypes"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.setTypes">[docs]</a>    <span class="k">def</span> <span class="nf">setTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.setTypes">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.setTypes">[docs]</a>
+    <span class="k">def</span> <span class="nf">setTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.types = types.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="n">types</span></div>
-<div class="viewcode-block" id="OutputCatalog.getNObjects"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNObjects">[docs]</a>    <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.getNObjects">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNObjects">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.nobjects.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span></div>
-<div class="viewcode-block" id="OutputCatalog.getNCols"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNCols">[docs]</a>    <span class="k">def</span> <span class="nf">getNCols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.getNCols">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.getNCols">[docs]</a>
+    <span class="k">def</span> <span class="nf">getNCols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to sef.ncols.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.addRow"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.addRow">[docs]</a>    <span class="k">def</span> <span class="nf">addRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">sort_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.addRow">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.addRow">[docs]</a>
+    <span class="k">def</span> <span class="nf">addRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">sort_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a row of data to the catalog.</span>
 
 <span class="sd">        Warning: no type checking is done at this point.  If the values in the row do not</span>
@@ -525,7 +562,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sort_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sort_key</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.write"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.write">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.write">[docs]</a>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the catalog to a file.</span>
 
 <span class="sd">        Parameters:</span>
@@ -555,7 +595,10 @@
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># file_type == &#39;ASCII&#39;:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">writeAscii</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.makeData"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.makeData">[docs]</a>    <span class="k">def</span> <span class="nf">makeData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.makeData">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.makeData">[docs]</a>
+    <span class="k">def</span> <span class="nf">makeData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a numpy array of the data as it should be written to an output file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -603,7 +646,10 @@
 
         <span class="k">return</span> <span class="n">data</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.writeAscii"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeAscii">[docs]</a>    <span class="k">def</span> <span class="nf">writeAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.writeAscii">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeAscii">[docs]</a>
+    <span class="k">def</span> <span class="nf">writeAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to an ASCII file.</span>
 
 <span class="sd">        Parameters:</span>
@@ -630,7 +676,10 @@
 
         <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.writeFits"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFits">[docs]</a>    <span class="k">def</span> <span class="nf">writeFits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.writeFits">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFits">[docs]</a>
+    <span class="k">def</span> <span class="nf">writeFits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to a FITS file.</span>
 
 <span class="sd">        Parameters:</span>
@@ -640,7 +689,10 @@
         <span class="n">tbhdu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">writeFitsHdu</span><span class="p">()</span>
         <span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">tbhdu</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OutputCatalog.writeFitsHdu"><a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFitsHdu">[docs]</a>    <span class="k">def</span> <span class="nf">writeFitsHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="OutputCatalog.writeFitsHdu">
+<a class="viewcode-back" href="../../catalog.html#galsim.OutputCatalog.writeFitsHdu">[docs]</a>
+    <span class="k">def</span> <span class="nf">writeFitsHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write catalog to a FITS hdu.</span>
 
 <span class="sd">        Returns:</span>
@@ -666,6 +718,7 @@
         <span class="n">tbhdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tbhdu</span></div>
 
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">make_type_str</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
@@ -681,6 +734,7 @@
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
 </pre></div>
 
            </div>

@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_screens &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.phase_screens &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.phase_screens</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -147,7 +144,9 @@
 <span class="n">_GSScreenShare</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<div class="viewcode-block" id="initWorkerArgs"><a class="viewcode-back" href="../../phase_psf.html#galsim.initWorkerArgs">[docs]</a><span class="k">def</span> <span class="nf">initWorkerArgs</span><span class="p">():</span>
+<div class="viewcode-block" id="initWorkerArgs">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.initWorkerArgs">[docs]</a>
+<span class="k">def</span> <span class="nf">initWorkerArgs</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function used to generate worker arguments to pass to multiprocessing.Pool initializer.</span>
 
 <span class="sd">    See `AtmosphericScreen` docstring for more information.</span>
@@ -159,14 +158,20 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">_GSScreenShare</span><span class="p">,)</span></div>
 
 
-<div class="viewcode-block" id="initWorker"><a class="viewcode-back" href="../../phase_psf.html#galsim.initWorker">[docs]</a><span class="k">def</span> <span class="nf">initWorker</span><span class="p">(</span><span class="n">share</span><span class="p">):</span>
+
+<div class="viewcode-block" id="initWorker">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.initWorker">[docs]</a>
+<span class="k">def</span> <span class="nf">initWorker</span><span class="p">(</span><span class="n">share</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker initialization function to pass to multiprocessing.Pool initializer.</span>
 
 <span class="sd">    See `AtmosphericScreen` docstring for more information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_GSScreenShare</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">share</span><span class="p">)</span>  <span class="c1"># pragma: no cover  (covered, but in a fork)</span></div>
 
-<div class="viewcode-block" id="reset_shared_screens"><a class="viewcode-back" href="../../phase_psf.html#galsim.reset_shared_screens">[docs]</a><span class="k">def</span> <span class="nf">reset_shared_screens</span><span class="p">():</span>
+
+<div class="viewcode-block" id="reset_shared_screens">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.reset_shared_screens">[docs]</a>
+<span class="k">def</span> <span class="nf">reset_shared_screens</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset the global dict that contains screens being shared across multiprocessing processes.</span>
 
 <span class="sd">    This is almost never necessary.  However, if you first use one multiprocessing context with</span>
@@ -183,6 +188,7 @@
     <span class="k">global</span> <span class="n">_GSScreenShare</span>
     <span class="n">_GSScreenShare</span> <span class="o">=</span> <span class="p">{}</span></div>
 
+
 <span class="c1"># Helper to let the with Lock() context in the __del__ below timeout if things get borked.</span>
 <span class="c1"># From https://stackoverflow.com/questions/71282555/acquire-a-multiprocessing-lock-in-a-with-statement-if-non-blocking-or-with-timeo</span>
 <span class="nd">@contextmanager</span>
@@ -195,7 +201,9 @@
             <span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="AtmosphericScreen"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen">[docs]</a><span class="k">class</span> <span class="nc">AtmosphericScreen</span><span class="p">:</span>
+<div class="viewcode-block" id="AtmosphericScreen">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen">[docs]</a>
+<span class="k">class</span> <span class="nc">AtmosphericScreen</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; An atmospheric phase screen that can drift in the wind and evolves (&quot;boils&quot;) over time.  The</span>
 <span class="sd">    initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is</span>
 <span class="sd">    defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer</span>
@@ -566,7 +574,9 @@
 
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
 
-<div class="viewcode-block" id="AtmosphericScreen.instantiate"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.instantiate">[docs]</a>    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kmin</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">kmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AtmosphericScreen.instantiate">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.instantiate">[docs]</a>
+    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kmin</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">kmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters:</span>
 <span class="sd">            kmin:     Minimum k-mode to include when generating phase screens.  Generally this will</span>
@@ -605,6 +615,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kmax</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
                     <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;AtmosphericScreen was instantiated for FFT drawing. &quot;</span>
                                 <span class="s2">&quot;Drawing now with photon shooting may yield surprising results.&quot;</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">kmin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -745,7 +756,9 @@
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_calcAtmStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0_500</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AtmosphericScreen.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
+<div class="viewcode-block" id="AtmosphericScreen.wavefront">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.wavefront">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute wavefront due to atmospheric phase screen.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
@@ -802,6 +815,7 @@
                 <span class="n">tt</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
             <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Same as wavefront(), but no argument checking, no boiling updates, no</span>
         <span class="c1"># screen instantiation checking</span>
@@ -815,7 +829,9 @@
             <span class="n">v</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_altitude</span><span class="o">*</span><span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tan</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tab2d</span><span class="o">.</span><span class="n">_call_wrap</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AtmosphericScreen.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
+<div class="viewcode-block" id="AtmosphericScreen.wavefront_gradient">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.wavefront_gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute gradient of wavefront due to atmospheric phase screen.</span>
 
 <span class="sd">        Parameters:</span>
@@ -867,6 +883,7 @@
                 <span class="n">tt</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
             <span class="k">return</span> <span class="n">dwdu</span><span class="p">,</span> <span class="n">dwdv</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Same as wavefront(), but no argument checking and no boiling updates.</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="n">t</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">vx</span>
@@ -879,7 +896,10 @@
         <span class="k">return</span> <span class="n">dfdx</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dfdy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Atmosphere"><a class="viewcode-back" href="../../phase_psf.html#galsim.Atmosphere">[docs]</a><span class="k">def</span> <span class="nf">Atmosphere</span><span class="p">(</span><span class="n">screen_size</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Atmosphere">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.Atmosphere">[docs]</a>
+<span class="k">def</span> <span class="nf">Atmosphere</span><span class="p">(</span><span class="n">screen_size</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Create an atmosphere as a list of turbulent phase screens at different altitudes.  The</span>
 <span class="sd">    atmosphere model can then be used to simulate atmospheric PSFs.</span>
 
@@ -1042,7 +1062,10 @@
     <span class="k">return</span> <span class="n">PhaseScreenList</span><span class="p">([</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">utilities</span><span class="o">.</span><span class="n">dol_to_lod</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">nmax</span><span class="p">)])</span></div>
 
 
-<div class="viewcode-block" id="OpticalScreen"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen">[docs]</a><span class="k">class</span> <span class="nc">OpticalScreen</span><span class="p">:</span>
+
+<div class="viewcode-block" id="OpticalScreen">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen">[docs]</a>
+<span class="k">class</span> <span class="nc">OpticalScreen</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to describe optical aberrations in terms of Zernike polynomial coefficients.</span>
 
@@ -1183,7 +1206,9 @@
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_calcOptStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OpticalScreen.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalScreen.wavefront">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.wavefront">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute wavefront due to optical phase screen.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
@@ -1206,12 +1231,15 @@
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;u.shape not equal to v.shape&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wavefront</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Same as wavefront(), but no argument checking.</span>
         <span class="c1"># Note, this phase screen is actually independent of time and theta.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zernike</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span>
 
-<div class="viewcode-block" id="OpticalScreen.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalScreen.wavefront_gradient">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.wavefront_gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute gradient of wavefront due to optical phase screen.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1232,6 +1260,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wavefront_gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
 
+
     <span class="k">def</span> <span class="nf">_wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="c1"># Same as wavefront(), but no argument checking.</span>
         <span class="c1"># Note, this phase screen is actually independent of time and theta.</span>
@@ -1241,13 +1270,16 @@
         <span class="k">return</span> <span class="n">gradx</span><span class="p">,</span> <span class="n">grady</span></div>
 
 
+
 <span class="c1"># Used only for testing</span>
 <span class="k">class</span> <span class="nc">_DummyScreen</span><span class="p">(</span><span class="n">OpticalScreen</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Shouldn&#39;t reach this&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="UserScreen"><a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen">[docs]</a><span class="k">class</span> <span class="nc">UserScreen</span><span class="p">:</span>
+<div class="viewcode-block" id="UserScreen">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen">[docs]</a>
+<span class="k">class</span> <span class="nc">UserScreen</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Create a (static) user-defined phase screen.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1315,7 +1347,9 @@
         <span class="n">diam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">_calcOptStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UserScreen.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UserScreen.wavefront">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen.wavefront">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Evaluate wavefront from lookup table.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
@@ -1334,10 +1368,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UserScreen.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UserScreen.wavefront_gradient">
+<a class="viewcode-back" href="../../phase_psf.html#galsim.UserScreen.wavefront_gradient">[docs]</a>
+    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Evaluate gradient of wavefront from lookup table.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1353,8 +1390,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
 
 <span class="c1"># Put this at the end to avoid circular imports</span>
 <span class="kn">from</span> <span class="nn">.phase_psf</span> <span class="kn">import</span> <span class="n">PhaseScreenList</span>

@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.bounds &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.bounds &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.bounds</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -116,7 +113,9 @@
 <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span>
 
-<div class="viewcode-block" id="Bounds"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds">[docs]</a><span class="k">class</span> <span class="nc">Bounds</span><span class="p">:</span>
+<div class="viewcode-block" id="Bounds">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds">[docs]</a>
+<span class="k">class</span> <span class="nc">Bounds</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for representing image bounds as 2D rectangles.</span>
 
 <span class="sd">    Bounds is a base class for two slightly different kinds of bounds:</span>
@@ -240,7 +239,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Bounds.area"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.area">[docs]</a>    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Bounds.area">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.area">[docs]</a>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the area of the enclosed region.</span>
 
 <span class="sd">        The area is a bit different for integer-type `BoundsI` and float-type `BoundsD` instances.</span>
@@ -250,7 +251,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Bounds.withBorder"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.withBorder">[docs]</a>    <span class="k">def</span> <span class="nf">withBorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.withBorder">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.withBorder">[docs]</a>
+    <span class="k">def</span> <span class="nf">withBorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new `Bounds` object that expands the current bounds by the specified width.</span>
 
 <span class="sd">        If two arguments are given, then these are separate dx and dy borders.</span>
@@ -261,6 +265,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_scalar</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="s2">&quot;dy&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="o">-</span><span class="n">dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="o">+</span><span class="n">dy</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -291,7 +296,9 @@
             <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;true_center is invalid for an undefined Bounds&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_PositionD</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Bounds.includes"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.includes">[docs]</a>    <span class="k">def</span> <span class="nf">includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="Bounds.includes">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.includes">[docs]</a>
+    <span class="k">def</span> <span class="nf">includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Test whether a supplied ``(x,y)`` pair, `Position`, or `Bounds` lie within a defined</span>
 <span class="sd">        `Bounds` rectangle of this instance.</span>
 
@@ -333,7 +340,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;include takes at most 2 arguments (</span><span class="si">%d</span><span class="s2"> given)&quot;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Bounds.expand"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor_x</span><span class="p">,</span> <span class="n">factor_y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.expand">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.expand">[docs]</a>
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor_x</span><span class="p">,</span> <span class="n">factor_y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Grow the `Bounds` by the supplied factor about the center.</span>
 
 <span class="sd">        If two arguments are given, then these are separate x and y factors to</span>
@@ -348,27 +358,45 @@
             <span class="n">dy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">dy</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withBorder</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Bounds.isDefined"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.isDefined">[docs]</a>    <span class="k">def</span> <span class="nf">isDefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.isDefined">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.isDefined">[docs]</a>
+    <span class="k">def</span> <span class="nf">isDefined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;Test whether `Bounds` rectangle is defined.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isdefined</span></div>
 
-<div class="viewcode-block" id="Bounds.getXMin"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMin">[docs]</a>    <span class="k">def</span> <span class="nf">getXMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.getXMin">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMin">[docs]</a>
+    <span class="k">def</span> <span class="nf">getXMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;Get the value of xmin.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span></div>
 
-<div class="viewcode-block" id="Bounds.getXMax"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMax">[docs]</a>    <span class="k">def</span> <span class="nf">getXMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.getXMax">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getXMax">[docs]</a>
+    <span class="k">def</span> <span class="nf">getXMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;Get the value of xmax.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span></div>
 
-<div class="viewcode-block" id="Bounds.getYMin"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMin">[docs]</a>    <span class="k">def</span> <span class="nf">getYMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.getYMin">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMin">[docs]</a>
+    <span class="k">def</span> <span class="nf">getYMin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;Get the value of ymin.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span></div>
 
-<div class="viewcode-block" id="Bounds.getYMax"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMax">[docs]</a>    <span class="k">def</span> <span class="nf">getYMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.getYMax">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.getYMax">[docs]</a>
+    <span class="k">def</span> <span class="nf">getYMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;Get the value of ymax.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span></div>
 
-<div class="viewcode-block" id="Bounds.shift"><a class="viewcode-back" href="../../bounds.html#galsim.Bounds.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Bounds.shift">
+<a class="viewcode-back" href="../../bounds.html#galsim.Bounds.shift">[docs]</a>
+    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shift the `Bounds` instance by a supplied `Position`.</span>
 
 <span class="sd">        Examples:</span>
@@ -385,6 +413,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;delta must be a </span><span class="si">%s</span><span class="s2"> instance&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_pos_class</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
                               <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
@@ -457,7 +486,10 @@
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span></div>
 
 
-<div class="viewcode-block" id="BoundsD"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsD">[docs]</a><span class="k">class</span> <span class="nc">BoundsD</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BoundsD">
+<a class="viewcode-back" href="../../bounds.html#galsim.BoundsD">[docs]</a>
+<span class="k">class</span> <span class="nc">BoundsD</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A `Bounds` that takes floating point values.</span>
 
 <span class="sd">    See the `Bounds` doc string for more details.</span>
@@ -491,7 +523,10 @@
         <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span> <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BoundsI"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsI">[docs]</a><span class="k">class</span> <span class="nc">BoundsI</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BoundsI">
+<a class="viewcode-back" href="../../bounds.html#galsim.BoundsI">[docs]</a>
+<span class="k">class</span> <span class="nc">BoundsI</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A `Bounds` that takes only integer values.</span>
 
 <span class="sd">    Typically used to define the bounding box of an image.</span>
@@ -522,12 +557,15 @@
             <span class="k">pass</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> must be an integer value&quot;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BoundsI.numpyShape"><a class="viewcode-back" href="../../bounds.html#galsim.BoundsI.numpyShape">[docs]</a>    <span class="k">def</span> <span class="nf">numpyShape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BoundsI.numpyShape">
+<a class="viewcode-back" href="../../bounds.html#galsim.BoundsI.numpyShape">[docs]</a>
+    <span class="k">def</span> <span class="nf">numpyShape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot;A simple utility function to get the numpy shape that corresponds to this `Bounds` object.&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="o">+</span><span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span></div>
+
 
     <span class="k">def</span> <span class="nf">_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Remember the + 1 this time to include the pixels on both edges of the bounds.</span>
@@ -547,7 +585,10 @@
                           <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="_BoundsD"><a class="viewcode-back" href="../../bounds.html#galsim._BoundsD">[docs]</a><span class="k">def</span> <span class="nf">_BoundsD</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_BoundsD">
+<a class="viewcode-back" href="../../bounds.html#galsim._BoundsD">[docs]</a>
+<span class="k">def</span> <span class="nf">_BoundsD</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `BoundsD` constructor, but skips some sanity checks and argument parsing.</span>
 <span class="sd">    This requires that the four values be float types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -560,7 +601,10 @@
     <span class="k">return</span> <span class="n">ret</span></div>
 
 
-<div class="viewcode-block" id="_BoundsI"><a class="viewcode-back" href="../../bounds.html#galsim._BoundsI">[docs]</a><span class="k">def</span> <span class="nf">_BoundsI</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
+
+<div class="viewcode-block" id="_BoundsI">
+<a class="viewcode-back" href="../../bounds.html#galsim._BoundsI">[docs]</a>
+<span class="k">def</span> <span class="nf">_BoundsI</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Equivalent to `BoundsI` constructor, but skips some sanity checks and argument parsing.</span>
 <span class="sd">    This requires that the four values be int types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -571,6 +615,7 @@
     <span class="n">ret</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymin</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymax</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ret</span></div>
+
 
 </pre></div>
 

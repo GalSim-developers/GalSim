@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsobject &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.gsobject &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.gsobject</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -119,7 +116,8 @@
 <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">_PositionD</span><span class="p">,</span> <span class="n">_PositionI</span><span class="p">,</span> <span class="n">Position</span><span class="p">,</span> <span class="n">parse_pos_args</span>
 <span class="kn">from</span> <span class="nn">._utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span><span class="p">,</span> <span class="n">galsim_warn_fft</span>
 <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageCD</span><span class="p">,</span> <span class="n">ImageCF</span>
 <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">_Shear</span>
 <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span>
@@ -130,7 +128,9 @@
 <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
 
 
-<div class="viewcode-block" id="GSObject"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject">[docs]</a><span class="k">class</span> <span class="nc">GSObject</span><span class="p">:</span>
+<div class="viewcode-block" id="GSObject">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject">[docs]</a>
+<span class="k">class</span> <span class="nc">GSObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all GalSim classes that represent some kind of surface brightness profile.</span>
 
 <span class="sd">    A GSObject is not intended to be constructed directly.  Normally, you would use whatever</span>
@@ -254,17 +254,11 @@
 <span class="sd">        &gt;&gt;&gt; conv = galsim.Convolve([gal,psf])</span>
 <span class="sd">        &gt;&gt;&gt; im = galsim.Image(1000,1000, scale=0.02)        # Note the very small pixel scale!</span>
 <span class="sd">        &gt;&gt;&gt; im = conv.drawImage(image=im)                   # This uses the default GSParams.</span>
-<span class="sd">        Traceback (most recent call last):</span>
-<span class="sd">          File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;</span>
-<span class="sd">          File &quot;galsim/gsobject.py&quot;, line 1666, in drawImage</span>
-<span class="sd">            added_photons = prof.drawFFT(draw_image, add)</span>
-<span class="sd">          File &quot;galsim/gsobject.py&quot;, line 1877, in drawFFT</span>
-<span class="sd">            kimage, wrap_size = self.drawFFT_makeKImage(image)</span>
-<span class="sd">          File &quot;galsim/gsobject.py&quot;, line 1802, in drawFFT_makeKImage</span>
-<span class="sd">            raise GalSimFFTSizeError(&quot;drawFFT requires an FFT that is too large.&quot;, Nk)</span>
-<span class="sd">        galsim.errors.GalSimFFTSizeError: drawFFT requires an FFT that is too large.</span>
+<span class="sd">        galsim/errors.py:437: GalSimFFTSizeWarning: drawFFT requires a very large FFT.</span>
 <span class="sd">        The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.</span>
-<span class="sd">        If you can handle the large FFT, you may update gsparams.maximum_fft_size.</span>
+<span class="sd">        If you can handle the large FFT and want to suppress this warning,</span>
+<span class="sd">        you may update gsparams.maximum_fft_size.</span>
+<span class="sd">          warnings.warn(GalSimFFTSizeWarning(message, size))</span>
 <span class="sd">        &gt;&gt;&gt; big_fft_params = galsim.GSParams(maximum_fft_size=12300)</span>
 <span class="sd">        &gt;&gt;&gt; conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)</span>
 <span class="sd">        &gt;&gt;&gt; im = conv.drawImage(image=im)                   # Now it works (but is slow!)</span>
@@ -553,23 +547,31 @@
     <span class="c1"># Make op+ of two GSObjects work to return an Add object</span>
     <span class="c1"># Note: we don&#39;t define __iadd__ and similar.  Let python handle this automatically</span>
     <span class="c1"># to make obj += obj2 be equivalent to obj = obj + obj2.</span>
-<div class="viewcode-block" id="GSObject.__add__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__add__">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_sum</span><span class="o">.</span><span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span></div>
 
+
     <span class="c1"># op- is unusual, but allowed.  It subtracts off one profile from another.</span>
-<div class="viewcode-block" id="GSObject.__sub__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__sub__">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Subtract two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, -1 * other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_sum</span><span class="o">.</span><span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">other</span><span class="p">)])</span></div>
 
+
     <span class="c1"># Make op* work to adjust the flux of an object</span>
-<div class="viewcode-block" id="GSObject.__mul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__mul__">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given factor.</span>
 
 <span class="sd">        obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)</span>
@@ -582,14 +584,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.__rmul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.__rmul__">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to obj * other.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
+
     <span class="c1"># Likewise for op/</span>
-<div class="viewcode-block" id="GSObject.__div__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__div__">[docs]</a>    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__div__">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__div__">[docs]</a>
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to obj * (1/other).  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span></div>
+
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
@@ -597,7 +606,9 @@
         <span class="k">return</span> <span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="bp">self</span>
 
     <span class="c1"># Some calculations that can be done for all GSObjects.</span>
-<div class="viewcode-block" id="GSObject.calculateHLR"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateHLR">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux_frac</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.calculateHLR">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateHLR">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux_frac</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the half-light radius of the object.</span>
 
 <span class="sd">        If the profile has a half_light_radius attribute, it will just return that, but in the</span>
@@ -659,7 +670,10 @@
         <span class="n">center</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">true_center</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">centroid</span><span class="o">/</span><span class="n">scale</span>
         <span class="k">return</span> <span class="n">im</span><span class="o">.</span><span class="n">calculateHLR</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="n">flux_frac</span><span class="o">=</span><span class="n">flux_frac</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.calculateMomentRadius"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateMomentRadius">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMomentRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rtype</span><span class="o">=</span><span class="s1">&#39;det&#39;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.calculateMomentRadius">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateMomentRadius">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateMomentRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rtype</span><span class="o">=</span><span class="s1">&#39;det&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an estimate of the radius based on unweighted second moments.</span>
 
 <span class="sd">        The second moments are defined as:</span>
@@ -733,7 +747,10 @@
         <span class="n">center</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">true_center</span> <span class="o">+</span> <span class="n">centroid</span><span class="o">/</span><span class="n">scale</span>
         <span class="k">return</span> <span class="n">im</span><span class="o">.</span><span class="n">calculateMomentRadius</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="n">rtype</span><span class="o">=</span><span class="n">rtype</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.calculateFWHM"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateFWHM">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFWHM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.calculateFWHM">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.calculateFWHM">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculateFWHM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the full-width half-maximum (FWHM) of the object.</span>
 
 <span class="sd">        If the profile has a fwhm attribute, it will just return that, but in the general case,</span>
@@ -783,7 +800,10 @@
         <span class="n">center</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">true_center</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">centroid</span><span class="o">/</span><span class="n">scale</span>
         <span class="k">return</span> <span class="n">im</span><span class="o">.</span><span class="n">calculateFWHM</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span> <span class="n">Imax</span><span class="o">=</span><span class="n">Imax</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.xValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.xValue">[docs]</a>    <span class="k">def</span> <span class="nf">xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.xValue">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.xValue">[docs]</a>
+    <span class="k">def</span> <span class="nf">xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the value of the object at a chosen 2D position in real space.</span>
 
 <span class="sd">        This function returns the surface brightness of the object at a particular position</span>
@@ -812,7 +832,10 @@
         <span class="n">pos</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">kwargs</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._xValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._xValue">[docs]</a>    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._xValue">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._xValue">[docs]</a>
+    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `xValue`, but ``pos`` must be a `galsim.PositionD` instance</span>
 
 <span class="sd">        Parameters:</span>
@@ -823,7 +846,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement xValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.kValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.kValue">[docs]</a>    <span class="k">def</span> <span class="nf">kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.kValue">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.kValue">[docs]</a>
+    <span class="k">def</span> <span class="nf">kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the value of the object at a chosen 2D position in k space.</span>
 
 <span class="sd">        This function returns the amplitude of the fourier transform of the surface brightness</span>
@@ -843,12 +869,18 @@
         <span class="n">kpos</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">kwargs</span><span class="p">,</span><span class="s1">&#39;kx&#39;</span><span class="p">,</span><span class="s1">&#39;ky&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">kpos</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._kValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._kValue">[docs]</a>    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
+
+<div class="viewcode-block" id="GSObject._kValue">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._kValue">[docs]</a>
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `kValue`, but ``kpos`` must be a `galsim.PositionD` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement kValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.withGSParams"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.withGSParams">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the given `GSParams`.</span>
 
 <span class="sd">        You may either provide a `GSParams` instance::</span>
@@ -875,7 +907,10 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="GSObject.withFlux"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.withFlux">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withFlux">[docs]</a>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with a different flux.</span>
 
 <span class="sd">        This function is equivalent to ``obj.withScaledFlux(flux / obj.flux)``.</span>
@@ -893,7 +928,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">flux</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.withScaledFlux"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withScaledFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.withScaledFlux">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withScaledFlux">[docs]</a>
+    <span class="k">def</span> <span class="nf">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with the flux scaled by the given ``flux_ratio``.</span>
 
 <span class="sd">        This function is equivalent to ``obj.withFlux(flux_ratio * obj.flux)``.  Indeed, withFlux()</span>
@@ -934,7 +972,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.expand"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.expand">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.expand">[docs]</a>
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Expand the linear size of the profile by the given ``scale`` factor, while preserving</span>
 <span class="sd">        surface brightness.</span>
 
@@ -958,7 +999,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="GSObject.dilate"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.dilate">[docs]</a>    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.dilate">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.dilate">[docs]</a>
+    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dilate the linear size of the profile by the given ``scale`` factor, while preserving</span>
 <span class="sd">        flux.</span>
 
@@ -976,7 +1020,10 @@
         <span class="c1"># equivalent to self.expand(scale) * (1./scale**2)</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="p">],</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">scale</span><span class="o">**-</span><span class="mi">2</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.magnify"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.magnify">[docs]</a>    <span class="k">def</span> <span class="nf">magnify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.magnify">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.magnify">[docs]</a>
+    <span class="k">def</span> <span class="nf">magnify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with a lensing magnification applied to it,</span>
 <span class="sd">        scaling the area and flux by ``mu`` at fixed surface brightness.</span>
 
@@ -998,7 +1045,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="GSObject.shear"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.shear">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shear">[docs]</a>
+    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with an area-preserving shear applied to it.</span>
 
 <span class="sd">        The arguments may be either a `Shear` instance or arguments to be used to initialize one.</span>
@@ -1030,7 +1080,10 @@
             <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="GSObject._shear"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shear">[docs]</a>    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._shear">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shear">[docs]</a>
+    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other</span>
 <span class="sd">        ways to input the ``shear`` value.</span>
 
@@ -1044,7 +1097,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="GSObject.lens"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.lens">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.lens">[docs]</a>
+    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with both a lensing shear and magnification</span>
 <span class="sd">        applied to it.</span>
 
@@ -1068,6 +1124,7 @@
         <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span></div>
 
+
     <span class="k">def</span> <span class="nf">_lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `GSObject.lens`, but without the overhead of some of the sanity checks.</span>
 
@@ -1086,7 +1143,9 @@
         <span class="n">shear</span> <span class="o">=</span> <span class="n">_Shear</span><span class="p">(</span><span class="n">g1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">g2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span>
 
-<div class="viewcode-block" id="GSObject.rotate"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.rotate">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.rotate">[docs]</a>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Rotate this object by an `Angle` ``theta``.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1100,7 +1159,10 @@
         <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="GSObject.transform"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.transform">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.transform">[docs]</a>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with an arbitrary Jacobian matrix transformation</span>
 <span class="sd">        applied to it.</span>
 
@@ -1130,7 +1192,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="GSObject.shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.shift">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shift">[docs]</a>
+    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object shifted by some amount in real space.</span>
 
 <span class="sd">        After this call, the caller&#39;s type will be a `GSObject`.</span>
@@ -1172,7 +1237,10 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;dy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">transform</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shift">[docs]</a>    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._shift">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shift">[docs]</a>
+    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Equivalent to `shift`, but without the overhead of sanity checks or option</span>
 <span class="sd">        to give the shift as a PositionD.</span>
 
@@ -1188,7 +1256,10 @@
         <span class="n">new_obj</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">new_obj</span></div>
 
-<div class="viewcode-block" id="GSObject.atRedshift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.atRedshift">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.atRedshift">[docs]</a>
+    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a version of the current object with a different redshift.</span>
 
 <span class="sd">        For regular GSObjects, this method doesn&#39;t do anything aside from setting a ``redshift``</span>
@@ -1207,6 +1278,7 @@
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">redshift</span> <span class="o">=</span> <span class="n">redshift</span>
         <span class="k">return</span> <span class="n">ret</span></div>
+
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>
     <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1377,7 +1449,9 @@
         <span class="c1"># Do any work that was postponed until drawImage.</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="GSObject.drawImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="GSObject.drawImage">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
@@ -1940,7 +2014,10 @@
 
         <span class="k">return</span> <span class="n">image</span></div>
 
-<div class="viewcode-block" id="GSObject.drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.drawReal">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawReal">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Draw this profile into an `Image` by direct evaluation at the location of each pixel.</span>
 
@@ -1985,7 +2062,10 @@
                 <span class="n">image</span><span class="o">.</span><span class="n">_copyFrom</span><span class="p">(</span><span class="n">im1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._drawReal">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawReal">[docs]</a>
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A version of `drawReal` without the sanity checks or some options.</span>
 
 <span class="sd">        This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but</span>
@@ -1994,7 +2074,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawReal&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.getGoodImageSize"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.getGoodImageSize">[docs]</a>    <span class="k">def</span> <span class="nf">getGoodImageSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.getGoodImageSize">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.getGoodImageSize">[docs]</a>
+    <span class="k">def</span> <span class="nf">getGoodImageSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a good size to use for drawing this profile.</span>
 
 <span class="sd">        The size will be large enough to cover most of the flux of the object.  Specifically,</span>
@@ -2021,7 +2104,10 @@
         <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">((</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">N</span></div>
 
-<div class="viewcode-block" id="GSObject.drawFFT_makeKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT_makeKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawFFT_makeKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.drawFFT_makeKImage">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT_makeKImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawFFT_makeKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is a helper routine for drawFFT that just makes the (blank) k-space image</span>
 <span class="sd">        onto which the profile will be drawn.  This can be useful if you want to break</span>
@@ -2060,7 +2146,7 @@
             <span class="n">Nk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">maxk</span><span class="o">/</span><span class="n">dk</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span>
 
         <span class="k">if</span> <span class="n">Nk</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;drawFFT requires an FFT that is too large.&quot;</span><span class="p">,</span> <span class="n">Nk</span><span class="p">)</span>
+            <span class="n">galsim_warn_fft</span><span class="p">(</span><span class="s2">&quot;drawFFT requires a very large FFT.&quot;</span><span class="p">,</span> <span class="n">Nk</span><span class="p">)</span>
 
         <span class="n">bounds</span> <span class="o">=</span> <span class="n">_BoundsI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Nk</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="n">Nk</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="n">Nk</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">):</span>
@@ -2069,7 +2155,10 @@
             <span class="n">kimage</span> <span class="o">=</span> <span class="n">ImageCF</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">dk</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kimage</span><span class="p">,</span> <span class="n">N</span></div>
 
-<div class="viewcode-block" id="GSObject.drawFFT_finish"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT_finish">[docs]</a>    <span class="k">def</span> <span class="nf">drawFFT_finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.drawFFT_finish">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT_finish">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawFFT_finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is a helper routine for drawFFT that finishes the calculation, based on the</span>
 <span class="sd">        drawn k-space image.</span>
@@ -2108,7 +2197,10 @@
         <span class="n">added_photons</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">added_photons</span></div>
 
-<div class="viewcode-block" id="GSObject.drawFFT"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT">[docs]</a>    <span class="k">def</span> <span class="nf">drawFFT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.drawFFT">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawFFT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Draw this profile into an `Image` by computing the k-space image and performing an FFT.</span>
 
@@ -2141,7 +2233,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawFFT_finish</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._calculate_nphotons"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._calculate_nphotons">[docs]</a>    <span class="k">def</span> <span class="nf">_calculate_nphotons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._calculate_nphotons">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._calculate_nphotons">[docs]</a>
+    <span class="k">def</span> <span class="nf">_calculate_nphotons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate how many photons to shoot and what flux_ratio (called g) each one should</span>
 <span class="sd">        have in order to produce an image with the right S/N and total flux.</span>
 
@@ -2252,7 +2347,10 @@
         <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span></div>
 
 
-<div class="viewcode-block" id="GSObject.makePhot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.makePhot">[docs]</a>    <span class="k">def</span> <span class="nf">makePhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<div class="viewcode-block" id="GSObject.makePhot">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.makePhot">[docs]</a>
+    <span class="k">def</span> <span class="nf">makePhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make photons for a profile.</span>
@@ -2348,7 +2446,10 @@
         <span class="k">return</span> <span class="n">photons</span></div>
 
 
-<div class="viewcode-block" id="GSObject.drawPhot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawPhot">[docs]</a>    <span class="k">def</span> <span class="nf">drawPhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+
+<div class="viewcode-block" id="GSObject.drawPhot">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawPhot">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawPhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">n_photons</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">_PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2499,7 +2600,10 @@
         <span class="k">return</span> <span class="n">added_flux</span><span class="p">,</span> <span class="n">photons</span></div>
 
 
-<div class="viewcode-block" id="GSObject.shoot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shoot">[docs]</a>    <span class="k">def</span> <span class="nf">shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.shoot">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shoot">[docs]</a>
+    <span class="k">def</span> <span class="nf">shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shoot photons into a `PhotonArray`.</span>
 
 <span class="sd">        Parameters:</span>
@@ -2522,7 +2626,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">photons</span></div>
 
-<div class="viewcode-block" id="GSObject._shoot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shoot">[docs]</a>    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject._shoot">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shoot">[docs]</a>
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shoot photons into the given `PhotonArray`.</span>
 
 <span class="sd">        This is the backend implementation of `shoot` once the `PhotonArray` has been constructed.</span>
@@ -2533,7 +2640,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement shoot&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.applyTo"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GSObject.applyTo">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.applyTo">[docs]</a>
+    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply this surface brightness profile as a convolution to an existing photon array.</span>
 
 <span class="sd">        This method allows a GSObject to duck type as a PhotonOp, so one can apply a PSF</span>
@@ -2558,7 +2668,10 @@
         <span class="n">obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="n">photon_array</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<div class="viewcode-block" id="GSObject.drawKImage">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawKImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recenter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Draws the k-space (complex) `Image` of the object, with bounds optionally set by input</span>
 <span class="sd">        `Image` instance.</span>
@@ -2678,7 +2791,10 @@
             <span class="n">image</span> <span class="o">+=</span> <span class="n">im2</span>
         <span class="k">return</span> <span class="n">image</span></div>
 
-<div class="viewcode-block" id="GSObject._drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
+
+<div class="viewcode-block" id="GSObject._drawKImage">
+<a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawKImage">[docs]</a>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A version of `drawKImage` without the sanity checks or some options.</span>
 
 <span class="sd">        Equivalent to ``drawKImage(image, add_to_image=False, recenter=False, add_to_image=False)``,</span>
@@ -2694,8 +2810,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawKImage&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
+
     <span class="c1"># Derived classes should define the __eq__ function</span>
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
 
 <span class="c1"># Put these at the bottom to avoid circular import errors.</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">convolve</span>

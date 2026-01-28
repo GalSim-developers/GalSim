@@ -1,20 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.vonkarman &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>galsim.vonkarman &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -31,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -90,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.vonkarman</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -123,7 +120,9 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 
-<div class="viewcode-block" id="VonKarman"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman">[docs]</a><span class="k">class</span> <span class="nc">VonKarman</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+<div class="viewcode-block" id="VonKarman">
+<a class="viewcode-back" href="../../psf.html#galsim.VonKarman">[docs]</a>
+<span class="k">class</span> <span class="nc">VonKarman</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class describing a von Karman surface brightness profile, which represents a long exposure</span>
 <span class="sd">    atmospheric PSF.  The difference between the von Karman profile and the related `Kolmogorov`</span>
 <span class="sd">    profile is that the von Karman profile includes a parameter for the outer scale of atmospheric</span>
@@ -423,12 +422,16 @@
         <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VonKarman.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+<div class="viewcode-block" id="VonKarman.withFlux">
+<a class="viewcode-back" href="../../psf.html#galsim.VonKarman.withFlux">[docs]</a>
+    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">VonKarman</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="n">L0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
                          <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
                          <span class="n">force_stepk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_stepk</span><span class="p">,</span> <span class="n">do_delta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">do_delta</span><span class="p">,</span>
-                         <span class="n">suppress_warning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppress</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+                         <span class="n">suppress_warning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppress</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
            </div>

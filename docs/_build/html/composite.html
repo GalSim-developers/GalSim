@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Composite Profiles &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Composite Profiles &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -122,13 +119,13 @@
            <div itemprop="articleBody">
              
   <section id="composite-profiles">
-<h1>Composite Profiles<a class="headerlink" href="#composite-profiles" title="Permalink to this heading"></a></h1>
+<h1>Composite Profiles<a class="headerlink" href="#composite-profiles" title="Link to this heading"></a></h1>
 <p>The above profiles can be combined in various ways including sums and convolutions.</p>
 <section id="sums-of-gsobjects">
-<h2>Sums of GSObjects<a class="headerlink" href="#sums-of-gsobjects" title="Permalink to this heading"></a></h2>
+<h2>Sums of GSObjects<a class="headerlink" href="#sums-of-gsobjects" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Sum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sum" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sum" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class for adding 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.</p>
 <p>The Sum class is used to represent the sum of multiple <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.  For example, it
@@ -171,13 +168,13 @@ one object is much fainter and can thus use looser accuracy tolerances), then yo
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Sum.obj_list">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obj_list</span></span><a class="headerlink" href="#galsim.Sum.obj_list" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obj_list</span></span><a class="headerlink" href="#galsim.Sum.obj_list" title="Link to this definition"></a></dt>
 <dd><p>The list of objects being added.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Sum.withGSParams">
-<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sum.withGSParams" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Sum.withGSParams" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -190,7 +187,7 @@ of each object being added.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.Add">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Add" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Add" title="Link to this definition"></a></dt>
 <dd><p>A function for adding 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
 <p>This function will inspect its input arguments to decide if a <a class="reference internal" href="#galsim.Sum" title="galsim.Sum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> object is required to represent the sum of surface brightness profiles.</p>
@@ -225,10 +222,10 @@ would not want to do this. [default: True]</p></li>
 
 </section>
 <section id="convolutions-of-gsobjects">
-<h2>Convolutions of GSObjects<a class="headerlink" href="#convolutions-of-gsobjects" title="Permalink to this heading"></a></h2>
+<h2>Convolutions of GSObjects<a class="headerlink" href="#convolutions-of-gsobjects" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.Convolution">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Convolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolution" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Convolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolution" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.gsobject.GSObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
 <p>A class for convolving 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.</p>
 <p>The convolution will normally be done using discrete Fourier transforms of each of the component
@@ -280,20 +277,20 @@ However, if you want to keep the existing gsparams of the component objects, the
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Convolution.obj_list">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obj_list</span></span><a class="headerlink" href="#galsim.Convolution.obj_list" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obj_list</span></span><a class="headerlink" href="#galsim.Convolution.obj_list" title="Link to this definition"></a></dt>
 <dd><p>The list of objects being convolved.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.Convolution.real_space">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.Convolution.real_space" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.Convolution.real_space" title="Link to this definition"></a></dt>
 <dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
 than FFT convolution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.Convolution.withGSParams">
-<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolution.withGSParams" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolution.withGSParams" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -306,7 +303,7 @@ of each object being convolved.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.Convolve">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Convolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolve" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">Convolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Convolve" title="Link to this definition"></a></dt>
 <dd><p>A function for convolving 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
 <p>This function will inspect its input arguments to decide if a <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> object is required to represent the convolution of surface
@@ -332,7 +329,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.AutoConvolution">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoConvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolution" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoConvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolution" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.Convolution" title="galsim.convolve.Convolution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a></p>
 <p>A special class for convolving a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> with itself.</p>
 <p>It is equivalent in functionality to <code class="docutils literal notranslate"><span class="pre">Convolve([obj,obj])</span></code>, but takes advantage of
@@ -357,20 +354,20 @@ would not want to do this. [default: True]</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AutoConvolution.orig_obj">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.AutoConvolution.orig_obj" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.AutoConvolution.orig_obj" title="Link to this definition"></a></dt>
 <dd><p>The original object that is being auto-convolved.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AutoConvolution.real_space">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.AutoConvolution.real_space" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.AutoConvolution.real_space" title="Link to this definition"></a></dt>
 <dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
 than FFT convolution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.AutoConvolution.withGSParams">
-<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolution.withGSParams" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolution.withGSParams" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -383,7 +380,7 @@ of the wrapped component object.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.AutoConvolve">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoConvolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolve" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoConvolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoConvolve" title="Link to this definition"></a></dt>
 <dd><p>A function for autoconvolving either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.AutoConvolution" title="galsim.AutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoConvolution</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoConvolution" title="galsim.ChromaticAutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoConvolution</span></code></a> object is required to represent the convolution of a surface
@@ -409,7 +406,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="galsim.AutoCorrelation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoCorrelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoCorrelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.Convolution" title="galsim.convolve.Convolution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a></p>
 <p>A special class for correlating a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> with itself.</p>
 <p>It is equivalent in functionality to:</p>
@@ -439,20 +436,20 @@ would not want to do this. [default: True]</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AutoCorrelation.orig_obj">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.AutoCorrelation.orig_obj" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orig_obj</span></span><a class="headerlink" href="#galsim.AutoCorrelation.orig_obj" title="Link to this definition"></a></dt>
 <dd><p>The original object that is being auto-correlated.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="galsim.AutoCorrelation.real_space">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.AutoCorrelation.real_space" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real_space</span></span><a class="headerlink" href="#galsim.AutoCorrelation.real_space" title="Link to this definition"></a></dt>
 <dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
 than FFT convolution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.AutoCorrelation.withGSParams">
-<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelation.withGSParams" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">withGSParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelation.withGSParams" title="Link to this definition"></a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -465,7 +462,7 @@ of the wrapped component object.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="galsim.AutoCorrelate">
-<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoCorrelate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelate" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">galsim.</span></span><span class="sig-name descname"><span class="pre">AutoCorrelate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate_gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.AutoCorrelate" title="Link to this definition"></a></dt>
 <dd><p>A function for autocorrelating either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.AutoCorrelation" title="galsim.AutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoCorrelation</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoCorrelation" title="galsim.ChromaticAutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoCorrelation</span></code></a> object is required to represent the correlation of a surface

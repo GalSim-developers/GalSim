@@ -1,25 +1,25 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revision History &mdash; GalSim 2.7.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Revision History &mdash; GalSim 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="v2.5" href="older.html" />
+    <link rel="next" title="v2.7" href="older.html" />
     <link rel="prev" title="Shared Data" href="shared.html" /> 
 </head>
 
@@ -34,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             GalSim
           </a>
-              <div class="version">
-                2.7
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -75,7 +72,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="older.html">v2.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html">v2.7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-6">v2.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="older.html#v2-5">v2.5</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-4">v2.4</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
@@ -124,15 +123,15 @@
            <div itemprop="articleBody">
              
   <section id="revision-history">
-<h1>Revision History<a class="headerlink" href="#revision-history" title="Permalink to this heading"></a></h1>
+<h1>Revision History<a class="headerlink" href="#revision-history" title="Link to this heading"></a></h1>
 <section id="changes-from-v2-6-to-v2-7">
-<h2>Changes from v2.6 to v2.7<a class="headerlink" href="#changes-from-v2-6-to-v2-7" title="Permalink to this heading"></a></h2>
+<h2>Changes from v2.6 to v2.7<a class="headerlink" href="#changes-from-v2-6-to-v2-7" title="Link to this heading"></a></h2>
 <p>We currently support Python 3.8 through 3.13.</p>
 <p>A complete list of all new features and changes is given below.
 <a class="reference external" href="https://github.com/GalSim-developers/GalSim/milestone/24?closed=1">Relevant PRs and Issues,</a>
 whose issue numbers are listed below for the relevant items.</p>
 <section id="new-features">
-<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this heading"></a></h3>
+<h3>New Features<a class="headerlink" href="#new-features" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Added <a class="reference internal" href="zernike.html#galsim.zernike.DoubleZernike.xycoef" title="galsim.zernike.DoubleZernike.xycoef"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">DoubleZernike.xycoef</span></code></a> to directly access the pupil coefficient array rather than
 going through <a class="reference internal" href="zernike.html#galsim.zernike.Zernike" title="galsim.zernike.Zernike"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Zernike</span></code></a>. (#1327)</p></li>
@@ -146,7 +145,7 @@ pixel boundaries are recalculated during the accumulation. (#1328)</p></li>
 </ul>
 </section>
 <section id="performance-improvements">
-<h3>Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permalink to this heading"></a></h3>
+<h3>Performance Improvements<a class="headerlink" href="#performance-improvements" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Switched to inbuilt operators on lists rather than numpy operators in a few places where
 they are faster. (#1316)</p></li>
@@ -155,29 +154,31 @@ for large Noll indices, but is usually slower for small indices. (#1326, #1327)<
 </ul>
 </section>
 <section id="bug-fixes">
-<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this heading"></a></h3>
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fixed an error in the <a class="reference internal" href="gal.html#galsim.Spergel" title="galsim.Spergel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Spergel</span></code></a> stepk calculation. (#1324, #1325)</p></li>
 </ul>
 </section>
 <section id="changes-from-v2-7-0-to-v2-7-1">
-<h3>Changes from v2.7.0 to v2.7.1<a class="headerlink" href="#changes-from-v2-7-0-to-v2-7-1" title="Permalink to this heading"></a></h3>
+<h3>Changes from v2.7.0 to v2.7.1<a class="headerlink" href="#changes-from-v2-7-0-to-v2-7-1" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)</p></li>
 </ul>
 </section>
 <section id="changes-from-v2-7-1-to-v2-7-2">
-<h3>Changes from v2.7.1 to v2.7.2<a class="headerlink" href="#changes-from-v2-7-1-to-v2-7-2" title="Permalink to this heading"></a></h3>
+<h3>Changes from v2.7.1 to v2.7.2<a class="headerlink" href="#changes-from-v2-7-1-to-v2-7-2" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Reduced memory use in the Silicon class. (#1331)</p></li>
 </ul>
 </section>
 </section>
 <section id="older-versions">
-<h2>Older Versions<a class="headerlink" href="#older-versions" title="Permalink to this heading"></a></h2>
+<h2>Older Versions<a class="headerlink" href="#older-versions" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="older.html">v2.5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html">v2.7</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-6">v2.6</a></li>
+<li class="toctree-l1"><a class="reference internal" href="older.html#v2-5">v2.5</a></li>
 <li class="toctree-l1"><a class="reference internal" href="older.html#v2-4">v2.4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="older.html#v2-3">v2.3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="older.html#v2-2">v2.2</a></li>
@@ -205,7 +206,7 @@ for large Noll indices, but is usually slower for small indices. (#1326, #1327)<
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="shared.html" class="btn btn-neutral float-left" title="Shared Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="older.html" class="btn btn-neutral float-right" title="v2.5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="older.html" class="btn btn-neutral float-right" title="v2.7" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
