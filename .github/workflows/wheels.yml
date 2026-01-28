@@ -53,7 +53,7 @@ jobs:
 
   build_macosx_intel_wheels:
     name: Build wheels on MacOS Intel
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
 
