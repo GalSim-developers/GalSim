@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsparams &mdash; GalSim 2.8.0 documentation</title>
+  <title>galsim.gsparams &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.gsparams</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -134,22 +134,14 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        minimum_fft_size:   The minimum size of any FFT that may need to be performed.</span>
 <span class="sd">                            [default: 128]</span>
-<span class="sd">        maximum_fft_size:   The maximum allowed size of an image for performing an FFT without</span>
-<span class="sd">                            warning.  This is more about memory use than accuracy.  We have this</span>
-<span class="sd">                            maximum value to inform a user who accidentally performs an extremely</span>
-<span class="sd">                            large FFT why they just crashed the program. GalSim used to</span>
-<span class="sd">                            raise an exception indicating that the image is too large,</span>
-<span class="sd">                            which is often a sign of an error in the user&#39;s code. However, we</span>
-<span class="sd">                            now just emit a warning about the large FFT, so if the code crashes</span>
-<span class="sd">                            you have some indication of why. If you have the memory to handle it,</span>
-<span class="sd">                            you can raise this limit to allow the calculation to happen without</span>
-<span class="sd">                            seeing the warning. [default: 8192]</span>
-
-<span class="sd">                            .. note::</span>
-
-<span class="sd">                                To revert to the old behavior of raising an exception, you</span>
-<span class="sd">                                may set ``galsim.errors.raise_fft_size_error = True``.</span>
-
+<span class="sd">        maximum_fft_size:   The maximum allowed size of an image for performing an FFT.  This</span>
+<span class="sd">                            is more about memory use than accuracy.  We have this maximum</span>
+<span class="sd">                            value to help prevent the user from accidentally trying to perform</span>
+<span class="sd">                            an extremely large FFT that crashes the program. Instead, GalSim</span>
+<span class="sd">                            will raise an exception indicating that the image is too large,</span>
+<span class="sd">                            which is often a sign of an error in the user&#39;s code. However, if</span>
+<span class="sd">                            you have the memory to handle it, you can raise this limit to</span>
+<span class="sd">                            allow the calculation to happen. [default: 8192]</span>
 <span class="sd">        folding_threshold:  This sets a maximum amount of real space folding that is allowed,</span>
 <span class="sd">                            an effect caused by the periodic nature of FFTs.  FFTs implicitly</span>
 <span class="sd">                            use periodic boundary conditions, and a profile specified on a</span>

@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The GSParams class &mdash; GalSim 2.8.0 documentation</title>
+  <title>The GSParams class &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -139,22 +139,14 @@ to change.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>minimum_fft_size</strong> – The minimum size of any FFT that may need to be performed.
 [default: 128]</p></li>
-<li><p><strong>maximum_fft_size</strong> – <p>The maximum allowed size of an image for performing an FFT without
-warning.  This is more about memory use than accuracy.  We have this
-maximum value to inform a user who accidentally performs an extremely
-large FFT why they just crashed the program. GalSim used to
-raise an exception indicating that the image is too large,
-which is often a sign of an error in the user’s code. However, we
-now just emit a warning about the large FFT, so if the code crashes
-you have some indication of why. If you have the memory to handle it,
-you can raise this limit to allow the calculation to happen without
-seeing the warning. [default: 8192]</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>To revert to the old behavior of raising an exception, you
-may set <code class="docutils literal notranslate"><span class="pre">galsim.errors.raise_fft_size_error</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p>
-</div>
-</p></li>
+<li><p><strong>maximum_fft_size</strong> – The maximum allowed size of an image for performing an FFT.  This
+is more about memory use than accuracy.  We have this maximum
+value to help prevent the user from accidentally trying to perform
+an extremely large FFT that crashes the program. Instead, GalSim
+will raise an exception indicating that the image is too large,
+which is often a sign of an error in the user’s code. However, if
+you have the memory to handle it, you can raise this limit to
+allow the calculation to happen. [default: 8192]</p></li>
 <li><p><strong>folding_threshold</strong> – This sets a maximum amount of real space folding that is allowed,
 an effect caused by the periodic nature of FFTs.  FFTs implicitly
 use periodic boundary conditions, and a profile specified on a

@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Stamp Field &mdash; GalSim 2.8.0 documentation</title>
+  <title>Config Stamp Field &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -178,7 +178,7 @@ to customize any aspect of the stamp-building process.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio (using the optimal matched filter definition of S/N, measured using the signal on the stamp before noise is applied) is less than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio is higher than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> = <em>bool_value</em> (optional) If this evaluates to true, then reject the current stamp and start over.  Typically, this would be a custom function that would perform some measurement on the pre-noise image.
-See <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a> for an examples of such a custom function.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+See <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/great3/cgc.yaml"><code class="file docutils literal notranslate"><span class="pre">cgc.yaml</span> </code></a> for an examples of such a custom function.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -628,10 +628,10 @@ of valid stamp types.</p>
 </div>
 <p>For examples of custom stamps, see</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a></p></li>
-<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/blend.yaml"><code class="file docutils literal notranslate"><span class="pre">blend.yaml</span> </code></a></p></li>
+<li><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/blendset.yaml"><code class="file docutils literal notranslate"><span class="pre">blendset.yaml</span> </code></a></p></li>
 </ul>
-<p>which use custom stamp types <code class="docutils literal notranslate"><span class="pre">Blend</span></code> and <code class="docutils literal notranslate"><span class="pre">BlendSet</span></code> defined in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.8/examples/des/blend.py"><code class="file docutils literal notranslate"><span class="pre">blend.py</span> </code></a>.</p>
+<p>which use custom stamp types <code class="docutils literal notranslate"><span class="pre">Blend</span></code> and <code class="docutils literal notranslate"><span class="pre">BlendSet</span></code> defined in <a class="reference external" href="https://github.com/GalSim-developers/GalSim/blob/releases/2.7/examples/des/blend.py"><code class="file docutils literal notranslate"><span class="pre">blend.py</span> </code></a>.</p>
 <p>It may also be helpful to look at the GalSim implementation of the include <code class="docutils literal notranslate"><span class="pre">Ring</span></code> type:
 (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> link):</p>
 <dl class="py class">

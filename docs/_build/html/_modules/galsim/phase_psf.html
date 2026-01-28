@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.phase_psf &mdash; GalSim 2.8.0 documentation</title>
+  <title>galsim.phase_psf &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.phase_psf</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -123,7 +123,7 @@
 <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">basestring</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span><span class="p">,</span> <span class="n">galsim_warn_fft</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">TimeSampler</span><span class="p">,</span> <span class="n">PhotonArray</span>
 <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
 <span class="kn">from</span> <span class="nn">.second_kick</span> <span class="kn">import</span> <span class="n">SecondKick</span>
@@ -419,7 +419,7 @@
 
         <span class="c1"># Check FFT size</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">:</span>
-            <span class="n">galsim_warn_fft</span><span class="p">(</span><span class="s2">&quot;Created pupil plane array that will need a very large fft.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;Created pupil plane array that is too large.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
 
         <span class="c1"># Shrink scale such that size = scale * npix exactly.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_size</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span>
@@ -474,7 +474,7 @@
 
         <span class="c1"># Check FFT size</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">:</span>
-            <span class="n">galsim_warn_fft</span><span class="p">(</span><span class="s2">&quot;Loaded pupil plane array that will need a very large fft.&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;Loaded pupil plane array that is too large.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npix</span><span class="p">)</span>
 
         <span class="c1"># Sanity checks</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>

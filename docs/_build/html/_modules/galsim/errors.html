@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.errors &mdash; GalSim 2.8.0 documentation</title>
+  <title>galsim.errors &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.errors</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -114,15 +114,11 @@
             <span class="s1">&#39;GalSimSEDError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimHSMError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimFFTSizeError&#39;</span><span class="p">,</span>
             <span class="s1">&#39;GalSimConfigError&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimConfigValueError&#39;</span><span class="p">,</span>
             <span class="s1">&#39;GalSimNotImplementedError&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;GalSimWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimDeprecationWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimFFTSizeWarning&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;convert_cpp_errors&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn_fft&#39;</span> <span class="p">]</span>
+            <span class="s1">&#39;GalSimWarning&#39;</span><span class="p">,</span> <span class="s1">&#39;GalSimDeprecationWarning&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;convert_cpp_errors&#39;</span><span class="p">,</span> <span class="s1">&#39;galsim_warn&#39;</span><span class="p">,</span> <span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-
-<span class="c1"># Set this to True to have large FFTs raise a GalSimFFTSizeError  exception rather</span>
-<span class="c1"># merely emit a GalSimFFTSizeWarning.</span>
-<span class="n">raise_fft_size_error</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Note to developers about which exception to throw.</span>
 <span class="c1">#</span>
@@ -217,6 +213,10 @@
 <span class="c1">#</span>
 <span class="c1"># GalSimHSMError:       Use this for errors from the HSM algorithm.  They are emitted in C++, but</span>
 <span class="c1">#                       we use `with convert_cpp_errors(GalSimHSMError):` to convert them.</span>
+<span class="c1">#</span>
+<span class="c1"># GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size</span>
+<span class="c1">#                       for the object, so the recommendation is raise this parameter if that</span>
+<span class="c1">#                       is possible.</span>
 <span class="c1">#</span>
 <span class="c1"># GalSimConfigError:    Use this for errors processing a config dict.</span>
 <span class="c1">#</span>
@@ -551,34 +551,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.GalSimDeprecationWarning(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
-
-<span class="k">class</span> <span class="nc">GalSimFFTSizeWarning</span><span class="p">(</span><span class="n">GalSimWarning</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A GalSim-specific warning class indicating that a requested FFT exceeds the relevant</span>
-<span class="sd">    maximum_fft_size.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        size:       The size that was deemed too large</span>
-<span class="sd">        mem:        The estimated memory that would be required (in GB) for the FFT.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mem</span> <span class="o">=</span> <span class="n">size</span> <span class="o">*</span> <span class="n">size</span> <span class="o">*</span> <span class="mf">24.</span> <span class="o">/</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span>
-        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">The required FFT size would be </span><span class="si">{0}</span><span class="s2"> x </span><span class="si">{0}</span><span class="s2">, which requires &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
-        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2"> GB of memory.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mem</span><span class="p">)</span>
-        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;If you can handle the large FFT and want to suppress this warning,</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;you may update gsparams.maximum_fft_size.&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">GalSimFFTSizeWarning</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.GalSimFFTSizeWarning(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">GalSimFFTSizeWarning</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">galsim_warn_fft</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">raise_fft_size_error</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">GalSimFFTSizeWarning</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
 
 <span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">convert_cpp_errors</span><span class="p">(</span><span class="n">error_type</span><span class="o">=</span><span class="n">GalSimError</span><span class="p">):</span>

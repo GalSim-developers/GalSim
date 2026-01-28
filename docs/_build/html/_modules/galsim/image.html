@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.image &mdash; GalSim 2.8.0 documentation</title>
+  <title>galsim.image &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.image</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -1791,18 +1791,13 @@
 
         <span class="c1"># Find the first value with I &lt; 0.5 * Imax</span>
         <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">Imax</span><span class="p">)</span>
-        <span class="c1"># If there are duplicate rsq values, argmax won&#39;t be deterministic across numpy versions.</span>
-        <span class="c1"># To achieve consistent results, we take the average of all data values with the same rsq.</span>
-        <span class="n">k2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">rsqf</span><span class="p">,</span> <span class="n">rsqf</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
-        <span class="n">Ik</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">k2</span><span class="p">])</span> <span class="o">/</span> <span class="n">Imax</span>
+        <span class="n">Ik</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="n">Imax</span>
 
         <span class="c1"># Interpolate (linearly) between this and the previous value.</span>
         <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">rsqhm</span> <span class="o">=</span> <span class="n">rsqf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">/</span> <span class="n">Ik</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Similarly, use the mean data for all rsq equal to rsqf[k-1].</span>
-            <span class="n">k1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">rsqf</span><span class="p">,</span> <span class="n">rsqf</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
-            <span class="n">Ikm1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">k1</span><span class="p">:</span><span class="n">k</span><span class="p">])</span> <span class="o">/</span> <span class="n">Imax</span>
+            <span class="n">Ikm1</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Imax</span>
             <span class="n">rsqhm</span> <span class="o">=</span> <span class="p">(</span><span class="n">rsqf</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ik</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="n">rsqf</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">-</span><span class="n">Ikm1</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">Ik</span><span class="o">-</span><span class="n">Ikm1</span><span class="p">)</span>
 
         <span class="c1"># This has all been done in pixels.  So normalize according to the pixel scale.</span>
@@ -1996,10 +1991,7 @@
     <span class="k">def</span> <span class="fm">__ipow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Can only raise an image to a float or int power!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isinteger</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">**=</span> <span class="n">other</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_cast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">**</span> <span class="n">other</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">**=</span> <span class="n">other</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

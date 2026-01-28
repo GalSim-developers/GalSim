@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.real &mdash; GalSim 2.8.0 documentation</title>
+  <title>galsim.real &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="../../_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -87,7 +87,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for galsim.real</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2026 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2023 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -608,14 +608,6 @@
 <span class="sd">       GalSim knows the location of the installation share directory, so it will automatically</span>
 <span class="sd">       look for it there.</span>
 
-<span class="sd">    .. note::</span>
-
-<span class="sd">        A RealGalaxyCatalog instance will cache data from the input files that it loads.</span>
-<span class="sd">        Normally, this leads to a performance improvement, especially if objects are selected</span>
-<span class="sd">        from the catalog semi-randomly, since it is faster to access the data in memory.</span>
-<span class="sd">        If you want to free the cached memory before the RealGalaxyCatalog goes out of</span>
-<span class="sd">        scope, you can use the `close` method to do so.</span>
-
 <span class="sd">    Parameters:</span>
 <span class="sd">        file_name:  The file containing the catalog. [default: None, which will look for the</span>
 <span class="sd">                    F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an</span>
@@ -656,8 +648,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="n">preload</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># The pyfits commands aren&#39;t thread safe.  So we need to make sure the methods that</span>
         <span class="c1"># use pyfits are not run concurrently from multiple threads.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing gal files</span>
@@ -754,26 +746,14 @@
         <span class="c1"># Make sure to clean up pyfits open files if people forget to call close()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="RealGalaxyCatalog.close">
-<a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.close">[docs]</a>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close all loaded files.</span>
-
-<span class="sd">        Usually it is a performance improvement to keep the various input files open while using</span>
-<span class="sd">        the RealGalaxyCatalog, especially if the access of the galaxies is in semi-random order.</span>
-<span class="sd">        However, if you want to release the memory tied up in these files before the</span>
-<span class="sd">        RealGalaxyCatalog goes out of scope, then this method will release the memory directly.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Need to close any open files.</span>
         <span class="c1"># Make sure to check if loaded_files exists, since the constructor could abort</span>
         <span class="c1"># before it gets to the place where loaded_files is built.</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;loaded_files&#39;</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-            <span class="c1"># Also release the memory in the noise images, even though this is usually negligible.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>

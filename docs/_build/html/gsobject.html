@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The GSObject base class &mdash; GalSim 2.8.0 documentation</title>
+  <title>The GSObject base class &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -286,11 +286,17 @@ larger <code class="docutils literal notranslate"><span class="pre">maximum_fft_
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conv</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">([</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>        <span class="c1"># Note the very small pixel scale!</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im</span><span class="p">)</span>                   <span class="c1"># This uses the default GSParams.</span>
-<span class="go">galsim/errors.py:437: GalSimFFTSizeWarning: drawFFT requires a very large FFT.</span>
-<span class="go">The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.</span>
-<span class="go">If you can handle the large FFT and want to suppress this warning,</span>
-<span class="go">you may update gsparams.maximum_fft_size.</span>
-<span class="go">  warnings.warn(GalSimFFTSizeWarning(message, size))</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;galsim/gsobject.py&quot;</span>, line <span class="m">1666</span>, in <span class="n">drawImage</span>
+<span class="w">    </span><span class="n">added_photons</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawFFT</span><span class="p">(</span><span class="n">draw_image</span><span class="p">,</span> <span class="n">add</span><span class="p">)</span>
+  File <span class="nb">&quot;galsim/gsobject.py&quot;</span>, line <span class="m">1877</span>, in <span class="n">drawFFT</span>
+<span class="w">    </span><span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawFFT_makeKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+  File <span class="nb">&quot;galsim/gsobject.py&quot;</span>, line <span class="m">1802</span>, in <span class="n">drawFFT_makeKImage</span>
+<span class="w">    </span><span class="k">raise</span> <span class="n">GalSimFFTSizeError</span><span class="p">(</span><span class="s2">&quot;drawFFT requires an FFT that is too large.&quot;</span><span class="p">,</span> <span class="n">Nk</span><span class="p">)</span>
+<span class="gr">galsim.errors.GalSimFFTSizeError</span>: <span class="n">drawFFT requires an FFT that is too large.</span>
+<span class="x">The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.</span>
+<span class="x">If you can handle the large FFT, you may update gsparams.maximum_fft_size.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">big_fft_params</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">12300</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conv</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">([</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">],</span><span class="n">gsparams</span><span class="o">=</span><span class="n">big_fft_params</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im</span><span class="p">)</span>                   <span class="c1"># Now it works (but is slow!)</span>

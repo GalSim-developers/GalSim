@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>“Real” Galaxies &mdash; GalSim 2.8.0 documentation</title>
+  <title>“Real” Galaxies &mdash; GalSim 2.7.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=69ff2ef9"></script>
+      <script src="_static/documentation_options.js?v=4c6c8f0e"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -338,14 +338,6 @@ this program to download the COSMOS catalog, then you can use it with:</p>
 look for it there.</p>
 </li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>A RealGalaxyCatalog instance will cache data from the input files that it loads.
-Normally, this leads to a performance improvement, especially if objects are selected
-from the catalog semi-randomly, since it is faster to access the data in memory.
-If you want to free the cached memory before the RealGalaxyCatalog goes out of
-scope, you can use the <a class="reference internal" href="#galsim.RealGalaxyCatalog.close" title="galsim.RealGalaxyCatalog.close"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">close</span></code></a> method to do so.</p>
-</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -368,16 +360,6 @@ various calls to <a class="reference internal" href="#galsim.RealGalaxyCatalog.g
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.close" title="Link to this definition"></a></dt>
-<dd><p>Close all loaded files.</p>
-<p>Usually it is a performance improvement to keep the various input files open while using
-the RealGalaxyCatalog, especially if the access of the galaxies is in semi-random order.
-However, if you want to release the memory tied up in these files before the
-RealGalaxyCatalog goes out of scope, then this method will release the memory directly.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="galsim.RealGalaxyCatalog.getBandpass">
 <span class="sig-name descname"><span class="pre">getBandpass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getBandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getBandpass" title="Link to this definition"></a></dt>
