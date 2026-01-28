@@ -5,28 +5,6 @@ listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
-v2.7
-----
-
-*New Features*
-
-- Added `DoubleZernike.xycoef`. (#1327)
-- Added a setter for the `Image.array` property. (#1272, #1329)
-- Added an option ``recalc=True`` to `SiliconSensor.accumulate`.  (#1328)
-
-
-*Performance Improvements*
-
-- Switched to inbuilt operators on lists rather than numpy operators in a few places (#1316)
-- Added ``robust=True`` option to `Zernike.__call__`. (#1326, #1327)
-- Reduced memory use in the Silicon class. (#1331)
-
-
-*Bug Fixes*
-
-- Fixed an error in the `Spergel` stepk calculation. (#1324, #1325)
-- Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)
-
 
 v2.6
 ----
