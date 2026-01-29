@@ -88,7 +88,10 @@ jobs:
           CIBW_BUILD: "*macosx*"
           CIBW_ARCHS: arm64
           CIBW_SKIP: cp36* cp37* cp38* pp*
-          CIBW_BEFORE_ALL: brew install llvm@19 libomp fftw eigen
+          CIBW_BEFORE_ALL: |
+            brew install llvm@19 libomp fftw eigen
+            ls /opt/homebrew
+            ls /opt/homebrew/opt
           CIBW_ENVIRONMENT: >-
             CC=/opt/homebrew/opt/llvm/bin/clang
             CXX=/opt/homebrew/opt/llvm/bin/clang++
