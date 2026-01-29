@@ -90,12 +90,12 @@ jobs:
           CIBW_SKIP: cp36* cp37* cp38* pp*
           #CIBW_BEFORE_ALL: brew install llvm libomp fftw eigen
           CIBW_BEFORE_ALL: brew install fftw eigen
+          #CC=/opt/homebrew/opt/llvm/bin/clang
+          #CCX=/opt/homebrew/opt/llvm/bin/clang++
+          #LDFLAGS="-L/opt/homebrew/opt/llvm/lib -Wl,-rpath,/opt/homebrew/opt/llvm/lib"
+          #CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+          #PATH="/opt/homebrew/opt/llvm/bin:$PATH"
           CIBW_ENVIRONMENT: >-
-            #CC=/opt/homebrew/opt/llvm/bin/clang
-            #CCX=/opt/homebrew/opt/llvm/bin/clang++
-            #LDFLAGS="-L/opt/homebrew/opt/llvm/lib -Wl,-rpath,/opt/homebrew/opt/llvm/lib"
-            #CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-            #PATH="/opt/homebrew/opt/llvm/bin:$PATH"
             FFTW_DIR="/opt/homebrew/lib"
             MACOSX_DEPLOYMENT_TARGET=14.0
 
