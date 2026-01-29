@@ -34,3 +34,9 @@ Bug Fixes
 ---------
 
 - Fixed a bug in `Image.calculateFWHM` that started with numpy version 2.3. (#1336, #1337)
+
+
+Changes from v2.8.0 to v2.8.1
+-----------------------------
+
+- Nothing substantive. Just a pypi problem with 2.8.0.
