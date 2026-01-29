@@ -93,11 +93,11 @@ jobs:
             ls /opt/homebrew
             ls /opt/homebrew/opt
           CIBW_ENVIRONMENT: >-
-            CC=/opt/homebrew/opt/llvm/bin/clang
-            CXX=/opt/homebrew/opt/llvm/bin/clang++
-            LDFLAGS="-L/opt/homebrew/opt/llvm/lib -Wl,-rpath,/opt/homebrew/opt/llvm/lib"
-            CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-            PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+            CC=/opt/homebrew/opt/llvm@19/bin/clang
+            CXX=/opt/homebrew/opt/llvm@19/bin/clang++
+            LDFLAGS="-L/opt/homebrew/opt/llvm@19/lib -Wl,-rpath,/opt/homebrew/opt/llvm@19/lib"
+            CPPFLAGS="-I/opt/homebrew/opt/llvm@19/include"
+            PATH="/opt/homebrew/opt/llvm@19/bin:$PATH"
             FFTW_DIR="/opt/homebrew/lib"
             MACOSX_DEPLOYMENT_TARGET=14.0
 
