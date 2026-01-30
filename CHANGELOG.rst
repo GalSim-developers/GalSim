@@ -36,7 +36,7 @@ Bug Fixes
 - Fixed a bug in `Image.calculateFWHM` that started with numpy version 2.3. (#1336, #1337)
 
 
-Changes from v2.8.0 to v2.8.1
+Changes from v2.8.0 to v2.8.2
 -----------------------------
 
-- Nothing substantive. Just a pypi problem with 2.8.0.
+- Nothing substantive. Just fixing a problem with the pypi wheels on some macos systems.
