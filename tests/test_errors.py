@@ -305,6 +305,7 @@ def test_galsim_fft_size_error():
     assert err.size == 10240
     np.testing.assert_almost_equal(err.mem, 2.34375)
     assert isinstance(err, galsim.GalSimError)
+    check_pickle(err)
 
 
 if __name__ == "__main__":
