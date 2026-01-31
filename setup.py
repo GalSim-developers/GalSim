@@ -70,21 +70,21 @@ inst = all_files_from('src', '.inst')
 shared_data = all_files_from('share')
 
 copt =  {
-    'gcc' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp'],
-    'gcc w/ GPU' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp','-foffload=nvptx-none','-DGALSIM_USE_GPU'],
-    'icc' : ['-O2','-vec-report0','-std=c++11','-openmp'],
-    'clang' : ['-O2','-std=c++11',
+    'gcc' : ['-O2','-std=c++14','-fvisibility=hidden','-fopenmp'],
+    'gcc w/ GPU' : ['-O2','-std=c++14','-fvisibility=hidden','-fopenmp','-foffload=nvptx-none','-DGALSIM_USE_GPU'],
+    'icc' : ['-O2','-vec-report0','-std=c++14','-openmp'],
+    'clang' : ['-O2','-std=c++14',
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ OpenMP' : ['-O2','-std=c++11','-fopenmp',
+    'clang w/ OpenMP' : ['-O2','-std=c++14','-fopenmp',
                          '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ Intel OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ Intel OpenMP' : ['-O2','-std=c++14','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ manual OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ manual OpenMP' : ['-O2','-std=c++14','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
+    'clang w/ GPU' : ['-O2','-msse2','-std=c++14','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
                       '-Wno-shorten-64-to-32','-fvisibility=hidden', '-DGALSIM_USE_GPU'],
-    'nvc++' : ['-O2','-std=c++11','-mp=gpu','-DGALSIM_USE_GPU'],
+    'nvc++' : ['-O2','-std=c++14','-mp=gpu','-DGALSIM_USE_GPU'],
     'unknown' : [],
 }
 lopt =  {
@@ -684,17 +684,28 @@ def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
     """)
     return try_compile(cpp_code, compiler, cflags, lflags, prepend=prepend)
 
-def try_cpp11(compiler, cflags=[], lflags=[], check_warning=False):
-    """Check if compiling c++11 code with the given compiler works properly.
+def try_cpp14(compiler, cflags=[], lflags=[], check_warning=False):
+    """Check if compiling c++14 code with the given compiler works properly.
     """
     from textwrap import dedent
     cpp_code = dedent("""
     #include <iostream>
-    #include <forward_list>
+    #include <forward_list> // c++11 feature
     #include <cmath>
 
     int main(void) {
+        // c++11 feature
         std::cout << std::tgamma(1.3) << std::endl;
+
+        // c++14 feature
+        auto func = [](int i) { return i + 5; };
+        std::cout << "Result of func(3): " << func(3) << std::endl;
+
+        // A more sophisticated c++14 feature
+        std::unique_ptr<int> ptr(new int(10));
+        auto lambda = [value = std::move(ptr)]() { if (value) return *value; };
+        std::cout << "Value from lambda(): " << lambda() << std::endl;
+
         return 0;
     }
     """)
@@ -822,7 +833,7 @@ def fix_compiler(compiler, njobs):
     extra_cflags = copt[comp_type]
     extra_lflags = lopt[comp_type]
 
-    success = try_cpp11(compiler, extra_cflags, extra_lflags)
+    success = try_cpp14(compiler, extra_cflags, extra_lflags)
     if not success:
         # In case libc++ doesn't work, try letting the system use the default stdlib
         try:
@@ -831,16 +842,16 @@ def fix_compiler(compiler, njobs):
         except (AttributeError, ValueError):
             pass
         else:
-            success = try_cpp11(compiler, extra_cflags, extra_lflags)
+            success = try_cpp14(compiler, extra_cflags, extra_lflags)
     if not success:
-        print('The compiler %s with flags %s did not successfully compile C++11 code'%
+        print('The compiler %s with flags %s did not successfully compile C++14 code'%
               (cc, ' '.join(extra_cflags)))
-        raise OSError("Compiler is not C++-11 compatible")
+        raise OSError("Compiler is not C++-14 compatible")
 
     # Also see if adding -msse2 works (and doesn't give a warning)
     if '-msse2' not in extra_cflags:
         extra_cflags.append('-msse2')
-    if try_cpp11(compiler, extra_cflags, extra_lflags, check_warning=True):
+    if try_cpp14(compiler, extra_cflags, extra_lflags, check_warning=True):
         print('Using cflag -msse2')
     else:
         print('warning with -msse2.')
