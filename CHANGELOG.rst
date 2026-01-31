@@ -40,3 +40,8 @@ Changes from v2.8.0 to v2.8.2
 -----------------------------
 
 - Nothing substantive. Just fixing a problem with the pypi wheels on some macos systems.
+
+Changes from v2.8.2 to v2.8.3
+-----------------------------
+
+- Updated build to use std=c++14 to allow for eigen version 5.0, which now requires it.
