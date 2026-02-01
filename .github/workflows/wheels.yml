@@ -141,9 +141,10 @@ jobs:
 
       - name: Build sdist
         run: |
-          #python setup.py sdist
+          python setup.py sdist
           ls -l dist
           #tar tvfz dist/*.tar.gz
+          rm dist/*.tar.gz
 
       - name: Copy wheels
         run: |
