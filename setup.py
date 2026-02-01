@@ -692,6 +692,7 @@ def try_cpp14(compiler, cflags=[], lflags=[], check_warning=False):
     #include <iostream>
     #include <forward_list> // c++11 feature
     #include <cmath>
+    #include <memory>
 
     int main(void) {
         // c++11 feature
