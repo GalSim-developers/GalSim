@@ -143,14 +143,13 @@ jobs:
         run: |
           python setup.py sdist
           ls -l dist
-          #tar tvfz dist/*.tar.gz
-          rm dist/*.tar.gz
+          tar tvfz dist/*.tar.gz
 
       - name: Copy wheels
         run: |
           echo ls -l wheels
           ls -l wheels
-          cp wheels/*314*.whl dist
+          cp wheels/*.whl dist
           echo ls -l dist
           ls -l dist
 
