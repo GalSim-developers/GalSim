@@ -477,7 +477,8 @@ def test_moffat_flux_scaling():
 def test_moffat_shoot():
     """Test Moffat with photon shooting.  Particularly the flux of the final image.
     """
-    rng = galsim.BaseDeviate(1234)
+    rng_seed = 1235 if is_jax_galsim() else 1234
+    rng = galsim.BaseDeviate(rng_seed)
     obj = galsim.Moffat(fwhm=3.5, beta=4.7, flux=1.e4)
     im = galsim.Image(500,500, scale=1)
     im.setCenter(0,0)

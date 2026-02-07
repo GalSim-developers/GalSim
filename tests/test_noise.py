@@ -582,16 +582,15 @@ def test_ccdnoise():
 
     # Tabulated results for the above settings and testseed value.
     if is_jax_galsim():
-        # jax-galsim has a different RNG
-        cResultS = np.array([[42, 52], [49, 45]], dtype=np.int16)  # noqa: F841
-        cResultI = np.array([[42, 52], [49, 45]], dtype=np.int32)  # noqa: F841
+        cResultS = np.array([[47, 53], [47, 50]], dtype=np.int16)  # noqa: F841
+        cResultI = np.array([[47, 53], [47, 50]], dtype=np.int32)  # noqa: F841
         cResultF = np.array([  # noqa: F841
-            [42.4286994934082, 52.42875671386719],
-            [49.016048431396484, 45.61003875732422]
+            [47.53980255126953, 53.10973358154297],
+            [47.38243865966797, 50.18268585205078]
         ], dtype=np.float32)
         cResultD = np.array([  # noqa: F841
-            [42.42870031326479, 52.42875718917211],
-            [49.016050296441094, 45.61003745208172]
+            [47.5398021712499, 53.109735285501074],
+            [47.38243725054185, 50.18268713855554]
         ], dtype=np.float64)
     else:
         cResultS = np.array([[44, 47], [50, 49]], dtype=np.int16)

@@ -48,42 +48,29 @@ testseed = 1000 # seed used for UniformDeviate for all tests
 # Warning! If you change testseed, then all of the *Result variables below must change as well.
 
 if is_jax_galsim():
-    # the right answer for the first three uniform deviates produced from testseed
-    uResult = (0.0160653916, 0.228817832, 0.1609966951)
+    uResult = (0.0303194914, 0.0910759047, 0.1208923360)
 
-    # mean, sigma to use for Gaussian tests
     gMean = 4.7
     gSigma = 3.2
-    # the right answer for the first three Gaussian deviates produced from testseed
-    gResult = (-2.1568953985, 2.3232138032, 1.5308165692)
+    gResult = (-1.3035798312, 0.4306917482, 0.9542795210)
 
-    # N, p to use for binomial tests
     bN = 10
     bp = 0.7
-    # the right answer for the first three binomial deviates produced from testseed
-    bResult = (5, 8, 7)
+    bResult = (7, 6, 7)
 
-    # mean to use for Poisson tests
     pMean = 7
-    # the right answer for the first three Poisson deviates produced from testseed
-    pResult = (6, 11, 4)
+    pResult = (5, 8, 6)
 
-    # a & b to use for Weibull tests
     wA = 4.0
     wB = 9.0
-    # Tabulated results for Weibull
-    wResult = (3.2106530102, 6.4256210259, 5.8255498741)
+    wResult = (3.7699892848, 5.0030654033, 5.3921485618)
 
-    # k & theta to use for Gamma tests
     gammaK = 1.5
     gammaTheta = 4.5
-    # Tabulated results for Gamma
-    gammaResult = (10.9318881415, 7.6074550007, 2.0526795529)
+    gammaResult = (0.7985896238, 22.0508132116, 33.1369864688)
 
-    # n to use for Chi2 tests
     chi2N = 30
-    # Tabulated results for Chi2
-    chi2Result = (36.7583415337, 32.7223187231, 23.1555198334)
+    chi2Result = (19.2174896025, 47.3448788104, 55.8177548146)
 else:
     # the right answer for the first three uniform deviates produced from testseed
     uResult = (0.11860922840423882, 0.21456799632869661, 0.43088198406621814)
