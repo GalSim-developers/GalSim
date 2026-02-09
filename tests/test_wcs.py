@@ -2208,7 +2208,7 @@ def test_astropywcs(run_slow):
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
-        galsim.AstropyWCS('SBProfile_comparison_images/kolmogorov.fits')
+        galsim.AstropyWCS(os.path.join(os.path.dirname(__file__), 'SBProfile_comparison_images/kolmogorov.fits'))
 
     # This file does not have any WCS information in it.
     with assert_raises(galsim.GalSimError):
@@ -2295,11 +2295,11 @@ def test_pyastwcs(run_slow):
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
-        galsim.PyAstWCS('SBProfile_comparison_images/kolmogorov.fits')
+        galsim.PyAstWCS(os.path.join(os.path.dirname(__file__), 'SBProfile_comparison_images/kolmogorov.fits'))
 
     # This file does not have any WCS information in it.
     with assert_raises(OSError):
-        galsim.PyAstWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
+        galsim.PyAstWCS(os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     assert_raises(TypeError, galsim.PyAstWCS)
     assert_raises(TypeError, galsim.PyAstWCS, file_name, header='dummy')
@@ -2360,11 +2360,11 @@ def test_wcstools(run_slow):
 
     # This file does not have any WCS information in it.
     with assert_raises(OSError):
-        galsim.WcsToolsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
+        galsim.WcsToolsWCS(os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
-        galsim.WcsToolsWCS('SBProfile_comparison_images/kolmogorov.fits')
+        galsim.WcsToolsWCS(os.path.join(os.path.dirname(__file__), 'SBProfile_comparison_images/kolmogorov.fits'))
 
     assert_raises(TypeError, galsim.WcsToolsWCS)
     assert_raises(TypeError, galsim.WcsToolsWCS, file_name, header='dummy')
@@ -2415,11 +2415,11 @@ def test_gsfitswcs(run_slow):
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
-        galsim.GSFitsWCS('SBProfile_comparison_images/kolmogorov.fits')
+        galsim.GSFitsWCS(os.path.join(os.path.dirname(__file__), 'SBProfile_comparison_images/kolmogorov.fits'))
 
     # This file does not have any WCS information in it.
     with assert_raises(galsim.GalSimError):
-        galsim.GSFitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
+        galsim.GSFitsWCS(os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     assert_raises(TypeError, galsim.GSFitsWCS)
     assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
@@ -2636,16 +2636,16 @@ def test_fitswcs(run_slow):
         galsim.fits.closeHDUList(hdu_list, fin)
 
     # This does support LINEAR WCS types.
-    linear = galsim.FitsWCS('SBProfile_comparison_images/kolmogorov.fits')
+    linear = galsim.FitsWCS(os.path.join(os.path.dirname(__file__), 'SBProfile_comparison_images/kolmogorov.fits'))
     assert isinstance(linear, galsim.OffsetWCS)
 
     # This file does not have any WCS information in it.
     with assert_warns(galsim.GalSimWarning):
-        pixel = galsim.FitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
+        pixel = galsim.FitsWCS(os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
     assert pixel == galsim.PixelScale(1.0)
 
     # Can suppress the warning if desired
-    pixel = galsim.FitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'), suppress_warning=True)
+    pixel = galsim.FitsWCS(os.path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'), suppress_warning=True)
     assert pixel == galsim.PixelScale(1.0)
 
     assert_raises(TypeError, galsim.FitsWCS)
