@@ -668,7 +668,7 @@ def do_jac_decomp(wcs, name):
 
     M = scale * S.dot(R).dot(F)
     J = wcs.getMatrix()
-    np.testing.assert_almost_equal(
+    np.testing.assert_array_almost_equal(
             M, J, 8, "Decomposition was inconsistent with jacobian for "+name)
 
     # The minLinearScale is scale * (1-g) / sqrt(1-g^2)
