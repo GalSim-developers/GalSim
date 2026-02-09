@@ -356,7 +356,7 @@ def do_wcs_image(wcs, name, run_slow, approx=False):
     # Use the "blank" image as our test image.  It's not blank in the sense of having all
     # zeros.  Rather, there are basically random values that we can use to test that
     # the shifted values are correct.  And it is a conveniently small-ish, non-square image.
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     file_name = 'blankimg.fits'
     im = galsim.fits.read(file_name, dir=dir)
     np.testing.assert_equal(im.origin.x, 1, "initial origin is not 1,1 as expected")
@@ -2169,7 +2169,7 @@ def test_astropywcs(run_slow):
     else:
         test_tags = [ 'TAN', 'SIP', 'ZTF', 'TAN-PV' ]
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
@@ -2249,7 +2249,7 @@ def test_pyastwcs(run_slow):
     else:
         test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV', 'TNX', 'ZTF' ]
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
@@ -2299,7 +2299,7 @@ def test_pyastwcs(run_slow):
 
     # This file does not have any WCS information in it.
     with assert_raises(OSError):
-        galsim.PyAstWCS('fits_files/blankimg.fits')
+        galsim.PyAstWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     assert_raises(TypeError, galsim.PyAstWCS)
     assert_raises(TypeError, galsim.PyAstWCS, file_name, header='dummy')
@@ -2324,7 +2324,7 @@ def test_wcstools(run_slow):
     else:
         test_tags = [ 'TNX' ]
 
-    dir = 'fits_files'
+    dir = os.path.join(os.path.dirname(__file__), 'fits_files')
     try:
         galsim.WcsToolsWCS(references['TAN'][0], dir=dir)
     except OSError:
@@ -2360,7 +2360,7 @@ def test_wcstools(run_slow):
 
     # This file does not have any WCS information in it.
     with assert_raises(OSError):
-        galsim.WcsToolsWCS('fits_files/blankimg.fits')
+        galsim.WcsToolsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
@@ -2419,7 +2419,7 @@ def test_gsfitswcs(run_slow):
 
     # This file does not have any WCS information in it.
     with assert_raises(galsim.GalSimError):
-        galsim.GSFitsWCS('fits_files/blankimg.fits')
+        galsim.GSFitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
 
     assert_raises(TypeError, galsim.GSFitsWCS)
     assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
@@ -2641,11 +2641,11 @@ def test_fitswcs(run_slow):
 
     # This file does not have any WCS information in it.
     with assert_warns(galsim.GalSimWarning):
-        pixel = galsim.FitsWCS('fits_files/blankimg.fits')
+        pixel = galsim.FitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'))
     assert pixel == galsim.PixelScale(1.0)
 
     # Can suppress the warning if desired
-    pixel = galsim.FitsWCS('fits_files/blankimg.fits', suppress_warning=True)
+    pixel = galsim.FitsWCS(os,path.join(os.path.dirname(__file__), 'fits_files/blankimg.fits'), suppress_warning=True)
     assert pixel == galsim.PixelScale(1.0)
 
     assert_raises(TypeError, galsim.FitsWCS)
