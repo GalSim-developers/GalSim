@@ -201,10 +201,7 @@ def test_moffat_maxk():
     for psf in psfs:
         for thresh in threshs:
             psf = psf.withGSParams(maxk_threshold=thresh)
-            if is_jax_galsim():
-                rtol = 5e-3
-            else:
-                rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
+            rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
             fk = psf.kValue(psf.maxk,0).real/psf.flux
             print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e} \t {psf.maxk:.3e}')
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol)
