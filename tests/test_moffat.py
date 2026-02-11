@@ -206,7 +206,7 @@ def test_moffat_maxk():
             else:
                 rtol = 1.e-7 if psf.trunc == 0 else 3.e-3
             fk = psf.kValue(psf.maxk,0).real/psf.flux
-            print(f'{psf.beta} \t {int(psf.trunc)} \t {thresh:.1e} \t {fk:.3e} \t {psf.maxk:.3e}')
+            print(f'{psf.beta} \t {int(psf.trunc or 0)} \t {thresh:.1e} \t {fk:.3e} \t {psf.maxk:.3e}')
             np.testing.assert_allclose(abs(psf.kValue(psf.maxk,0).real)/psf.flux, thresh, rtol=rtol)
 
 
@@ -263,9 +263,11 @@ def test_moffat_radii():
     np.testing.assert_equal(
             test_gal.beta, test_beta,
             err_msg="Moffat beta not correct")
-    np.testing.assert_equal(
-            test_gal.trunc, 0,
-            err_msg="Moffat trunc not correct")
+    # jax-galsim uses None as the default
+    if test_gal.trunc is not None:
+        np.testing.assert_equal(
+                test_gal.trunc, 0,
+                err_msg="Moffat trunc not correct")
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.half_light_radius
