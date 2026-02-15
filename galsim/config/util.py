@@ -699,10 +699,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
         Process = ctx.Process
         Queue = ctx.Queue
 
-        log_queue = Queue()
-        listener = ctx.Process(target=log_listener, args=(log_queue,))
-        listener.start()
-
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
@@ -713,6 +709,11 @@ def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
         # We need to set the number of OpenMP threads to 1 during multiprocessing, otherwise
         # it may spawn e.g. 64 threads in each of 64 processes, which tends to be bad.
         with single_threaded():
+
+            # Initialize the log queue and start the listener for logging from multiple processes.
+            log_queue = Queue()
+            listener = ctx.Process(target=log_listener, args=(log_queue,))
+            listener.start()
 
             # Send the tasks to the task_queue.
             ntasks = len(tasks)
@@ -777,6 +778,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
                         if except_abort:
                             for j in range(nproc):
                                 p_list[j].terminate()
+                            listener.terminate()
                             raise_error = res
                             break
                     else:
@@ -803,6 +805,13 @@ def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
                 # And terminate any jobs that might still be running.
                 for j in range(nproc):
                     p_list[j].terminate()
+                # Same for logging
+                while not log_queue.empty():
+                    try:
+                        log_queue.get_nowait()
+                    except Exception:  # pragma: no cover
+                        pass
+                    listener.terminate()
                 raise_error = e
 
             finally:
@@ -823,9 +832,13 @@ def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
                     p_list[j].join()
                 task_queue.close()
 
-                # Also make sure to stop the log listener with `STOP`
-                log_queue.put('STOP')
+                # Also make sure to stop the log listener with `STOP` and do cleanup.
+                try:
+                    log_queue.put_nowait('STOP')
+                except Exception:  # pragma: no cover
+                    pass
                 listener.join()
+                log_queue.close()
 
         del config['current_nproc']
 
