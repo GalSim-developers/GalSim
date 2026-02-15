@@ -17,6 +17,7 @@
 #
 
 import logging
+import logging.handlers
 import copy
 import sys
 import time
@@ -33,11 +34,23 @@ from ..utilities import SimpleGenerator, single_threaded
 from ..random import BaseDeviate
 from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError, galsim_warn
 
+logger = logging.getLogger(__name__)
+
 max_queue_size = 32767  # This is where multiprocessing.Queue starts to have trouble.
                         # We make it a settable parameter here really for unit testing.
                         # I don't think there is any reason for end users to want to set this.
 
-def MergeConfig(config1, config2, logger=None):
+
+def log_listener(log_queue):
+    root = logging.getLogger(__name__)
+    handler = logging.StreamHandler()
+    root.addHandler(handler)
+
+    for record in iter(log_queue.get, 'STOP'):
+        logger = logging.getLogger(record.name)
+        logger.handle(record)
+
+def MergeConfig(config1, config2):
     """
     Merge config2 into config1 such that it has all the information from either config1 or
     config2 including places where both input dicts have some of a field defined.
@@ -47,7 +60,6 @@ def MergeConfig(config1, config2, logger=None):
 
     For real conflicts (the same value in both cases), config1's value takes precedence
     """
-    logger = LoggerWrapper(logger)
     for (key, value) in config2.items():
         if not key in config1:
             # If this key isn't in config1 yet, just add it
@@ -55,7 +67,7 @@ def MergeConfig(config1, config2, logger=None):
         elif isinstance(value,dict) and isinstance(config1[key],dict):
             # If they both have a key, first check if the values are dicts
             # If they are, just recurse this process and merge those dicts.
-            MergeConfig(config1[key],value,logger)
+            MergeConfig(config1[key],value)
         else:
             # Otherwise config1 takes precedence
             logger.info("Not merging key %s from the base config, since the later "
@@ -252,89 +264,7 @@ class SafeManager(BaseManager):
         super(SafeManager, self).__init__(ctx=get_context('fork'))
 
 
-def GetLoggerProxy(logger):
-    """Make a proxy for the given logger that can be passed into multiprocessing Processes
-    and used safely.
-
-    Parameters:
-        logger:      The logger to make a copy of
-
-    Returns:
-        a proxy for the given logger
-    """
-    if logger:
-        class LoggerManager(SafeManager): pass
-        logger_generator = SimpleGenerator(logger)
-        LoggerManager.register('logger', callable = logger_generator)
-        logger_manager = LoggerManager()
-        with single_threaded():
-            logger_manager.start()
-        logger_proxy = logger_manager.logger()
-    else:
-        logger_proxy = None
-    return logger_proxy
-
-class LoggerWrapper:
-    """A wrap around a Logger object that checks whether a debug or info or warn call will
-    actually produce any output before calling the functions.
-
-    This seems like a gratuitous wrapper, and it is if the object being wrapped is a real
-    Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)
-    that would otherwise send the arguments of logger.debug(...) calls through a multiprocessing
-    pipe before (typically) being ignored.  Here, we check whether the call will actually
-    produce any output before calling the functions.
-
-    Parameters:
-        logger:     The logger object to wrap.
-    """
-    def __init__(self, logger):
-        if isinstance(logger,LoggerWrapper):
-            self.logger = logger.logger
-            self.level = logger.level
-        else:
-            self.logger = logger
-            # When multiprocessing, it is faster to check if the level is enabled locally, rather
-            # than communicating over the pipe to ask the base logger if it isEnabledFor a given
-            # level.
-            # If the logger is None, use more than the top logging level (CRITICAL).
-            self.level = self.logger.getEffectiveLevel() if self.logger else logging.CRITICAL+1
-
-    def getEffectiveLevel(self):
-        return self.level
-
-    def __bool__(self):
-        return self.logger is not None
-    __nonzero__ = __bool__
-
-    def debug(self, *args, **kwargs):
-        if self.logger and self.isEnabledFor(logging.DEBUG):
-            self.logger.debug(*args, **kwargs)
-
-    def info(self, *args, **kwargs):
-        if self.logger and self.isEnabledFor(logging.INFO):
-            self.logger.info(*args, **kwargs)
-
-    def warning(self, *args, **kwargs):
-        if self.logger and self.isEnabledFor(logging.WARNING):
-            self.logger.warning(*args, **kwargs)
-
-    def error(self, *args, **kwargs):
-        if self.logger and self.isEnabledFor(logging.ERROR):
-            self.logger.error(*args, **kwargs)
-
-    def critical(self, *args, **kwargs):
-        if self.logger and self.isEnabledFor(logging.CRITICAL):
-            self.logger.critical(*args, **kwargs)
-
-    def log(self, level, *args, **kwargs):
-        if self.logger and self.isEnabledFor(level):
-            self.logger.log(level, *args, **kwargs)
-
-    def isEnabledFor(self, level):
-        return level >= self.level
-
-
-def UpdateNProc(nproc, ntot, config, logger=None):
+def UpdateNProc(nproc, ntot, config):
     """Update nproc
 
     - If nproc < 0, set nproc to ncpu
@@ -345,12 +275,10 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         ntot:       The total number of files/images/stamps to do, so the maximum number of
                     processes that would make sense.
         config:     The configuration dict to copy.
-        logger:     If given, a logger object to log progress. [default: None]
 
     Returns:
         the number of processes to use.
     """
-    logger = LoggerWrapper(logger)
     # First if nproc < 0, update based on ncpu
     if nproc <= 0:
         # Try to figure out a good number of processes to use
@@ -476,7 +404,7 @@ def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, rng_index_key=
         PropagateIndexKeyRNGNum(config[key], index_key, rng_num, rng_index_key)
 
 
-def SetupConfigRNG(config, seed_offset=0, logger=None):
+def SetupConfigRNG(config, seed_offset=0):
     """Set up the RNG in the config dict.
 
     - Setup config['image']['random_seed'] if necessary
@@ -486,14 +414,11 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
         config:         The configuration dict.
         seed_offset:    An offset to use relative to what config['image']['random_seed'] gives.
                         [default: 0]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         the seed used to initialize the RNG.
     """
     from .process import rng_fields
-
-    logger = LoggerWrapper(logger)
 
     # If we are starting a new file, clear out the existing rngs.
     index_key = config['index_key']
@@ -620,7 +545,7 @@ def GetFromConfig(config, key):
             "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
     return value
 
-def SetInConfig(config, key, value, logger=None):
+def SetInConfig(config, key, value):
     """Set the value of a (possibly extended) key in a config dict.
 
     If key is a simple string, then this is equivalent to config[key] = value.
@@ -643,10 +568,9 @@ def SetInConfig(config, key, value, logger=None):
             # Then d was really a list.
             # This has some potentially counter-intuitive consequences, so let the user
             # know about them.
-            if logger:
-                logger.warning("Warning: Removing item %d from %s. "%(k,key[:key.rfind('.')]) +
-                               "Any further adjustments to this list must use the new "+
-                               "list index values, not the original indices.")
+            logger.warning("Warning: Removing item %d from %s. "%(k,key[:key.rfind('.')]) +
+                           "Any further adjustments to this list must use the new "+
+                           "list index values, not the original indices.")
             del d[k]
     else:
         try:
@@ -656,7 +580,7 @@ def SetInConfig(config, key, value, logger=None):
                 "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
 
 
-def UpdateConfig(config, new_params, logger=None):
+def UpdateConfig(config, new_params):
     """Update the given config dict with additional parameters/values.
 
     Parameters:
@@ -666,10 +590,10 @@ def UpdateConfig(config, new_params, logger=None):
                         parsed to update config['gal']['first']['dilate'].
     """
     for key, value in new_params.items():
-        SetInConfig(config, key, value, logger)
+        SetInConfig(config, key, value)
 
 
-def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
+def MultiProcess(nproc, config, job_func, tasks, item, timeout=900,
                  done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
 
@@ -695,17 +619,16 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
         tasks:          A list of tasks to run.  Each task is a list of jobs, each of which is
                         a tuple (kwargs, k).
         item:           A string indicating what is being worked on.
-        logger:         If given, a logger object to log progress. [default: None]
         timeout:        How many seconds to allow for each task before timing out. [default: 900]
         done_func:      A function to run upon completion of each job.  It will be called as::
 
-                            done_func(logger, proc, k, result, t)
+                            done_func(proc, k, result, t)
 
                         where proc is the process name, k is the index of the job, result is
                         the return value of that job, and t is the time taken. [default: None]
         except_func:    A function to run if an exception is encountered.  It will be called as::
 
-                            except_func(logger, proc, k, ex, tr)
+                            except_func(proc, k, ex, tr)
 
                         where proc is the process name, k is the index of the job that failed,
                         ex is the exception caught, and tr is the traceback. [default: None]
@@ -724,20 +647,15 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
     # with the kwargs from the list of jobs.
     # Each job also carries with it its index in the original list of all jobs.
-    def worker(task_queue, results_queue, config, logger, initializers, initargs):
+    def worker(task_queue, results_queue, config, log_queue, initializers, initargs):
         proc = current_process().name
 
         for init, args in zip(initializers, initargs):
             init(*args)
 
-        # The logger object passed in here is a proxy object.  This means that all the arguments
-        # to any logging commands are passed through the pipe to the real Logger object on the
-        # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
-        # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
-        # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
-        # LoggerWrapper that checks whether it is worth sending the arguments back to the original
-        # Logger before calling the functions.
-        logger = LoggerWrapper(logger)
+        logger = logging.getLogger(__name__)
+        handler = logging.handlers.QueueHandler(log_queue)
+        logger.addHandler(handler)
 
         if 'profile' in config and config['profile']:
             pr = cProfile.Profile()
@@ -752,7 +670,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 for kwargs, k in task:
                     t1 = time.time()
                     kwargs['config'] = config
-                    kwargs['logger'] = logger
                     result = job_func(**kwargs)
                     t2 = time.time()
                     results_queue.put( (result, k, t2-t1, proc) )
@@ -782,16 +699,16 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
         Process = ctx.Process
         Queue = ctx.Queue
 
+        log_queue = Queue()
+        listener = ctx.Process(target=log_listener, args=(log_queue,))
+        listener.start()
+
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
 
         if 'profile' in config and config['profile']:
             logger.info("Starting separate profiling for each of the %d processes.",nproc)
-
-        # The logger is not picklable, so we need to make a proxy for it so all the
-        # processes can emit logging information safely.
-        logger_proxy = GetLoggerProxy(logger)
 
         # We need to set the number of OpenMP threads to 1 during multiprocessing, otherwise
         # it may spawn e.g. 64 threads in each of 64 processes, which tends to be bad.
@@ -828,7 +745,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 # processes, so for the sake of the logging output, we name the processes explicitly.
                 initializers = worker_init_fns
                 initargs = [initargs_fn() for initargs_fn in worker_initargs_fns]
-                p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy,
+                p = Process(target=worker, args=(task_queue, results_queue, config, log_queue,
                                                  initializers, initargs),
                             name='Process-%d'%(j+1))
                 p.start()
@@ -856,7 +773,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                         # t is really the traceback
                         # k is the index for the job that failed
                         if except_func is not None:  # pragma: no branch
-                            except_func(logger, proc, k, res, t)
+                            except_func(proc, k, res, t)
                         if except_abort:
                             for j in range(nproc):
                                 p_list[j].terminate()
@@ -865,7 +782,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                     else:
                         # The normal case
                         if done_func is not None:  # pragma: no branch
-                            done_func(logger, proc, k, res, t)
+                            done_func(proc, k, res, t)
                         results[k] = res
 
             except BaseException as e:
@@ -906,6 +823,10 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                     p_list[j].join()
                 task_queue.close()
 
+                # Also make sure to stop the log listener with `STOP`
+                log_queue.put('STOP')
+                listener.join()
+
         del config['current_nproc']
 
         if raise_error is not None:
@@ -918,16 +839,15 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 try:
                     t1 = time.time()
                     kwargs['config'] = config
-                    kwargs['logger'] = logger
                     result = job_func(**kwargs)
                     t2 = time.time()
                     if done_func is not None:  # pragma: no branch
-                        done_func(logger, None, k, result, t2-t1)
+                        done_func(None, k, result, t2-t1)
                     results[k] = result
                 except Exception as e:
                     tr = traceback.format_exc()
                     if except_func is not None: # pragma: no branch
-                        except_func(logger, None, k, e, tr)
+                        except_func(None, k, e, tr)
                     if except_abort:
                         raise
 
@@ -968,22 +888,18 @@ def GetIndex(config, base, is_sequence=False):
     return index, index_key
 
 
-def GetRNG(config, base, logger=None, tag=''):
+def GetRNG(config, base, tag=''):
     """Get the appropriate current rng according to whatever the current index_key is.
-
-    If a logger is provided, then it will emit a warning if there is no current rng setup.
 
     Parameters:
         config:         The configuration dict for the current item being worked on.
         base:           The base configuration dict.
-        logger:         If given, a logger object to log progress. [default: None]
         tag:            If given, an appropriate name for the current item to use in the
                         warning message. [default: '']
 
     Returns:
         either the appropriate rng for the current index_key or None
     """
-    logger = LoggerWrapper(logger)
     if 'rng_index_key' in config:
         index_key = config['rng_index_key']
         if index_key not in valid_index_keys:
@@ -1009,7 +925,7 @@ def GetRNG(config, base, logger=None, tag=''):
         logger.debug("No index_key_rng.  Use base[rng]")
         rng = base.get('rng',None)
 
-    if rng is None and logger:
+    if rng is None:
         # Only report the warning the first time.
         rng_tag = tag + '_reported_no_rng'
         if rng_tag not in base:
@@ -1053,7 +969,7 @@ def SetDefaultExt(config, default_ext):
 
 
 _sleep_mult = 1  # 1 second normally, but make it a variable, so I can change it when unit testing.
-def RetryIO(func, args, ntries, file_name, logger):
+def RetryIO(func, args, ntries, file_name):
     """A helper function to retry I/O commands
     """
     itry = 0

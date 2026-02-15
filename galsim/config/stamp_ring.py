@@ -35,7 +35,7 @@ class RingBuilder(StampBuilder):
     It specializes the setup, buildProfile, reject, and makeTasks functions.
     """
 
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         """Do the initialization and setup for the Ring type.
 
         Most of the work is done by SetupBasic, but we do need to check that the required parameters
@@ -48,7 +48,6 @@ class RingBuilder(StampBuilder):
             ysize:      The ysize of the image to build (if known).
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             xsize, ysize, image_pos, world_pos
@@ -75,9 +74,9 @@ class RingBuilder(StampBuilder):
 
         # Now go on and do the base class setup.
         ignore = ignore + list(req) + list(opt)
-        return super(RingBuilder, self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(RingBuilder, self).setup(config, base, xsize, ysize, ignore)
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
+    def buildProfile(self, config, base, psf, gsparams):
         """
         Build the object to be drawn.
 
@@ -91,7 +90,6 @@ class RingBuilder(StampBuilder):
             psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.
             gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
                         list by the galaxy object.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the final profile
@@ -104,7 +102,7 @@ class RingBuilder(StampBuilder):
 
         if index % num == 0:
             # Then we are on the first item in the ring, so make it normally.
-            gal = BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+            gal = BuildGSObject(base, 'gal', gsparams=gsparams)[0]
             if gal is None:
                 raise GalSimConfigError(
                     "The gal field must define a valid galaxy for stamp type=Ring.")
@@ -121,14 +119,14 @@ class RingBuilder(StampBuilder):
             gal = gal.rotate(index*dtheta)
 
         # Apply any transformations that are given in the stamp field.
-        gal = TransformObject(gal, config, base, logger)[0]
+        gal = TransformObject(gal, config, base)[0]
 
         if psf is not None:
             return Convolve(gal,psf)
         else:
             return gal
 
-    def reject(self, config, base, prof, psf, image, logger):
+    def reject(self, config, base, prof, psf, image):
         """Check to see if this object should be rejected.
 
         This is the same as base class reject for the first item in the ring.  Later items are not
@@ -140,18 +138,17 @@ class RingBuilder(StampBuilder):
             prof:       The profile that was drawn.
             psf:        The psf that was used to build the profile.
             image:      The postage stamp image.  No noise is on it yet at this point.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             whether the galaxy was rejected.
         """
         index = ParseValue(config, 'index', base, int)[0]
         if index == 0:
-            return super(RingBuilder,self).reject(config, base, prof, psf, image, logger)
+            return super(RingBuilder,self).reject(config, base, prof, psf, image)
         else:
             return False
 
-    def makeTasks(self, config, base, jobs, logger):
+    def makeTasks(self, config, base, jobs):
         """Turn a list of jobs into a list of tasks.
 
         For the Ring stamp type, we group jobs into sets of num.  If there are extra jobs that
@@ -162,7 +159,6 @@ class RingBuilder(StampBuilder):
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'obj_num'.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a list of tasks

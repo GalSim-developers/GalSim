@@ -25,7 +25,7 @@ import galsim.des
 # Define the Blend stamp type
 #
 
-def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
+def BuildBlendProfiles(self, config, base, psf, gsparams):
     """
     Build a list of galaxy profiles, each convolved with the psf, to use for the blend image.
 
@@ -38,7 +38,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
 
     self.neighbor_gals = []
     for i in range(n_neighbors):
-        gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+        gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams)[0]
         self.neighbor_gals.append(gal)
         # Remove the current stuff from base['gal'] so we don't get the same galaxy
         # each time.
@@ -55,8 +55,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
         pos = galsim.config.ParseValue(config_pos, 'pos', base, galsim.PositionD)[0]
         self.neighbor_pos.append(pos)
 
-    self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams,
-                                                logger=logger)[0]
+    self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams)[0]
 
     profiles = [ self.main_gal ]
     profiles += [ gal.shift(pos) for gal, pos in zip(self.neighbor_gals, self.neighbor_pos) ]
@@ -68,7 +67,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
 
 class BlendBuilder(galsim.config.StampBuilder):
 
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         """Do the appropriate setup for a Blend stamp.
         """
         self.first = None  # Mark that we don't have anything stored yet.
@@ -80,19 +79,19 @@ class BlendBuilder(galsim.config.StampBuilder):
         # Now farm off to the regular stamp setup function the rest of the work of parsing
         # the size and position of the stamp.
         ignore = ignore + ['n_neighbors', 'min_sep', 'max_sep']
-        return super(BlendBuilder,self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(BlendBuilder,self).setup(config, base, xsize, ysize, ignore)
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
-        return BuildBlendProfiles(self, config, base, psf, gsparams, logger)
+    def buildProfile(self, config, base, psf, gsparams):
+        return BuildBlendProfiles(self, config, base, psf, gsparams)
 
-    def draw(self, profiles, image, method, offset, config, base, logger):
+    def draw(self, profiles, image, method, offset, config, base):
         """
         Draw the profiles onto the stamp.
         """
         n_neighbors = len(profiles)-1
 
         # Draw the central galaxy using the basic draw function.
-        image = galsim.config.DrawBasic(profiles[0], image, method, offset, config, base, logger)
+        image = galsim.config.DrawBasic(profiles[0], image, method, offset, config, base)
 
         # We'll want a copy of just the neighbors for the deblend image.
         # Otherwise we could have just drawn these on the main image with add_to_image = True
@@ -101,7 +100,7 @@ class BlendBuilder(galsim.config.StampBuilder):
 
         # Draw all the neighbor stamps
         for p in profiles[1:]:
-            galsim.config.DrawBasic(p, self.neighbor_image, method, offset, config, base, logger,
+            galsim.config.DrawBasic(p, self.neighbor_image, method, offset, config, base,
                                     add_to_image=True)
 
         # Save this in base for the deblend output
@@ -111,12 +110,12 @@ class BlendBuilder(galsim.config.StampBuilder):
 
         return image
 
-    def whiten(self, profiles, image, config, base, logger):
+    def whiten(self, profiles, image, config, base):
         """
         Whiten the noise on the stamp according to the existing noise in all the profiles.
         """
         total = galsim.Add(profiles)
-        return super(BlendBuilder,self).whiten(total, image, config, base, logger)
+        return super(BlendBuilder,self).whiten(total, image, config, base)
 
 
 galsim.config.RegisterStampType('Blend', BlendBuilder())
@@ -132,7 +131,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
     # This is the same as the setup function for Blend, so there is a bit of duplicated code
     # here, but it was simpler to have BlendSetBuilder derive directly from StampBuilder
     # so the super calls go directly to that.
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         """Do the appropriate setup for a Blend stamp.
         """
         # Make sure that we start over on the start of a new file.
@@ -146,9 +145,9 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         # Now farm off to the regular stamp setup function the rest of the work of parsing
         # the size and position of the stamp.
         ignore = ignore + ['n_neighbors', 'min_sep', 'max_sep']
-        return super(BlendSetBuilder, self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(BlendSetBuilder, self).setup(config, base, xsize, ysize, ignore)
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
+    def buildProfile(self, config, base, psf, gsparams):
         """
         Build a list of galaxy profiles, each convolved with the psf, to use for the blend image.
         """
@@ -158,12 +157,12 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             return None
         else:
             # Run the above BuildBlendProfiles function to build the profiles.
-            self.profiles = BuildBlendProfiles(self, config, base, psf, gsparams, logger)
+            self.profiles = BuildBlendProfiles(self, config, base, psf, gsparams)
             # And mark this as the first object in the set
             self.first = base['obj_num']
             return self.profiles
 
-    def draw(self, profiles, image, method, offset, config, base, logger):
+    def draw(self, profiles, image, method, offset, config, base):
         """
         Draw the profiles onto the stamp.
         """
@@ -188,8 +187,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_images = []
             for prof in profiles:
                 im = galsim.ImageF(bounds=bounds, wcs=wcs)
-                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base,
-                                        logger)
+                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base)
                 self.full_images.append(im)
 
         # Figure out what bounds to use for the cutouts.
@@ -219,7 +217,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
 
         return image
 
-    def whiten(self, profiles, image, config, base, logger):
+    def whiten(self, profiles, image, config, base):
         """
         Whiten the noise on the stamp according to the existing noise in all the profiles.
         """
@@ -229,7 +227,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.current_var = 0
             for prof, full_im in zip(self.profiles, self.full_images):
                 self.current_var += super(BlendSetBuilder,self).whiten(
-                        prof, full_im, config, base, logger)
+                        prof, full_im, config, base)
             if self.current_var != 0:
                 # Then we whitened the noise somewhere.  Rebuild the stamp
                 image.setZero()
@@ -239,7 +237,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         return self.current_var
 
 
-    def addNoise(self, config, base, image, current_var, logger):
+    def addNoise(self, config, base, image, current_var):
         """Add the sky and noise"""
         # We want the noise realization to be the same for all galaxies in the set,
         # so we only generate the noise the first time and save it, pulling out the right cutout
@@ -251,7 +249,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_noise_image = self.full_images[0].copy()
             self.full_noise_image.setZero()
             self.full_noise_image, self.current_var = super(BlendSetBuilder,self).addNoise(
-                    config, base, self.full_noise_image, current_var, logger)
+                    config, base, self.full_noise_image, current_var)
 
         image += self.full_noise_image[self.bounds]
         return image, self.current_var
@@ -273,7 +271,7 @@ galsim.config.RegisterStampType('BlendSet', BlendSetBuilder())
 
 class DeblendBuilder(galsim.config.ExtraOutputBuilder):
 
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         """Save the stamps of just the neighbor fluxes.  We'll subtract them from the full image
         at the end.
         """
@@ -289,7 +287,7 @@ class DeblendBuilder(galsim.config.ExtraOutputBuilder):
         # Save it in the scratch dict using this obj_num as the key.
         self.scratch[obj_num] = im
 
-    def processImage(self, index, obj_nums, config, base, logger):
+    def processImage(self, index, obj_nums, config, base):
         """Copy the full final image over and then subtract off the neighbor-only fluxes.
         """
         # Start with a copy of the regular final image.
@@ -313,7 +311,7 @@ galsim.config.RegisterExtraOutput('deblend', DeblendBuilder())
 
 class DeblendMedsBuilder(DeblendBuilder):
 
-    def finalize(self, config, base, main_data, logger):
+    def finalize(self, config, base, main_data):
         """Convert from the list of images we've been making into a list of MultiExposureObjects
         we can use to write the MEDS file.
         """
@@ -331,7 +329,7 @@ class DeblendMedsBuilder(DeblendBuilder):
             k1 = k2
         return obj_list
 
-    def writeFile(self, file_name, config, base, logger):
+    def writeFile(self, file_name, config, base):
         galsim.des.WriteMEDS(self.final_data, file_name)
 
 

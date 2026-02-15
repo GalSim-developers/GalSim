@@ -26,67 +26,66 @@ from ..errors import GalSimConfigError
 from ..gsparams import GSParams
 from ..galaxy_sample import GalaxySample, COSMOSCatalog
 
+logger = logging.getLogger(__name__)
+
 # This file adds input types cosmos_catalog and sample_galaxy and gsobject types
 # COSMOSGalaxy and SampleGalaxy.
 
 # The SampleGalaxy doesn't need anything special other than registration as a valid input type.
-# However, we do make a custom Loader so that we can add a logger line with some information about
-# the number of objects in the catalog that passed the initial cuts and other basic catalog info.
 class SampleLoader(InputLoader):
     def __init__(self, cls, input_field):
         self.cls_name = cls.__name__
         self.input_field = input_field
         super().__init__(cls)
 
-    def setupImage(self, cosmos_cat, config, base, logger):
-        if logger:
-            # Only report as a warning the first time.  After that, use info.
-            first = not base.get('_SampleLoader_reported_as_warning',False)
-            base['_SampleLoader_reported_as_warning'] = True
-            if first:
-                log_level = logging.WARNING
-            else:
-                log_level = logging.INFO
-            # It should be required that base['input']['cosmos_catalog'] exists, but
-            # just in case someone calls this in a weird way, use get() with defaults.
-            cc = base.get('input',{}).get(self.input_field,{})
-            if isinstance(cc,list): cc = cc[0]
-            out_str = ''
-            if 'sample' in cc:
-                out_str += '\n  sample = %s'%cc['sample']
-            if 'dir' in cc:
-                out_str += '\n  dir = %s'%cc['dir']
-            if 'file_name' in cc:
-                out_str += '\n  file_name = %s'%cc['file_name']
-            if out_str != '':
-                logger.log(log_level, 'Using user-specified %s: %s',self.cls_name, out_str)
-            logger.info("file %d: Sample catalog has %d total objects; %d passed initial cuts.",
-                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.nobjects)
-            if base.get('gal',{}).get('gal_type',None) == 'parametric':
-                logger.log(log_level,"Using parametric galaxies.")
-            else:
-                logger.log(log_level,"Using real galaxies.")
+    def setupImage(self, cosmos_cat, config, base):
+        # Only report as a warning the first time.  After that, use info.
+        first = not base.get('_SampleLoader_reported_as_warning',False)
+        base['_SampleLoader_reported_as_warning'] = True
+        if first:
+            log_level = logging.WARNING
+        else:
+            log_level = logging.INFO
+        # It should be required that base['input']['cosmos_catalog'] exists, but
+        # just in case someone calls this in a weird way, use get() with defaults.
+        cc = base.get('input',{}).get(self.input_field,{})
+        if isinstance(cc,list): cc = cc[0]
+        out_str = ''
+        if 'sample' in cc:
+            out_str += '\n  sample = %s'%cc['sample']
+        if 'dir' in cc:
+            out_str += '\n  dir = %s'%cc['dir']
+        if 'file_name' in cc:
+            out_str += '\n  file_name = %s'%cc['file_name']
+        if out_str != '':
+            logger.log(log_level, 'Using user-specified %s: %s',self.cls_name, out_str)
+        logger.info("file %d: Sample catalog has %d total objects; %d passed initial cuts.",
+                    base['file_num'], cosmos_cat.getNTot(), cosmos_cat.nobjects)
+        if base.get('gal',{}).get('gal_type',None) == 'parametric':
+            logger.log(log_level,"Using parametric galaxies.")
+        else:
+            logger.log(log_level,"Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', SampleLoader(COSMOSCatalog, 'cosmos_catalog'))
 RegisterInputType('galaxy_sample', SampleLoader(GalaxySample, 'galaxy_sample'))
 
 # The gsobject types coupled to these are COSMOSGalaxy and SampleGalaxy respectively.
 
-def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
+def _BuildCOSMOSGalaxy(config, base, ignore, gsparams):
     """Build a COSMOS galaxy using the cosmos_catalog input item.
     """
     sample_cat = GetInputObj('cosmos_catalog', config, base, 'COSMOSGalaxy')
-    return _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger,
+    return _FinishBuildSampleGalaxy(config, base, ignore, gsparams,
                                     sample_cat, 'COSMOSGalaxy')
 
-def _BuildSampleGalaxy(config, base, ignore, gsparams, logger):
+def _BuildSampleGalaxy(config, base, ignore, gsparams):
     """Build a sample galaxy using the galaxy_sample input item.
     """
     sample_cat = GetInputObj('galaxy_sample', config, base, 'SampleGalaxy')
-    return _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger,
+    return _FinishBuildSampleGalaxy(config, base, ignore, gsparams,
                                     sample_cat, 'SampleGalaxy')
 
-def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger, sample_cat, cls_name):
+def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, sample_cat, cls_name):
     ignore = ignore + ['num']
 
     # Special: if galaxies are selected based on index, and index is Sequence or Random, and max
@@ -107,7 +106,7 @@ def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger, sample_cat,
     kwargs, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    rng = GetRNG(config, base, logger, cls_name)
+    rng = GetRNG(config, base, cls_name)
 
     if 'index' not in kwargs:
         kwargs['index'], n_rng_calls = sample_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)

@@ -28,7 +28,6 @@ import astropy.units as u
 import galsim
 from galsim_test_helpers import *
 
-
 @timer
 def test_single():
     """Test the default image type = Single and stamp type = Basic
@@ -48,24 +47,6 @@ def test_single():
         }
     }
 
-    logger = logging.getLogger('test_single')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.INFO)
-
-    # Test a little bit of the LoggerWrapper functionality
-    logger_wrapper = galsim.config.LoggerWrapper(logger)
-    assert logger_wrapper.level == logger.getEffectiveLevel()
-    assert logger_wrapper.getEffectiveLevel() == logger.getEffectiveLevel()
-    assert logger_wrapper.isEnabledFor(logging.WARNING)
-    assert logger_wrapper.isEnabledFor(logging.CRITICAL)
-    assert not logger_wrapper.isEnabledFor(logging.DEBUG)
-
-    # smoke test for critical calls
-    # these are not normally used by galsim so a test here is needed
-    logger_wrapper.critical("blah blah")
-    none_logger_wrapper = galsim.config.LoggerWrapper(None)
-    none_logger_wrapper.critical("blah blah")
-
     im1_list = []
     nimages = 6
     first_seed = galsim.BaseDeviate(1234).raw()
@@ -77,24 +58,24 @@ def test_single():
         im1 = gal.drawImage(scale=1)
         im1_list.append(im1)
 
-        im2 = galsim.config.BuildImage(config, obj_num=k, logger=logger)
+        im2 = galsim.config.BuildImage(config, obj_num=k)
         np.testing.assert_array_equal(im2.array, im1.array)
 
         # Can also use BuildStamp.  In this case, it will used the cached value
         # of sigma, so we don't need to worry about resetting the rng in the config dict.
-        im3 = galsim.config.BuildStamp(config, obj_num=k, logger=logger)[0]
+        im3 = galsim.config.BuildStamp(config, obj_num=k)[0]
         np.testing.assert_array_equal(im3.array, im1.array)
 
         # Users can write their own custom stamp builders, in which case they may want
         # to call DrawBasic directly as part of the draw method in their builder.
         im4 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
-                                      config['stamp'], config, logger)
+                                      config['stamp'], config)
         np.testing.assert_array_equal(im4.array, im1.array)
 
         # The user is allowed to to add extra kwarg to the end, which would be passed on
         # to the drawImage command.
         im5 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
-                                      config['stamp'], config, logger,
+                                      config['stamp'], config,
                                       scale=1.0, dtype=np.float32)
         np.testing.assert_array_equal(im5.array, im1.array)
 
@@ -102,7 +83,7 @@ def test_single():
         config['stamp']['scale'] = 1.0
         config['stamp']['dtype'] = 'np.float32'
         im6 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
-                                      config['stamp'], config, logger)
+                                      config['stamp'], config)
         np.testing.assert_array_equal(im6.array, im1.array)
         config['stamp'].pop('scale')
         config['stamp'].pop('dtype')
@@ -217,42 +198,38 @@ def test_positions():
         }
     }
 
-    logger = logging.getLogger('test_positions')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    #logger.setLevel(logging.DEBUG)
-
     gal = galsim.Gaussian(sigma=1.7, flux=100)
     im1 = gal.drawImage(nx=21, ny=21, scale=1)
     im1.setCenter(39,43)
 
-    im2 = galsim.config.BuildImage(config, logger=logger)
+    im2 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im2.array, im1.array)
     assert im2.bounds == im1.bounds  # This is really the main test.
 
     # image_pos could also be in image
     config['image']['image_pos'] = config['stamp']['image_pos']
     del config['stamp']['image_pos']
-    im3 = galsim.config.BuildImage(config, logger=logger)
+    im3 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im3.array, im1.array)
     assert im3.bounds == im1.bounds
 
     # since our wcs is just a pixel scale, we can also specify world_pos instead.
     config['stamp']['world_pos'] = config['image']['image_pos']
     del config['image']['image_pos']
-    im4 = galsim.config.BuildImage(config, logger=logger)
+    im4 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4.array, im1.array)
     assert im4.bounds == im1.bounds
 
     # Can also set world_pos in image.
     config['image']['world_pos'] = config['stamp']['world_pos']
     del config['stamp']['world_pos']
-    im5 = galsim.config.BuildImage(config, logger=logger)
+    im5 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im5.array, im1.array)
     assert im5.bounds == im1.bounds
 
     # It is also valid to give both world_pos and image_pos in the image field for Single.
     config['image']['image_pos'] = config['image']['world_pos']
-    im6 = galsim.config.BuildImage(config, logger=logger)
+    im6 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im6.array, im1.array)
     assert im6.bounds == im1.bounds
 
@@ -260,26 +237,26 @@ def test_positions():
     config['stamp']['image_pos'] = config['image']['image_pos']
     del config['image']
     del config['stamp']['_done']
-    im7, _ = galsim.config.BuildStamp(config, logger=logger)
+    im7, _ = galsim.config.BuildStamp(config)
     np.testing.assert_array_equal(im7.array, im1.array)
     assert im7.bounds == im1.bounds
 
     del config['image']
     del config['stamp']['_done']
-    im8, _ = galsim.config.BuildStamps(1, config, logger=logger)
+    im8, _ = galsim.config.BuildStamps(1, config)
     im8 = im8[0]
     np.testing.assert_array_equal(im8.array, im1.array)
     assert im8.bounds == im1.bounds
 
     del config['image']
     del config['stamp']['_done']
-    im9 = galsim.config.BuildImage(config, logger=logger)
+    im9 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im9.array, im1.array)
     assert im9.bounds == im1.bounds
 
     del config['image']
     del config['stamp']['_done']
-    im10 = galsim.config.BuildImages(1, config, logger=logger)
+    im10 = galsim.config.BuildImages(1, config)
     im10 = im10[0]
     np.testing.assert_array_equal(im10.array, im1.array)
     assert im10.bounds == im1.bounds
@@ -313,7 +290,7 @@ def test_positions():
 
 
 @timer
-def test_phot():
+def test_phot(caplog):
     """Test draw_method=phot, which has extra allowed kwargs
     """
     config = {
@@ -362,9 +339,8 @@ def test_phot():
     np.testing.assert_array_equal(im3c.array, im3a.array)
 
     # Although with a logger, it should give a warning.
-    with CaptureLog() as cl:
-        im3d = galsim.config.BuildImage(config, logger=cl.logger)
-    assert "ignoring 'max_extra_noise'" in cl.output
+    im3d = galsim.config.BuildImage(config)
+    assert "ignoring 'max_extra_noise'" in caplog.text
 
     # Without n_photons, it should work.  But then, we also need a noise field
     # So without the noise field, it will raise an exception.
@@ -398,9 +374,11 @@ def test_phot():
 
 
 @timer
-def test_reject():
+def test_reject(caplog):
     """Test various ways that objects can be rejected.
     """
+    caplog.set_level(logging.DEBUG)
+
     # Make a custom function for rejecting COSMOSCatalog objects that use Sersics with n > 2.
     def HighN(config, base, value_type):
         # GetCurrentValue returns the constructed 'gal' object for this pass
@@ -490,15 +468,8 @@ def test_reject():
     galsim.config.ProcessInput(config)
     orig_config = config.copy()
 
-    if False:
-        logger = logging.getLogger('test_reject')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        #logger.setLevel(logging.DEBUG)
-    else:
-        logger = galsim.config.LoggerWrapper(None)
-
     nimages = 11
-    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
     # For this particular config, only 3 of them are real images.  The others were skipped.
     # The skipped ones are present in the list, but their flux is 0
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
@@ -506,42 +477,38 @@ def test_reject():
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
     # Check for a few of the logging outputs that explain why things were rejected.
-    with CaptureLog() as cl:
-        im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
+    im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
     for im1,im2 in zip(im_list, im_list2):
         assert im1 == im2
-    #print(cl.output)
     # Note: I'm testing for specific error messages here, which could change if we change
     # the order of operations somewhere.  The point here is that we hit at least one of each
     # kind of skip/rejection/exception that we intended in the config dict above.
-    assert "obj 8: Skipping because field skip=True" in cl.output
-    assert "obj 8: Caught SkipThisObject: e = None" in cl.output
-    assert "Skipping object 8" in cl.output
-    assert "Object 6: Caught exception index=97 has gone past the number of entries" in cl.output
-    assert "Object 5: Caught exception inner_radius must be less than radius (1.193147)" in cl.output
-    assert "Object 4: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
-    assert "obj 0: reject evaluated to True" in cl.output
-    assert "Object 0: Rejecting this object and rebuilding" in cl.output
+    assert "obj 8: Skipping because field skip=True" in caplog.text
+    assert "obj 8: Caught SkipThisObject: e = None" in caplog.text
+    assert "Skipping object 8" in caplog.text
+    assert "Object 6: Caught exception index=97 has gone past the number of entries" in caplog.text
+    assert "Object 5: Caught exception inner_radius must be less than radius (1.193147)" in caplog.text
+    assert "Object 4: Caught exception Unable to evaluate string 'math.sqrt(x)'" in caplog.text
+    assert "obj 0: reject evaluated to True" in caplog.text
+    assert "Object 0: Rejecting this object and rebuilding" in caplog.text
     # This next two can end up with slightly different numerical values depending on numpy version
     # So use re.search rather than require an exact match.
-    assert re.search(r"Object 0: Measured flux = 3086.30[0-9]* < 0.95 \* 3265.226572.", cl.output)
-    assert re.search(r"Object 4: Measured snr = 79.888[0-9]* > 50.0.", cl.output)
+    assert re.search(r"Object 0: Measured flux = 3086.30[0-9]* < 0.95 \* 3265.226572.", caplog.text)
+    assert re.search(r"Object 4: Measured snr = 79.888[0-9]* > 50.0.", caplog.text)
 
     # 10 is quick skipped, so we don't even get a debug line for it.
-    assert 'Stamp 10' not in cl.output
-    assert 'obj 10' not in cl.output
+    assert 'Stamp 10' not in caplog.text
+    assert 'obj 10' not in caplog.text
     # Others all get at least that:
     for i in range(10):
-        assert 'Stamp %d'%i in cl.output
-        assert 'obj %d'%i in cl.output
+        assert 'Stamp %d'%i in caplog.text
+        assert 'obj %d'%i in caplog.text
 
     # For test coverage to get all branches, do min_snr and max_snr separately.
     del config['stamp']['max_snr']
     config['stamp']['min_snr'] = 26
-    with CaptureLog() as cl:
-        im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
-    #print(cl.output)
-    assert re.search(r"Object 6: Measured snr = 25.2741[0-9]* < 26.0.", cl.output)
+    im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
+    assert re.search(r"Object 6: Measured snr = 25.2741[0-9]* < 26.0.", caplog.text)
 
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
@@ -549,13 +516,11 @@ def test_reject():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamps(nimages, config, do_noise=False)
     try:
-        with CaptureLog() as cl:
-            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
     except (galsim.GalSimConfigError):
         pass
-    #print(cl.output)
-    assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
-    assert "Exception caught when building stamp" in cl.output
+    assert "Object 0: Too many exceptions/rejections for this object. Aborting." in caplog.text
+    assert "Exception caught when building stamp" in caplog.text
 
     # Even lower, and we get a different limiting error.
     config['stamp']['retry_failures'] = 4
@@ -563,43 +528,35 @@ def test_reject():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamps(nimages, config, do_noise=False)
     try:
-        with CaptureLog() as cl:
-            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
     except (galsim.GalSimConfigError):
         pass
-    #print(cl.output)
-    assert "Rejected an object 5 times. If this is expected," in cl.output
-    assert "Exception caught when building stamp" in cl.output
+    assert "Rejected an object 5 times. If this is expected," in caplog.text
+    assert "Exception caught when building stamp" in caplog.text
 
     # We can also do this with BuildImages which runs through a different code path.
     galsim.config.RemoveCurrent(config)
     try:
-        with CaptureLog() as cl:
-            galsim.config.BuildImages(nimages, config, logger=cl.logger)
+        galsim.config.BuildImages(nimages, config)
     except (ValueError,IndexError,galsim.GalSimError):
         pass
-    #print(cl.output)
-    assert "Exception caught when building image" in cl.output
+    assert "Exception caught when building image" in caplog.text
 
     # When in nproc > 1 mode, the error message is slightly different.
     config['image']['nproc'] = 2
     try:
-        with CaptureLog() as cl:
-            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
     except (ValueError,IndexError,galsim.GalSimError):
         pass
-    #print(cl.output)
     if galsim.config.UpdateNProc(2, nimages, config) > 1:
-        assert re.search("Process-.: Exception caught when building stamp",cl.output)
+        assert re.search("Process-.: Exception caught when building stamp",caplog.text)
 
     try:
-        with CaptureLog() as cl:
-            galsim.config.BuildImages(nimages, config, logger=cl.logger)
+        galsim.config.BuildImages(nimages, config)
     except (ValueError,IndexError,galsim.GalSimError):
         pass
-    #print(cl.output)
     if galsim.config.UpdateNProc(2, nimages, config) > 1:
-        assert re.search("Process-.: Exception caught when building image",cl.output)
+        assert re.search("Process-.: Exception caught when building image",caplog.text)
 
     # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
     # report that no files were written.
@@ -607,18 +564,14 @@ def test_reject():
     config['root'] = 'test_reject'  # This lets the code generate a file name automatically.
     del config['stamp']['size']     # Otherwise skipped images will still build an empty image.
     config = galsim.config.CleanConfig(config)
-    with CaptureLog() as cl:
-        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
-    #print(cl.output)
-    assert "No files were written.  All were either skipped or had errors." in cl.output
+    galsim.config.BuildFiles(nimages, config)
+    assert "No files were written.  All were either skipped or had errors." in caplog.text
 
     # There is a different path if all files raise an exception, rather than are rejected.
     config['stamp']['type'] = 'hello'
     config = galsim.config.CleanConfig(config)
-    with CaptureLog() as cl:
-        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
-    #print(cl.output)
-    assert "No files were written.  All were either skipped or had errors." in cl.output
+    galsim.config.BuildFiles(nimages, config)
+    assert "No files were written.  All were either skipped or had errors." in caplog.text
 
     # If we skip all objects, and don't have a definite size for them, then we get to a message
     # that no stamps were built.
@@ -627,39 +580,28 @@ def test_reject():
     galsim.config.RemoveCurrent(config)
     im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
     assert all (im is None for im in im_list3)
-    with CaptureLog() as cl:
-        im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
-    #print(cl.output)
-    assert "No stamps were built.  All objects were skipped." in cl.output
+    im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
+    assert "No stamps were built.  All objects were skipped." in caplog.text
 
     # Different message if nstamps=0, rather than all failures.
-    with CaptureLog() as cl:
-        galsim.config.BuildStamps(0, config, do_noise=False, logger=cl.logger)[0]
-    assert "No stamps were built, since nstamps == 0." in cl.output
+    galsim.config.BuildStamps(0, config, do_noise=False)[0]
+    assert "No stamps were built, since nstamps == 0." in caplog.text
 
     # Likewise with BuildImages, but with a slightly different message.
-    with CaptureLog() as cl:
-        im_list4 = galsim.config.BuildImages(nimages, config, logger=cl.logger)
-    assert "No images were built.  All were either skipped or had errors." in cl.output
+    im_list4 = galsim.config.BuildImages(nimages, config)
+    assert "No images were built.  All were either skipped or had errors." in caplog.text
 
     # Different message if nimages=0, rather than all failures.
-    with CaptureLog() as cl:
-        galsim.config.BuildImages(0, config, logger=cl.logger)
-    assert "No images were built, since nimages == 0." in cl.output
+    galsim.config.BuildImages(0, config)
+    assert "No images were built, since nimages == 0." in caplog.text
 
     # And BuildFiles
-    with CaptureLog() as cl:
-        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
-    assert "No files were written.  All were either skipped or had errors." in cl.output
+    galsim.config.BuildFiles(nimages, config)
+    assert "No files were written.  All were either skipped or had errors." in caplog.text
 
     # Different message if nfiles=0, rather than all failures.
-    with CaptureLog() as cl:
-        galsim.config.BuildFiles(0, config, logger=cl.logger)
-    assert "No files were made, since nfiles == 0." in cl.output
-
-    # Finally, with a fake logger, this covers the LoggerWrapper functionality.
-    logger = galsim.config.LoggerWrapper(None)
-    galsim.config.BuildFiles(nimages, config, logger=logger)
+    galsim.config.BuildFiles(0, config)
+    assert "No files were made, since nfiles == 0." in caplog.text
 
     # Now go back to the original config, and switch to skip_failures rather than retry.
     config = orig_config
@@ -667,10 +609,10 @@ def test_reject():
 
     # With this and retry_failures, we get an error.
     with assert_raises(galsim.GalSimConfigValueError):
-        galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
 
     del config['stamp']['retry_failures']
-    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
     # Everything gets skipped here.
     np.testing.assert_almost_equal(fluxes, 0, decimal=0)
@@ -681,14 +623,14 @@ def test_reject():
     del config['stamp']['max_snr']
     del config['stamp']['skip']
     del config['stamp']['quick_skip']
-    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
     expected_fluxes = [0, 76673, 0, 0, 24074, 0, 0, 9124, 0, 0, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
 
 @timer
-def test_snr():
+def test_snr(caplog):
     """Test signal-to-noise option for setting the flux
     """
     config = {
@@ -742,10 +684,9 @@ def test_snr():
     im2b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im2b.array, im2a.array)
 
-    with CaptureLog() as cl:
-        im2c = galsim.config.BuildImage(config, logger=cl.logger)
+    im2c = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im2c.array, im2a.array)
-    assert 'signal_to_noise calculation is not accurate for draw_method = phot' in cl.output
+    assert 'signal_to_noise calculation is not accurate for draw_method = phot' in caplog.text
 
 
 @timer
@@ -780,8 +721,8 @@ def test_ring():
     ring_builder = galsim.config.stamp_ring.RingBuilder()
     for k in range(6):
         galsim.config.SetupConfigObjNum(config, k)
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore)
+        gal1a = ring_builder.buildProfile(config['stamp'], config, None, {})
         gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
         print('gal1a = ',gal1a)
         print('gal1b = ',gal1b)
@@ -848,8 +789,8 @@ def test_ring():
     galsim.config.SetupConfigImageNum(config, 0, 0)
     for k in range(25):
         galsim.config.SetupConfigObjNum(config, k)
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal2a = ring_builder.buildProfile(config['stamp'], config, psf, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore)
+        gal2a = ring_builder.buildProfile(config['stamp'], config, psf, {})
         gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
         gal2b = galsim.Convolve(gal2b,psf)
         gsobject_compare(gal2a, gal2b)
@@ -882,8 +823,8 @@ def test_ring():
     for k in range(25):
         galsim.config.SetupConfigObjNum(config, k)
         index = k // 4  # make sure we use integer division
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal3a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore)
+        gal3a = ring_builder.buildProfile(config['stamp'], config, None, {})
         gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
         gsobject_compare(gal3a, gal3b)
 
@@ -912,9 +853,8 @@ def test_ring():
 
     galsim.config.SetupConfigImageNum(config, 0, 0)
     galsim.config.SetupConfigObjNum(config, 0)
-    ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-    gal4a = ring_builder.buildProfile(config['stamp'], config, None, config['stamp']['gsparams'],
-                                      None)
+    ring_builder.setup(config['stamp'], config, None, None, ignore)
+    gal4a = ring_builder.buildProfile(config['stamp'], config, None, config['stamp']['gsparams'])
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
     bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)
@@ -1144,9 +1084,9 @@ def test_scattered_noskip():
     class NoSkipStampBuilder(galsim.config.StampBuilder):
         def quickSkip(self, config, base):
             return False
-        def getSkip(self, config, base, logger):
+        def getSkip(self, config, base):
             return False
-        def updateSkip(self, prof, image, method, offset, config, base, logger):
+        def updateSkip(self, prof, image, method, offset, config, base):
             return False
     galsim.config.RegisterStampType('NoSkip', NoSkipStampBuilder())
 
@@ -1204,10 +1144,12 @@ def test_scattered_noskip():
 
 
 @timer
-def test_scattered_whiten():
+def test_scattered_whiten(caplog):
     """Test whitening with the image type Scattered.  In particular getting the noise flattened
     across overlapping stamps and stamps that are partially off the image.
     """
+    caplog.set_level(logging.INFO)
+
     real_gal_dir = os.path.join('..','examples','data')
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
     scale = 0.05
@@ -1304,14 +1246,12 @@ def test_scattered_whiten():
     np.testing.assert_almost_equal(im2.array, im1.array)
 
     # Should give a warning for the objects that fall off the edge
-    # Note: CaptureLog doesn't work correctly in multiprocessing for some reason.
-    # I haven't figured out what about the implementation fails, but it prints these
-    # just fine when using a regular logger with nproc=2.  Oh well.
+    # Note: caplog doesn't work correctly in multiprocessing;
+    # cf. https://github.com/pytest-dev/pytest/issues/3037.
+    # It prints these just fine when using a regular logger with nproc=2.  Oh well.
     config['image']['nproc'] = 1
-    with CaptureLog() as cl:
-        im3 = galsim.config.BuildImage(config, logger=cl.logger)
-    #print(cl.output)
-    assert "skip drawing object because its image will be entirely off the main image." in cl.output
+    im3 = galsim.config.BuildImage(config)
+    assert "skip drawing object because its image will be entirely off the main image." in caplog.text
     im2 = galsim.config.BuildImage(config)
 
 
@@ -1659,15 +1599,13 @@ def test_njobs():
     }
     config1 = galsim.config.CopyConfig(config)
 
-    logger = logging.getLogger('test_njobs')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config)
 
     # Repeat with 2 jobs
     config = galsim.config.CopyConfig(config1)
     config['output']['file_name']['root'] = 'test_two_jobs_'
-    galsim.config.Process(config, njobs=2, job=1, logger=logger)
-    galsim.config.Process(config, njobs=2, job=2, logger=logger)
+    galsim.config.Process(config, njobs=2, job=1)
+    galsim.config.Process(config, njobs=2, job=2)
 
     # Check that the images are equal:
     one00 = galsim.fits.read('test_one_job_00.fits', dir='output')
@@ -1685,7 +1623,7 @@ def test_njobs():
     config = galsim.config.CopyConfig(config1)
     config['rng'] = object()
     with assert_raises(galsim.GalSimConfigError):
-        galsim.config.ProcessInput(config, logger=logger, safe_only=False)
+        galsim.config.ProcessInput(config, safe_only=False)
 
 
 @timer
@@ -1972,7 +1910,7 @@ def test_wcs():
 
     # Base class usage is invalid
     builder = galsim.config.wcs.WCSBuilder()
-    assert_raises(NotImplementedError, builder.buildWCS, config, config, logger=None)
+    assert_raises(NotImplementedError, builder.buildWCS, config, config)
 
 
 @timer
@@ -2062,7 +2000,7 @@ def test_bandpass():
 
     # Base class usage is invalid
     builder = galsim.config.bandpass.BandpassBuilder()
-    assert_raises(NotImplementedError, builder.buildBandpass, config, config, logger=None)
+    assert_raises(NotImplementedError, builder.buildBandpass, config, config)
 
 
 @timer
@@ -2078,20 +2016,13 @@ def test_index_key(run_slow):
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
-    if run_slow:
-        logger = logging.getLogger('test_index_key')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger = None
 
     # Normal sequential
     config1 = galsim.config.CopyConfig(config)
     # Note: Using BuildFiles(config1) would normally work, but it has an extra copy internally,
     # which messes up some of the current checks later.
     for n in range(nfiles):
-        galsim.config.BuildFile(config1, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
-                                logger=logger)
+        galsim.config.BuildFile(config1, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
     if run_slow:
@@ -2103,16 +2034,14 @@ def test_index_key(run_slow):
         config2 = galsim.config.CopyConfig(config)
         config2['output']['nproc'] = nfiles
         for n in range(nfiles):
-            galsim.config.BuildFile(config2, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
-                                    logger=logger)
+            galsim.config.BuildFile(config2, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
         images2 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
         # Multiprocessing images
         config3 = galsim.config.CopyConfig(config)
         config3['image']['nproc'] = nfiles
         for n in range(nfiles):
-            galsim.config.BuildFile(config3, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
-                                    logger=logger)
+            galsim.config.BuildFile(config3, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
         images3 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
         # New config for each file
@@ -2121,8 +2050,7 @@ def test_index_key(run_slow):
             galsim.config.SetupConfigFileNum(config4[n], n, n*nimages, n*n_per_file)
             galsim.config.SetupConfigRNG(config4[n])
         images4 = [ galsim.config.BuildImages(nimages, config4[n],
-                                              image_num=n*nimages, obj_num=n*n_per_file,
-                                              logger=logger)
+                                              image_num=n*nimages, obj_num=n*n_per_file)
                     for n in range(nfiles) ]
 
     # New config for each image
@@ -2133,8 +2061,7 @@ def test_index_key(run_slow):
 
     images5 = [ [ galsim.config.BuildImage(galsim.config.CopyConfig(config5[n]),
                                            image_num=n*nimages+i,
-                                           obj_num=n*n_per_file + i*n_per_image,
-                                           logger=logger)
+                                           obj_num=n*n_per_file + i*n_per_image)
                   for i in range(nimages) ]
                 for n in range(nfiles) ]
 
@@ -2273,13 +2200,9 @@ def test_multirng(run_slow):
     if run_slow:
         nimages = 6
         ngals = 20
-        logger = logging.getLogger('test_multirng')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        #logger.setLevel(logging.DEBUG)
     else:
         nimages = 3
         ngals = 3
-        logger = None
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
@@ -2288,7 +2211,7 @@ def test_multirng(run_slow):
     config2 = galsim.config.CopyConfig(config)
     config3 = galsim.config.CopyConfig(config)
 
-    images1 = galsim.config.BuildImages(nimages, config1, logger=logger)
+    images1 = galsim.config.BuildImages(nimages, config1)
     config2['image']['nproc'] = 6
     images2 = galsim.config.BuildImages(nimages, config2)
     images3 = [ galsim.config.BuildImage(galsim.config.CopyConfig(config),
@@ -2403,12 +2326,9 @@ def test_sequential_seeds(run_slow):
     if run_slow:
         nimages = 6
         ngals = 20
-        logger = logging.getLogger('test_sequential_seeds')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
     else:
         nimages = 3
         ngals = 3
-        logger = None
 
     config = galsim.config.ReadConfig('config_input/sequential_seeds.yaml')[0]
     config['image']['nobjects'] = ngals
@@ -2419,7 +2339,7 @@ def test_sequential_seeds(run_slow):
         # the same as for the previous image.
         config1 = galsim.config.CopyConfig(config)
         config1['eval_variables']['iid'] = n
-        stamps, current_vars = galsim.config.BuildStamps(ngals, config1, logger=logger)
+        stamps, current_vars = galsim.config.BuildStamps(ngals, config1)
         assert len(stamps) == ngals
         all_stamps.append(stamps)
 
@@ -2431,7 +2351,7 @@ def test_sequential_seeds(run_slow):
 
 
 @timer
-def test_template():
+def test_template(caplog):
     """Test various uses of the template keyword
     """
     # Use the multirng.yaml config file from the above test as a convenient template source
@@ -2551,12 +2471,10 @@ def test_template():
     config7 = config1.copy()
     config7['image.random_seed.0'] = ""
     config7['image.random_seed.0.str'] = '123 + (image_num//3) * @image.nobjects'
-    with CaptureLog() as cl:
-        galsim.config.ProcessAllTemplates(config7, cl.logger)
+    galsim.config.ProcessAllTemplates(config7)
     assert config7['image']['random_seed'][0]['type'] == 'Eval'
     assert config7['image']['random_seed'][0]['str'] == '123 + (image_num//3) * @image.nobjects'
-    print(cl.output)
-    assert "Removing item 0 from image.random_seed." in cl.output
+    assert "Removing item 0 from image.random_seed." in caplog.text
 
     # Read a template config from a file
     config8 = galsim.config.ReadConfig('config_input/template.yaml')[0]
@@ -2598,9 +2516,11 @@ def test_template():
 
 
 @timer
-def test_variable_cat_size():
+def test_variable_cat_size(caplog):
     """Test that some automatic nitems calculations work with variable input catalog sizes
     """
+    caplog.set_level(logging.DEBUG)
+
     config = {
         'gal': {
             'type': 'Gaussian',
@@ -2641,20 +2561,16 @@ def test_variable_cat_size():
     config1 = galsim.config.CopyConfig(config)
 
     # This input isn't safe, so it can't load when doing the safe_only load.
-    with CaptureLog() as cl:
-        galsim.config.ProcessInput(config, safe_only=True, logger=cl.logger)
-    assert "Skip catalog 0, since not safe" in cl.output
+    galsim.config.ProcessInput(config, safe_only=True)
+    assert "Skip catalog 0, since not safe" in caplog.text
 
-    logger = logging.getLogger('test_variable_input')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    #logger.setLevel(logging.DEBUG)
     cfg_images = []
     galsim.config.SetupConfigFileNum(config, 0, 0, 0)
-    galsim.config.ProcessInput(config, logger=logger)
-    cfg_images.append(galsim.config.BuildImage(config, 0, 0, logger=logger))
+    galsim.config.ProcessInput(config)
+    cfg_images.append(galsim.config.BuildImage(config, 0, 0))
     galsim.config.SetupConfigFileNum(config, 1, 1, 3)
-    galsim.config.ProcessInput(config, logger=logger)
-    cfg_images.append(galsim.config.BuildImage(config, 1, 3, logger=logger))
+    galsim.config.ProcessInput(config)
+    cfg_images.append(galsim.config.BuildImage(config, 1, 3))
 
     # Build by hand to compare
     ref_images = []
@@ -2674,7 +2590,7 @@ def test_variable_cat_size():
     assert cfg_images[1] == ref_images[1]
 
     # Now run with full Process function
-    galsim.config.Process(config1, logger=logger)
+    galsim.config.Process(config1)
     cfg_images2 = galsim.fits.readMulti('output/test_variable_input.fits')
     assert cfg_images2[0] == ref_images[0]
     assert cfg_images2[1] == ref_images[1]
@@ -2686,15 +2602,15 @@ class BlendSetBuilder(galsim.config.StampBuilder):
     GSObject for its "prof".
     """
 
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         """Do the appropriate setup for a Blend stamp.
         """
         self.ngal = galsim.config.ParseValue(config, 'n_neighbors', base, int)[0] + 1
         self.sep = galsim.config.ParseValue(config, 'sep', base, float)[0]
         ignore = ignore + ['n_neighbors', 'sep']
-        return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(self.__class__, self).setup(config, base, xsize, ysize, ignore)
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
+    def buildProfile(self, config, base, psf, gsparams):
         """
         Build a list of galaxy profiles, each convolved with the psf, to use for the blend image.
         """
@@ -2703,19 +2619,18 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         else:
             self.neighbor_gals = []
             for i in range(self.ngal-1):
-                gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+                gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams)[0]
                 self.neighbor_gals.append(gal)
                 galsim.config.RemoveCurrent(base['gal'], keep_safe=True)
 
-            rng = galsim.config.GetRNG(config, base, logger, 'BlendSet')
+            rng = galsim.config.GetRNG(config, base, 'BlendSet')
             ud = galsim.UniformDeviate(rng)
             self.neighbor_pos = [galsim.PositionI(int(ud()*2*self.sep-self.sep),
                                                   int(ud()*2*self.sep-self.sep))
                                  for i in range(self.ngal-1)]
             #print('neighbor positions = ',self.neighbor_pos)
 
-            self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams,
-                                                        logger=logger)[0]
+            self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams)[0]
 
             self.profiles = [ self.main_gal ]
             self.profiles += [ g.shift(p) for g, p in zip(self.neighbor_gals, self.neighbor_pos) ]
@@ -2723,7 +2638,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
                 self.profiles = [ galsim.Convolve(gal, psf) for gal in self.profiles ]
             return self.profiles
 
-    def draw(self, profiles, image, method, offset, config, base, logger):
+    def draw(self, profiles, image, method, offset, config, base):
         nx = base['stamp_xsize']
         ny = base['stamp_ysize']
         wcs = base['wcs']
@@ -2737,8 +2652,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_images = []
             for prof in profiles:
                 im = galsim.ImageF(bounds=bounds, wcs=wcs)
-                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base,
-                                        logger)
+                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base)
                 self.full_images.append(im)
 
         k = base['obj_num'] % self.ngal
@@ -3262,7 +3176,7 @@ def test_photon_ops():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config, 'photon_op', config)
     with assert_raises(NotImplementedError):
-        galsim.config.photon_ops.PhotonOpBuilder().buildPhotonOp(config,config,None)
+        galsim.config.photon_ops.PhotonOpBuilder().buildPhotonOp(config,config)
     del config['photon_ops_orig'][1]['sed']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config['photon_ops_orig'], 1, config)
@@ -3439,7 +3353,7 @@ def test_sensor():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'gal', config)
     with assert_raises(NotImplementedError):
-        galsim.config.sensor.SensorBuilder().buildSensor(config,config,None)
+        galsim.config.sensor.SensorBuilder().buildSensor(config,config)
     config['sensor8']['index'] = 1
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'sensor8', config)

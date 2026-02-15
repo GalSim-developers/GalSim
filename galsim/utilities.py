@@ -52,6 +52,8 @@ from .table import find_out_of_bounds_position
 from .position import parse_pos_args
 from ._utilities import *
 
+logger = logging.getLogger(__name__)
+
 
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
@@ -1489,12 +1491,11 @@ def nCr(n, r):
     else:
         return 0
 
-def set_omp_threads(num_threads, logger=None):
+def set_omp_threads(num_threads):
     """Set the number of OpenMP threads to use in the C++ layer.
 
     :param num_threads: The target number of threads to use (If None or <=0, then try to use the
                         numer of cpus.)
-    :param logger:      If desired, a logger object for logging any warnings here. (default: None)
 
     :returns:           The  number of threads OpenMP reports that it will use.  Typically this
                         matches the input, but OpenMP reserves the right not to comply with
@@ -1507,12 +1508,10 @@ def set_omp_threads(num_threads, logger=None):
     # If num_threads is auto, get it from cpu_count
     if num_threads is None or num_threads <= 0:
         num_threads = multiprocessing.cpu_count()
-        if logger:
-            logger.debug('multiprocessing.cpu_count() = %d',num_threads)
+        logger.debug('multiprocessing.cpu_count() = %d',num_threads)
 
     # Tell OpenMP to use this many threads
-    if logger:
-        logger.debug('Telling OpenMP to use %d threads',num_threads)
+    logger.debug('Telling OpenMP to use %d threads',num_threads)
 
     # Cf. comment in get_omp_threads.  Do it here too.
     var = "OMP_PROC_BIND"
@@ -1521,13 +1520,12 @@ def set_omp_threads(num_threads, logger=None):
     num_threads = _galsim.SetOMPThreads(num_threads)
 
     # Report back appropriately.
-    if logger:
-        logger.debug('OpenMP reports that it will use %d threads',num_threads)
-        if num_threads > 1:
-            logger.info('Using %d threads.',num_threads)
-        elif input_num_threads is not None and input_num_threads != 1:
-            # Only warn if the user specifically asked for num_threads != 1.
-            logger.warning("Unable to use multiple threads, since OpenMP is not enabled.")
+    logger.debug('OpenMP reports that it will use %d threads',num_threads)
+    if num_threads > 1:
+        logger.info('Using %d threads.',num_threads)
+    elif input_num_threads is not None and input_num_threads != 1:
+        # Only warn if the user specifically asked for num_threads != 1.
+        logger.warning("Unable to use multiple threads, since OpenMP is not enabled.")
 
     return num_threads
 
@@ -1759,39 +1757,6 @@ def timer(f):
         print('time for %s = %.2f' % (fname, t1-t0))
         return result
     return f2
-
-
-class CaptureLog:
-    """A context manager that saves logging output into a string that is accessible for
-    checking in unit tests.
-
-    After exiting the context, the attribute ``output`` will have the logging output.
-
-    Sample usage:
-
-            >>> with CaptureLog() as cl:
-            ...     cl.logger.info('Do some stuff')
-            >>> assert cl.output == 'Do some stuff'
-
-    """
-    def __init__(self, level=3):
-        logging_levels = { 0: logging.CRITICAL,
-                           1: logging.WARNING,
-                           2: logging.INFO,
-                           3: logging.DEBUG }
-        self.logger = logging.getLogger('CaptureLog')
-        self.logger.setLevel(logging_levels[level])
-        self.stream = StringIO()
-        self.handler = logging.StreamHandler(self.stream)
-        self.logger.addHandler(self.handler)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.handler.flush()
-        self.output = self.stream.getvalue().strip()
-        self.handler.close()
 
 
 # Context to make it easier to profile bits of the code

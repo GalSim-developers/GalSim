@@ -16,7 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
+import logging
+
+from .util import GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from .sed import BuildSED
@@ -25,6 +27,8 @@ from ..utilities import basestring
 from ..photon_array import PhotonOp
 from ..photon_array import WavelengthSampler, FRatioAngles, PhotonDCR, Refraction, FocusDepth
 from ..photon_array import TimeSampler, PupilImageSampler, PupilAnnulusSampler
+
+logger = logging.getLogger(__name__)
 
 # This file handles the construction of photon_ops in config['stamp']['photon_ops'].
 
@@ -35,7 +39,7 @@ from ..photon_array import TimeSampler, PupilImageSampler, PupilAnnulusSampler
 valid_photon_op_types = {}
 
 
-def BuildPhotonOps(config, key, base, logger=None):
+def BuildPhotonOps(config, key, base):
     """Read the parameters from config[key] (which should be a list) and return a constructed
     photon_ops as a list.
 
@@ -44,22 +48,20 @@ def BuildPhotonOps(config, key, base, logger=None):
                     (usually base['stamp'])
         key:        The key in the dict for the photon_ops list.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         the photon_ops list
     """
-    logger = LoggerWrapper(logger)
     if not isinstance(config[key], list):
         raise GalSimConfigError("photon_ops must be a list")
     photon_ops = config[key]  # The list in the config dict
     ops = [] # List of the actual operators
     for i in range(len(photon_ops)):
-        op = BuildPhotonOp(photon_ops, i, base, logger)
+        op = BuildPhotonOp(photon_ops, i, base)
         ops.append(op)
     return ops
 
-def BuildPhotonOp(config, key, base, logger=None):
+def BuildPhotonOp(config, key, base):
     """Read the parameters from config[key] and return a single constructed photon_op object.
 
     Parameters:
@@ -69,12 +71,10 @@ def BuildPhotonOp(config, key, base, logger=None):
                     things, this is a key into a dict, but here it's normally an integer index
                     into the photon_ops list.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         a object that would be valid in a photon_ops list
     """
-    logger = LoggerWrapper(logger)
     logger.debug('obj %d: Start BuildPhotonOp key = %s',base.get('obj_num',0),key)
 
     param = config[key]
@@ -110,7 +110,7 @@ def BuildPhotonOp(config, key, base, logger=None):
     # Need to use a builder.
     logger.debug('obj %d: Building photon_op type %s', base.get('obj_num',0), op_type)
     builder = valid_photon_op_types[op_type]
-    op = builder.buildPhotonOp(param, base, logger)
+    op = builder.buildPhotonOp(param, base)
     logger.debug('obj %d: photon_op = %s', base.get('obj_num',0), str(op))
 
     param['current'] = op, False, None, index, index_key
@@ -123,7 +123,7 @@ class PhotonOpBuilder:
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildPhotonOp(self, config, base, logger):
+    def buildPhotonOp(self, config, base):
         """Build the PhotonOp based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
@@ -131,7 +131,6 @@ class PhotonOpBuilder:
         Parameters:
             config:     The configuration dict for the PhotonOp
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed PhotonOp object.
@@ -149,7 +148,7 @@ class SimplePhotonOpBuilder(PhotonOpBuilder):
     def __init__(self, init_func):
         self.init_func = init_func
 
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         """Get the kwargs to pass to the build function based on the following attributes of
         init_func:
 
@@ -168,7 +167,6 @@ class SimplePhotonOpBuilder(PhotonOpBuilder):
         Parameters:
             config:     The configuration dict for the photon_op type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             kwargs
@@ -176,33 +174,32 @@ class SimplePhotonOpBuilder(PhotonOpBuilder):
         req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
         if takes_rng:  # pragma: no cover  None of ours have this anymore.  But it's still allowed.
-            kwargs['rng'] = GetRNG(config, base, logger, self.init_func.__name__)
+            kwargs['rng'] = GetRNG(config, base, self.init_func.__name__)
         return kwargs
 
-    def buildPhotonOp(self, config, base, logger):
+    def buildPhotonOp(self, config, base):
         """Build the PhotonOp based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the photon_op type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed PhotonOp object.
         """
-        kwargs = self.getKwargs(config,base,logger)
+        kwargs = self.getKwargs(config,base)
         return self.init_func(**kwargs)
 
 class WavelengthSamplerBuilder(PhotonOpBuilder):
     """Build a WavelengthSampler
     """
     # This one needs special handling for sed and bandpass
-    def buildPhotonOp(self, config, base, logger):
+    def buildPhotonOp(self, config, base):
         req, opt, single, takes_rng = get_cls_params(WavelengthSampler)
         kwargs, safe = GetAllParams(config, base, req, opt, single, ignore=['sed'])
         if 'sed' not in config:
             raise GalSimConfigError("sed is required for WavelengthSampler")
-        sed = BuildSED(config, 'sed', base, logger)[0]
+        sed = BuildSED(config, 'sed', base)[0]
         kwargs['sed'] = sed
         if 'bandpass' not in base:
             raise GalSimConfigError("bandpass is required for WavelengthSampler")
@@ -213,7 +210,7 @@ class PhotonDCRBuilder(PhotonOpBuilder):
     """Build a PhotonDCR
     """
     # This one needs special handling for obj_coord
-    def buildPhotonOp(self, config, base, logger):
+    def buildPhotonOp(self, config, base):
         req, opt, single, takes_rng = get_cls_params(PhotonDCR)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
         if 'sky_pos' in base:
@@ -223,7 +220,7 @@ class PhotonDCRBuilder(PhotonOpBuilder):
 class ListPhotonOpBuilder(PhotonOpBuilder):
     """Select a photon_op from a list
     """
-    def buildPhotonOp(self, config, base, logger):
+    def buildPhotonOp(self, config, base):
         req = { 'items' : list }
         opt = { 'index' : int }
         # Only Check, not Get.  We need to handle items a bit differently, since it's a list.

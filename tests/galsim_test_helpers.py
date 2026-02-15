@@ -20,7 +20,7 @@ import pytest
 import numpy as np
 import galsim
 
-from galsim.utilities import check_pickle, check_all_diff, timer, CaptureLog, Profile
+from galsim.utilities import check_pickle, check_all_diff, timer, Profile
 
 # We used to roll our own versions of these, but numpy.testing has good ones now.
 from numpy.testing import assert_raises

@@ -18,7 +18,7 @@
 
 import logging
 
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
+from .util import GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -30,6 +30,8 @@ from ..position import PositionD
 from ..celestial import CelestialCoord
 from ..utilities import basestring
 
+logger = logging.getLogger(__name__)
+
 # This file handles the construction of wcs types in config['image']['wcs'].
 
 # This module-level dict will store all the registered wcs types.
@@ -39,19 +41,17 @@ from ..utilities import basestring
 valid_wcs_types = {}
 
 
-def BuildWCS(config, key, base, logger=None):
+def BuildWCS(config, key, base):
     """Read the wcs parameters from config[key] and return a constructed wcs object.
 
     Parameters:
         config:     A dict with the configuration information. (usually base['image'])
         key:        The key name in config indicating which object to build.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         a BaseWCS instance
     """
-    logger = LoggerWrapper(logger)
     logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
 
     try:
@@ -100,7 +100,7 @@ def BuildWCS(config, key, base, logger=None):
                                      list(valid_wcs_types.keys()))
     logger.debug('image %d: Building wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
-    wcs = builder.buildWCS(param, base, logger)
+    wcs = builder.buildWCS(param, base)
     logger.debug('image %d: wcs = %s', base.get('image_num',0), wcs)
 
     param['current'] = wcs, False, None, index, index_key
@@ -114,7 +114,7 @@ class WCSBuilder:
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildWCS(self, config, base, logger):
+    def buildWCS(self, config, base):
         """Build the WCS based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
@@ -122,7 +122,6 @@ class WCSBuilder:
         Parameters:
             config:     The configuration dict for the wcs type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed WCS object.
@@ -181,13 +180,12 @@ class SimpleWCSBuilder(WCSBuilder):
             kwargs['rng'] = GetRNG(config, base)
         return kwargs
 
-    def buildWCS(self, config, base, logger):
+    def buildWCS(self, config, base):
         """Build the WCS based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the wcs type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed WCS object.
@@ -204,14 +202,13 @@ class OriginWCSBuilder(SimpleWCSBuilder):
         self.init_func = init_func
         self.origin_init_func = origin_init_func
 
-    def buildWCS(self, config, base, logger):
+    def buildWCS(self, config, base):
         """Build the WCS based on the specifications in the config dict, using the appropriate
         type depending on whether an origin is provided.
 
         Parameters:
             config:     The configuration dict for the wcs type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed WCS object.
@@ -232,13 +229,12 @@ class TanWCSBuilder(WCSBuilder):
     """
     def __init__(self): pass
 
-    def buildWCS(self, config, base, logger):
+    def buildWCS(self, config, base):
         """Build the TanWCS based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the wcs type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed WCS object.
@@ -266,7 +262,7 @@ class TanWCSBuilder(WCSBuilder):
 class ListWCSBuilder(WCSBuilder):
     """Select a wcs from a list
     """
-    def buildWCS(self, config, base, logger):
+    def buildWCS(self, config, base):
         req = { 'items' : list }
         opt = { 'index' : int }
         # Only Check, not Get.  We need to handle items a bit differently, since it's a list.

@@ -26,10 +26,10 @@ def RandomWalk(*args, **kwargs):
 
 galsim.RandomWalk = RandomWalk
 
-def BuildRandomWalk(config, base, ignore, gsparams, logger):
+def BuildRandomWalk(config, base, ignore, gsparams):
     from . import depr
     depr('RandomWalk', 2.2, 'RandomKnots')
     return galsim.config.gsobject._BuildSimple(galsim.RandomKnots,
-                                               config, base, ignore, gsparams, logger)
+                                               config, base, ignore, gsparams)
 
 RegisterObjectType('RandomWalk', BuildRandomWalk)

@@ -19,12 +19,13 @@
 import logging
 from astropy.units import Quantity, Unit
 
-from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
 from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..bandpass import Bandpass
 from ..utilities import basestring
+
+logger = logging.getLogger(__name__)
 
 # This module-level dict will store all the registered Bandpass types.
 # See the RegisterBandpassType function at the end of this file.
@@ -32,20 +33,18 @@ from ..utilities import basestring
 # how to build the Bandpass object.
 valid_bandpass_types = {}
 
-def BuildBandpass(config, key, base, logger=None):
+def BuildBandpass(config, key, base):
     """Read the Bandpass parameters from config[key] and return a constructed Bandpass object.
 
     Parameters:
         config:     A dict with the configuration information.
         key:        The key name in config indicating which object to build.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         (bandpass, safe) where bandpass is a Bandpass instance, and safe is whether it is safe to
                          reuse.
     """
-    logger = LoggerWrapper(logger)
     logger.debug('obj %d: Start BuildBandpass key = %s',base.get('obj_num',0),key)
 
     param = config[key]
@@ -79,7 +78,7 @@ def BuildBandpass(config, key, base, logger=None):
                                      list(valid_bandpass_types.keys()))
     logger.debug('obj %d: Building bandpass type %s', base.get('obj_num',0), bandpass_type)
     builder = valid_bandpass_types[bandpass_type]
-    bandpass, safe = builder.buildBandpass(param, base, logger)
+    bandpass, safe = builder.buildBandpass(param, base)
     logger.debug('obj %d: bandpass = %s', base.get('obj_num',0), bandpass)
 
     param['current'] = bandpass, safe, Bandpass, index, index_key
@@ -92,7 +91,7 @@ class BandpassBuilder:
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildBandpass(self, config, base, logger):
+    def buildBandpass(self, config, base):
         """Build the Bandpass based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
@@ -100,7 +99,6 @@ class BandpassBuilder:
         Parameters:
             config:     The configuration dict for the bandpass type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed Bandpass object.
@@ -120,18 +118,16 @@ class FileBandpassBuilder(BandpassBuilder):
         red_limit (float or Quantity)   A cutoff wavelength on the red side (default: None)
         zeropoint (float or str)        A zeropoint to use (default: None)
     """
-    def buildBandpass(self, config, base, logger):
+    def buildBandpass(self, config, base):
         """Build the Bandpass based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the bandpass type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed Bandpass object.
         """
-        logger = LoggerWrapper(logger)
 
         req = {
             'file_name': str,

@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import numpy as np
 import astropy.units as u
 import math
@@ -23,11 +24,12 @@ import math
 import galsim
 from galsim_test_helpers import *
 
-
 @timer
-def test_float_value():
+def test_float_value(caplog):
     """Test various ways to generate a float value
     """
+    caplog.set_level(logging.DEBUG)
+
     halo_mass = 1.e14
     halo_conc = 4
     halo_z = 0.3
@@ -358,7 +360,7 @@ def test_float_value():
     np.testing.assert_almost_equal(sum2, sum([ 0, 1, 2, 4, 6]))
 
     # Test NFWHaloMagnification
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     # Raise an error because no uv_pos
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'nfw',config, float)
@@ -378,11 +380,9 @@ def test_float_value():
     config['uv_pos'] = galsim.PositionD(0.1,0.3)
     print("strong lensing mag = ",nfw_halo.getMagnification((0.1,0.3), gal_z))
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        nfw2 = galsim.config.ParseValue(config, 'nfw', config, float)[0]
-    print(cl.output)
-    assert "Warning: NFWHalo mu = 249.374050 means strong lensing." in cl.output
+    galsim.config.SetupInputsForImage(config)
+    nfw2 = galsim.config.ParseValue(config, 'nfw', config, float)[0]
+    assert "Warning: NFWHalo mu = 249.374050 means strong lensing." in caplog.text
     np.testing.assert_almost_equal(nfw2, 25.)
 
     # Or set a different maximum
@@ -397,11 +397,9 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     config['uv_pos'] = galsim.PositionD(0.1,0.2)
     print("very strong lensing mag = ",nfw_halo.getMagnification((0.1,0.2), gal_z))
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        nfw4 = galsim.config.ParseValue(config, 'nfw', config, float)[0]
-    print(cl.output)
-    assert "Warning: NFWHalo mu = -163.631846 means strong lensing." in cl.output
+    galsim.config.SetupInputsForImage(config)
+    nfw4 = galsim.config.ParseValue(config, 'nfw', config, float)[0]
+    assert "Warning: NFWHalo mu = -163.631846 means strong lensing." in caplog.text
     np.testing.assert_almost_equal(nfw4, 3000.)
 
     # Negative max_mu is invalid.
@@ -418,7 +416,7 @@ def test_float_value():
     config['rng'] = rng.duplicate()
     ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
     print("ps mag = ",ps.getMagnification((0.1,0.2)))
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     ps1 = galsim.config.ParseValue(config,'ps',config, float)[0]
     np.testing.assert_almost_equal(ps1, ps.getMagnification((0.1,0.2)))
 
@@ -429,22 +427,18 @@ def test_float_value():
     print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
     config = galsim.config.CleanConfig(config)
     config['input']['power_spectrum']['e_power_function'] = '2000 * np.exp(-k**0.2)'
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-        ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
-    print(cl.output)
-    assert 'PowerSpectrum mu = -4.335137 means strong lensing. Using mu=25.000000' in cl.output
+    galsim.config.SetupInputsForImage(config)
+    ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
+    assert 'PowerSpectrum mu = -4.335137 means strong lensing. Using mu=25.000000' in caplog.text
     np.testing.assert_almost_equal(ps2a, 25.)
 
     # Need a different point that happens to have strong lensing, since the PS realization changed.
     ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
     config['uv_pos'] = galsim.PositionD(55,-25)
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-        ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
-    print(cl.output)
-    assert "PowerSpectrum mu = 26.746296 means strong lensing. Using mu=25.000000" in cl.output
+    galsim.config.SetupInputsForImage(config)
+    ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
+    assert "PowerSpectrum mu = 26.746296 means strong lensing. Using mu=25.000000" in caplog.text
     np.testing.assert_almost_equal(ps2b, 25.)
 
     # Or set a different maximum
@@ -465,12 +459,10 @@ def test_float_value():
     # Out of bounds results in shear = 0, and a warning.
     galsim.config.RemoveCurrent(config)
     config['uv_pos'] = galsim.PositionD(1000,2000)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
-    print(cl.output)
+    galsim.config.SetupInputsForImage(config)
+    ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
     assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
-            "galsim.BoundsD") in cl.output
+            "galsim.BoundsD") in caplog.text
     np.testing.assert_almost_equal(ps2c, 1.)
 
     # Error if no uv_pos
@@ -1216,9 +1208,11 @@ def test_angle_value():
 
 
 @timer
-def test_shear_value():
+def test_shear_value(caplog):
     """Test various ways to generate a Shear value
     """
+    caplog.set_level(logging.DEBUG)
+
     halo_mass = 1.e14
     halo_conc = 4
     halo_z = 0.3
@@ -1336,7 +1330,7 @@ def test_shear_value():
 
     # Test NFWHaloShear
     galsim.config.ProcessInput(config)
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     # Raise an error because no uv_pos
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)
@@ -1358,11 +1352,9 @@ def test_shear_value():
     galsim.config.RemoveCurrent(config)
     config['uv_pos'] = galsim.PositionD(0.1,0.2)
     print("strong lensing shear = ",nfw_halo.getShear((0.1,0.2), gal_z))
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        nfw2a = galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)[0]
-    print(cl.output)
-    assert "Warning: NFWHalo shear (g1=1.148773, g2=-1.531697) is invalid." in cl.output
+    galsim.config.SetupInputsForImage(config)
+    nfw2a = galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)[0]
+    assert "Warning: NFWHalo shear (g1=1.148773, g2=-1.531697) is invalid." in caplog.text
     np.testing.assert_almost_equal((nfw2a.g1, nfw2a.g2), (0,0))
 
     # Test PowerSpectrumShear
@@ -1374,7 +1366,7 @@ def test_shear_value():
     config['image_xsize'] = config['image_ysize'] = 2000
     config['wcs'] = galsim.PixelScale(0.1)
     config['image_center'] = galsim.PositionD(0,0)
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     ps1a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
     ps1b = ps.getShear((0.1,0.2))
     print("ps shear= ",ps1b)
@@ -1388,25 +1380,22 @@ def test_shear_value():
     print("strong lensing shear = ",ps.getShear((0.1,0.2)))
     config = galsim.config.CleanConfig(config)
     config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     ps2b = ps.getShear((0.1,0.2))
     print("ps shear= ",ps2b)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-        ps2a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
-    assert 'PowerSpectrum shear (g1=-1.626101, g2=0.287082) is invalid. Using shear = 0.' in cl.output
+    galsim.config.SetupInputsForImage(config)
+    ps2a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
+    assert 'PowerSpectrum shear (g1=-1.626101, g2=0.287082) is invalid. Using shear = 0.' in caplog.text
     np.testing.assert_almost_equal((ps2a.g1, ps2a.g2), (0,0))
 
     # Out of bounds results in shear = 0, and a warning.
     galsim.config.RemoveCurrent(config)
     config['uv_pos'] = galsim.PositionD(1000,2000)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        ps2c = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
-    print(cl.output)
+    galsim.config.SetupInputsForImage(config)
+    ps2c = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
     assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
             "galsim.BoundsD(xmin=-190.00000000000023, xmax=200.00000000000023, "
-            "ymin=-190.00000000000023, ymax=200.00000000000023)") in cl.output
+            "ymin=-190.00000000000023, ymax=200.00000000000023)") in caplog.text
     np.testing.assert_almost_equal((ps2c.g1, ps2c.g2), (0,0))
 
     # Error if no uv_pos
@@ -1882,7 +1871,7 @@ def test_eval():
     config['image'] = { 'random_seed' : 1234 }
     rng = galsim.BaseDeviate(galsim.BaseDeviate(1234).raw())
     galsim.config.ProcessInput(config)
-    galsim.config.SetupInputsForImage(config, None)
+    galsim.config.SetupInputsForImage(config)
     ps = galsim.PowerSpectrum(e_power_function = lambda k: np.exp(-k**0.2),
                               b_power_function = lambda k: np.exp(-k**1.2))
     # ngrid is calculated from the image size by config, which was setup above.

@@ -29,10 +29,12 @@ from ..image import Image
 from ..position import PositionD
 from ..errors import GalSimConfigValueError, GalSimConfigError
 
+logger = logging.getLogger(__name__)
+
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
 
 # The code the actually draws the PSF on a postage stamp.
-def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
+def DrawPSFStamp(psf, config, base, bounds, offset, method):
     """
     Draw an image using the given psf profile.
 
@@ -92,7 +94,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
     a TiledImage, since you wouldn't typically want the PSF images to overlap.  But it just
     follows whatever pattern of stamp locations the main image has.
     """
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         # If this doesn't exist, an appropriate exception will be raised.
         psf = base['psf']['current'][0]
         draw_method = GetCurrentValue('draw_method', base['stamp'], str, base)
@@ -123,14 +125,14 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                 offset += ParseValue(config, 'offset', base, PositionD)[0]
             logger.debug('obj %d: psf offset: %s',base.get('obj_num',0),str(offset))
 
-        psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
+        psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method)
         if 'signal_to_noise' in config:
             base['current_noise_image'] = base['current_stamp']
-            AddNoise(base,psf_im,current_var=0,logger=logger)
+            AddNoise(base,psf_im,current_var=0)
         self.scratch[obj_num] = psf_im
 
     # The function to call at the end of building each image
-    def processImage(self, index, obj_nums, config, base, logger):
+    def processImage(self, index, obj_nums, config, base):
         image = Image(base['image_bounds'], wcs=base['wcs'], init_value=0.,
                       dtype=base['current_image'].dtype)
         # Make sure to only use the stamps for objects in this image.

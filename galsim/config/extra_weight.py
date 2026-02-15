@@ -38,7 +38,7 @@ class WeightBuilder(ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         if base['do_noise_in_stamps']:
             weight_im = ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
             if 'include_obj_var' in config:
@@ -46,11 +46,11 @@ class WeightBuilder(ExtraOutputBuilder):
             else:
                 include_obj_var = False
             base['current_noise_image'] = base['current_stamp']
-            AddNoiseVariance(base,weight_im,include_obj_var,logger)
+            AddNoiseVariance(base,weight_im,include_obj_var)
             self.scratch[obj_num] = weight_im
 
     # The function to call at the end of building each image
-    def processImage(self, index, obj_nums, config, base, logger):
+    def processImage(self, index, obj_nums, config, base):
         image = ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
         if len(self.scratch) > 0.:
             # If we have been accumulating the variance on the stamps, build the total from them.
@@ -70,7 +70,7 @@ class WeightBuilder(ExtraOutputBuilder):
             else:
                 include_obj_var = False
             base['current_noise_image'] = base['current_image']
-            AddNoiseVariance(base,image,include_obj_var,logger)
+            AddNoiseVariance(base,image,include_obj_var)
 
         # Now invert the variance image to get weight map.
         # Note that any zeros present in the image are maintained as zeros after inversion.

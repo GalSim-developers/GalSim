@@ -16,10 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 
 from .input import InputLoader, RegisterInputType
 from .value import GetAllParams
 from ..fits import read
+
+logger = logging.getLogger(__name__)
 
 # This file adds input type initial_image.
 
@@ -29,16 +32,14 @@ class InitialImageLoader(InputLoader):
         self.init_func = read
         self.has_nobj = False
         self.file_scope = False
-        self.takes_logger = False
         self.use_proxy = False
 
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
 
         Parameters:
             config:     The configuration dict for 'power_spectrum'
             base:       The base configuration dict
-            logger:     If given, a logger object to log progress.
 
         Returns:
             kwargs, safe
@@ -47,7 +48,7 @@ class InitialImageLoader(InputLoader):
         opt = { 'dir': str, 'read_header': bool }
         return GetAllParams(config, base, req=req, opt=opt)
 
-    def setupImage(self, input_obj, config, base, logger=None):
+    def setupImage(self, input_obj, config, base):
         """Set up the PowerSpectrum input object's gridded values based on the
         size of the image and the grid spacing.
 
@@ -55,7 +56,6 @@ class InitialImageLoader(InputLoader):
             input_obj:  The PowerSpectrum object to use
             config:     The configuration dict for 'power_spectrum'
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
         """
         base['current_image'] = input_obj.copy()
 

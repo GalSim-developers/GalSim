@@ -18,6 +18,7 @@
 
 __all__ = [ 'RealGalaxy', 'RealGalaxyCatalog', 'ChromaticRealGalaxy', ]
 
+import logging
 import os
 import numpy as np
 import copy
@@ -43,6 +44,7 @@ from .chromatic import ChromaticSum
 from . import meta_data
 from ._pyfits import pyfits
 
+logger = logging.getLogger(__name__)
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
 
@@ -172,8 +174,6 @@ class RealGalaxy(GSObject):
                                 source catalog telescope when creating the `RealGalaxy` (e.g.,
                                 area_norm=45238.93416 for HST).  [default: 1]
         gsparams:               An optional `GSParams` argument. [default: None]
-        logger:                 A logger object for output of progress statements if the user wants
-                                them.  [default: None]
     """
     _opt_params = { "x_interpolant" : str ,
                     "k_interpolant" : str ,
@@ -193,7 +193,7 @@ class RealGalaxy(GSObject):
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
-                 pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None, logger=None):
+                 pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None):
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
@@ -204,8 +204,6 @@ class RealGalaxy(GSObject):
             raise GalSimIncompatibleValuesError(
                 "Cannot supply a flux and a flux rescaling factor.",
                 flux=flux, flux_rescale=flux_rescale)
-
-        logger = LoggerWrapper(logger)  # So don't need to check `if logger:` all the time.
 
         if isinstance(real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a RealGalaxy without needing the rgc directly
@@ -532,7 +530,6 @@ class RealGalaxyCatalog:
                     approximately the same total I/O time (assuming you eventually use most of
                     the image files referenced in the catalog), but it is spread over the
                     various calls to `getGalImage` and `getPSFImage`.  [default: False]
-        logger:     An optional logger object to log progress. [default: None]
     """
     _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
                     'preload' : bool }
@@ -540,13 +537,11 @@ class RealGalaxyCatalog:
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name=None, sample=None, dir=None, preload=False, logger=None):
+    def __init__(self, file_name=None, sample=None, dir=None, preload=False):
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
                 sample=sample, file_name=file_name)
-
-        logger = LoggerWrapper(logger)
 
         self.file_name, self.image_dir, self.sample = _parse_files_dirs(file_name, dir, sample)
 
@@ -1016,8 +1011,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 `ChromaticRealGalaxy` (e.g., area_norm=45238.93416 for HST).
                                 [default: 1]
         gsparams:               An optional `GSParams` argument. [default: None]
-        logger:                 A logger object for output of progress statements if the user wants
-                                them.  [default: None]
 
     """
     # TODO: SEDs isn't implemented yet in config parser.
@@ -1031,14 +1024,12 @@ class ChromaticRealGalaxy(ChromaticSum):
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalogs, index=None, id=None, random=False, rng=None,
-                 gsparams=None, logger=None, **kwargs):
+                 gsparams=None, **kwargs):
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
             raise TypeError("The rng provided to ChromaticRealGalaxy is not a BaseDeviate")
         self.rng = rng
-
-        logger = LoggerWrapper(logger)  # So don't need to check `if logger:` all the time.
 
         # Get the index to use in the catalog
         if index is not None:
@@ -1143,8 +1134,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 `ChromaticRealGalaxy` (e.g., area_norm=45238.93416 for HST).
                                 [default: 1]
             gsparams:           An optional `GSParams` argument. [default: None]
-            logger:             A logger object for output of progress statements if the user wants
-                                them.  [default: None]
 
         """
         if not hasattr(PSFs, '__iter__'):
@@ -1337,7 +1326,4 @@ class ChromaticRealGalaxy(ChromaticSum):
         return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, k_interpolant=%r, "
                 "area_norm=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
                                               self._k_interpolant, self._area_norm, self._gsparams))
-
-# Put this at the bottom to avoid circular import error.
-from .config import LoggerWrapper
 

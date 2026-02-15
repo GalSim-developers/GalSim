@@ -20,7 +20,7 @@ import os
 import logging
 import time
 
-from .util import LoggerWrapper, UpdateNProc, CopyConfig, MultiProcess, SetupConfigRNG
+from .util import UpdateNProc, CopyConfig, MultiProcess, SetupConfigRNG
 from .util import RetryIO, SetDefaultExt
 from .value import ParseValue, CheckAllParams
 from .input import ProcessInput
@@ -30,6 +30,8 @@ from .image import BuildImage, GetNObjForImage
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import ensure_dir
 from ..fits import writeMulti
+
+logger = logging.getLogger(__name__)
 
 # This file handles building the output files according to the specifications in config['output'].
 # This file includes the basic functionality, but it calls out to helper functions for the
@@ -42,7 +44,7 @@ from ..fits import writeMulti
 # that will perform the different stages of processing to construct and write the output file(s).
 valid_output_types = {}
 
-def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
+def BuildFiles(nfiles, config, file_num=0, except_abort=False):
     """
     Build a number of output files as specified in config.
 
@@ -50,14 +52,12 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nfiles:         The number of files to build.
         config:         A configuration dict.
         file_num:       If given, the first file_num. [default: 0]
-        logger:         If given, a logger object to log progress. [default: None]
         except_abort:   Whether to abort processing when a file raises an exception (True)
                         or just report errors and continue on (False). [default: False]
 
     Returns:
         the final config dict that was used.
     """
-    logger = LoggerWrapper(logger)
     t1 = time.time()
 
     # The next line relies on getting errors when the rng is undefined.  However, the default
@@ -68,7 +68,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    ProcessInput(config, logger=logger, safe_only=True)
+    ProcessInput(config, safe_only=True)
 
     jobs = []  # Will be a list of the kwargs to use for each job
     info = []  # Will be a list of (file_num, file_name) correspongind to each jobs.
@@ -86,7 +86,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     if nfiles > 1 and 'nproc' in output:
         nproc = ParseValue(output, 'nproc', config, int)[0]
         # Update this in case the config value is -1
-        nproc = UpdateNProc(nproc, nfiles, config, logger)
+        nproc = UpdateNProc(nproc, nfiles, config)
         # We'll want a pristine version later to give to the workers.
     else:
         nproc = 1
@@ -102,16 +102,16 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         return orig_config
 
     for k in range(nfiles + first_file_num):
-        SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
+        SetupConfigFileNum(config, file_num, image_num, obj_num)
 
         builder = valid_output_types[output['type']]
-        builder.setup(output, config, file_num, logger)
+        builder.setup(output, config, file_num)
 
         # Process the input fields that might be relevant at file scope:
-        ProcessInput(config, logger=logger, file_scope_only=True)
+        ProcessInput(config, file_scope_only=True)
 
         # Get the number of objects in each image for this file.
-        nobj = GetNObjForFile(config, file_num, image_num, logger=logger, approx=True)
+        nobj = GetNObjForFile(config, file_num, image_num, approx=True)
 
         # The kwargs to pass to BuildFile
         kwargs = {
@@ -124,7 +124,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
             # Get the file_name here, in case it needs to create directories, which is not
             # safe to do with multiple processes. (At least not without extra code in the
             # getFilename function...)
-            file_name = builder.getFilename(output, config, logger)
+            file_name = builder.getFilename(output, config)
             jobs.append(kwargs)
             info.append( (file_num, file_name) )
 
@@ -135,17 +135,17 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         image_num += len(nobj)
         obj_num += sum(nobj)
 
-    def done_func(logger, proc, k, result, t2):
+    def done_func(proc, k, result, t2):
         file_num, file_name = info[k]
         file_name2, t = result  # This is the t for which 0 means the file was skipped.
         if file_name2 != file_name:  # pragma: no cover  (I think this should never happen.)
             raise GalSimConfigError("Files seem to be out of sync. %s != %s", file_name, file_name2)
-        if t != 0 and logger:
+        if t != 0:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             logger.warning(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
-    def except_func(logger, proc, k, e, tr):
+    def except_func(proc, k, e, tr):
         file_num, file_name = info[k]
         if proc is None: s0 = ''
         else: s0 = '%s: '%proc
@@ -162,7 +162,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     tasks = [ [ (job, k) ] for (k, job) in enumerate(jobs) ]
 
     results = MultiProcess(nproc, orig_config, BuildFile, tasks, 'file',
-                           logger=logger, timeout=timeout,
+                           timeout=timeout,
                            done_func=done_func, except_func=except_func,
                            except_abort=except_abort)
     t2 = time.time()
@@ -187,7 +187,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
 
 output_ignore = [ 'nproc', 'timeout', 'skip', 'noclobber', 'retry_io' ]
 
-def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
+def BuildFile(config, file_num=0, image_num=0, obj_num=0):
     """
     Build an output file as specified in config.
 
@@ -196,24 +196,22 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
         file_num:       If given, the current file_num. [default: 0]
         image_num:      If given, the current image_num. [default: 0]
         obj_num:        If given, the current obj_num. [default: 0]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         (file_name, t), a tuple of the file name and the time taken to build file
         Note: t==0 indicates that this file was skipped.
     """
-    logger = LoggerWrapper(logger)
     t1 = time.time()
 
-    SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
+    SetupConfigFileNum(config, file_num, image_num, obj_num)
     output = config['output']
     output_type = output['type']
     builder = valid_output_types[output_type]
-    builder.setup(output, config, file_num, logger)
+    builder.setup(output, config, file_num)
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
-    nobj = GetNObjForFile(config, file_num, image_num, logger=logger)
+    nobj = GetNObjForFile(config, file_num, image_num)
     nimages = len(nobj)
     config['nimages'] = nimages
     config['nobj'] = nobj
@@ -221,11 +219,11 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
                  file_num,output_type,nimages,image_num)
 
     # Make sure the inputs and extra outputs are set up properly.
-    ProcessInput(config, logger=logger)
-    SetupExtraOutput(config, logger=logger)
+    ProcessInput(config)
+    SetupExtraOutput(config)
 
     # Get the file name
-    file_name = builder.getFilename(output, config, logger)
+    file_name = builder.getFilename(output, config)
 
     # Check if we ought to skip this file
     if 'skip' in output and ParseValue(output, 'skip', config, bool)[0]:
@@ -244,7 +242,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
         logger.warning('Start file %d = %s', file_num, file_name)
 
     ignore = output_ignore + list(valid_extra_outputs)
-    data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
+    data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore)
 
     # If any images came back as None, then remove them, since they cannot be written.
     data = [ im for im in data if im is not None ]
@@ -256,7 +254,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     # Go back to file_num as the default index_key.
     config['index_key'] = 'file_num'
 
-    data = builder.addExtraOutputHDUs(config, data, logger)
+    data = builder.addExtraOutputHDUs(config, data)
 
     if 'retry_io' in output:
         ntries = ParseValue(output,'retry_io',config,int)[0]
@@ -265,23 +263,22 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     else:
         ntries = 1
 
-    args = (data, file_name, output, config, logger)
-    RetryIO(builder.writeFile, args, ntries, file_name, logger)
+    args = (data, file_name, output, config)
+    RetryIO(builder.writeFile, args, ntries, file_name)
     logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
-    builder.writeExtraOutputs(config, data, logger)
+    builder.writeExtraOutputs(config, data)
 
     t2 = time.time()
 
     return file_name, t2-t1
 
-def GetNFiles(config, logger=None):
+def GetNFiles(config):
     """
     Get the number of files that will be made, based on the information in the config dict.
 
     Parameters:
         config:     The configuration dict.
-        logger:     If given, a logger object to log progress. [default: None]
 
     Returns:
         the number of files
@@ -291,10 +288,10 @@ def GetNFiles(config, logger=None):
     if output_type not in valid_output_types:
         raise GalSimConfigValueError("Invalid output.type.", output_type,
                                      list(valid_output_types.keys()))
-    return valid_output_types[output_type].getNFiles(output, config, logger=logger)
+    return valid_output_types[output_type].getNFiles(output, config)
 
 
-def GetNImagesForFile(config, file_num, logger=None):
+def GetNImagesForFile(config, file_num):
     """
     Get the number of images that will be made for the file number file_num, based on the
     information in the config dict.
@@ -302,7 +299,6 @@ def GetNImagesForFile(config, file_num, logger=None):
     Parameters:
         config:     The configuration dict.
         file_num:   The current file number.
-        logger:     If given, a logger object to log progress. [default: None]
 
     Returns:
         the number of images
@@ -312,10 +308,10 @@ def GetNImagesForFile(config, file_num, logger=None):
     if output_type not in valid_output_types:
         raise GalSimConfigValueError("Invalid output.type.", output_type,
                                      list(valid_output_types.keys()))
-    return valid_output_types[output_type].getNImages(output, config, file_num, logger=logger)
+    return valid_output_types[output_type].getNImages(output, config, file_num)
 
 
-def GetNObjForFile(config, file_num, image_num, logger=None, approx=False):
+def GetNObjForFile(config, file_num, image_num, approx=False):
     """
     Get the number of objects that will be made for each image built as part of the file file_num,
     which starts at image number image_num, based on the information in the config dict.
@@ -324,7 +320,6 @@ def GetNObjForFile(config, file_num, image_num, logger=None, approx=False):
         config:         The configuration dict.
         file_num:       The current file number.
         image_num:      The current image number.
-        logger:         If given, a logger object to log progress. [default: None]
         approx:         Whether an approximate/overestimate is ok [default: False]
 
     Returns:
@@ -336,10 +331,10 @@ def GetNObjForFile(config, file_num, image_num, logger=None, approx=False):
         raise GalSimConfigValueError("Invalid output.type.", output_type,
                                      list(valid_output_types.keys()))
     return valid_output_types[output_type].getNObjPerImage(output, config, file_num, image_num,
-                                                           logger=logger, approx=approx)
+                                                           approx=approx)
 
 
-def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
+def SetupConfigFileNum(config, file_num, image_num, obj_num):
     """Do the basic setup of the config dict at the file processing level.
 
     Includes:
@@ -359,9 +354,7 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
                     start_obj_num items in the config dict.)
         image_num:  The current image_num.
         obj_num:    The current obj_num.
-        logger:     If given, a logger object to log progress. [default: None]
     """
-    logger = LoggerWrapper(logger)
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
     config['start_image_num'] = image_num
@@ -391,7 +384,7 @@ class OutputBuilder:
     # A class attribute that sub-classes may override.
     default_ext = '.fits'
 
-    def setup(self, config, base, file_num, logger):
+    def setup(self, config, base, file_num):
         """Do any necessary setup at the start of processing a file.
 
         The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to
@@ -401,12 +394,11 @@ class OutputBuilder:
             config:     The configuration dict for the output type.
             base:       The base configuration dict.
             file_num:   The current file_num.
-            logger:     If given, a logger object to log progress.
         """
-        seed = SetupConfigRNG(base, logger=logger)
+        seed = SetupConfigRNG(base)
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    def getFilename(self, config, base, logger):
+    def getFilename(self, config, base):
         """Get the file_name for the current file being worked on.
 
         Note that the base class defines a default extension = '.fits'.
@@ -415,7 +407,6 @@ class OutputBuilder:
         Parameters:
             config:     The configuration dict for the output type.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the filename to build.
@@ -439,7 +430,7 @@ class OutputBuilder:
 
         return file_name
 
-    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore):
         """Build the images for output.
 
         In the base class, this function just calls BuildImage to build the single image to
@@ -453,7 +444,6 @@ class OutputBuilder:
             obj_num:    The current obj_num.
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here.  i.e. it won't be an error if they are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a list of the images built
@@ -463,10 +453,10 @@ class OutputBuilder:
         ignore += [ 'file_name', 'dir', 'nfiles' ]
         CheckAllParams(config, ignore=ignore)
 
-        image = BuildImage(base, image_num, obj_num, logger=logger)
+        image = BuildImage(base, image_num, obj_num)
         return [ image ]
 
-    def getNFiles(self, config, base, logger=None):
+    def getNFiles(self, config, base):
         """Returns the number of files to be built.
 
         In the base class, this is just output.nfiles.
@@ -474,7 +464,6 @@ class OutputBuilder:
         Parameters:
             config:     The configuration dict for the output field.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the number of files to build.
@@ -484,7 +473,7 @@ class OutputBuilder:
         else:
             return 1
 
-    def getNImages(self, config, base, file_num, logger=None):
+    def getNImages(self, config, base, file_num):
         """Returns the number of images to be built for a given ``file_num``.
 
         In the base class, we only build a single image, so it returns 1.
@@ -493,14 +482,13 @@ class OutputBuilder:
             config:     The configuration dict for the output field.
             base:       The base configuration dict.
             file_num:   The current file number.
-            logger:     If given, a logger object to log progress.
 
         Returns:
            the number of images to build.
         """
         return 1
 
-    def getNObjPerImage(self, config, base, file_num, image_num, logger=None, approx=False):
+    def getNObjPerImage(self, config, base, file_num, image_num, approx=False):
         """
         Get the number of objects that will be made for each image built as part of the file
         file_num, which starts at image number image_num, based on the information in the config
@@ -511,14 +499,13 @@ class OutputBuilder:
             base:           The base configuration dict.
             file_num:       The current file number.
             image_num:      The current image number (the first one for this file).
-            logger:         If given, a logger object to log progress.
             approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:
             a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
         """
-        nimages = self.getNImages(config, base, file_num, logger=logger)
-        nobj = [ GetNObjForImage(base, image_num+j, logger=logger, approx=approx)
+        nimages = self.getNImages(config, base, file_num)
+        nobj = [ GetNObjForImage(base, image_num+j, approx=approx)
                  for j in range(nimages) ]
         base['image_num'] = image_num  # Make sure this is set back to current image num.
         return nobj
@@ -530,24 +517,23 @@ class OutputBuilder:
         """
         return True
 
-    def addExtraOutputHDUs(self, config, data, logger):
+    def addExtraOutputHDUs(self, config, data):
         """If appropriate, add any extra output items that go into HDUs to the data list.
 
         Parameters:
             config:     The configuration dict for the output field.
             data:       The data to write.  Usually a list of images.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             data (possibly updated with additional items)
         """
         if self.canAddHdus():
-            data = AddExtraOutputHDUs(config, data, logger)
+            data = AddExtraOutputHDUs(config, data)
         else:
-            CheckNoExtraOutputHDUs(config, config['output']['type'], logger)
+            CheckNoExtraOutputHDUs(config, config['output']['type'])
         return data
 
-    def writeFile(self, data, file_name, config, base, logger):
+    def writeFile(self, data, file_name, config, base):
         """Write the data to a file.
 
         Parameters:
@@ -557,19 +543,17 @@ class OutputBuilder:
             file_name:      The file_name to write to.
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
-            logger:         If given, a logger object to log progress.
         """
         writeMulti(data,file_name)
 
-    def writeExtraOutputs(self, config, data, logger):
+    def writeExtraOutputs(self, config, data):
         """If appropriate, write any extra output items that write their own files.
 
         Parameters:
             config:     The configuration dict for the output field.
             data:       The data to write.  Usually a list of images.
-            logger:     If given, a logger object to log progress.
         """
-        WriteExtraOutputs(config, data, logger)
+        WriteExtraOutputs(config, data)
 
 
 def RegisterOutputType(output_type, builder):

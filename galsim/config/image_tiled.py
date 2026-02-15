@@ -28,12 +28,14 @@ from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image
 from .. import random
 
+logger = logging.getLogger(__name__)
+
 # This file adds image type Tiled, which builds a larger image by tiling nx x ny individual
 # postage stamps.
 
 class TiledImageBuilder(ImageBuilder):
 
-    def setup(self, config, base, image_num, obj_num, ignore, logger):
+    def setup(self, config, base, image_num, obj_num, ignore):
         """Do the initialization and setup for building the image.
 
         This figures out the size that the image will be, but doesn't actually build it yet.
@@ -45,7 +47,6 @@ class TiledImageBuilder(ImageBuilder):
             obj_num:    The first object number in the image.
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             xsize, ysize
@@ -101,7 +102,7 @@ class TiledImageBuilder(ImageBuilder):
         return full_xsize, full_ysize
 
 
-    def buildImage(self, config, base, image_num, obj_num, logger):
+    def buildImage(self, config, base, image_num, obj_num):
         """
         Build an Image consisting of a tiled array of postage stamps.
 
@@ -110,7 +111,6 @@ class TiledImageBuilder(ImageBuilder):
             base:       The base configuration dict.
             image_num:  The current image number.
             obj_num:    The first object number in the image.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the final image and the current noise variance in the image as a tuple
@@ -133,7 +133,7 @@ class TiledImageBuilder(ImageBuilder):
         elif order.startswith('rand'):
             ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
             iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
-            rng = GetRNG(config, base, logger, 'TiledImage, order = '+order)
+            rng = GetRNG(config, base, 'TiledImage, order = '+order)
             random.permute(rng, ix_list, iy_list)
         else:
             raise GalSimConfigValueError("Invalid order.", order, ('row', 'col', 'random'))
@@ -155,7 +155,7 @@ class TiledImageBuilder(ImageBuilder):
         }
 
         stamps, current_vars = BuildStamps(
-                nobjects, base, logger=logger, obj_num=obj_num,
+                nobjects, base, obj_num=obj_num,
                 xsize=self.stamp_xsize, ysize=self.stamp_ysize, do_noise=self.do_noise_in_stamps)
 
         base['index_key'] = 'image_num'
@@ -172,10 +172,10 @@ class TiledImageBuilder(ImageBuilder):
         current_var = 0
         if not self.do_noise_in_stamps:
             current_var = FlattenNoiseVariance(
-                    base, full_image, stamps, current_vars, logger)
+                    base, full_image, stamps, current_vars)
         return full_image, current_var
 
-    def makeTasks(self, config, base, jobs, logger):
+    def makeTasks(self, config, base, jobs):
         """Turn a list of jobs into a list of tasks.
 
         Here we just have one job per task.
@@ -185,14 +185,13 @@ class TiledImageBuilder(ImageBuilder):
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'image_num' and 'obj_num'.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a list of tasks
         """
         return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
-    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var):
         """Add the final noise to a Tiled image
 
         Parameters:
@@ -202,23 +201,21 @@ class TiledImageBuilder(ImageBuilder):
             image_num:      The current image number.
             obj_num:        The first object number in the image.
             current_var:    The current noise variance in each postage stamps.
-            logger:         If given, a logger object to log progress.
         """
         # If didn't do noise above in the stamps, then need to do it here.
         if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
             base['current_noise_image'] = base['current_image']
             AddSky(base,image)
-            AddNoise(base,image,current_var,logger)
+            AddNoise(base,image,current_var)
 
-    def getNObj(self, config, base, image_num, logger=None, approx=False):
+    def getNObj(self, config, base, image_num, approx=False):
         """Get the number of objects that will be built for this image.
 
         Parameters:
             config:         The configuration dict for the image field.
             base:           The base configuration dict.
             image_num:      The current image number.
-            logger:         If given, a logger object to log progress.
             approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:

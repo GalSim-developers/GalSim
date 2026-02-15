@@ -31,7 +31,7 @@ class BadPixBuilder(ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
         # these features should be marked in the badpix mask.  For now though, all pixels = 0.
         if base['do_noise_in_stamps']:
@@ -39,7 +39,7 @@ class BadPixBuilder(ExtraOutputBuilder):
             self.scratch[obj_num] = badpix_im
 
     # The function to call at the end of building each image
-    def processImage(self, index, obj_nums, config, base, logger):
+    def processImage(self, index, obj_nums, config, base):
         image = ImageS(base['image_bounds'], wcs=base['wcs'], init_value=0)
         if len(self.scratch) > 0.:
             # If we have been accumulating the variance on the stamps, build the total from them.

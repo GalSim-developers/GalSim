@@ -1038,7 +1038,7 @@ def test_config_sca():
         config['image']['ipc'] = True
         config['image']['read_noise'] = True
         config['image']['sky_subtract'] = True
-        im1 = galsim.config.BuildImage(config, obj_num=0, logger=logger)
+        im1 = galsim.config.BuildImage(config, obj_num=0)
         sky_level *= (1.0 + galsim.roman.stray_light_fraction)
         wcs.makeSkyImage(im2, sky_level)
         im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
@@ -1076,7 +1076,7 @@ def test_config_sca():
         del config['image']['sky_subtract']
         config['stamp'] = { 'draw_method' : 'phot' }
         config['image']['bandpass'] = { 'type' : 'RomanBandpass', 'name' : 'H158' }
-        im1 = galsim.config.BuildImage(config, obj_num=0, logger=logger)
+        im1 = galsim.config.BuildImage(config, obj_num=0)
         wcs.makeSkyImage(im2, sky_level)
         im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
         sky_image = im2.copy()

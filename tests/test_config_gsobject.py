@@ -933,7 +933,7 @@ def test_pixel():
     gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
 @timer
-def test_realgalaxy():
+def test_realgalaxy(caplog):
     """Test various ways to build a RealGalaxy
     """
     # I don't want to gratuitously copy the real_catalog catalog, so use the
@@ -1016,11 +1016,9 @@ def test_realgalaxy():
     galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
     galsim.config.BuildGSObject(config, 'gal5')
 
-    # If there is a logger, there should be a warning message emitted.
-    with CaptureLog() as cl:
-        galsim.config.RemoveCurrent(config)
-        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
-    assert "No base['rng'] available" in cl.output
+    galsim.config.RemoveCurrent(config)
+    galsim.config.BuildGSObject(config, 'gal5')
+    assert "No base['rng'] available" in caplog.text
 
     config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
@@ -1046,9 +1044,11 @@ def test_realgalaxy():
 
 
 @timer
-def test_cosmosgalaxy():
+def test_cosmosgalaxy(caplog):
     """Test various ways to build a COSMOSGalaxy
     """
+    caplog.set_level(logging.INFO)
+
     # I don't want to gratuitously copy the real_catalog catalog, so use the
     # version in the examples directory.
     real_gal_dir = os.path.join('..','examples','data')
@@ -1193,26 +1193,26 @@ def test_cosmosgalaxy():
     gsobject_compare(gal1a, gal1b, conv=conv)
 
     # Check some information passed to the logger about the kind of catalog being built.
+    caplog.clear()
     galsim.config.SetupConfigImageNum(config, 0, 0)
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-    assert "Using user-specified COSMOSCatalog" in cl.output
+    galsim.config.SetupInputsForImage(config)
+    assert "Using user-specified COSMOSCatalog" in caplog.text
+    caplog.clear()
     config['input']['cosmos_catalog']['sample'] = 25.2
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-    assert "sample = 25.2" in cl.output
+    galsim.config.SetupInputsForImage(config)
+    assert "sample = 25.2" in caplog.text
+    caplog.clear()
     config['input']['cosmos_catalog'] = {}
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-    assert "Using user-specified" not in cl.output
+    galsim.config.SetupInputsForImage(config)
+    assert "Using user-specified" not in caplog.text
+    caplog.clear()
     config['gal']['gal_type'] = 'parametric'
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-    assert "Using parametric galaxies" in cl.output
+    galsim.config.SetupInputsForImage(config)
+    assert "Using parametric galaxies" in caplog.text
+    caplog.clear()
     config['gal']['gal_type'] = 'real'
-    with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, logger=cl.logger)
-    assert "Using real galaxies" in cl.output
+    galsim.config.SetupInputsForImage(config)
+    assert "Using real galaxies" in caplog.text
 
 
 @timer
@@ -1304,24 +1304,20 @@ def test_cosmos_redshift():
         }
     }
 
-    logger = logging.getLogger('test_cosmos_redshift')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    galsim.config.ProcessInput(config, logger=logger)
+    galsim.config.ProcessInput(config)
     galsim.config.SetupConfigImageNum(config, 0, 0)
-    galsim.config.SetupInputsForImage(config, logger=logger)
+    galsim.config.SetupInputsForImage(config)
 
     cosmos_cat = galsim.COSMOSCatalog(
         dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
     sample_cat = galsim.GalaxySample(
         dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
 
-    galsim.config.SetupConfigObjNum(config, 0, logger=logger)
-    galsim.config.SetupConfigRNG(config, seed_offset=1, logger=logger)
+    galsim.config.SetupConfigObjNum(config, 0)
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
     image_pos = galsim.config.ParseValue(config['image'], 'image_pos', config, galsim.PositionD)[0]
-    galsim.config.SetupConfigStampSize(config,32,32,image_pos,None, logger=logger)
-    gal1a = galsim.config.BuildGSObject(config, 'gal', logger=logger)[0]
+    galsim.config.SetupConfigStampSize(config,32,32,image_pos,None)
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
     print('gal1a = ',gal1a)
     first_seed = galsim.BaseDeviate(12345).raw()
     rng = galsim.UniformDeviate(first_seed+1)
@@ -1339,13 +1335,13 @@ def test_cosmos_redshift():
     print('gal1b = ',gal1b)
     gsobject_compare(gal1a, gal1b)
 
-    gal2 = galsim.config.BuildGSObject(config, 'gal2', logger=logger)[0]
+    gal2 = galsim.config.BuildGSObject(config, 'gal2')[0]
     gsobject_compare(gal2, gal1b)
-    gal3 = galsim.config.BuildGSObject(config, 'gal3', logger=logger)[0]
+    gal3 = galsim.config.BuildGSObject(config, 'gal3')[0]
     gsobject_compare(gal3, gal1b)
 
 @timer
-def test_interpolated_image():
+def test_interpolated_image(caplog):
     """Test various ways to build an InterpolatedImage
     """
     imgdir = 'SBProfile_comparison_images'
@@ -1424,17 +1420,16 @@ def test_interpolated_image():
     galsim.config.BuildGSObject(config, 'gal6')
 
     # If there is a logger, there should be a warning message emitted, but only the first time.
-    with CaptureLog() as cl:
-        galsim.config.RemoveCurrent(config)
-        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
-    assert "No base['rng'] available" in cl.output
-    with CaptureLog(level=1) as cl:
-        galsim.config.RemoveCurrent(config)
-        galsim.config.BuildGSObject(config, 'gal6', logger=cl.logger)
-    assert cl.output == ''
+    galsim.config.RemoveCurrent(config)
+    galsim.config.BuildGSObject(config, 'gal5')
+    assert "No base['rng'] available" in caplog.text
+    caplog.clear()
+    galsim.config.RemoveCurrent(config)
+    galsim.config.BuildGSObject(config, 'gal6')
+    assert caplog.text == ''
 
 @timer
-def test_add():
+def test_add(caplog):
     """Test various ways to build a Add
     """
     config = {
@@ -1592,10 +1587,9 @@ def test_add():
     # If the sum comes out larger than 1, emit a warning
     config['gal8']['items'][1]['flux'] = 0.9
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.BuildGSObject(config, 'gal8', logger=cl.logger)
+    galsim.config.BuildGSObject(config, 'gal8')
     assert ("Warning: Automatic flux for the last item in Sum (to make the total flux=1) " +
-            "resulted in negative flux = -0.200000 for that item") in cl.output
+            "resulted in negative flux = -0.200000 for that item") in caplog.text
 
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'bad1')
@@ -1851,9 +1845,11 @@ def test_list():
 
 
 @timer
-def test_repeat():
+def test_repeat(caplog):
     """Test use of the repeat option for an object
     """
+    caplog.set_level(logging.DEBUG)
+
     config = {
         'rng' : galsim.BaseDeviate(1234),
         'gal' : {
@@ -1889,10 +1885,9 @@ def test_repeat():
 
     # Also check that the logger reports why it is using the current object
     config['obj_num'] = 5
-    with CaptureLog() as cl:
-        gal2a = galsim.config.BuildGSObject(config, 'gal', logger=cl.logger)[0]
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
     gsobject_compare(gal2a, gal2b)
-    assert "repeat = 3, index = 5, use current object" in cl.output
+    assert "repeat = 3, index = 5, use current object" in caplog.text
 
 
 @timer
@@ -1934,7 +1929,7 @@ def test_usertype():
     gsobject_compare(gal3a, gal3b, conv=psf)
 
     # Now an equivalent thing, but implemented with a builder rather than a class.
-    def BuildPseudoDelta(config, base, ignore, gsparams, logger):
+    def BuildPseudoDelta(config, base, ignore, gsparams):
         opt = { 'flux' : float }
         kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
         gsparams = galsim.GSParams(**gsparams)  # within config, it is passed around as a dict
@@ -1955,7 +1950,7 @@ def test_usertype():
     # This one is potentially more useful.
     # This is now equivalent to the Eval type, but it started its life as a user type,
     # so keep it here with a different name.
-    def EvalGSObject(config, base, ignore, gsparams, logger):
+    def EvalGSObject(config, base, ignore, gsparams):
         req = { 'str': str }
         params, safe = galsim.config.GetAllParams(config, base, req=req, ignore=ignore)
         return galsim.utilities.math_eval(params['str']).withGSParams(**gsparams), safe
@@ -2169,7 +2164,7 @@ def test_sed():
 
     # Base class usage is invalid
     builder = galsim.config.sed.SEDBuilder()
-    assert_raises(NotImplementedError, builder.buildSED, config, config, logger=None)
+    assert_raises(NotImplementedError, builder.buildSED, config, config)
 
 
 

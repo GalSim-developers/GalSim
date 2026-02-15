@@ -25,11 +25,13 @@ from .input import ProcessInputNObjects
 from .value import ParseValue, CheckAllParams
 from ..errors import GalSimConfigError
 
+logger = logging.getLogger(__name__)
+
 class MultiFitsBuilder(OutputBuilder):
     """Builder class for constructing and writing MultiFits output types.
     """
 
-    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore):
         """Build the images
 
         Parameters:
@@ -40,12 +42,11 @@ class MultiFitsBuilder(OutputBuilder):
             obj_num:        The current obj_num.
             ignore:         A list of parameters that are allowed to be in config that we can
                             ignore here.  i.e. it won't be an error if they are present.
-            logger:         If given, a logger object to log progress.
 
         Returns:
             a list of the images built
         """
-        nimages = self.getNImages(config, base, file_num, logger=logger)
+        nimages = self.getNImages(config, base, file_num)
 
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
@@ -53,9 +54,9 @@ class MultiFitsBuilder(OutputBuilder):
         ignore += [ 'file_name', 'dir', 'nfiles' ]
         CheckAllParams(config, ignore=ignore, req=req)
 
-        return BuildImages(nimages, base, image_num, obj_num, logger=logger)
+        return BuildImages(nimages, base, image_num, obj_num)
 
-    def getNImages(self, config, base, file_num, logger=None):
+    def getNImages(self, config, base, file_num):
         """
         Get the number of images for a MultiFits file type.
 
@@ -63,7 +64,6 @@ class MultiFitsBuilder(OutputBuilder):
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
             file_num:       The current file number.
-            logger:         If given, a logger object to log progress.
 
         Returns:
             the number of images

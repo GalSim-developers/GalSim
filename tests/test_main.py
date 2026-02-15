@@ -25,6 +25,8 @@ import galsim.main  # Not imported automatically
 import galsim.__main__
 from galsim_test_helpers import *
 
+logger = logging.getLogger(__name__)
+
 # This file tests the galsim executable.
 # Note: Most of the real functional tests are elsewhere.  E.g. test_config*
 #       This really just tests the bits related specifically to the functions in galsim/main.py.
@@ -149,18 +151,11 @@ def test_args():
         galsim.main.parse_args([config_file, '-v', '4'])
     sys.stderr = sys_stderr
 
-# Need to call these before each time make_logger is repeated.  Else duplicate handles.
-def remove_handler():
-    logger = logging.getLogger('galsim')
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-
 @timer
 def test_logger():
     args = galsim.main.parse_args(['test.yaml'])
 
-    remove_handler()
-    logger = galsim.main.make_logger(args)
+    galsim.main.setup_logger(args)
     assert logger.getEffectiveLevel() == logging.WARNING
     print('handlers = ',logger.handlers)
     print('This should print...')
@@ -172,8 +167,7 @@ def test_logger():
 
     args.verbosity = 3
     args.log_file = 'output/test_logger.log'
-    remove_handler()
-    logger = galsim.main.make_logger(args)
+    galsim.main.setup_logger(args)
     print('handlers = ',logger.handlers)
     assert logger.getEffectiveLevel() == logging.DEBUG
     logger.warning("Test warning")
@@ -186,8 +180,7 @@ def test_logger():
         assert f.readline().strip() == "Test debug"
 
     args.verbosity = 0
-    remove_handler()
-    logger = galsim.main.make_logger(args)
+    galsim.main.setup_logger(args)
     print('handlers = ',logger.handlers)
     assert logger.getEffectiveLevel() == logging.ERROR
     logger.warning("Test warning")
@@ -199,8 +192,7 @@ def test_logger():
 
     args.verbosity = 3
     args.log_format = '%(levelname)s - %(message)s'
-    remove_handler()
-    logger = galsim.main.make_logger(args)
+    galsim.main.setup_logger(args)
     print('handlers = ',logger.handlers)
     assert logger.getEffectiveLevel() == logging.DEBUG
     logger.warning("Test warning")
@@ -214,21 +206,21 @@ def test_logger():
 
 @timer
 def test_parse_variables():
-    logger = logging.getLogger('test_main')
+    logging.getLogger('test_main')
     logger.setLevel(logging.ERROR)
 
     # Empty list -> empty dict
-    new_params = galsim.main.parse_variables([], logger)
+    new_params = galsim.main.parse_variables([])
     assert new_params == {}
 
     vars = ["output.nfiles=1", "output.dir='.'"]
-    new_params = galsim.main.parse_variables(vars, logger)
+    new_params = galsim.main.parse_variables(vars)
     assert new_params['output.nfiles'] == 1
     assert new_params['output.dir'] == '.'
 
     # Lists or dicts will be parsed here
     vars = ["psf={'type':'Gaussian','sigma':0.4}", "output.skip=[0,0,0,0,0,1]"]
-    new_params = galsim.main.parse_variables(vars, logger)
+    new_params = galsim.main.parse_variables(vars)
     assert new_params['psf'] == {'type' : 'Gaussian', 'sigma' : 0.4}
     assert new_params['output.skip'] == [0,0,0,0,0,1]
 
@@ -236,20 +228,20 @@ def test_parse_variables():
     # (Presumably they would give an appropriate error later when they are used if the
     # string is not a valid value for whatever this is.)
     vars = ["psf={'type':'Gaussian' : 'sigma':0.4}"]
-    new_params = galsim.main.parse_variables(vars, logger)
+    new_params = galsim.main.parse_variables(vars)
     assert new_params['psf'] == "{'type':'Gaussian' : 'sigma':0.4}"
 
     # Missing = is an error
     vars = ["output.nfiles","1"]
-    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars, logger)
+    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars)
     vars = ["output.nfiles-1"]
-    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars, logger)
+    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars)
 
     # Should work correctly if yaml isn't available.
     # Although it doesn't always parse quite as nicely. E.g. requires ", not ' for string quotes.
     with mock.patch.dict(sys.modules, {'yaml':None}):
         vars = ['psf={"type":"Gaussian","sigma":0.4}', 'output.skip=[0,0,0,0,0,1]']
-        new_params = galsim.main.parse_variables(vars, logger)
+        new_params = galsim.main.parse_variables(vars)
         assert new_params['psf'] == {'type' : 'Gaussian', 'sigma' : 0.4}
         assert new_params['output.skip'] == [0,0,0,0,0,1]
 
@@ -289,31 +281,27 @@ def test_process():
     if os.path.exists(file_name):
         os.remove(file_name)
     args = galsim.main.parse_args(['test.yaml','-v','1'])
-    remove_handler()
-    logger = galsim.main.make_logger(args)
+    galsim.main.setup_logger(args)
 
-    galsim.main.process_config([config], args, logger)
+    galsim.main.process_config([config], args)
     assert os.path.exists(file_name)
     assert config['root'] == 'test'  # This is set automatically
     args.profile = True
     print('Should print profile:')
-    galsim.main.process_config([config], args, logger)
+    galsim.main.process_config([config], args)
     assert config['profile'] is True
     print('Done')
 
-    remove_handler()
     os.remove(file_name)
     config_file = os.path.join('input','test.yaml')
     galsim.main.main([config_file,'-v','1'])
     assert os.path.exists(file_name)
 
     with mock.patch('sys.argv', ['galsim', config_file, '-v', '1']):
-        remove_handler()
         os.remove(file_name)
         galsim.main.run_main()
         assert os.path.exists(file_name)
 
-        remove_handler()
         os.remove(file_name)
         galsim.__main__.run_main()
         assert os.path.exists(file_name)

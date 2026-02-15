@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import time
 
 from .output import OutputBuilder, RegisterOutputType
@@ -26,11 +27,14 @@ from .value import ParseValue, CheckAllParams
 from ..errors import GalSimConfigError
 from ..fits import writeCube
 
+logger = logging.getLogger(__name__)
+
+
 class DataCubeBuilder(OutputBuilder):
     """Builder class for constructing and writing DataCube output types.
     """
 
-    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore):
         """Build the images
 
         A point of attention for DataCubes is that they must all be the same size.
@@ -45,12 +49,11 @@ class DataCubeBuilder(OutputBuilder):
             obj_num:        The current obj_num.
             ignore:         A list of parameters that are allowed to be in config that we can
                             ignore here.  i.e. it won't be an error if they are present.
-            logger:         If given, a logger object to log progress.
 
         Returns:
             a list of the images built
         """
-        nimages = self.getNImages(config, base, file_num, logger=logger)
+        nimages = self.getNImages(config, base, file_num)
 
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
@@ -64,7 +67,7 @@ class DataCubeBuilder(OutputBuilder):
         # image.
         t1 = time.time()
         base1 = CopyConfig(base)
-        image0 = BuildImage(base1, image_num, obj_num, logger=logger)
+        image0 = BuildImage(base1, image_num, obj_num)
         t2 = time.time()
         # Note: numpy shape is y,x
         ys, xs = image0.array.shape
@@ -78,20 +81,19 @@ class DataCubeBuilder(OutputBuilder):
         images = [ image0 ]
 
         if nimages > 1:
-            obj_num += GetNObjForImage(base, image_num, logger=logger)
-            images += BuildImages(nimages-1, base, logger=logger,
+            obj_num += GetNObjForImage(base, image_num)
+            images += BuildImages(nimages-1, base,
                                   image_num=image_num+1, obj_num=obj_num)
 
         return images
 
-    def getNImages(self, config, base, file_num, logger=None):
+    def getNImages(self, config, base, file_num):
         """Returns the number of images to be built.
 
         Parameters:
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
             file_num:       The current file number.
-            logger:         If given, a logger object to log progress.
 
         Returns:
             the number of images to build.
@@ -108,7 +110,7 @@ class DataCubeBuilder(OutputBuilder):
                 "Attribute output.nimages is required for output.type = MultiFits")
         return ParseValue(config,'nimages',base,int)[0]
 
-    def writeFile(self, data, file_name, config, base, logger):
+    def writeFile(self, data, file_name, config, base):
         """Write the data to a file.
 
         Parameters:
@@ -118,7 +120,6 @@ class DataCubeBuilder(OutputBuilder):
             file_name:      The file_name to write to.
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
-            logger:         If given, a logger object to log progress.
         """
         writeCube(data,file_name)
 

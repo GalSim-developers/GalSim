@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import numpy as np
 import sys
 import time
@@ -29,6 +30,8 @@ from ..config import OutputBuilder, ExtraOutputBuilder, BuildImages, GetFinalExt
 from ..config import ParseValue, GetAllParams, GetCurrentValue
 from ..config import RegisterOutputType, RegisterExtraOutput
 from .._pyfits import pyfits
+
+logger = logging.getLogger(__name__)
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -445,7 +448,7 @@ class MEDSBuilder(OutputBuilder):
     It requires the use of ``galsim.des`` in the config files ``modules`` section.
     """
 
-    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore):
         """
         Build a meds file as specified in config.
 
@@ -457,7 +460,6 @@ class MEDSBuilder(OutputBuilder):
            obj_num:     The current obj_num.
            ignore:      A list of parameters that are allowed to be in config that we can ignore
                         here.
-           logger:      If given, a logger object to log progress.
 
         Returns:
            A list of MultiExposureObjects.
@@ -479,22 +481,22 @@ class MEDSBuilder(OutputBuilder):
         nstamps_per_object = params['nstamps_per_object']
         ntot = nobjects * nstamps_per_object
 
-        main_images = BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num, logger=logger)
+        main_images = BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num)
 
         # grab list of offsets for cutout_row/cutout_col.
-        offsets = GetFinalExtraOutput('meds_get_offset', base, logger)
+        offsets = GetFinalExtraOutput('meds_get_offset', base)
         # cutout_row/col is the stamp center (**with the center of the first pixel
         # being (0,0)**) + offset
         centers = [0.5*im.array.shape[0]-0.5 for im in main_images]
         cutout_rows = [c+offset.y for c,offset in zip(centers,offsets)]
         cutout_cols = [c+offset.x for c,offset in zip(centers,offsets)]
 
-        weight_images = GetFinalExtraOutput('weight', base, logger)
+        weight_images = GetFinalExtraOutput('weight', base)
         if 'badpix' in config:
-            badpix_images = GetFinalExtraOutput('badpix', base, logger)
+            badpix_images = GetFinalExtraOutput('badpix', base)
         else:
             badpix_images = None
-        psf_images = GetFinalExtraOutput('psf', base, logger)
+        psf_images = GetFinalExtraOutput('psf', base)
 
         obj_list = []
         for i in range(nobjects):
@@ -515,7 +517,7 @@ class MEDSBuilder(OutputBuilder):
 
         return obj_list
 
-    def writeFile(self, data, file_name, config, base, logger):
+    def writeFile(self, data, file_name, config, base):
         """Write the data to a file.  In this case a MEDS file.
 
         Parameters:
@@ -523,11 +525,10 @@ class MEDSBuilder(OutputBuilder):
             file_name:      The file_name to write to.
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
-            logger:         If given, a logger object to log progress.
         """
         WriteMEDS(data, file_name)
 
-    def getNImages(self, config, base, file_num, logger=None):
+    def getNImages(self, config, base, file_num):
         # This gets called before starting work on the file, so we can use this opportunity
         # to make sure that weight and psf processing are turned on.
         # We just add these as empty dicts, so there is no hdu or file_name parameter, which
@@ -558,7 +559,7 @@ class OffsetBuilder(ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         offset = base['stamp_offset']
         stamp = base['stamp']
         if 'offset' in stamp:
@@ -566,7 +567,7 @@ class OffsetBuilder(ExtraOutputBuilder):
         self.scratch[obj_num] = offset
 
     # The function to call at the end of building each file to finalize the truth catalog
-    def finalize(self, config, base, main_data, logger):
+    def finalize(self, config, base, main_data):
         offsets_list = []
         obj_nums = sorted(self.scratch.keys())
         for obj_num in obj_nums:

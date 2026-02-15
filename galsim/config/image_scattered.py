@@ -27,12 +27,14 @@ from .input import ProcessInputNObjects
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image
 
+logger = logging.getLogger(__name__)
+
 # This file adds image type Scattered, which places individual stamps at arbitrary
 # locations on a larger image.
 
 class ScatteredImageBuilder(ImageBuilder):
 
-    def setup(self, config, base, image_num, obj_num, ignore, logger):
+    def setup(self, config, base, image_num, obj_num, ignore):
         """Do the initialization and setup for building the image.
 
         This figures out the size that the image will be, but doesn't actually build it yet.
@@ -44,7 +46,6 @@ class ScatteredImageBuilder(ImageBuilder):
             obj_num:    The first object number in the image.
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             xsize, ysize
@@ -52,7 +53,7 @@ class ScatteredImageBuilder(ImageBuilder):
         logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
-        self.nobjects = self.getNObj(config, base, image_num, logger=logger)
+        self.nobjects = self.getNObj(config, base, image_num)
         logger.debug('image %d: nobj = %d',image_num,self.nobjects)
 
         # These are allowed for Scattered, but we don't use them here.
@@ -79,7 +80,7 @@ class ScatteredImageBuilder(ImageBuilder):
         return full_xsize, full_ysize
 
 
-    def buildImage(self, config, base, image_num, obj_num, logger):
+    def buildImage(self, config, base, image_num, obj_num):
         """Build an Image containing multiple objects placed at arbitrary locations.
 
         Parameters:
@@ -87,7 +88,6 @@ class ScatteredImageBuilder(ImageBuilder):
             base:       The base configuration dict.
             image_num:  The current image number.
             obj_num:    The first object number in the image.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the final image and the current noise variance in the image as a tuple
@@ -115,7 +115,7 @@ class ScatteredImageBuilder(ImageBuilder):
             }
 
         stamps, current_vars = BuildStamps(
-                self.nobjects, base, logger=logger, obj_num=obj_num, do_noise=False)
+                self.nobjects, base, obj_num=obj_num, do_noise=False)
 
         base['index_key'] = 'image_num'
 
@@ -138,11 +138,11 @@ class ScatteredImageBuilder(ImageBuilder):
 
         # Bring the image so far up to a flat noise variance
         current_var = FlattenNoiseVariance(
-                base, full_image, stamps, current_vars, logger)
+                base, full_image, stamps, current_vars)
 
         return full_image, current_var
 
-    def makeTasks(self, config, base, jobs, logger):
+    def makeTasks(self, config, base, jobs):
         """Turn a list of jobs into a list of tasks.
 
         Here we just have one job per task.
@@ -152,14 +152,13 @@ class ScatteredImageBuilder(ImageBuilder):
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'image_num' and 'obj_num'.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a list of tasks
         """
         return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
-    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var):
         """Add the final noise to a Scattered image
 
         Parameters:
@@ -169,21 +168,19 @@ class ScatteredImageBuilder(ImageBuilder):
             image_num:      The current image number.
             obj_num:        The first object number in the image.
             current_var:    The current noise variance in each postage stamps.
-            logger:         If given, a logger object to log progress.
         """
         base['current_noise_image'] = base['current_image']
         AddSky(base,image)
-        AddNoise(base,image,current_var,logger)
+        AddNoise(base,image,current_var)
 
 
-    def getNObj(self, config, base, image_num, logger=None, approx=False):
+    def getNObj(self, config, base, image_num, approx=False):
         """Get the number of objects that will be built for this image.
 
         Parameters:
             config:         The configuration dict for the image field.
             base:           The base configuration dict.
             image_num:      The current image number.
-            logger:         If given, a logger object to log progress.
             approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:
@@ -195,7 +192,7 @@ class ScatteredImageBuilder(ImageBuilder):
 
         # Allow nobjects to be automatic based on input catalog
         if 'nobjects' not in config:
-            nobj = ProcessInputNObjects(base, logger=logger, approx=approx)
+            nobj = ProcessInputNObjects(base, approx=approx)
             if nobj is None:
                 raise GalSimConfigError(
                     "Attribute nobjects is required for image.type = Scattered")

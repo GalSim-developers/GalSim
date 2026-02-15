@@ -16,8 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 import inspect
+import logging
 
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params, CleanConfig
+from .util import GetIndex, GetRNG, get_cls_params, CleanConfig
 from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from .sed import BuildSED
@@ -34,6 +35,8 @@ from ..gsparams import GSParams
 from ..utilities import basestring
 from ..chromatic import ChromaticAtmosphere
 from ..celestial import CelestialCoord
+
+logger = logging.getLogger(__name__)
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
@@ -57,7 +60,7 @@ class SkipThisObject(Exception):
         self.msg = message
 
 
-def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
+def BuildGSObject(config, key, base=None, gsparams={}):
     """Build a GSObject from the parameters in config[key].
 
     Parameters:
@@ -68,8 +71,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                     at this level will be added to the list.  This should be a dict with
                     whatever kwargs should be used in constructing the GSParams object.
                     [default: {}]
-        logger:     Optionally, provide a logger for logging debug statements.
-                    [default: None]
 
     Returns:
         the tuple (gsobject, safe), where ``gsobject`` is the built object, and ``safe`` is
@@ -77,7 +78,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     """
     from .. import __dict__ as galsim_dict
 
-    logger = LoggerWrapper(logger)
     if base is None:
         base = config
 
@@ -117,14 +117,13 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         cobj, csafe, cvalue_type, cindex, cindex_type = param['current']
         if csafe or cindex//repeat == index//repeat:
             # If logging, explain why we are using the current object.
-            if logger:
-                if csafe:
-                    logger.debug('obj %d: current is safe',base.get('obj_num',0))
-                elif repeat > 1:
-                    logger.debug('obj %d: repeat = %d, index = %d, use current object',
-                                base.get('obj_num',0),repeat,index)
-                else:
-                    logger.debug('obj %d: This object is already current', base.get('obj_num',0))
+            if csafe:
+                logger.debug('obj %d: current is safe',base.get('obj_num',0))
+            elif repeat > 1:
+                logger.debug('obj %d: repeat = %d, index = %d, use current object',
+                            base.get('obj_num',0),repeat,index)
+            else:
+                logger.debug('obj %d: This object is already current', base.get('obj_num',0))
 
             return cobj, csafe
 
@@ -188,9 +187,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         raise GalSimConfigValueError("Unrecognised gsobject type", type_name)
 
     if inspect.isclass(build_func) and issubclass(build_func, (GSObject, ChromaticObject)):
-        gsobject, safe = _BuildSimple(build_func, param, base, ignore, gsparams, logger)
+        gsobject, safe = _BuildSimple(build_func, param, base, ignore, gsparams)
     else:
-        gsobject, safe = build_func(param, base, ignore, gsparams, logger)
+        gsobject, safe = build_func(param, base, ignore, gsparams)
 
     # Apply any SED and redshift that might be present.
     if 'redshift' in param:
@@ -201,7 +200,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                  'sed field.')
             param['sed']['redshift'] = param.pop('redshift')
 
-    gsobject, safe1 = ApplySED(gsobject, param, base, logger)
+    gsobject, safe1 = ApplySED(gsobject, param, base)
     safe = safe and safe1
 
     if 'redshift' in param:
@@ -234,7 +233,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             pass
 
     # Apply any dilation, ellip, shear, etc. modifications.
-    gsobject, safe1 = TransformObject(gsobject, param, base, logger)
+    gsobject, safe1 = TransformObject(gsobject, param, base)
     safe = safe and safe1
 
     # Re-get index and index_key in case something changed when building the object.
@@ -265,17 +264,16 @@ def UpdateGSParams(gsparams, config, base):
     ret.update(kwargs)
     return ret
 
-def ApplySED(gsobject, config, base, logger):
+def ApplySED(gsobject, config, base):
     """Read and apply an SED to the base gsobject
 
     Parameters:
         gsobject:   The base GSObject
         config:     A dict with the configuration information.
         base:       The base dict of the configuration.
-        logger:     A logger for logging debug statements.
     """
     if 'sed' in config:
-        sed, safe = BuildSED(config, 'sed', base, logger)
+        sed, safe = BuildSED(config, 'sed', base)
         return gsobject * sed, safe
     else:
         return gsobject, True
@@ -285,7 +283,7 @@ def ApplySED(gsobject, config, base, logger):
 # These are not imported into galsim.config namespace.
 #
 
-def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
+def _BuildSimple(build_func, config, base, ignore, gsparams):
     """Build a simple GSObject (i.e. one without a specialized _Build function) or
     any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
@@ -298,7 +296,7 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     if takes_rng:
-        kwargs['rng'] = GetRNG(config, base, logger, type_name)
+        kwargs['rng'] = GetRNG(config, base, type_name)
         safe = False
 
     logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)
@@ -307,13 +305,13 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     return build_func(**kwargs), safe
 
 
-def _BuildNone(config, base, ignore, gsparams, logger):
+def _BuildNone(config, base, ignore, gsparams):
     """Special type=None returns None.
     """
     return None, True
 
 
-def _BuildAdd(config, base, ignore, gsparams, logger):
+def _BuildAdd(config, base, ignore, gsparams):
     """Build a Sum object.
     """
     req = { 'items' : list }
@@ -328,7 +326,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     safe = True
 
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         # Skip items with flux=0
         if 'flux' in items[i] and GetCurrentValue('flux',items[i],float,base) == 0.:
             logger.debug('obj %d: Not including component with flux == 0',base.get('obj_num',0))
@@ -361,7 +359,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildConvolve(config, base, ignore, gsparams, logger):
+def _BuildConvolve(config, base, ignore, gsparams):
     """Build a Convolution object.
     """
     req = { 'items' : list }
@@ -375,7 +373,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
         raise GalSimConfigError("items entry for type=Convolve is not a list.")
     safe = True
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         safe = safe and safe1
         gsobjects.append(gsobject)
 
@@ -390,7 +388,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildList(config, base, ignore, gsparams, logger):
+def _BuildList(config, base, ignore, gsparams):
     """Build a GSObject selected from a List.
     """
     req = { 'items' : list }
@@ -408,12 +406,12 @@ def _BuildList(config, base, ignore, gsparams, logger):
     if index < 0 or index >= len(items):
         raise GalSimConfigError("index %d out of bounds for List"%index)
 
-    gsobject, safe1 = BuildGSObject(items, index, base, gsparams, logger)
+    gsobject, safe1 = BuildGSObject(items, index, base, gsparams)
     safe = safe and safe1
 
     return gsobject, safe
 
-def _BuildEval(config, base, ignore, gsparams, logger):
+def _BuildEval(config, base, ignore, gsparams):
     """Build a GSObject from an Eval string
     """
     from .value_eval import _GenerateFromEval
@@ -453,7 +451,7 @@ def ParseAberrations(key, config, base, name):
     else:
         return None
 
-def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams, logger):
+def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams):
     req, opt, single, _ = get_cls_params(cls)
 
     kwargs, safe = GetAllParams(config, base, req, opt, single, ignore = ['aberrations'] + ignore)
@@ -462,18 +460,18 @@ def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams, logger):
 
     return cls(**kwargs), safe
 
-def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
+def _BuildOpticalPSF(config, base, ignore, gsparams):
     """Build an OpticalPSF.
     """
-    return _BuildJointOpticalPSF(OpticalPSF, config, base, ignore, gsparams, logger)
+    return _BuildJointOpticalPSF(OpticalPSF, config, base, ignore, gsparams)
 
-def _BuildChromaticOpticalPSF(config, base, ignore, gsparams, logger):
+def _BuildChromaticOpticalPSF(config, base, ignore, gsparams):
     """Build a ChromaticOpticalPSF.
     """
     # All the code for this is the same as for OpticalPSF, so use a shared implementation above.
-    return _BuildJointOpticalPSF(ChromaticOpticalPSF, config, base, ignore, gsparams, logger)
+    return _BuildJointOpticalPSF(ChromaticOpticalPSF, config, base, ignore, gsparams)
 
-def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
+def _BuildChromaticAtmosphere(config, base, ignore, gsparams):
     """Build a ChromaticAtmosphere.
     """
     req = {'base_wavelength' : float}
@@ -493,7 +491,7 @@ def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
 
     if 'base_profile' not in config:
         raise GalSimConfigError("Attribute base_profile is required for type=ChromaticAtmosphere")
-    base_profile, safe1 = BuildGSObject(config, 'base_profile', base, gsparams, logger)
+    base_profile, safe1 = BuildGSObject(config, 'base_profile', base, gsparams)
     safe = safe and safe1
 
     if 'zenith_angle' not in kwargs:
@@ -512,7 +510,7 @@ def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
 # Now the functions for performing transformations
 #
 
-def TransformObject(gsobject, config, base, logger):
+def TransformObject(gsobject, config, base):
     """Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
     supplied GSObject, in that order.
 
@@ -520,12 +518,10 @@ def TransformObject(gsobject, config, base, logger):
         gsobject:   The GSObject to be transformed.
         config:     A dict with the tranformation information for this object.
         base:       The base dict of the configuration.
-        logger:     A logger for logging debug statements.
 
     Returns:
         transformed GSObject.
     """
-    logger = LoggerWrapper(logger)
     # The transformations are applied in the following order:
     _transformation_list = [
         ('dilate', _Dilate),
@@ -544,35 +540,35 @@ def TransformObject(gsobject, config, base, logger):
     safe = True
     for key, func in _transformation_list:
         if key in config:
-            gsobject, safe1 = func(gsobject, config, key, base, logger)
+            gsobject, safe1 = func(gsobject, config, key, base)
             safe = safe and safe1
     return gsobject, safe
 
-def _Shear(gsobject, config, key, base, logger):
+def _Shear(gsobject, config, key, base):
     shear, safe = ParseValue(config, key, base, Shear)
     logger.debug('obj %d: shear = %f,%f',base.get('obj_num',0),shear.g1,shear.g2)
     gsobject = gsobject._shear(shear)
     return gsobject, safe
 
-def _Rotate(gsobject, config, key, base, logger):
+def _Rotate(gsobject, config, key, base):
     theta, safe = ParseValue(config, key, base, Angle)
     logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad)
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
-def _ScaleFlux(gsobject, config, key, base, logger):
+def _ScaleFlux(gsobject, config, key, base):
     flux_ratio, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: flux_ratio  = %f',base.get('obj_num',0),flux_ratio)
     gsobject = gsobject * flux_ratio
     return gsobject, safe
 
-def _Dilate(gsobject, config, key, base, logger):
+def _Dilate(gsobject, config, key, base):
     scale, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: scale  = %f',base.get('obj_num',0),scale)
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
-def _Lens(gsobject, config, key, base, logger):
+def _Lens(gsobject, config, key, base):
     shear, safe = ParseValue(config[key], 'shear', base, Shear)
     mu, safe1 = ParseValue(config[key], 'mu', base, float)
     safe = safe and safe1
@@ -581,13 +577,13 @@ def _Lens(gsobject, config, key, base, logger):
     gsobject = gsobject._lens(shear.g1, shear.g2, mu)
     return gsobject, safe
 
-def _Magnify(gsobject, config, key, base, logger):
+def _Magnify(gsobject, config, key, base):
     mu, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: mu  = %f',base.get('obj_num',0),mu)
     gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
-def _Shift(gsobject, config, key, base, logger):
+def _Shift(gsobject, config, key, base):
     shift, safe = ParseValue(config, key, base, PositionD)
     logger.debug('obj %d: shift  = %f,%f',base.get('obj_num',0),shift.x,shift.y)
     gsobject = gsobject._shift(shift.x, shift.y)
@@ -605,7 +601,6 @@ def RegisterObjectType(type_name, build_func, input_type=None):
        are present and not valid for the object being built.
     4. The gsparams parameter is a dict of kwargs that should be used to build a GSParams object
        to use when building this object.
-    5. The logger parameter is a logging.Logger object to use for logging progress if desired.
     6. The return value of build_func should be a tuple consisting of the object and a boolean,
        safe, which indicates whether the generated object is safe to use again rather than
        regenerate for subsequent postage stamps. e.g. if a PSF has all constant values, then it
@@ -618,7 +613,7 @@ def RegisterObjectType(type_name, build_func, input_type=None):
         build_func:     A function to build a GSObject from the config information.
                         The call signature is::
 
-                            obj, safe = Build(config, base, ignore, gsparams, logger)
+                            obj, safe = Build(config, base, ignore, gsparams)
 
         input_type:     If the type requires an input object, give the key name of the input
                         type here.  (If it uses more than one, this may be a list.)

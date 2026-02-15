@@ -35,10 +35,10 @@ processing with them.  (e.g. Run your shape measurement code on the images from 
 
 New features introduced in this demo:
 
-- galsim.config.Process(config, logger)
-- galsim.config.ProcessInput(config, logger)
-- galsim.config.BuildFile(config, file_num, logger)
-- image = galsim.config.BuildImage(config, image_num, logger)
+- galsim.config.Process(config)
+- galsim.config.ProcessInput(config)
+- galsim.config.BuildFile(config, file_num)
+- image = galsim.config.BuildImage(config, image_num)
 - galsim.fits.read(file_name)
 """
 
@@ -153,19 +153,13 @@ def main(argv):
     #
     #     image = galsim.config.BuildImage(config, image_num)
     #
-    # All of the above functions also have an optional kwarg, logger, which can take a
-    # logger object to output diagnostic information if desired.  We'll use that option here
-    # to output the progress of the build as we go.  Our logger is set with level=logging.INFO
-    # which means it will output a modest amount of text along the way.  Using level=logging.DEBUG
-    # will output a lot of text, useful when diagnosing a mysterious crash.  And using
-    # level=logging.WARNING or higher will be pretty silent unless there is a problem.
 
     t1 = time.time()
 
     # Build the image.
     # In this case, there is only a single image, so image_num=0.  This is the default, so we
     # can actually omit this parameter for brevity.
-    image = galsim.config.BuildImage(config, logger=logger)
+    image = galsim.config.BuildImage(config)
 
     # At this point you could do something interesting with the image in memory.
     # After all, that was kind of the point of using BuildImage rather than the other higher
@@ -202,7 +196,7 @@ def main(argv):
         'file_name' : multi_file_name
     }
     # Again, we are just building one file, so use the default value of file_num=0.
-    galsim.config.BuildFile(config, logger=logger)
+    galsim.config.BuildFile(config)
 
     t3 = time.time()
 

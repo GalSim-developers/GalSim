@@ -16,9 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 from astropy.units import Quantity, Unit
 
-from .util import LoggerWrapper
 from .value import ParseValue, GetAllParams, GetIndex
 from .input import RegisterInputConnectedType
 from .bandpass import BuildBandpass
@@ -26,25 +27,25 @@ from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..sed import SED
 from ..utilities import basestring, LRU_Cache
 
+logger = logging.getLogger(__name__)
+
 # This module-level dict will store all the registered SED types.
 # See the RegisterSEDType function at the end of this file.
 # The keys are the (string) names of the SED types, and the values will be builders that know
 # how to build the SED object.
 valid_sed_types = {}
 
-def BuildSED(config, key, base, logger=None):
+def BuildSED(config, key, base):
     """Read the SED parameters from config[key] and return a constructed SED object.
 
     Parameters:
         config:     A dict with the configuration information.
         key:        The key name in config indicating which object to build.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         (sed, safe) where sed is an SED instance, and safe is whether it is safe to reuse.
     """
-    logger = LoggerWrapper(logger)
     logger.debug('obj %d: Start BuildSED key = %s',base.get('obj_num',0),key)
 
     param = config[key]
@@ -77,7 +78,7 @@ def BuildSED(config, key, base, logger=None):
         raise GalSimConfigValueError("Invalid sed.type.", sed_type, list(valid_sed_types.keys()))
     logger.debug('obj %d: Building sed type %s', base.get('obj_num',0), sed_type)
     builder = valid_sed_types[sed_type]
-    sed, safe = builder.buildSED(param, base, logger)
+    sed, safe = builder.buildSED(param, base)
     logger.debug('obj %d: sed = %s', base.get('obj_num',0), sed)
 
     param['current'] = sed, safe, SED, index, index_key
@@ -90,7 +91,7 @@ class SEDBuilder:
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildSED(self, config, base, logger):
+    def buildSED(self, config, base):
         """Build the SED based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
@@ -98,7 +99,6 @@ class SEDBuilder:
         Parameters:
             config:     The configuration dict for the SED type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed SED object.
@@ -120,18 +120,16 @@ class FileSEDBuilder(SEDBuilder):
         flux_type (required)    Which kind of flux values are in the file
                                 Allowed values: flambda, fnu, fphotons, 1
     """
-    def buildSED(self, config, base, logger):
+    def buildSED(self, config, base):
         """Build the SED based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the SED type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed SED object.
         """
-        logger = LoggerWrapper(logger)
 
         req = {
             'file_name': str,
@@ -162,7 +160,7 @@ class FileSEDBuilder(SEDBuilder):
         if norm_flux_density is not None:
             sed = sed.withFluxDensity(norm_flux_density, wavelength=norm_wavelength)
         elif norm_flux:
-            bandpass, safe1 = BuildBandpass(config, 'norm_bandpass', base, logger)
+            bandpass, safe1 = BuildBandpass(config, 'norm_bandpass', base)
             sed = sed.withFlux(norm_flux, bandpass=bandpass)
             safe = safe and safe1
         sed = sed.atRedshift(redshift)

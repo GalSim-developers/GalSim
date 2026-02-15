@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import sys
 import os
 import json
@@ -27,6 +28,8 @@ from .util import *
 
 from .output import GetNFiles, BuildFiles
 from ..errors import GalSimValueError
+
+logger = logging.getLogger(__name__)
 
 top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
                     'eval_variables', 'root', 'modules', 'profile']
@@ -42,7 +45,7 @@ valid_index_keys = [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]
 # real file location on disk.
 valid_templates = {}
 
-def ReadConfig(config_file, file_type=None, logger=None):
+def ReadConfig(config_file, file_type=None):
     """Read in a configuration file and return the corresponding dicts.
 
     A YAML file is allowed to define several dicts using multiple documents. The GalSim parser
@@ -64,12 +67,10 @@ def ReadConfig(config_file, file_type=None, logger=None):
         config_file:    The name of the configuration file to read.
         file_type:      If given, the type of file to read.  [default: None, which mean
                         infer the file type from the extension.]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         list of config dicts
     """
-    logger = LoggerWrapper(logger)
     logger.warning('Reading config file %s', config_file)
     # Determine the file type from the extension if necessary:
     if file_type is None:
@@ -119,18 +120,16 @@ def ImportModules(config, gdict=None):
                 else:
                     raise
 
-def ProcessTemplate(config, base, logger=None):
+def ProcessTemplate(config, base):
     """If the config dict has a 'template' item, read in the appropriate file and
     make any requested updates.
 
     Parameters:
         config:         The configuration dict.
         base:           The base configuration dict.
-        logger:         If given, a logger object to log progress. [default: None]
     """
     from .value_eval import _GenerateFromEval
 
-    logger = LoggerWrapper(logger)
     if 'template' in config:
         template_string = config.pop('template')
         logger.debug("Processing template specified as %s",template_string)
@@ -155,7 +154,7 @@ def ProcessTemplate(config, base, logger=None):
 
         # Read the config file if appropriate
         if config_file != '':
-            template = ReadConfig(config_file, logger=logger)[0]
+            template = ReadConfig(config_file)[0]
             ImportModules(template)
         else:
             template = base
@@ -165,7 +164,7 @@ def ProcessTemplate(config, base, logger=None):
             template = GetFromConfig(template, field)
 
         # In case template has further templates to process, do that now.
-        ProcessTemplate(template, base=base, logger=logger)
+        ProcessTemplate(template, base=base)
 
         # Copy over the template config into this one.
         new_params = config.copy()  # N.B. Already popped config['template'].
@@ -179,29 +178,28 @@ def ProcessTemplate(config, base, logger=None):
             config['modules'].extend(new_params.pop('modules', []))
 
         # Update the config with the requested changes
-        UpdateConfig(config, new_params, logger)
+        UpdateConfig(config, new_params)
 
 
-def ProcessAllTemplates(config, logger=None, base=None):
+def ProcessAllTemplates(config, base=None):
     """Check through the full config dict and process any fields that have a 'template' item.
 
     Parameters:
         config:         The configuration dict.
-        logger:         If given, a logger object to log progress. [default: None]
         base:           The base configuration dict. [default: None]
     """
     if base is None: base = config
-    ProcessTemplate(config, base, logger)
+    ProcessTemplate(config, base)
     for (key, field) in list(config.items()):
         if isinstance(field, dict):
-            ProcessAllTemplates(field, logger, base)
+            ProcessAllTemplates(field, base)
         elif isinstance(field, list):
             for item in field:
                 if isinstance(item, dict):
-                    ProcessAllTemplates(item, logger, base)
+                    ProcessAllTemplates(item, base)
 
 # This is the main script to process everything in the configuration dict.
-def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=False):
+def Process(config, njobs=1, job=1, new_params=None, except_abort=False):
     """
     Do all processing of the provided configuration dict.  In particular, this
     function handles processing the output field, calling other functions to
@@ -216,7 +214,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
 
     Parameters:
         config:         The configuration dict.
-        logger:         If given, a logger object to log progress. [default: None]
         njobs:          The total number of jobs to split the work into. [default: 1]
         job:            Which job should be worked on here (1..njobs). [default: 1]
         new_params:     A dict of new parameter values that should be used to update the config
@@ -227,7 +224,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     Returns:
         the final config dict that was used.
     """
-    logger = LoggerWrapper(logger)
     if njobs < 1:
         raise GalSimValueError("Invalid number of jobs",njobs)
     if job < 1:
@@ -242,11 +238,11 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     ImportModules(config)
 
     # Process any template specifications in the dict.
-    ProcessAllTemplates(config, logger)
+    ProcessAllTemplates(config)
 
     # Update using any new_params that are given:
     if new_params is not None:
-        UpdateConfig(config, new_params, logger)
+        UpdateConfig(config, new_params)
 
     # Do this again in case any new modules were added by the templates or command line params.
     ImportModules(config)
@@ -256,14 +252,14 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
 
     # Warn about any unexpected fields.
     unexpected = [ k for k in config if k not in top_level_fields and k[0] != '_' ]
-    if len(unexpected) > 0 and logger:
+    if len(unexpected) > 0:
         logger.warning("Warning: config dict contains the following unexpected fields: %s.",
                        unexpected)
         logger.warning("These fields are not (directly) processed by the config processing.")
 
     # Determine how many files we will be processing in total.
     # Usually, this is just output.nfiles, but different output types may define this differently.
-    nfiles = GetNFiles(config, logger=logger)
+    nfiles = GetNFiles(config)
     logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:
@@ -282,7 +278,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
 
     #BuildFiles returns the config dictionary, which can includes stuff added
     #by custom output types during the run.
-    config_out = BuildFiles(nfiles, config, file_num=start, logger=logger,
+    config_out = BuildFiles(nfiles, config, file_num=start,
                             except_abort=except_abort)
     #Return config_out in case useful
     return config_out

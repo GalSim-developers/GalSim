@@ -27,7 +27,9 @@ from urllib.request import urlopen
 from ._version import __version__ as version
 from .meta_data import share_dir
 from .utilities import ensure_dir
-from .main import make_logger
+from .main import setup_logger
+
+logger = logging.getLogger(__name__)
 
 script_name = 'galsim_download_cosmos'
 
@@ -118,7 +120,7 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
     return valid[choice]
 
-def get_names(args, logger):
+def get_names(args):
     if args.dir is not None:
         target_dir = os.path.expanduser(args.dir)
         do_link = not args.nolink
@@ -137,7 +139,7 @@ def get_names(args, logger):
 
     return url, target, target_dir, link_dir, unpack_dir, do_link
 
-def get_meta(url, args, logger):
+def get_meta(url, args):
     logger.info('')
 
     # See how large the file to be downloaded is.
@@ -150,7 +152,7 @@ def get_meta(url, args, logger):
 
     return meta
 
-def check_existing(target, unpack_dir, meta, args, logger):
+def check_existing(target, unpack_dir, meta, args):
     # Make sure the directory we want to put this file exists.
     ensure_dir(target)
 
@@ -265,7 +267,7 @@ def check_existing(target, unpack_dir, meta, args, logger):
                 do_download = False
     return do_download
 
-def download(do_download, url, target, meta, args, logger):
+def download(do_download, url, target, meta, args):
     if not do_download: return
     logger.info("")
     u = urlopen(url)
@@ -332,7 +334,7 @@ def check_unpack(do_download, unpack_dir, target, args):
             do_unpack=True
     return do_unpack
 
-def unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger):
+def unpack(do_unpack, target, target_dir, unpack_dir, meta, args):
     if not do_unpack: return
     logger.info("Unpacking the tarball...")
     with tarfile.open(target) as tar:
@@ -387,12 +389,12 @@ def check_remove(do_unpack, target, args):
             do_remove = True
     return do_remove
 
-def remove_tarball(do_remove, target, logger):
+def remove_tarball(do_remove, target):
     if do_remove:
         logger.info("Removing the tarball to save space")
         os.remove(target)
 
-def make_link(do_link, unpack_dir, link_dir, args, logger):
+def make_link(do_link, unpack_dir, link_dir, args):
     if not do_link: return
     logger.debug("Linking to %s from %s", unpack_dir, link_dir)
     if os.path.lexists(link_dir):
@@ -431,8 +433,8 @@ def make_link(do_link, unpack_dir, link_dir, args, logger):
     logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
 
-def download_cosmos(args, logger):
-    """The main script given the ArgParsed args and a logger
+def download_cosmos(args):
+    """The main script given the ArgParsed args
     """
     # Give diagnostic about GalSim version
     logger.debug("GalSim version: %s",version)
@@ -447,33 +449,33 @@ def download_cosmos(args, logger):
     # link_dir is the directory where this would normally have been unpacked.
     # unpack_dir is the directory that the tarball will unpack into.
 
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
 
-    meta = get_meta(url, args, logger)
+    meta = get_meta(url, args)
 
     # Check if the file already exists and if it is the right size
-    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    do_download = check_existing(target, unpack_dir, meta, args)
 
     # Download the tarball
-    download(do_download, url, target, meta, args, logger)
+    download(do_download, url, target, meta, args)
 
     # Unpack the tarball
     do_unpack = check_unpack(do_download, unpack_dir, target, args)
-    unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger)
+    unpack(do_unpack, target, target_dir, unpack_dir, meta, args)
 
     # Remove the tarball
     do_remove = check_remove(do_unpack, target, args)
-    remove_tarball(do_remove, target, logger)
+    remove_tarball(do_remove, target)
 
     # If we are downloading to an alternate directory, we (usually) link to it from share/galsim
-    make_link(do_link, unpack_dir, link_dir, args, logger)
+    make_link(do_link, unpack_dir, link_dir, args)
 
 def main(command_args):
     """The whole process given command-line parameters in their native (non-ArgParse) form.
     """
     args = parse_args(command_args)
-    logger = make_logger(args)
-    download_cosmos(args, logger)
+    setup_logger(args)
+    download_cosmos(args)
 
 def run_main():
     """Kick off the process grabbing the command-line parameters from sys.argv

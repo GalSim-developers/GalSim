@@ -21,7 +21,7 @@ import numpy as np
 import math
 import traceback
 
-from .util import LoggerWrapper, GetRNG, UpdateNProc, MultiProcess, SetupConfigRNG, RemoveCurrent
+from .util import GetRNG, UpdateNProc, MultiProcess, SetupConfigRNG, RemoveCurrent
 from .input import SetupInput
 from .gsobject import UpdateGSParams, SkipThisObject
 from .gsobject import BuildGSObject
@@ -42,6 +42,8 @@ from ..box import Pixel
 from ..chromatic import ChromaticObject
 from ..bandpass import Bandpass
 
+logger = logging.getLogger(__name__)
+
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
 # config['gal'] and a PSF from config['psf'] (either but not both of which may be absent),
@@ -57,7 +59,7 @@ valid_stamp_types = {}
 
 
 def BuildStamps(nobjects, config, obj_num=0,
-                xsize=0, ysize=0, do_noise=True, logger=None):
+                xsize=0, ysize=0, do_noise=True):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -75,12 +77,10 @@ def BuildStamps(nobjects, config, obj_num=0,
                         automatic sizing.]
         do_noise:       Whether to add noise to the image (according to config['noise']).
                         [default: True]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         the tuple (images, current_vars).  Both are themselves tuples.
     """
-    logger = LoggerWrapper(logger)
     logger.debug('image %d: BuildStamps nobjects = %d: obj = %d',
                  config.get('image_num',0),nobjects,obj_num)
 
@@ -92,7 +92,7 @@ def BuildStamps(nobjects, config, obj_num=0,
     if nobjects > 1 and 'image' in config and 'nproc' in config['image']:
         nproc = ParseValue(config['image'], 'nproc', config, int)[0]
         # Update this in case the config value is -1
-        nproc = UpdateNProc(nproc, nobjects, config, logger)
+        nproc = UpdateNProc(nproc, nobjects, config)
     else:
         nproc = 1
 
@@ -111,7 +111,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         }
         jobs.append(kwargs)
 
-    def done_func(logger, proc, k, result, t):
+    def done_func(proc, k, result, t):
         if result[0] is not None:
             # Note: numpy shape is y,x
             image = result[0]
@@ -121,7 +121,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             obj_num = jobs[k]['obj_num']
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
-    def except_func(logger, proc, k, e, tr):
+    def except_func(proc, k, e, tr):
         if proc is None: s0 = ''
         else: s0 = '%s: '%proc
         obj_num = jobs[k]['obj_num']
@@ -131,10 +131,10 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     # Convert to the tasks structure we need for MultiProcess.
     # Each task is a list of (job, k) tuples.
-    tasks = MakeStampTasks(config, jobs, logger)
+    tasks = MakeStampTasks(config, jobs)
 
     results = MultiProcess(nproc, config, BuildStamp, tasks, 'stamp',
-                           logger=logger, timeout=timeout,
+                           timeout=timeout,
                            done_func=done_func, except_func=except_func)
 
     images, current_vars = zip(*results)
@@ -151,7 +151,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method', 'dtype',
                     'n_photons', 'max_extra_noise', 'poisson_flux', 'obj_rng']
 
-def SetupConfigObjNum(config, obj_num, logger=None):
+def SetupConfigObjNum(config, obj_num):
     """Do the basic setup of the config dict at the stamp (or object) processing level.
 
     Includes:
@@ -167,9 +167,7 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     Parameters:
         config:         A configuration dict.
         obj_num:        The current obj_num.
-        logger:         If given, a logger object to log progress. [default: None]
     """
-    logger = LoggerWrapper(logger)
     config['obj_num'] = obj_num
     config['index_key'] = 'obj_num'
 
@@ -207,12 +205,12 @@ def SetupConfigObjNum(config, obj_num, logger=None):
         stamp['draw_method'] = 'auto'
 
     # In case this hasn't been done yet.
-    SetupInput(config, logger)
+    SetupInput(config)
 
     # Mark this as done, so later passes can skip a lot of this.
     stamp['_done'] = True
 
-def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None):
+def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     """Do further setup of the config dict at the stamp (or object) processing level reflecting
     the stamp size and position in either image or world coordinates.
 
@@ -224,12 +222,11 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
         ysize:          The size of the stamp in the y-dimension. [may be 0 if unknown]
         image_pos:      The position of the stamp in image coordinates. [may be None]
         world_pos:      The position of the stamp in world coordinates. [may be None]
-        logger:         If given, a logger object to log progress. [default: None]
     """
     stamp = config.get('stamp',{})
     stamp_type = stamp.get('type','Basic')
     builder = valid_stamp_types[stamp_type]
-    builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos, logger)
+    builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos)
 
 
 # Ignore these when parsing the parameters for specific stamp types:
@@ -241,7 +238,7 @@ stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos', 'sky_pos',
 
 valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
 
-def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
+def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True):
     """
     Build a single stamp image using the given config file
 
@@ -252,15 +249,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         ysize:          The ysize of the stamp to build (if known). [default: 0]
         do_noise:       Whether to add noise to the image (according to config['noise']).
                         [default: True]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         the tuple (image, current_var)
     """
     from .extra import ProcessExtraOutputsForStamp
 
-    logger = LoggerWrapper(logger)
-    SetupConfigObjNum(config, obj_num, logger)
+    SetupConfigObjNum(config, obj_num)
 
     stamp = config['stamp']
     stamp_type = stamp['type']
@@ -270,10 +265,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     builder = valid_stamp_types[stamp_type]
 
     if builder.quickSkip(stamp, config):
-        ProcessExtraOutputsForStamp(config, True, logger)
+        ProcessExtraOutputsForStamp(config, True)
         return None, 0
 
-    builder.setupRNG(stamp, config, logger)
+    builder.setupRNG(stamp, config)
 
     if 'skip_failures' in stamp:
         skip_failures = ParseValue(stamp, 'skip_failures', config, bool)[0]
@@ -308,10 +303,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Do the necessary initial setup for this stamp type.
             xsize, ysize, image_pos, world_pos = builder.setup(
-                    stamp, config, xsize, ysize, stamp_ignore, logger)
+                    stamp, config, xsize, ysize, stamp_ignore)
 
             # Determine the stamp size and location
-            builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos, logger)
+            builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos)
 
             # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
@@ -327,35 +322,35 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             #       Skip is also different from prof = None.
             #       If prof is None, then the user indicated that no object should be
             #       drawn on this stamp, but that a noise image is still desired.
-            if builder.getSkip(stamp, config, logger):
+            if builder.getSkip(stamp, config):
                 raise SkipThisObject('')
 
             # Build the object to draw
-            psf = builder.buildPSF(stamp, config, gsparams, logger)
-            prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
+            psf = builder.buildPSF(stamp, config, gsparams)
+            prof = builder.buildProfile(stamp, config, psf, gsparams)
 
             # Make an empty image
-            im = builder.makeStamp(stamp, config, xsize, ysize, logger)
+            im = builder.makeStamp(stamp, config, xsize, ysize)
 
             # Determine which draw method to use
-            method = builder.getDrawMethod(stamp, config, logger)
+            method = builder.getDrawMethod(stamp, config)
 
             # Determine the net offset (starting from config['stamp_offset'] typically.
-            offset = builder.getOffset(stamp, config, logger)
+            offset = builder.getOffset(stamp, config)
 
             # At this point, we may want to update whether the object should be skipped
             # based on other information about the profile and location.
-            if builder.updateSkip(prof, im, method, offset, stamp, config, logger):
+            if builder.updateSkip(prof, im, method, offset, stamp, config):
                 raise SkipThisObject('')
 
             # Draw the object on the postage stamp
-            im = builder.draw(prof, im, method, offset, stamp, config, logger)
+            im = builder.draw(prof, im, method, offset, stamp, config)
             # Store the final version of the current profile for reference.
             config['current_prof'] = prof
 
             # Update the drawn image according to the SNR if desired.
-            scale_factor = builder.getSNRScale(im, stamp, config, logger)
-            im, prof = builder.applySNRScale(im, prof, scale_factor, method, logger)
+            scale_factor = builder.getSNRScale(im, stamp, config)
+            im, prof = builder.applySNRScale(im, prof, scale_factor, method)
 
             # Set the origin appropriately
             builder.updateOrigin(stamp, config, im)
@@ -366,28 +361,28 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             config['do_noise_in_stamps'] = do_noise
 
             # Check if this object should be rejected.
-            reject = builder.reject(stamp, config, prof, psf, im, logger)
+            reject = builder.reject(stamp, config, prof, psf, im)
             if reject:
                 if itry < ntries:
                     logger.warning('Object %d: Rejecting this object and rebuilding', obj_num)
-                    builder.reset(config, logger)
+                    builder.reset(config)
                     continue
                 else:
                     raise GalSimConfigError(
                             "Rejected an object %d times. If this is expected, "
                             "you should specify a larger stamp.retry_failures."%(ntries))
 
-            ProcessExtraOutputsForStamp(config, False, logger)
+            ProcessExtraOutputsForStamp(config, False)
 
             # We always need to do the whiten step here in the stamp processing
-            current_var = builder.whiten(prof, im, stamp, config, logger)
+            current_var = builder.whiten(prof, im, stamp, config)
             if current_var != 0.:
                 logger.debug('obj %d: whitening noise brought current var to %f',
                                 config.get('obj_num',0),current_var)
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                im, current_var = builder.addNoise(stamp,config,im,current_var,logger)
+                im, current_var = builder.addNoise(stamp,config,im,current_var)
 
         except SkipThisObject as e:
             if e.msg != '':
@@ -395,8 +390,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             logger.info('Skipping object %d %s', obj_num, e.msg)
             # If xsize, ysize != 0, then this makes a blank stamp for this object.
             # Otherwise, it's just None here.
-            im = builder.makeStamp(stamp, config, xsize, ysize, logger)
-            ProcessExtraOutputsForStamp(config, True, logger)
+            im = builder.makeStamp(stamp, config, xsize, ysize)
+            ProcessExtraOutputsForStamp(config, True)
             return im, 0.
 
         except Exception as e:
@@ -406,8 +401,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 logger.info('Skipping this object')
                 # Now same as SkipThisObject case above.
-                im = builder.makeStamp(stamp, config, xsize, ysize, logger)
-                ProcessExtraOutputsForStamp(config, True, logger)
+                im = builder.makeStamp(stamp, config, xsize, ysize)
+                ProcessExtraOutputsForStamp(config, True)
                 return im, 0.
             elif itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
@@ -424,7 +419,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                builder.reset(config, logger)
+                builder.reset(config)
                 continue
 
         else:
@@ -432,7 +427,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             return im, current_var
 
 
-def MakeStampTasks(config, jobs, logger):
+def MakeStampTasks(config, jobs):
     """Turn a list of jobs into a list of tasks.
 
     See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
@@ -448,17 +443,16 @@ def MakeStampTasks(config, jobs, logger):
         config:         The configuration dict
         jobs:           A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'obj_num'.
-        logger:         A logger object to log progress.
 
     Returns:
         a list of tasks
     """
     stamp = config.get('stamp', {})
     stamp_type = stamp.get('type', 'Basic')
-    return valid_stamp_types[stamp_type].makeTasks(stamp, config, jobs, logger)
+    return valid_stamp_types[stamp_type].makeTasks(stamp, config, jobs)
 
 
-def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
+def DrawBasic(prof, image, method, offset, config, base, **kwargs):
     """The basic implementation of the draw command
 
     This function is provided as a free function, rather than just the base class implementation
@@ -476,13 +470,11 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         offset:     The offset to apply when drawing.
         config:     The configuration dict for the stamp field.
         base:       The base configuration dict.
-        logger:     A logger object to log progress.
         **kwargs:   Any additional kwargs are passed along to the drawImage function.
 
     Returns:
         the resulting image
     """
-    logger = LoggerWrapper(logger)
     # Setup the kwargs to pass to drawImage
     # (Start with any additional kwargs given as extra kwargs to DrawBasic and add to it.)
     kwargs['image'] = image
@@ -496,7 +488,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         # The cadence specified in the noise field is what to use for photon shooting.
         noise = base.get('image',{}).get('noise',{})
         noise = noise if isinstance(noise, dict) else {}
-        rng = GetRNG(noise, base, logger, "method='phot'")
+        rng = GetRNG(noise, base, "method='phot'")
         kwargs['rng'] = rng
 
     # Check validity of extra phot options:
@@ -538,7 +530,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         raise GalSimConfigError("Drawing chromatic object requires specifying bandpass")
 
     if 'photon_ops' in config:
-        kwargs['photon_ops'] = BuildPhotonOps(config, 'photon_ops', base, logger)
+        kwargs['photon_ops'] = BuildPhotonOps(config, 'photon_ops', base)
 
     if sensor is not None:
         sensor.updateRNG(rng)
@@ -562,7 +554,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     logger.debug('obj %d: added_flux = %s',base.get('obj_num',0), image.added_flux)
     return image
 
-def ParseWorldPos(config, param_name, base, logger):
+def ParseWorldPos(config, param_name, base):
     """A helper function to parse the 'world_pos' value.
 
     The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a
@@ -629,7 +621,7 @@ class StampBuilder:
     It also includes the implementation of the default stamp type: Basic.
     """
 
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         """
         Do the initialization and setup for building a postage stamp.
 
@@ -647,7 +639,6 @@ class StampBuilder:
             ysize:      The ysize of the image to build (if known).
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     A logger object to log progress.
 
         Returns:
             xsize, ysize, image_pos, world_pos
@@ -686,9 +677,9 @@ class StampBuilder:
             image_pos = None
 
         if 'world_pos' in config:
-            world_pos = ParseWorldPos(config, 'world_pos', base, logger)
+            world_pos = ParseWorldPos(config, 'world_pos', base)
         elif 'world_pos' in image:
-            world_pos = ParseWorldPos(image, 'world_pos', base, logger)
+            world_pos = ParseWorldPos(image, 'world_pos', base)
         else:
             world_pos = None
 
@@ -707,7 +698,7 @@ class StampBuilder:
         """
         return ('quick_skip' in config and ParseValue(config, 'quick_skip', base, bool)[0])
 
-    def setupRNG(self, config, base, logger):
+    def setupRNG(self, config, base):
         """Setup the RNG for this object.
 
         @param config       The configuration dict for the stamp field.
@@ -721,10 +712,10 @@ class StampBuilder:
                 return
 
         # Add 1 to the seed here so the first object has a different rng than the file or image.
-        seed = SetupConfigRNG(base, seed_offset=1, logger=logger)
+        seed = SetupConfigRNG(base, seed_offset=1)
         logger.debug('obj %d: seed = %d',base.get('obj_num',0),seed)
 
-    def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos, logger):
+    def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos):
         """Determine where and how large the stamp should be.
 
         The base class version does the followin:
@@ -747,13 +738,11 @@ class StampBuilder:
         @param ysize        The size of the stamp in the y-dimension. [may be 0 if unknown]
         @param image_pos    The position of the stamp in image coordinates. [may be None]
         @param world_pos    The position of the stamp in world coordinates. [may be None]
-        @param logger       A logger object to log progress.
         """
-        logger = LoggerWrapper(logger)
 
         # Make sure we have a valid wcs in case image-level processing was skipped.
         if 'wcs' not in base:
-            base['wcs'] = BuildWCS(base['image'], 'wcs', config, logger)
+            base['wcs'] = BuildWCS(base['image'], 'wcs', config)
         wcs = base['wcs']
 
         if xsize: base['stamp_xsize'] = xsize
@@ -824,12 +813,11 @@ class StampBuilder:
         if stamp_center:
             logger.debug('obj %d: stamp_center = %s',base.get('obj_num',0),stamp_center)
 
-    def getSkip(self, config, base, logger):
+    def getSkip(self, config, base):
         """Initial check of whether to skip this object based on the stamp.skip field.
 
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
-        @param logger       A logger object to log progress.
 
         @returns skip
         """
@@ -841,7 +829,7 @@ class StampBuilder:
             skip = False
         return skip
 
-    def buildPSF(self, config, base, gsparams, logger):
+    def buildPSF(self, config, base, gsparams):
         """Build the PSF object.
 
         For the Basic stamp type, this builds a PSF from the base['psf'] dict, if present,
@@ -852,14 +840,13 @@ class StampBuilder:
             base:       The base configuration dict.
             gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
                         list by the galaxy object.
-            logger:     A logger object to log progress.
 
         Returns:
             the PSF
         """
-        return BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0]
+        return BuildGSObject(base, 'psf', gsparams=gsparams)[0]
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
+    def buildProfile(self, config, base, psf, gsparams):
         """Build the surface brightness profile (a GSObject) to be drawn.
 
         For the Basic stamp type, this builds a galaxy from the base['gal'] dict and convolves
@@ -872,12 +859,11 @@ class StampBuilder:
             psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.
             gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
                         list by the galaxy object.
-            logger:     A logger object to log progress.
 
         Returns:
             the final profile
         """
-        gal = BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+        gal = BuildGSObject(base, 'gal', gsparams=gsparams)[0]
 
         if psf:
             if gal:
@@ -894,7 +880,7 @@ class StampBuilder:
                     "At least one of gal or psf must be specified in config. "
                     "If you really don't want any object, use gal type = None.")
 
-    def makeStamp(self, config, base, xsize, ysize, logger):
+    def makeStamp(self, config, base, xsize, ysize):
         """Make the initial empty postage stamp image, if possible.
 
         If we don't know xsize, ysize, return None, in which case the stamp will be created
@@ -905,7 +891,6 @@ class StampBuilder:
             base:       The base configuration dict.
             xsize:      The xsize of the image to build (if known).
             ysize:      The ysize of the image to build (if known).
-            logger:     A logger object to log progress.
 
         Returns:
             the image
@@ -927,12 +912,11 @@ class StampBuilder:
         else:
             return None
 
-    def getDrawMethod(self, config, base, logger):
+    def getDrawMethod(self, config, base):
         """Determine the draw method to use.
 
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
-        @param logger       A logger object to log progress.
 
         @returns method
         """
@@ -941,7 +925,7 @@ class StampBuilder:
             raise GalSimConfigValueError("Invalid draw_method.", method, valid_draw_methods)
         return method
 
-    def getOffset(self, config, base, logger):
+    def getOffset(self, config, base):
         """Determine the offset to use.
 
         The base class version adds the stamp_offset, which comes from calculations related to
@@ -949,7 +933,6 @@ class StampBuilder:
 
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
-        @param logger       A logger object to log progress.
 
         @returns offset
         """
@@ -960,7 +943,7 @@ class StampBuilder:
                      base['stamp_offset'], offset)
         return offset
 
-    def updateSkip(self, prof, image, method, offset, config, base, logger):
+    def updateSkip(self, prof, image, method, offset, config, base):
         """Before drawing the profile, see whether this object can be trivially skipped.
 
         The base method checks if the object is completely off the main image, so the
@@ -974,7 +957,6 @@ class StampBuilder:
             offset:     The offset to apply when drawing.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     A logger object to log progress.
 
         Returns:
             whether to skip drawing this object.
@@ -1005,7 +987,7 @@ class StampBuilder:
 
         return False
 
-    def draw(self, prof, image, method, offset, config, base, logger):
+    def draw(self, prof, image, method, offset, config, base):
         """Draw the profile on the postage stamp image.
 
         Parameters:
@@ -1015,7 +997,6 @@ class StampBuilder:
             offset:     The offset to apply when drawing.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     A logger object to log progress.
 
         Returns:
             the resulting image
@@ -1023,9 +1004,9 @@ class StampBuilder:
         if prof is None:
             return image
         else:
-            return DrawBasic(prof,image,method,offset,config,base,logger)
+            return DrawBasic(prof,image,method,offset,config,base)
 
-    def whiten(self, prof, image, config, base, logger):
+    def whiten(self, prof, image, config, base):
         """If appropriate, whiten the resulting image according to the requested noise profile
         and the amount of noise originally present in the profile.
 
@@ -1034,7 +1015,6 @@ class StampBuilder:
             image:      The image onto which to draw the profile.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     A logger object to log progress.
 
         Returns:
             the variance of the resulting whitened (or symmetrized) image.
@@ -1053,7 +1033,7 @@ class StampBuilder:
                     raise GalSimConfigError('Only one of whiten or symmetrize is allowed')
                 if whiten or symmetrize:
                     # In case the galaxy was cached, update the rng
-                    rng = GetRNG(noise, base, logger, "whiten")
+                    rng = GetRNG(noise, base, "whiten")
                     prof.noise.rng.reset(rng)
                 if whiten:
                     current_var = prof.noise.whitenImage(image)
@@ -1061,7 +1041,7 @@ class StampBuilder:
                     current_var = prof.noise.symmetrizeImage(image, symmetrize)
         return current_var
 
-    def getSNRScale(self, image, config, base, logger):
+    def getSNRScale(self, image, config, base):
         """Calculate the factor by which to rescale the image based on a desired S/N level.
 
         Note: The default implementation does this for the gal or psf field, so if a custom
@@ -1072,7 +1052,6 @@ class StampBuilder:
             image:      The current image.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     A logger object to log progress.
 
         Returns:
             scale_factor
@@ -1111,7 +1090,7 @@ class StampBuilder:
         scale_factor = sn_target / sn_meas
         return scale_factor
 
-    def applySNRScale(self, image, prof, scale_factor, method, logger):
+    def applySNRScale(self, image, prof, scale_factor, method):
         """Apply the scale_factor from getSNRScale to the image and profile.
 
         The default implementaion just multiplies each of them, but if prof is not a regular
@@ -1122,7 +1101,6 @@ class StampBuilder:
             prof:           The profile that was drawn.
             scale_factor:   The factor by which to scale both image and prof.
             method:         The method used by drawImage.
-            logger:         A logger object to log progress.
 
         Returns:
             image, prof  (after being properly scaled)
@@ -1149,7 +1127,7 @@ class StampBuilder:
             image.setOrigin(base.get('image_origin',PositionI(1,1)))
 
 
-    def reject(self, config, base, prof, psf, image, logger):
+    def reject(self, config, base, prof, psf, image):
         """Check to see if this object should be rejected.
 
         Parameters:
@@ -1158,7 +1136,6 @@ class StampBuilder:
             prof:       The profile that was drawn.
             psf:        The psf that was used to build the profile.
             image:      The postage stamp image.  No noise is on it yet at this point.
-            logger:     A logger object to log progress.
 
         Returns:
             whether to reject this object
@@ -1208,13 +1185,12 @@ class StampBuilder:
                     return True
         return False
 
-    def reset(self, base, logger):
+    def reset(self, base):
         """Reset some aspects of the config dict so the object can be rebuilt after rejecting the
         current object.
 
         Parameters:
             base:       The base configuration dict.
-            logger:     A logger object to log progress.
         """
         # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
         # This means they are either marked as safe or indexed by something other than obj_num.
@@ -1222,7 +1198,7 @@ class StampBuilder:
             if field in base:
                 RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
 
-    def addNoise(self, config, base, image, current_var, logger):
+    def addNoise(self, config, base, image, current_var):
         """
         Add the sky level and the noise to the stamp.
 
@@ -1234,17 +1210,16 @@ class StampBuilder:
             base:           The base configuration dict.
             image:          The current image.
             current_var:    The current noise variance present in the image already.
-            logger:         A logger object to log progress.
 
         Returns:
             the new values of image, current_var
         """
         base['current_noise_image'] = base['current_stamp']
         AddSky(base,image)
-        current_var = AddNoise(base,image,current_var,logger)
+        current_var = AddNoise(base,image,current_var)
         return image, current_var
 
-    def makeTasks(self, config, base, jobs, logger):
+    def makeTasks(self, config, base, jobs):
         """Turn a list of jobs into a list of tasks.
 
         For the Basic stamp type, there is just one job per task, so the tasks list is just:
@@ -1256,7 +1231,6 @@ class StampBuilder:
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'obj_num'.
-            logger:     A logger object to log progress.
 
         Returns:
             a list of tasks

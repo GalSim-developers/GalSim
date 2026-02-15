@@ -28,14 +28,12 @@ def _ret_size(size=-1):
 
 
 class InputSizeLoader(galsim.config.InputLoader):
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         req = {"size": int}
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
-        if self.takes_logger:
-            kwargs["logger"] = logger
         return kwargs, True
 
-    def initialize(self, input_objs, num, base, logger):
+    def initialize(self, input_objs, num, base):
         if num == 0:
             base['input_size_0'] = input_objs[0]
         if all(iobj is not None for iobj in input_objs):

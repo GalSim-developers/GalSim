@@ -18,12 +18,14 @@
 
 import logging
 
-from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
+from .util import GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from ..sensor import Sensor, SiliconSensor
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import basestring
+
+logger = logging.getLogger(__name__)
 
 # This file handles the construction of a Sensor in config['image']['sensor'].
 
@@ -34,7 +36,7 @@ from ..utilities import basestring
 valid_sensor_types = {}
 
 
-def BuildSensor(config, key, base, logger=None):
+def BuildSensor(config, key, base):
     """Read the parameters from config[key] and return a constructed Sensor.
 
     Parameters:
@@ -42,12 +44,10 @@ def BuildSensor(config, key, base, logger=None):
                     (usually base['image'])
         key:        The key in the dict for the sensor configuration.
         base:       The base dict of the configuration.
-        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
     Returns:
         a Sensor
     """
-    logger = LoggerWrapper(logger)
     logger.debug('obj %d: Start BuildSensor key = %s',base.get('obj_num',0),key)
 
     param = config[key]
@@ -83,7 +83,7 @@ def BuildSensor(config, key, base, logger=None):
     # Need to use a builder.
     logger.debug('obj %d: Building sensor type %s', base.get('obj_num',0), sensor_type)
     builder = valid_sensor_types[sensor_type]
-    sensor = builder.buildSensor(param, base, logger)
+    sensor = builder.buildSensor(param, base)
     logger.debug('obj %d: sensor = %s', base.get('obj_num',0), sensor)
 
     param['current'] = sensor, False, None, index, index_key
@@ -96,7 +96,7 @@ class SensorBuilder:
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildSensor(self, config, base, logger):
+    def buildSensor(self, config, base):
         """Build the Sensor based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
@@ -104,7 +104,6 @@ class SensorBuilder:
         Parameters:
             config:     The configuration dict for the Sensor
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed Sensor object.
@@ -122,7 +121,7 @@ class SimpleSensorBuilder(SensorBuilder):
     def __init__(self, init_func):
         self.init_func = init_func
 
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         """Get the kwargs to pass to the build function based on the following attributes of
         init_func:
 
@@ -141,7 +140,6 @@ class SimpleSensorBuilder(SensorBuilder):
         Parameters:
             config:     The configuration dict for the sensor type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             kwargs
@@ -149,27 +147,26 @@ class SimpleSensorBuilder(SensorBuilder):
         req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
         if takes_rng:
-            kwargs['rng'] = GetRNG(config, base, logger, self.init_func.__name__)
+            kwargs['rng'] = GetRNG(config, base, self.init_func.__name__)
         return kwargs
 
-    def buildSensor(self, config, base, logger):
+    def buildSensor(self, config, base):
         """Build the Sensor based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the sensor type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed Sensor object.
         """
-        kwargs = self.getKwargs(config,base,logger)
+        kwargs = self.getKwargs(config,base)
         return self.init_func(**kwargs)
 
 class ListSensorBuilder(SensorBuilder):
     """Select a sensor from a list
     """
-    def buildSensor(self, config, base, logger):
+    def buildSensor(self, config, base):
         req = { 'items' : list }
         opt = { 'index' : int }
         # Only Check, not Get.  We need to handle items a bit differently, since it's a list.

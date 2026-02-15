@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import sys
 import numpy as np
 from .extra import ExtraOutputBuilder, RegisterExtraOutput
@@ -23,6 +24,8 @@ from .value import ParseValue, GetCurrentValue
 from ..errors import GalSimConfigError
 from ..catalog import OutputCatalog
 from ..utilities import basestring
+
+logger = logging.getLogger(__name__)
 
 # The truth extra output type builds an OutputCatalog with truth information about each of the
 # objects being built by the configuration processing.  It stores the appropriate row information
@@ -41,7 +44,7 @@ class TruthBuilder(ExtraOutputBuilder):
     current values of various quantities for each constructed object.
     """
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         cols = config['columns']
         row = []
         types = []
@@ -89,7 +92,7 @@ class TruthBuilder(ExtraOutputBuilder):
             return type(v)
 
     # The function to call at the end of building each file to finalize the truth catalog
-    def finalize(self, config, base, main_data, logger):
+    def finalize(self, config, base, main_data):
         # Make the OutputCatalog
         cols = config['columns']
         # Note: Provide a default here, because if all items were skipped it would otherwise
@@ -106,11 +109,11 @@ class TruthBuilder(ExtraOutputBuilder):
         return cat  # This becomes self.final_data
 
     # Write the catalog to a file
-    def writeFile(self, file_name, config, base, logger):
+    def writeFile(self, file_name, config, base):
         self.final_data.write(file_name)
 
     # Create an HDU of the FITS binary table.
-    def writeHdu(self, config, base, logger):
+    def writeHdu(self, config, base):
         return self.final_data.writeFitsHdu()
 
 # Register this as a valid extra output

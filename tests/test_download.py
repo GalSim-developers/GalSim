@@ -161,12 +161,6 @@ def test_query():
     with assert_raises(ValueError):
         query_yes_no('', 'invalid')
 
-# Need to call these before each time make_logger is repeated.  Else duplicate handles.
-def remove_handler():
-    logger = logging.getLogger('galsim')
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-
 @timer
 def test_names():
     """Test the get_names function
@@ -174,9 +168,7 @@ def test_names():
     from galsim.download_cosmos import get_names
 
     args = galsim.download_cosmos.parse_args([])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
     assert url == 'https://zenodo.org/record/3242143/files/COSMOS_25.2_training_sample.tar.gz'
     assert target_dir == galsim.meta_data.share_dir
     assert do_link is False
@@ -185,7 +177,7 @@ def test_names():
     assert link_dir == os.path.join(galsim.meta_data.share_dir, 'COSMOS_25.2_training_sample')
 
     args = galsim.download_cosmos.parse_args(['-d','~/share','-s','23.5'])
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
     assert url == 'https://zenodo.org/record/3242143/files/COSMOS_23.5_training_sample.tar.gz'
     assert target_dir == os.path.expanduser('~/share')
     assert do_link is True
@@ -194,7 +186,7 @@ def test_names():
     assert link_dir == os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
 
     args = galsim.download_cosmos.parse_args(['-d','share','--nolink'])
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
     assert url == 'https://zenodo.org/record/3242143/files/COSMOS_25.2_training_sample.tar.gz'
     assert target_dir == 'share'
     assert do_link is False
@@ -258,18 +250,16 @@ def test_check():
     from galsim.download_cosmos import get_names, get_meta, check_existing
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-q','-v','3'])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
 
     # Check get_meta
     with mock.patch('galsim.download_cosmos.urlopen', fake_urlopen):
-        meta = get_meta(url, args, logger)
+        meta = get_meta(url, args)
         assert meta['Content-Length'] == "728"
         assert meta['Content-MD5'] == "e05cfe60c037c645d61ac70545cc2a99"
 
     # File already exists and is current.
-    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is False
 
     # Some changes imply it's obsolete
@@ -280,22 +270,22 @@ def test_check():
     meta['X-RateLimit-Remaining'] = "31"
     meta['Retry-After'] = "120"
     meta['Set-Cookie'] =  "session=2b720f14bdd71a29031a5cb415b391f8"
-    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is False
 
     # Force download anyway
     args.quiet = False
     args.force = True
-    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is True
 
     # Ask whether to re-download
     args.force = False
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        do_download = check_existing(target, unpack_dir, meta, args, logger)
+        do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is True
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        do_download = check_existing(target, unpack_dir, meta, args, logger)
+        do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is False
 
     # Meta data is obsolete
@@ -303,7 +293,7 @@ def test_check():
     meta1['Content-Length'] = "9999"
     meta1['Content-MD5'] = "f05cfe60c037c645d61ac70545cc2a99"
     args.quiet = True
-    do_download = check_existing(target, unpack_dir, meta1, args, logger)
+    do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is True
 
     # If they change the name of the checksum key, we consider it obsolete.
@@ -311,73 +301,73 @@ def test_check():
     meta2['Content-New-MD5'] = "e05cfe60c037c645d61ac70545cc2a99"
     del meta2['Content-MD5']
     del meta2['ETag']
-    do_download = check_existing(target, unpack_dir, meta2, args, logger)
+    do_download = check_existing(target, unpack_dir, meta2, args)
     assert do_download is True
 
     args.quiet = False
     args.force = True
-    do_download = check_existing(target, unpack_dir, meta1, args, logger)
+    do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is True
 
     args.force = False
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        do_download = check_existing(target, unpack_dir, meta1, args, logger)
+        do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is True
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        do_download = check_existing(target, unpack_dir, meta1, args, logger)
+        do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is False
 
     # Meta data is missing
     args.quiet = True
-    do_download = check_existing(target, 'output', meta, args, logger)
+    do_download = check_existing(target, 'output', meta, args)
     assert do_download is True
 
     # Tarball is present, but wrong size
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-s','23.5','-q'])
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
-    do_download = check_existing(target, 'output', meta1, args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
+    do_download = check_existing(target, 'output', meta1, args)
     assert do_download is True
 
     args.quiet = False
     args.force = True
-    do_download = check_existing(target, 'output', meta1, args, logger)
+    do_download = check_existing(target, 'output', meta1, args)
     assert do_download is True
 
     args.force = False
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        do_download = check_existing(target, unpack_dir, meta1, args, logger)
+        do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is True
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        do_download = check_existing(target, unpack_dir, meta1, args, logger)
+        do_download = check_existing(target, unpack_dir, meta1, args)
     assert do_download is False
 
     # Tarball is present, and correct size
     args.quiet = True
-    do_download = check_existing(target, 'output', meta, args, logger)
+    do_download = check_existing(target, 'output', meta, args)
     assert do_download is False
 
     args.quiet = False
     args.force = True
-    do_download = check_existing(target, 'output', meta, args, logger)
+    do_download = check_existing(target, 'output', meta, args)
     assert do_download is True
 
     args.force = False
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        do_download = check_existing(target, unpack_dir, meta, args, logger)
+        do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is True
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        do_download = check_existing(target, unpack_dir, meta, args, logger)
+        do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is False
 
     # Tarball and unpack_dir both missing
     args = galsim.download_cosmos.parse_args(['-d','input'])
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
-    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
+    do_download = check_existing(target, unpack_dir, meta, args)
     assert do_download is True
 
 
 @timer
-def test_download():
+def test_download(caplog):
     """Test the download function
 
     This one is a little silly.  It's almost completely mocked.  But we can at least check
@@ -386,43 +376,39 @@ def test_download():
     from galsim.download_cosmos import get_names, get_meta, download
 
     args = galsim.download_cosmos.parse_args(['-d','output','-q'])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
 
     with mock.patch('galsim.download_cosmos.urlopen', fake_urlopen):
-        meta = get_meta(url, args, logger)
+        meta = get_meta(url, args)
 
         print('Start download with verbosity = 2')
-        download(True, url, target, meta, args, logger)
+        download(True, url, target, meta, args)
 
         print('Start download with verbosity = 1')
         args.verbosity = 1
-        download(True, url, target, meta, args, logger)
+        download(True, url, target, meta, args)
 
         print('Start download with verbosity = 3')
         args.verbosity = 3
-        download(True, url, target, meta, args, logger)
+        download(True, url, target, meta, args)
 
         print('Start download with verbosity = 0')
         args.verbosity = 0
-        download(True, url, target, meta, args, logger)
+        download(True, url, target, meta, args)
 
         print("Don't download")
-        download(False, url, target, meta, args, logger)
+        download(False, url, target, meta, args)
 
         fake_urlopen.err = 'Permission denied'
-        with CaptureLog() as cl:
-            assert_raises(OSError, download, True, url, target, meta, args, cl.logger)
-        assert "Rerun using sudo" in cl.output
+        assert_raises(OSError, download, True, url, target, meta, args)
+        assert "Rerun using sudo" in caplog.text
 
         fake_urlopen.err = 'Disk quota exceeded'
-        with CaptureLog() as cl:
-            assert_raises(OSError, download, True, url, target, meta, args, cl.logger)
-        assert "You might need to download this in an alternate location" in cl.output
+        assert_raises(OSError, download, True, url, target, meta, args)
+        assert "You might need to download this in an alternate location" in caplog.text
 
         fake_urlopen.err = 'gack'
-        assert_raises(OSError, download, True, url, target, meta, args, logger)
+        assert_raises(OSError, download, True, url, target, meta, args)
     fake_urlopen.err = None
 
 @timer
@@ -433,9 +419,7 @@ def test_unpack():
 
     # If we downloaded the file, then we usually want to unpack
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-s','23.5','-q'])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
     meta = fake_urlopen(url).info()
 
     print('unpack_dir = ',unpack_dir)
@@ -452,20 +436,20 @@ def test_unpack():
 
     # Now unpack it
     print('unpack with verbose = 2:')
-    unpack(True, target, target_dir, unpack_dir, meta, args, logger)
+    unpack(True, target, target_dir, unpack_dir, meta, args)
 
     shutil.rmtree(unpack_dir)
     print('unpack with verbose = 3:')
     args.verbosity = 3
-    unpack(True, target, target_dir, unpack_dir, meta, args, logger)
+    unpack(True, target, target_dir, unpack_dir, meta, args)
 
     shutil.rmtree(unpack_dir)
     print('unpack with verbose = 1:')
     args.verbosity = 1
-    unpack(True, target, target_dir, unpack_dir, meta, args, logger)
+    unpack(True, target, target_dir, unpack_dir, meta, args)
 
     print("Don't unpack")
-    unpack(False, target, target_dir, unpack_dir, meta, args, logger)
+    unpack(False, target, target_dir, unpack_dir, meta, args)
 
     # If it is already unpacked, probably don't unpack it
     do_unpack = check_unpack(False, unpack_dir, target, args)
@@ -502,9 +486,7 @@ def test_remove():
     from galsim.download_cosmos import get_names, check_remove, remove_tarball
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-s','23.5','-q'])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
 
     # Normally, we remove the tarball if we unpacked it.
     do_remove = check_remove(True, target, args)
@@ -533,9 +515,9 @@ def test_remove():
     with open(target1,'w') as f:
         f.write('blah')
     assert os.path.isfile(target1)
-    remove_tarball(False, target1, logger)
+    remove_tarball(False, target1)
     assert os.path.isfile(target1)
-    remove_tarball(True, target1, logger)
+    remove_tarball(True, target1)
     assert not os.path.isfile(target1)
 
 
@@ -546,40 +528,38 @@ def test_link():
     from galsim.download_cosmos import get_names, make_link
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-q'])
-    remove_handler()
-    logger = galsim.download_cosmos.make_logger(args)
-    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args)
     link_dir = os.path.join('output', 'COSMOS_25.2_training_sample')
 
     # If link doesn't exist yet, make it.
     if os.path.lexists(link_dir):
         os.unlink(link_dir)
     assert not os.path.lexists(link_dir)
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
     # If link already exists, remove and remake
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
     # If do_link is False, don't make it
     os.unlink(link_dir)
-    make_link(False, unpack_dir, link_dir, args, logger)
+    make_link(False, unpack_dir, link_dir, args)
     assert not os.path.exists(link_dir)
 
     # If link exists, but is a directory, don't remove it
     os.mkdir(link_dir)
     assert os.path.isdir(link_dir)
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.isdir(link_dir)
     assert not os.path.islink(link_dir)
 
     # Unless force
     args.force = True
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
@@ -589,11 +569,11 @@ def test_link():
     os.unlink(link_dir)
     os.mkdir(link_dir)
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        make_link(True, unpack_dir, link_dir, args, logger)
+        make_link(True, unpack_dir, link_dir, args)
     assert os.path.isdir(link_dir)
     assert not os.path.islink(link_dir)
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        make_link(True, unpack_dir, link_dir, args, logger)
+        make_link(True, unpack_dir, link_dir, args)
     assert os.path.islink(link_dir)
 
     # If it's a broken link, remove and relink
@@ -602,7 +582,7 @@ def test_link():
     assert os.path.lexists(link_dir)
     assert os.path.islink(link_dir)
     assert not os.path.exists(link_dir)
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
@@ -612,7 +592,7 @@ def test_link():
     args.quiet = True
     assert os.path.exists(link_dir)
     assert not os.path.islink(link_dir)
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
@@ -622,7 +602,7 @@ def test_link():
     args.force = True
     assert os.path.exists(link_dir)
     assert not os.path.islink(link_dir)
-    make_link(True, unpack_dir, link_dir, args, logger)
+    make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
@@ -633,11 +613,11 @@ def test_link():
     assert os.path.exists(link_dir)
     assert not os.path.islink(link_dir)
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
-        make_link(True, unpack_dir, link_dir, args, logger)
+        make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert not os.path.islink(link_dir)
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
-        make_link(True, unpack_dir, link_dir, args, logger)
+        make_link(True, unpack_dir, link_dir, args)
     assert os.path.exists(link_dir)
     assert os.path.islink(link_dir)
 
@@ -655,12 +635,10 @@ def test_full():
     with mock.patch('galsim.download_cosmos.share_dir', 'output'), \
          mock.patch('galsim.download_cosmos.urlopen', fake_urlopen):
 
-        remove_handler()
         assert not os.path.islink(link_dir1)
         galsim.download_cosmos.main(['-d','fake_cosmos','-q','-s','23.5','--save'])
         assert os.path.islink(link_dir1)
 
-        remove_handler()
         assert not os.path.islink(link_dir2)
         with mock.patch('sys.argv', ['galsim_download_cosmos', '-d', 'fake_cosmos', '-q']):
             galsim.download_cosmos.run_main()

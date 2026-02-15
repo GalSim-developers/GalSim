@@ -308,7 +308,7 @@ class DES_PSFEx:
 class PSFExLoader(InputLoader):
     # Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
     # config dict.
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         req = { 'file_name' : str }
         opt = { 'dir' : str, 'image_file_name' : str }
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
@@ -330,7 +330,7 @@ RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 # config is a dictionary that includes 'type' plus other items you might want to allow or require.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
+def BuildDES_PSFEx(config, base, ignore, gsparams):
     """Build a GSObject representing the PSFex model at the correct location in the image in a
     config-processing context.
 

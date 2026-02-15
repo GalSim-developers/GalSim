@@ -35,9 +35,11 @@ from galsim_test_helpers import *
 
 
 @timer
-def test_fits():
+def test_fits(caplog):
     """Test the default output type = Fits
     """
+    caplog.set_level(logging.DEBUG)
+
     # Most of the tests in this file write to the 'output' directory.  Here we write to a different
     # directory and make sure that it properly creates the directory if necessary.
     if os.path.exists('output_fits'):
@@ -59,9 +61,6 @@ def test_fits():
         },
     }
 
-    logger = logging.getLogger('test_fits')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
     config1 = galsim.config.CopyConfig(config)
 
     im1_list = []
@@ -74,7 +73,7 @@ def test_fits():
         im1 = gal.drawImage(scale=1)
         im1_list.append(im1)
 
-        galsim.config.BuildFile(config, file_num=k, image_num=k, obj_num=k, logger=logger)
+        galsim.config.BuildFile(config, file_num=k, image_num=k, obj_num=k)
         file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1.array)
@@ -111,16 +110,14 @@ def test_fits():
 
     # nproc < 0 should automatically determine nproc from ncpu
     config = galsim.config.CopyConfig(config1)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : -1})
-    assert 'ncpu = ' in cl.output
+    galsim.config.Process(config, new_params={'output.nproc' : -1})
+    assert 'ncpu = ' in caplog.text
 
     # nproc > njobs should drop back to nproc = njobs
     config = galsim.config.CopyConfig(config1)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 10})
+    galsim.config.Process(config, new_params={'output.nproc' : 10})
     if galsim.config.UpdateNProc(10, 6, config) > 1:
-        assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
+        assert 'There are only 6 jobs to do.  Reducing nproc to 6' in caplog.text
 
     # There is a feature that we reduce the number of tasks to be < 32767 to avoid problems
     # with the multiprocessing.Queue overflowing.  That 32767 number is a settable paramter,
@@ -129,11 +126,9 @@ def test_fits():
     galsim.config.util.max_queue_size = 4
     config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = 2
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 2})
-    print(cl.output)
+    galsim.config.Process(config, new_params={'output.nproc' : 2})
     if galsim.config.UpdateNProc(10, 6, config) > 1:
-        assert 'len(tasks) = 6 is more than max_queue_size = 4' in cl.output
+        assert 'len(tasks) = 6 is more than max_queue_size = 4' in caplog.text
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
@@ -144,16 +139,9 @@ def test_fits():
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
     config = galsim.config.CopyConfig(config1)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger,
-                              new_params={'profile':True, 'output.nproc': 4})
-    #print(cl.output)
-    # Unfortunately, the LoggerProxy doesn't really work right with the string logger used
-    # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
-    # logs and couldn't get it working.  So this just checks for an info log before the
-    # multithreading starts.  But with a regular logger, there really is profiling output.
+    galsim.config.Process(config, new_params={'profile':True, 'output.nproc': 4})
     if galsim.config.UpdateNProc(10, 6, config) > 1:
-        assert "Starting separate profiling for each of the" in cl.output
+        assert "Starting separate profiling for each of the" in caplog.text
     for p in range(4):
         pstats_file = f'galsim-Process-{p+1}.pstats'
         assert os.path.exists(pstats_file)
@@ -204,9 +192,8 @@ def test_fits():
     # mock this up to make sure we handle it properly (by reverting to nproc = 1.
     with mock.patch('galsim.config.util.cpu_count', side_effect=RuntimeError()):
         config = galsim.config.CopyConfig(config1)
-        with CaptureLog() as cl:
-            galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : -1})
-        assert 'Using single process' in cl.output
+        galsim.config.Process(config, new_params={'output.nproc' : -1})
+        assert 'Using single process' in caplog.text
 
 
 @timer
@@ -374,7 +361,7 @@ def test_datacube():
 
 
 @timer
-def test_skip():
+def test_skip(caplog):
     """Test the skip and noclobber options
     """
     config = {
@@ -426,11 +413,10 @@ def test_skip():
     # Build the ones we skipped using noclobber option
     del config['output']['skip']
     config['output']['noclobber'] = True
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    assert "Skipping file 1 = output/test_skip_1.fits because output.noclobber" in cl.output
-    assert "Skipping file 3 = output/test_skip_3.fits because output.noclobber" in cl.output
-    assert "Skipping file 5 = output/test_skip_5.fits because output.noclobber" in cl.output
+    galsim.config.Process(config)
+    assert "Skipping file 1 = output/test_skip_1.fits because output.noclobber" in caplog.text
+    assert "Skipping file 3 = output/test_skip_3.fits because output.noclobber" in caplog.text
+    assert "Skipping file 5 = output/test_skip_5.fits because output.noclobber" in caplog.text
     for k in range(nfiles):
         file_name = 'output/test_skip_%d.fits'%k
         im2 = galsim.fits.read(file_name)
@@ -450,10 +436,9 @@ def test_skip():
             im2 = galsim.fits.read(file_name)
             np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
-    with CaptureLog() as cl:
-        galsim.config.Process(config, njobs=3, job=3, logger=cl.logger)
-    assert "Splitting work into 3 jobs.  Doing job 3" in cl.output
-    assert "Building 2 out of 6 total files: file_num = 4 .. 5" in cl.output
+    galsim.config.Process(config, njobs=3, job=3)
+    assert "Splitting work into 3 jobs.  Doing job 3" in caplog.text
+    assert "Building 2 out of 6 total files: file_num = 4 .. 5" in caplog.text
 
     # job < 1 or job > njobs is invalid
     with assert_raises(galsim.GalSimValueError):
@@ -466,9 +451,11 @@ def test_skip():
 
 
 @timer
-def test_extra_wt():
+def test_extra_wt(caplog):
     """Test the extra weight and badpix fields
     """
+    caplog.set_level(logging.DEBUG)
+
     nfiles = 6
     config = {
         'image' : {
@@ -505,9 +492,8 @@ def test_extra_wt():
     config['noise'] = { 'type' : 'Poisson', 'sky_level_pixel' : 500 }
     config['output']['noclobber'] = True
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    assert 'Not writing weight file 0 = output/test_wt_0.fits' in cl.output
+    galsim.config.Process(config)
+    assert 'Not writing weight file 0 = output/test_wt_0.fits' in caplog.text
     for k in range(nfiles):
         im = galsim.fits.read('output/test_main_%d.fits'%k)
         np.testing.assert_equal(im.array, main_im[k].array)
@@ -639,24 +625,23 @@ def test_extra_wt():
     # If both output.nproc and image.nproc, then only use output.nproc
     config['image']['nproc' ] = -1
     config['image']['nobjects'] = 5
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
-    #assert 'Already multiprocessing.  Ignoring image.nproc' in cl.output
-    # Note: This doesn't show up because cl.logger doesn't get through the multiprocessing,
+    galsim.config.Process(config)
+    # assert 'Already multiprocessing.  Ignoring image.nproc' in caplog.text
+    # Note: This doesn't show up because the log doesn't get through the multiprocessing,
     #       but it does ignore image.nproc > 1.
     # Do it manually to confirm.
     config['current_nproc'] = 2
-    with CaptureLog() as cl:
-        nproc = galsim.config.UpdateNProc(2, 5, config, logger=cl.logger)
-    assert 'Already multiprocessing.  Ignoring image.nproc' in cl.output
+    nproc = galsim.config.UpdateNProc(2, 5, config)
+    assert 'Already multiprocessing.  Ignoring image.nproc' in caplog.text
     assert nproc == 1
 
 
 @timer
-def test_extra_psf():
+def test_extra_psf(caplog):
     """Test the extra psf field
     """
+    caplog.set_level(logging.INFO)
+
     nfiles = 6
     config = {
         'image' : {
@@ -848,13 +833,12 @@ def test_extra_psf():
     im2 = galsim.fits.read('output_psf/test_psf.fits')
     np.testing.assert_almost_equal(im2.array, im.array)
 
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    assert "Not writing psf file 1 = output_psf/test_psf.fits because already written" in cl.output
-    assert "Not writing psf file 2 = output_psf/test_psf.fits because already written" in cl.output
-    assert "Not writing psf file 3 = output_psf/test_psf.fits because already written" in cl.output
-    assert "Not writing psf file 4 = output_psf/test_psf.fits because already written" in cl.output
-    assert "Not writing psf file 5 = output_psf/test_psf.fits because already written" in cl.output
+    galsim.config.Process(config)
+    assert "Not writing psf file 1 = output_psf/test_psf.fits because already written" in caplog.text
+    assert "Not writing psf file 2 = output_psf/test_psf.fits because already written" in caplog.text
+    assert "Not writing psf file 3 = output_psf/test_psf.fits because already written" in caplog.text
+    assert "Not writing psf file 4 = output_psf/test_psf.fits because already written" in caplog.text
+    assert "Not writing psf file 5 = output_psf/test_psf.fits because already written" in caplog.text
 
 @timer
 def test_extra_psf_sn():
@@ -941,7 +925,7 @@ def test_extra_psf_sn():
 
 
 @timer
-def test_extra_truth():
+def test_extra_truth(caplog):
     """Test the extra truth field
     """
     nobjects = 6
@@ -1077,10 +1061,9 @@ def test_extra_truth():
     config['output']['truth']['columns']['beta'] = (
         '$0. if @gal.index==0 else (@gal.items.1.ellip).beta')
     del config['image']['nproc']
-    with CaptureLog(level=1) as cl:
-        with assert_raises(galsim.GalSimConfigError):
-            galsim.config.Process(config, logger=cl.logger)
-    assert "beta has type Angle, but previously had type float" in cl.output
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config)
+    assert "beta has type Angle, but previously had type float" in caplog.text
     config['output']['truth']['columns']['beta'] = (
         '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad')
 
@@ -1098,9 +1081,11 @@ def test_extra_truth():
         assert 'Consider using an explicit value-typed type name like Random_float' in str(e)
 
 @timer
-def test_retry_io():
+def test_retry_io(caplog):
     """Test the retry_io option
     """
+    caplog.set_level(logging.DEBUG)
+
     # Make a class that mimics writeMulti, except that it fails about 1/3 of the time.
     class FlakyWriter:
         def __init__(self, rng):
@@ -1114,13 +1099,13 @@ def test_retry_io():
 
     # Now make a copy of Fits and ExtraWeight using this writer.
     class FlakyFits(galsim.config.OutputBuilder):
-        def writeFile(self, data, file_name, config, base, logger):
+        def writeFile(self, data, file_name, config, base):
             flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(data, file_name)
     galsim.config.RegisterOutputType('FlakyFits', FlakyFits())
 
     class FlakyWeight(galsim.config.extra_weight.WeightBuilder):
-        def writeFile(self, file_name, config, base, logger):
+        def writeFile(self, file_name, config, base):
             flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(self.final_data, file_name)
     galsim.config.RegisterExtraOutput('flaky_weight', FlakyWeight())
@@ -1147,15 +1132,13 @@ def test_retry_io():
         },
     }
 
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
-    assert "File output/test_flaky_fits_0.fits: Caught OSError" in cl.output
-    assert "This is try 2/6, so sleep for 2 sec and try again." in cl.output
-    assert "file 0: Wrote FlakyFits to file 'output/test_flaky_fits_0.fits'" in cl.output
-    assert "File output/test_flaky_wt_4.fits: Caught OSError: " in cl.output
-    assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
-    assert "file 0: Wrote flaky_weight to 'output/test_flaky_wt_0.fits'" in cl.output
+    galsim.config.Process(config)
+    assert "File output/test_flaky_fits_0.fits: Caught OSError" in caplog.text
+    assert "This is try 2/6, so sleep for 2 sec and try again." in caplog.text
+    assert "file 0: Wrote FlakyFits to file 'output/test_flaky_fits_0.fits'" in caplog.text
+    assert "File output/test_flaky_wt_4.fits: Caught OSError: " in caplog.text
+    assert "This is try 1/6, so sleep for 1 sec and try again." in caplog.text
+    assert "file 0: Wrote flaky_weight to 'output/test_flaky_wt_0.fits'" in caplog.text
 
     # Now the regular versions.
     config2 = galsim.config.CopyConfig(config)
@@ -1178,52 +1161,48 @@ def test_retry_io():
     # Without retry_io, it will fail, but keep going
     del config['output']['retry_io']
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
-    assert "Exception caught for file 0 = output/test_flaky_fits_0.fits" in cl.output
-    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-    assert "file 1: Wrote FlakyFits to file 'output/test_flaky_fits_1.fits'" in cl.output
-    assert "File 1 = output/test_flaky_fits_1.fits" in cl.output
-    assert "File 2 = output/test_flaky_fits_2.fits" in cl.output
-    assert "File 3 = output/test_flaky_fits_3.fits" in cl.output
-    assert "Exception caught for file 4 = output/test_flaky_fits_4.fits" in cl.output
-    assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
-    assert "File 5 = output/test_flaky_fits_5.fits" in cl.output
+    galsim.config.Process(config)
+    assert "Exception caught for file 0 = output/test_flaky_fits_0.fits" in caplog.text
+    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in caplog.text
+    assert "file 1: Wrote FlakyFits to file 'output/test_flaky_fits_1.fits'" in caplog.text
+    assert "File 1 = output/test_flaky_fits_1.fits" in caplog.text
+    assert "File 2 = output/test_flaky_fits_2.fits" in caplog.text
+    assert "File 3 = output/test_flaky_fits_3.fits" in caplog.text
+    assert "Exception caught for file 4 = output/test_flaky_fits_4.fits" in caplog.text
+    assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in caplog.text
+    assert "File 5 = output/test_flaky_fits_5.fits" in caplog.text
 
     # Also works in nproc > 1 mode
     config['output']['nproc'] = 2
     galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
+    galsim.config.Process(config)
     if galsim.config.UpdateNProc(2, nfiles, config) > 1:
         assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
-                         cl.output)
-        assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-        assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
-        assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
-        assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
+                         caplog.text)
+        assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in caplog.text
+        assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", caplog.text)
+        assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", caplog.text)
+        assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", caplog.text)
         assert re.search("Process-.: Exception caught for file 4 = output/test_flaky_fits_4.fits",
-                         cl.output)
-        assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
-        assert re.search("Process-.: File 5 = output/test_flaky_fits_5.fits", cl.output)
+                         caplog.text)
+        assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in caplog.text
+        assert re.search("Process-.: File 5 = output/test_flaky_fits_5.fits", caplog.text)
 
     # But with except_abort = True, it will stop after the first failure
     del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
-    with CaptureLog() as cl:
-        try:
-            galsim.config.Process(config, logger=cl.logger, except_abort=True)
-        except OSError as e:
-            assert str(e) == "p = 0.285159"
-    #print(cl.output)
-    assert "File output/test_flaky_fits_0.fits not written." in cl.output
+    try:
+        galsim.config.Process(config, except_abort=True)
+    except OSError as e:
+        assert str(e) == "p = 0.285159"
+    assert "File output/test_flaky_fits_0.fits not written." in caplog.text
 
 
 @timer
-def test_config():
+def test_config(caplog):
     """Test that configuration files are read, copied, and merged correctly.
     """
+    caplog.set_level(logging.INFO)
+
     config = {
         'gal' : { 'type' : 'Gaussian', 'sigma' : 2.3,
                   'flux' : { 'type' : 'List', 'items' : [ 100, 500, 1000 ] } },
@@ -1266,10 +1245,9 @@ def test_config():
     # Merging identical dicts, should do nothing
     galsim.config.MergeConfig(config1,config2)
     assert config == dict(config1)
-    with CaptureLog() as cl:
-        galsim.config.MergeConfig(config1,config2,logger=cl.logger)
-    assert "Not merging key type from the base config" in cl.output
-    assert "Not merging key items from the base config" in cl.output
+    galsim.config.MergeConfig(config1,config2)
+    assert "Not merging key type from the base config" in caplog.text
+    assert "Not merging key items from the base config" in caplog.text
 
     # Merging different configs does something, with the first taking precedence on conflicts
     del config5['gal']
@@ -1552,10 +1530,7 @@ def test_eval_full_word():
         }
     }
 
-    logger = logging.getLogger('test_eval_full_word')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-    galsim.config.Process(config, logger=logger, except_abort=True)
+    galsim.config.Process(config, except_abort=True)
 
     # First check the truth catalogs
     data0 = np.genfromtxt('output/test_eval_full_word_0.dat', names=True, deletechars='')
@@ -1612,7 +1587,7 @@ def test_eval_full_word():
     assert np.max(np.abs(im10.array)) > 200
 
 @timer
-def test_timeout():
+def test_timeout(caplog):
     """Test the timeout option
     """
     config = {
@@ -1647,20 +1622,16 @@ def test_timeout():
         },
     }
 
-    logger = logging.getLogger('test_timeout')
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    #logger.setLevel(logging.DEBUG)
-
     # Single proc:
     config1 = galsim.config.CopyConfig(config)
-    galsim.config.Process(config1, logger=logger)
+    galsim.config.Process(config1)
 
     # nproc in output field.
     config2 = galsim.config.CopyConfig(config)
     config2['output']['nproc'] = 3
     config2['output']['timeout'] = 30  # Still plenty large enough not to timeout.
     config2['output']['file_name'] = "$'output/test_timeout_nproc1_%d.fits'%file_num"
-    galsim.config.Process(config2, logger=logger)
+    galsim.config.Process(config2)
     for n in range(6):
         im1 = galsim.fits.read('output/test_timeout_%d.fits'%n)
         im2 = galsim.fits.read('output/test_timeout_nproc1_%d.fits'%n)
@@ -1671,17 +1642,16 @@ def test_timeout():
     if platform.python_implementation() != 'PyPy':
         config2 = galsim.config.CleanConfig(config2)
         config2['output']['timeout'] = 0.0001
-        with CaptureLog() as cl:
-            with assert_raises(galsim.GalSimError):
-                galsim.config.Process(config2, logger=cl.logger)
-        assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+        with assert_raises(galsim.GalSimError):
+            galsim.config.Process(config2)
+        assert 'Multiprocessing timed out waiting for a task to finish.' in caplog.text
 
     # nproc in image field.
     config2 = galsim.config.CopyConfig(config)
     config2['image']['nproc'] = 3
     config2['image']['timeout'] = 30
     config2['output']['file_name'] = "$'output/test_timeout_nproc2_%d.fits'%file_num"
-    galsim.config.Process(config2, logger=logger)
+    galsim.config.Process(config2)
     for n in range(6):
         im1 = galsim.fits.read('output/test_timeout_%d.fits'%n)
         im2 = galsim.fits.read('output/test_timeout_nproc2_%d.fits'%n)
@@ -1690,7 +1660,7 @@ def test_timeout():
     # If you use BuildImages, it uses the image nproc and timeout specs, but parallelizes
     # over images rather than stamps.  So check that.
     config2 = galsim.config.CleanConfig(config2)
-    images = galsim.config.BuildImages(6, config2, logger=logger)
+    images = galsim.config.BuildImages(6, config2)
     for n, im in enumerate(images):
         im1 = galsim.fits.read('output/test_timeout_%d.fits'%n)
         assert im1 == im
@@ -1700,20 +1670,18 @@ def test_timeout():
         # This time, it will continue on after each error, but report the error in the log.
         config2 = galsim.config.CleanConfig(config2)
         config2['image']['timeout'] = 0.001
-        with CaptureLog() as cl:
-            galsim.config.Process(config2, logger=cl.logger)
-        assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+        galsim.config.Process(config2)
+        assert 'Multiprocessing timed out waiting for a task to finish.' in caplog.text
         # Note: Usually they all fail, and the two lines below are in the logging output, but
         #       it's possible for one of them to finish, so these asserts occasionally fail.
-        #assert 'File output/test_timeout_nproc2_1.fits not written! Continuing on...' in cl.output
-        #assert 'No files were written.  All were either skipped or had errors.' in cl.output
+        #assert 'File output/test_timeout_nproc2_1.fits not written! Continuing on...' in caplog.text
+        #assert 'No files were written.  All were either skipped or had errors.' in caplog.text
 
         # If you want this to abort, use except_abort=True
         config2 = galsim.config.CleanConfig(config2)
-        with CaptureLog() as cl:
-            with assert_raises(galsim.GalSimError):
-                galsim.config.Process(config2, logger=cl.logger, except_abort=True)
-        assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+        with assert_raises(galsim.GalSimError):
+            galsim.config.Process(config2, except_abort=True)
+        assert 'Multiprocessing timed out waiting for a task to finish.' in caplog.text
 
 @timer
 def test_direct_extra_output():

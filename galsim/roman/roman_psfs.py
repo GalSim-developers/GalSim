@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import numpy as np
 import os
 
@@ -35,6 +36,7 @@ from .. import OpticalPSF, ChromaticOpticalPSF
 from .. import fits
 from .. import meta_data
 
+logger = logging.getLogger(__name__)
 
 """
 @file roman_psfs.py
@@ -59,7 +61,7 @@ def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, wcs=None,
            n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
-           logger=None, high_accuracy=None, approximate_struts=None):
+           high_accuracy=None, approximate_struts=None):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil

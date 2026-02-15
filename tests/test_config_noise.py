@@ -19,7 +19,6 @@
 import numpy as np
 import os
 import sys
-import logging
 import math
 
 import galsim
@@ -88,7 +87,7 @@ def test_gaussian():
     # Base class usage is invalid
     builder = galsim.config.noise.NoiseBuilder()
     assert_raises(NotImplementedError, builder.addNoise, config, config, im1a, rng, var,
-                 draw_method='auto', logger=None)
+                 draw_method='auto')
     assert_raises(NotImplementedError, builder.getNoiseVariance, config, config)
 
 
@@ -275,17 +274,10 @@ def test_poisson():
 def test_ccdnoise():
     """Test that the config layer CCD noise adds noise consistent with using a CCDNoise object.
     """
-    import logging
-
     gain = 4
     sky = 50
     rn = 5
     size = 2048
-
-    # Use this to turn on logging, but more info than we noramlly need, so generally leave it off.
-    #logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
-    #logger = logging.getLogger()
-    logger = None
 
     config = {}
     config['gal'] = { 'type' : 'None' }
@@ -301,7 +293,7 @@ def test_ccdnoise():
         'gain' : gain,
         'read_noise' : rn
     }
-    image = galsim.config.BuildImage(config,logger=logger)
+    image = galsim.config.BuildImage(config)
 
     print('config-built image: ',np.mean(image.array),np.var(image.array.astype(float)))
     test_var = np.var(image.array.astype(float))
@@ -346,7 +338,7 @@ def test_ccdnoise():
     image2.fill(0)
     rng.reset(first_seed+1)
     config['image_num_rng'] = rng
-    galsim.config.AddNoise(config, image2, current_var=1.e-20, logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=1.e-20)
 
     print('with negligible current_var: ',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
@@ -356,7 +348,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=rn/gain)
     image2.addNoise(gn)
-    galsim.config.AddNoise(config, image2, current_var=(rn/gain)**2, logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(rn/gain)**2)
 
     print('current_var == read_noise: ',np.mean(image2.array),np.var(image2.array))
     # So far we've done this to very high accuracy, since we've been using the same rng seed,
@@ -369,7 +361,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=0.5*rn/gain)
     image2.addNoise(gn)
-    galsim.config.AddNoise(config, image2, current_var=(0.5*rn/gain)**2, logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(0.5*rn/gain)**2)
 
     print('current_var < read_noise: ',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
@@ -379,7 +371,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=2.*rn/gain)
     image2.addNoise(gn)
-    galsim.config.AddNoise(config, image2, current_var=(2.*rn/gain)**2, logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(2.*rn/gain)**2)
 
     print('current_var > read_noise',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
@@ -513,10 +505,6 @@ def test_ccdnoise_phot():
 def test_cosmosnoise():
     """Test that the config layer COSMOS noise works with keywords.
     """
-    import logging
-
-    logger = None
-
     pix_scale = 0.03
     random_seed = 123
 
@@ -535,7 +523,7 @@ def test_cosmosnoise():
     config['image']['noise'] = {
         'type' : 'COSMOS'
     }
-    image = galsim.config.BuildStamp(config,logger=logger)[0]
+    image = galsim.config.BuildStamp(config)[0]
 
     # Then make it using explicit kwargs to make sure they are getting passed through properly.
     config2 = {}
@@ -551,7 +539,7 @@ def test_cosmosnoise():
         'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
         'cosmos_scale' : pix_scale
     }
-    image2 = galsim.config.BuildStamp(config2,logger=logger)[0]
+    image2 = galsim.config.BuildStamp(config2)[0]
 
     # We used the same RNG and noise file / properties, so should get the same exact noise field.
     np.testing.assert_allclose(
@@ -566,7 +554,7 @@ def test_cosmosnoise():
         'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
         'pixel_scale' : pix_scale
     }
-    image3 = galsim.config.BuildStamp(config3,logger=logger)[0]
+    image3 = galsim.config.BuildStamp(config3)[0]
     np.testing.assert_allclose(image3.array, image2.array,
         err_msg='Config Correlated noise not the same as COSMOS')
 
@@ -590,7 +578,7 @@ def test_cosmosnoise():
     }
     config['image']['noise']['whiten'] = True
     galsim.config.ProcessInput(config)
-    image3, current_var3 = galsim.config.BuildStamp(config, logger=logger)
+    image3, current_var3 = galsim.config.BuildStamp(config)
     print('From BuildStamp, current_var = ',current_var3)
 
     # Build the same image by hand to make sure it matches what config drew.

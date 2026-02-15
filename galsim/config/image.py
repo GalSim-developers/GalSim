@@ -16,9 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 import numpy as np
 
-from .util import LoggerWrapper, UpdateNProc, MultiProcess, SetupConfigRNG
+from .util import UpdateNProc, MultiProcess, SetupConfigRNG
 from .input import SetupInput, SetupInputsForImage
 from .value import ParseValue, GetAllParams
 from .wcs import BuildWCS
@@ -33,6 +35,8 @@ from ..celestial import CelestialCoord
 from ..image import Image
 from ..noise import VariableGaussianNoise
 
+logger = logging.getLogger(__name__)
+
 # This file handles the building of an image by parsing config['image'].
 # This file includes the basic functionality, but it calls out to helper functions
 # for parts of the process that are different for different image types.  It includes
@@ -46,7 +50,7 @@ from ..noise import VariableGaussianNoise
 valid_image_types = {}
 
 
-def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
+def BuildImages(nimages, config, image_num=0, obj_num=0):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -55,12 +59,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         config:         The configuration dict.
         image_num:      If given, the current image number. [default: 0]
         obj_num:        If given, the first object number in the image. [default: 0]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         a list of images
     """
-    logger = LoggerWrapper(logger)
     logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                  config.get('file_num',0),nimages,image_num,obj_num)
 
@@ -74,7 +76,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     if nimages > 1 and 'nproc' in image:
         nproc = ParseValue(image, 'nproc', config, int)[0]
         # Update this in case the config value is -1
-        nproc = UpdateNProc(nproc, nimages, config, logger)
+        nproc = UpdateNProc(nproc, nimages, config)
     else:
         nproc = 1
 
@@ -87,10 +89,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
         jobs.append(kwargs)
-        obj_num += GetNObjForImage(config, image_num, logger=logger)
+        obj_num += GetNObjForImage(config, image_num)
         image_num += 1
 
-    def done_func(logger, proc, k, image, t):
+    def done_func(proc, k, image, t):
         if image is not None:
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
@@ -99,7 +101,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
             image_num = jobs[k]['image_num']
             logger.info(s0 + 'Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t)
 
-    def except_func(logger, proc, k, e, tr):
+    def except_func(proc, k, e, tr):
         if proc is None: s0 = ''
         else: s0 = '%s: '%proc
         image_num = jobs[k]['image_num']
@@ -108,10 +110,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         logger.error('Aborting the rest of this file')
 
     # Convert to the tasks structure we need for MultiProcess
-    tasks = MakeImageTasks(config, jobs, logger)
+    tasks = MakeImageTasks(config, jobs)
 
     images = MultiProcess(nproc, config, BuildImage, tasks, 'image',
-                          logger=logger, timeout=timeout,
+                          timeout=timeout,
                           done_func=done_func, except_func=except_func)
 
     logger.debug('file %d: Done making images',config.get('file_num',0))
@@ -120,7 +122,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
 
     return images
 
-def SetupConfigImageNum(config, image_num, obj_num, logger=None):
+def SetupConfigImageNum(config, image_num, obj_num):
     """Do the basic setup of the config dict at the image processing level.
 
     Includes:
@@ -135,9 +137,7 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
         config:         The configuration dict.
         image_num:      The current image number.
         obj_num:        The first object number in the image.
-        logger:         If given, a logger object to log progress. [default: None]
     """
-    logger = LoggerWrapper(logger)
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'image_num'
@@ -160,15 +160,15 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
                                      list(valid_image_types.keys()))
 
     # In case this hasn't been done yet.
-    SetupInput(config, logger)
+    SetupInput(config)
 
     # Build the rng to use at the image level.
-    seed = SetupConfigRNG(config, logger=logger)
+    seed = SetupConfigRNG(config)
     logger.debug('image %d: seed = %d',image_num,seed)
 
 
 
-def SetupConfigImageSize(config, xsize, ysize, logger=None):
+def SetupConfigImageSize(config, xsize, ysize):
     """Do some further setup of the config dict at the image processing level based on
     the provided image size.
 
@@ -186,9 +186,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
         config:     The configuration dict.
         xsize:      The size of the image in the x-dimension.
         ysize:      The size of the image in the y-dimension.
-        logger:     If given, a logger object to log progress. [default: None]
     """
-    logger = LoggerWrapper(logger)
     config['image_xsize'] = xsize
     config['image_ysize'] = ysize
     image = config['image']
@@ -210,7 +208,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     config['image_bounds'] = bounds
 
     # Build the wcs
-    wcs = BuildWCS(image, 'wcs', config, logger)
+    wcs = BuildWCS(image, 'wcs', config)
     config['wcs'] = wcs
 
     # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The
@@ -239,7 +237,7 @@ image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky
                  'use_flux_sky_areas'
                ] + stamp_image_keys
 
-def BuildImage(config, image_num=0, obj_num=0, logger=None):
+def BuildImage(config, image_num=0, obj_num=0):
     """
     Build an Image according to the information in config.
 
@@ -247,18 +245,16 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
         config:         The configuration dict.
         image_num:      If given, the current image number. [default: 0]
         obj_num:        If given, the first object number in the image. [default: 0]
-        logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
         the final image
     """
     from .extra import SetupExtraOutputsForImage, ProcessExtraOutputsForImage
 
-    logger = LoggerWrapper(logger)
     logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Setup basic things in the top-level config dict that we will need.
-    SetupConfigImageNum(config, image_num, obj_num, logger)
+    SetupConfigImageNum(config, image_num, obj_num)
 
     cfg_image = config['image']  # Use cfg_image to avoid name confusion with the actual image
                                  # we will build later.
@@ -266,34 +262,34 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Do the necessary initial setup for this image type.
     builder = valid_image_types[image_type]
-    xsize, ysize = builder.setup(cfg_image, config, image_num, obj_num, image_ignore, logger)
+    xsize, ysize = builder.setup(cfg_image, config, image_num, obj_num, image_ignore)
 
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
     # do some basic calculations
-    SetupConfigImageSize(config, xsize, ysize, logger)
+    SetupConfigImageSize(config, xsize, ysize)
     logger.debug('image %d: image_size = %d, %d',image_num,xsize,ysize)
     logger.debug('image %d: image_origin = %s',image_num,config['image_origin'])
     logger.debug('image %d: image_center = %s',image_num,config['image_center'])
 
     # Sometimes an input field needs to do something special at the start of an image.
-    SetupInputsForImage(config, logger)
+    SetupInputsForImage(config)
 
     # Likewise for the extra output items.
-    SetupExtraOutputsForImage(config, logger)
+    SetupExtraOutputsForImage(config)
 
     # If there is a bandpass field, load it into config['bandpass']
-    bp = builder.buildBandpass(cfg_image, config, image_num, obj_num, logger)
+    bp = builder.buildBandpass(cfg_image, config, image_num, obj_num)
     if bp is not None:
         config['bandpass'] = bp
 
     # If there is a sensor, build it now.
-    sensor = builder.buildSensor(cfg_image, config, image_num, obj_num, logger)
+    sensor = builder.buildSensor(cfg_image, config, image_num, obj_num)
     if sensor is not None:
         config['sensor'] = sensor
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
-    image, current_var = builder.buildImage(cfg_image, config, image_num, obj_num, logger)
+    image, current_var = builder.buildImage(cfg_image, config, image_num, obj_num)
 
     # Store the current image in the base-level config for reference
     config['current_image'] = image
@@ -315,14 +311,14 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     config['index_key'] = 'image_num'
 
     # Do whatever processing is required for the extra output items.
-    ProcessExtraOutputsForImage(config,logger)
+    ProcessExtraOutputsForImage(config)
 
-    builder.addNoise(image, cfg_image, config, image_num, obj_num, current_var, logger)
+    builder.addNoise(image, cfg_image, config, image_num, obj_num, current_var)
 
     return image
 
 
-def GetNObjForImage(config, image_num, logger=None, approx=False):
+def GetNObjForImage(config, image_num, approx=False):
     """
     Get the number of objects that will be made for the image number image_num based on
     the information in the config dict.
@@ -330,7 +326,6 @@ def GetNObjForImage(config, image_num, logger=None, approx=False):
     Parameters:
         config:         The configuration dict.
         image_num:      The current image number.
-        logger:         If given, a logger object to log progress.
         approx:         Whether an approximate/overestimate is ok [default: False]
 
     Returns:
@@ -342,10 +337,10 @@ def GetNObjForImage(config, image_num, logger=None, approx=False):
         raise GalSimConfigValueError("Invalid image.type.", image_type,
                                      list(valid_image_types.keys()))
     return valid_image_types[image_type].getNObj(image, config, image_num,
-                                                 logger=logger, approx=approx)
+                                                 approx=approx)
 
 
-def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
+def FlattenNoiseVariance(config, full_image, stamps, current_vars):
     """This is a helper function to bring the noise level up to a constant value
     across the image.  If some of the galaxies are RealGalaxy objects and noise whitening
     (or symmetrizing) is turned on, then there will already be some noise in the
@@ -358,12 +353,10 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         full_image:     The full image onto which the noise should be added.
         stamps:         A list of the individual postage stamps.
         current_vars:   A list of the current variance in each postage stamps.
-        logger:         If given, a logger object to log progress.
 
     Returns:
         the final variance in the image
     """
-    logger = LoggerWrapper(logger)
     rng = config['image_num_rng']
     nobjects = len(stamps)
     max_current_var = max(tuple(current_vars) + (0,))  # Include 0 in case current_vars is empty.
@@ -391,7 +384,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
-def MakeImageTasks(config, jobs, logger):
+def MakeImageTasks(config, jobs):
     """Turn a list of jobs into a list of tasks.
 
     See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
@@ -407,14 +400,13 @@ def MakeImageTasks(config, jobs, logger):
         config:     The configuration dict
         jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                     dict of parameters that includes 'image_num' and 'obj_num'.
-        logger:     If given, a logger object to log progress.
 
     Returns:
         a list of tasks
     """
     image = config.get('image', {})
     image_type = image.get('type', 'Single')
-    return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
+    return valid_image_types[image_type].makeTasks(image, config, jobs)
 
 
 class ImageBuilder:
@@ -424,7 +416,7 @@ class ImageBuilder:
     It also includes the implementation of the default image type: Single.
     """
 
-    def setup(self, config, base, image_num, obj_num, ignore, logger):
+    def setup(self, config, base, image_num, obj_num, ignore):
         """Do the initialization and setup for building the image.
 
         This figures out the size that the image will be, but doesn't actually build it yet.
@@ -436,7 +428,6 @@ class ImageBuilder:
             obj_num:    The first object number in the image.
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             xsize, ysize
@@ -463,7 +454,7 @@ class ImageBuilder:
 
         return xsize, ysize
 
-    def buildBandpass(self, config, base, image_num, obj_num, logger):
+    def buildBandpass(self, config, base, image_num, obj_num):
         """If thre is a 'bandpass' field in config['image'], load it.
 
         Parameters:
@@ -471,17 +462,16 @@ class ImageBuilder:
             base:       The base configuration dict.
             image_num:  The current image number.
             obj_num:    The first object number in the image.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a gasim.Bandpass or None
         """
         if 'bandpass' in config:
-            return BuildBandpass(config, 'bandpass', base, logger)[0]
+            return BuildBandpass(config, 'bandpass', base)[0]
         else:
             return None
 
-    def buildSensor(self, config, base, image_num, obj_num, logger):
+    def buildSensor(self, config, base, image_num, obj_num):
         """Build the sensor if given in the config dict.
 
         Parameters:
@@ -489,17 +479,16 @@ class ImageBuilder:
             base:       The base configuration dict.
             image_num:  The current image number.
             obj_num:    The first object number in the image.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a galsim.Sensor or None
         """
         if 'sensor' in config:
-            return BuildSensor(config, 'sensor', base, logger)
+            return BuildSensor(config, 'sensor', base)
         else:
             return None
 
-    def buildImage(self, config, base, image_num, obj_num, logger):
+    def buildImage(self, config, base, image_num, obj_num):
         """Build an Image based on the parameters in the config dict.
 
         For Single, this is just an image consisting of a single postage stamp.
@@ -509,7 +498,6 @@ class ImageBuilder:
             base:       The base configuration dict.
             image_num:  The current image number.
             obj_num:    The first object number in the image.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             the final image and the current noise variance in the image as a tuple
@@ -519,7 +507,7 @@ class ImageBuilder:
         logger.debug('image %d: Single Image: size = %s, %s',image_num,xsize,ysize)
 
         image, current_var = BuildStamp(
-                base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
+                base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True)
         if image is not None:
             image.wcs = base['wcs']   # in case stamp has a local jacobian.
 
@@ -532,7 +520,7 @@ class ImageBuilder:
 
         return image, current_var
 
-    def makeTasks(self, config, base, jobs, logger):
+    def makeTasks(self, config, base, jobs):
         """Turn a list of jobs into a list of tasks.
 
         Each task is performed separately in multi-processing runs, so this provides a mechanism
@@ -557,14 +545,13 @@ class ImageBuilder:
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'image_num' and 'obj_num'.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             a list of tasks
         """
-        return MakeStampTasks(base, jobs, logger)
+        return MakeStampTasks(base, jobs)
 
-    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var):
         """Add the final noise to the image.
 
         In the base class, this is a no op, since it directs the BuildStamp function to build
@@ -578,11 +565,10 @@ class ImageBuilder:
             image_num:      The current image number.
             obj_num:        The first object number in the image.
             current_var:    The current noise variance in each postage stamps.
-            logger:         If given, a logger object to log progress.
         """
         pass
 
-    def getNObj(self, config, base, image_num, logger=None, approx=False):
+    def getNObj(self, config, base, image_num, approx=False):
         """Get the number of objects that will be built for this image.
 
         For Single, this is just 1, but other image types would figure this out from the
@@ -592,7 +578,6 @@ class ImageBuilder:
             config:         The configuration dict for the image field.
             base:           The base configuration dict.
             image_num:      The current image number.
-            logger:         If given, a logger object to log progress.
             approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:

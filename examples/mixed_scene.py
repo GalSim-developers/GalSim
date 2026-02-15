@@ -16,11 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import galsim
+
+logger = logging.getLogger(__name__)
 
 class MixedSceneBuilder(galsim.config.StampBuilder):
 
-    def setup(self, config, base, xsize, ysize, ignore, logger):
+    def setup(self, config, base, xsize, ysize, ignore):
         if 'objects' not in config:
             raise AttributeError('objets field is required for MixedScene stamp type')
         objects = config['objects']
@@ -76,20 +79,20 @@ class MixedSceneBuilder(galsim.config.StampBuilder):
         ignore = ignore + ['objects', 'magnify', 'shear', 'obj_type']
 
         # Now go on and do the rest of the normal setup.
-        return super(MixedSceneBuilder, self).setup(config,base,xsize,ysize,ignore,logger)
+        return super(MixedSceneBuilder, self).setup(config,base,xsize,ysize,ignore)
 
-    def buildProfile(self, config, base, psf, gsparams, logger):
+    def buildProfile(self, config, base, psf, gsparams):
         obj_type = base['current_obj_type']
         logger.info('obj %d: Drawing %s', base['obj_num'], obj_type)
 
         # Make the appropriate object using the obj_type field
-        obj = galsim.config.BuildGSObject(base, obj_type, gsparams=gsparams, logger=logger)[0]
+        obj = galsim.config.BuildGSObject(base, obj_type, gsparams=gsparams)[0]
         # Also save this in case useful for some calculation.
         base['current_obj'] = obj
 
         # Only shear and magnify are allowed, but this general TransformObject function will
         # work to implement those.
-        obj, safe = galsim.config.TransformObject(obj, config, base, logger)
+        obj, safe = galsim.config.TransformObject(obj, config, base)
 
         if psf:
             if obj:

@@ -16,19 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 from .input import InputLoader, GetInputObj, RegisterInputType
 from .value import GetCurrentValue, CheckAllParams, GetAllParams, RegisterValueType
-from .util import LoggerWrapper
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..shear import Shear
 from ..nfw_halo import NFWHalo
 
+logger = logging.getLogger(__name__)
+
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
 
-class NFWLoader(InputLoader):
-    def setupImage(self, input_obj, config, base, logger=None):
-        # Just attach the logger to the input_obj so we can use it when evaluating values.
-        input_obj.logger = LoggerWrapper(logger)
+NFWLoader = InputLoader
 
 # Register this as a valid input type
 RegisterInputType('nfw_halo', NFWLoader(NFWHalo))
@@ -37,7 +37,6 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     """Return a shear calculated from an NFWHalo object.
     """
     nfw_halo = GetInputObj('nfw_halo', config, base, 'NFWHaloShear')
-    logger = nfw_halo.logger
 
     if 'uv_pos' not in base:
         raise GalSimConfigError("NFWHaloShear requested, but no position defined.")
@@ -68,7 +67,6 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     """Return a magnification calculated from an NFWHalo object.
     """
     nfw_halo = GetInputObj('nfw_halo', config, base, 'NFWHaloMagnification')
-    logger = nfw_halo.logger
 
     if 'uv_pos' not in base:
         raise GalSimConfigError("NFWHaloMagnification requested, but no position defined.")

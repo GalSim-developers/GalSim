@@ -32,6 +32,8 @@ from ._version import __version__ as version
 from .config import ReadConfig, Process
 from .errors import GalSimError, GalSimValueError, GalSimRangeError
 
+logger = logging.getLogger(__name__)
+
 def parse_args(command_args):
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
@@ -106,7 +108,7 @@ def parse_args(command_args):
     # Return the args
     return args
 
-def parse_variables(variables, logger):
+def parse_variables(variables):
     """Parse any command-line variables, returning them as a dict
     """
     new_params = {}
@@ -141,33 +143,19 @@ def add_modules(config, modules):
         else:
             config['modules'].extend(modules)
 
-def make_logger(args):
+def setup_logger(args):
     """Make a logger object according to the command-line specifications.
     """
-    # Make a logger
-    logger = logging.getLogger('galsim')
-
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.ERROR,
                        1: logging.WARNING,
                        2: logging.INFO,
                        3: logging.DEBUG }
     level = logging_levels[args.verbosity]
-    logger.setLevel(level)
 
-    # Setup logging to go to sys.stdout or (if requested) to an output file
-    if args.log_file is None:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(logging.Formatter(args.log_format))
-        handler.setLevel(level)
-    else:
-        handler = logging.FileHandler(args.log_file, mode='w')
-        handler.setFormatter(logging.Formatter(args.log_format))
-        handler.setLevel(level)
-    logger.addHandler(handler)
-    return logger
+    logging.basicConfig(filename=args.log_file, filemode="w", format=args.log_format, level=level, force=True)
 
-def process_config(all_config, args, logger):
+def process_config(all_config, args):
     """Process the config dict according to the command-line specifications.
     """
     # If requested, load the profiler
@@ -183,7 +171,7 @@ def process_config(all_config, args, logger):
             config['root'] = root
 
         # Parse the command-line variables:
-        new_params = parse_variables(args.variables, logger)
+        new_params = parse_variables(args.variables)
 
         # Add modules to the config['modules'] list
         add_modules(config, args.module)
@@ -197,7 +185,7 @@ def process_config(all_config, args, logger):
         logger.debug("Process config dict: \n%s", json.dumps(config, indent=4))
 
         # Process the configuration
-        Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
+        Process(config, njobs=args.njobs, job=args.job, new_params=new_params,
                 except_abort=args.except_abort)
 
     if args.profile:
@@ -217,9 +205,9 @@ def main(command_args):
     """The whole process given command-line parameters in their native (non-ArgParse) form.
     """
     args = parse_args(command_args)
-    logger = make_logger(args)
-    all_config = ReadConfig(args.config_file, args.file_type, logger)
-    process_config(all_config, args, logger)
+    setup_logger(args)
+    all_config = ReadConfig(args.config_file, args.file_type)
+    process_config(all_config, args)
 
 def run_main():
     """Kick off the process grabbing the command-line parameters from sys.argv

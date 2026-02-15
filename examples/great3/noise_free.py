@@ -27,13 +27,13 @@ class NoiseFreeBuilder(galsim.config.ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, config, base):
         if base['do_noise_in_stamps']:
             noise_free_im = base['current_stamp'].copy()
             self.scratch[obj_num] = noise_free_im
 
     # The function to call at the end of building each image
-    def processImage(self, index, obj_nums, config, base, logger):
+    def processImage(self, index, obj_nums, config, base):
         if len(self.scratch) > 0.:
             # If we have been accumulating the stamp images, build the total from them.
             image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)

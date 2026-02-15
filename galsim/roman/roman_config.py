@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 from . import addReciprocityFailure, applyNonlinearity, applyIPC
 from . import n_pix, exptime, dark_current, read_noise, gain
 from . import stray_light_fraction, thermal_backgrounds
@@ -32,8 +34,10 @@ from ..celestial import CelestialCoord
 from ..random import PoissonDeviate
 from ..noise import GaussianNoise, PoissonNoise, DeviateNoise
 
+logger = logging.getLogger(__name__)
+
 # RomanPSF object type
-def _BuildRomanPSF(config, base, ignore, gsparams, logger):
+def _BuildRomanPSF(config, base, ignore, gsparams):
 
     req = {}
     opt = {
@@ -80,7 +84,7 @@ def _BuildRomanPSF(config, base, ignore, gsparams, logger):
 
     kwargs['extra_aberrations'] = ParseAberrations('extra_aberrations', config, base, 'RomanPSF')
 
-    psf = getPSF(wcs=base.get('wcs',None), logger=logger, **kwargs)
+    psf = getPSF(wcs=base.get('wcs',None), **kwargs)
     return psf, False
 
 RegisterObjectType('RomanPSF', _BuildRomanPSF)
@@ -93,13 +97,12 @@ class RomanBandpassBuilder(BandpassBuilder):
 
         name (str)          The name of the Roman filter to get. (required)
     """
-    def buildBandpass(self, config, base, logger):
+    def buildBandpass(self, config, base):
         """Build the Bandpass based on the specifications in the config dict.
 
         Parameters:
             config:     The configuration dict for the bandpass type.
             base:       The base configuration dict.
-            logger:     If provided, a logger for logging debug statements.
 
         Returns:
             the constructed Bandpass object.
@@ -121,7 +124,7 @@ RegisterBandpassType('RomanBandpass', RomanBandpassBuilder())
 # RomanSCA image type
 class RomanSCAImageBuilder(ScatteredImageBuilder):
 
-    def setup(self, config, base, image_num, obj_num, ignore, logger):
+    def setup(self, config, base, image_num, obj_num, ignore):
         """Do the initialization and setup for building the image.
 
         This figures out the size that the image will be, but doesn't actually build it yet.
@@ -133,7 +136,6 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             obj_num:    The first object number in the image.
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
 
         Returns:
             xsize, ysize
@@ -141,7 +143,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         logger.debug('image %d: Building RomanSCA: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
-        self.nobjects = self.getNObj(config, base, image_num, logger=logger)
+        self.nobjects = self.getNObj(config, base, image_num)
         logger.debug('image %d: nobj = %d',image_num,self.nobjects)
 
         # These are allowed for Scattered, but we don't use them here.
@@ -203,7 +205,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             self.all_roman_bp = getBandpasses()
         return self.all_roman_bp[filter_name]
 
-    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var):
         """Add the final noise to a Scattered image
 
         Parameters:
@@ -213,7 +215,6 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             image_num:      The current image number.
             obj_num:        The first object number in the image.
             current_var:    The current noise variance in each postage stamps.
-            logger:         If given, a logger object to log progress.
         """
         base['current_noise_image'] = base['current_image']
         wcs = base['wcs']

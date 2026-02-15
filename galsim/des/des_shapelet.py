@@ -181,7 +181,7 @@ RegisterInputType('des_shapelet', InputLoader(DES_Shapelet))
 # config is a dictionary that includes 'type' plus other items you might want to allow or require.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
+def BuildDES_Shapelet(config, base, ignore, gsparams):
     """Build a GSObject representing the shapelet model at the correct location in the image in a
     config-processing context.
 

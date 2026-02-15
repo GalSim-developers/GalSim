@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
 import numpy as np
 import os
 import sys
@@ -1188,9 +1189,10 @@ def test_flat(run_slow):
     np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
 
 @timer
-def test_omp():
+def test_omp(caplog):
     """Test setting the number of omp threads.
     """
+    caplog.set_level(logging.DEBUG)
     import multiprocessing
 
     # If num_threads <= 0 or None, get num from cpu_count
@@ -1215,61 +1217,61 @@ def test_omp():
     assert galsim.get_omp_threads() == num_threads
 
     # Repeat and check that appropriate messages are emitted
-    with CaptureLog() as cl:
-        num_threads = galsim.set_omp_threads(0, logger=cl.logger)
-    assert "multiprocessing.cpu_count() = " in cl.output
-    assert "Telling OpenMP to use %s threads"%cpus in cl.output
+    caplog.clear()
+    num_threads = galsim.set_omp_threads(0)
+    assert "multiprocessing.cpu_count() = " in caplog.text
+    assert "Telling OpenMP to use %s threads"%cpus in caplog.text
 
-    with CaptureLog() as cl:
-        galsim.set_omp_threads(None, logger=cl.logger)
-    assert "multiprocessing.cpu_count() = " in cl.output
-    assert "Telling OpenMP to use %s threads"%cpus in cl.output
+    caplog.clear()
+    galsim.set_omp_threads(None)
+    assert "multiprocessing.cpu_count() = " in caplog.text
+    assert "Telling OpenMP to use %s threads"%cpus in caplog.text
 
-    with CaptureLog() as cl:
-        galsim.set_omp_threads(1, logger=cl.logger)
-    assert "multiprocessing.cpu_count() = " not in cl.output
-    assert "Telling OpenMP to use 1 threads" in cl.output
-    assert "Using %s threads"%num_threads not in cl.output
-    assert "Unable to use multiple threads" not in cl.output
+    caplog.clear()
+    galsim.set_omp_threads(1)
+    assert "multiprocessing.cpu_count() = " not in caplog.text
+    assert "Telling OpenMP to use 1 threads" in caplog.text
+    assert "Using %s threads"%num_threads not in caplog.text
+    assert "Unable to use multiple threads" not in caplog.text
 
-    with CaptureLog() as cl:
-        galsim.set_omp_threads(2, logger=cl.logger)
-    assert "multiprocessing.cpu_count() = " not in cl.output
-    assert "Telling OpenMP to use 2 threads" in cl.output
+    caplog.clear()
+    galsim.set_omp_threads(2)
+    assert "multiprocessing.cpu_count() = " not in caplog.text
+    assert "Telling OpenMP to use 2 threads" in caplog.text
 
     # It's hard to tell what happens in the next step, since we can't control what
     # galsim._galsim.SetOMPThreads does.  It depends on whether OpenMP is enabled and
     # how many cores are available.  So let's mock it up.
     with mock.patch('galsim.utilities._galsim') as _galsim:
         # First mock with OpenMP enables and able to use lots of threads
+        caplog.clear()
         _galsim.SetOMPThreads = lambda x: x
         assert galsim.set_omp_threads(20) == 20
-        with CaptureLog() as cl:
-            galsim.set_omp_threads(20, logger=cl.logger)
-        assert "OpenMP reports that it will use 20 threads" in cl.output
-        assert "Using 20 threads" in cl.output
+        galsim.set_omp_threads(20)
+        assert "OpenMP reports that it will use 20 threads" in caplog.text
+        assert "Using 20 threads" in caplog.text
 
         # Next only 4 threads available
+        caplog.clear()
         _galsim.SetOMPThreads = lambda x: 4 if x > 4 else x
         print(galsim.set_omp_threads(20))
         assert galsim.set_omp_threads(20) == 4
-        with CaptureLog() as cl:
-            galsim.set_omp_threads(20, logger=cl.logger)
-        assert "OpenMP reports that it will use 4 threads" in cl.output
-        assert "Using 4 threads" in cl.output
+        galsim.set_omp_threads(20)
+        assert "OpenMP reports that it will use 4 threads" in caplog.text
+        assert "Using 4 threads" in caplog.text
 
+        caplog.clear()
         assert galsim.set_omp_threads(2) == 2
-        with CaptureLog() as cl:
-            galsim.set_omp_threads(2, logger=cl.logger)
-        assert "OpenMP reports that it will use 2 threads" in cl.output
+        galsim.set_omp_threads(2)
+        assert "OpenMP reports that it will use 2 threads" in caplog.text
 
         # Finally, no OpenMP
+        caplog.clear()
         _galsim.SetOMPThreads = lambda x: 1
         assert galsim.set_omp_threads(20) == 1
-        with CaptureLog() as cl:
-            galsim.set_omp_threads(20, logger=cl.logger)
-        assert "OpenMP reports that it will use 1 threads" in cl.output
-        assert "Unable to use multiple threads" in cl.output
+        galsim.set_omp_threads(20)
+        assert "OpenMP reports that it will use 1 threads" in caplog.text
+        assert "Unable to use multiple threads" in caplog.text
 
     # This is really just for coverage.  Check that OMP_PROC_BIND gets set properly.
     with mock.patch('os.environ', {}):

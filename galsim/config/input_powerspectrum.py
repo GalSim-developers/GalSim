@@ -21,7 +21,7 @@ import warnings
 import logging
 
 from .input import InputLoader, GetInputObj, RegisterInputType
-from .util import LoggerWrapper, SetupConfigRNG, GetRNG
+from .util import SetupConfigRNG, GetRNG
 from .value import ParseValue, GetAllParams, CheckAllParams, RegisterValueType
 from .stamp import ParseWorldPos
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -29,6 +29,8 @@ from ..position import PositionD
 from ..shear import Shear
 from ..random import BaseDeviate
 from ..lensing_ps import PowerSpectrum
+
+logger = logging.getLogger(__name__)
 
 # This file adds input type nfw_halo and value types PowerSpectrumShear and
 # PowerSpectrumMagnification.
@@ -40,18 +42,16 @@ from ..lensing_ps import PowerSpectrum
 
 class PowerSpectrumLoader(InputLoader):
 
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
 
         Parameters:
             config:     The configuration dict for 'power_spectrum'
             base:       The base configuration dict
-            logger:     If given, a logger object to log progress.
 
         Returns:
             kwargs, safe
         """
-        logger = LoggerWrapper(logger)
 
         # If we are going to use a different rebuilding cadence than the normal once per image,
         # then in order for this feature to work properly in a multiprocessing context,
@@ -80,10 +80,10 @@ class PowerSpectrumLoader(InputLoader):
             base['image']['random_seed'] = rs
             orig_index_key = base.get('index_key', 'file_num')
             base['index_key'] = 'file_num'
-            SetupConfigRNG(base, logger=logger)
+            SetupConfigRNG(base)
             if image_num is not None:
                 base['index_key'] = 'image_num'
-                SetupConfigRNG(base, logger=logger)
+                SetupConfigRNG(base)
             base['index_key'] = orig_index_key
             base['obj_num'] = obj_num
             base['image_num'] = image_num
@@ -95,7 +95,7 @@ class PowerSpectrumLoader(InputLoader):
         opt = PowerSpectrum._opt_params
         return GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    def setupImage(self, input_obj, config, base, logger=None):
+    def setupImage(self, input_obj, config, base):
         """Set up the PowerSpectrum input object's gridded values based on the
         size of the image and the grid spacing.
 
@@ -103,11 +103,7 @@ class PowerSpectrumLoader(InputLoader):
             input_obj:  The PowerSpectrum object to use
             config:     The configuration dict for 'power_spectrum'
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
         """
-        logger = LoggerWrapper(logger)
-        # Attach the logger to the input_obj so we can use it when evaluating values.
-        input_obj.logger = logger
 
         if 'grid_spacing' in config:
             grid_spacing = ParseValue(config, 'grid_spacing', base, float)[0]
@@ -148,7 +144,7 @@ class PowerSpectrumLoader(InputLoader):
             variance = None
 
         if 'center' in config:
-            center = ParseWorldPos(config, 'center', base, logger)
+            center = ParseWorldPos(config, 'center', base)
         elif base['wcs']._isCelestial:
             center = PositionD(0,0)
         else:
@@ -163,7 +159,7 @@ class PowerSpectrumLoader(InputLoader):
                 return
             config['current_setup_index'] = index
 
-        rng = GetRNG(config, base, logger, 'PowerSpectrum')
+        rng = GetRNG(config, base, 'PowerSpectrum')
 
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
@@ -191,7 +187,6 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     """Return a shear calculated from a PowerSpectrum object.
     """
     power_spectrum = GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
-    logger = power_spectrum.logger
 
     if 'uv_pos' not in base:
         raise GalSimConfigError("PowerSpectrumShear requested, but no position defined.")
@@ -228,7 +223,6 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     """Return a magnification calculated from a PowerSpectrum object.
     """
     power_spectrum = GetInputObj('power_spectrum', config, base, 'PowerSpectrumMagnification')
-    logger = power_spectrum.logger
 
     if 'uv_pos' not in base:
         raise GalSimConfigError(

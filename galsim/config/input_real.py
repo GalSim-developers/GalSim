@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 from .input import InputLoader, GetInputObj, RegisterInputType, GetNumInputObj
 from .util import GetRNG, get_cls_params
 from .value import GetAllParams, SetDefaultIndex
@@ -24,15 +26,17 @@ from ..gsparams import GSParams
 from ..errors import GalSimConfigError
 from ..real import RealGalaxyCatalog, RealGalaxy, ChromaticRealGalaxy
 
+logger = logging.getLogger(__name__)
+
 # This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.
 
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
-RegisterInputType('real_catalog', InputLoader(RealGalaxyCatalog, takes_logger=True))
+RegisterInputType('real_catalog', InputLoader(RealGalaxyCatalog))
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
-def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
+def _BuildRealGalaxy(config, base, ignore, gsparams, param_name='RealGalaxy'):
     """Build a RealGalaxy from the real_catalog input item.
     """
     real_cat = GetInputObj('real_catalog', config, base, param_name)
@@ -53,7 +57,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     kwargs, safe = GetAllParams(config, base, req, opt, single, ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    kwargs['rng'] = GetRNG(config, base, logger, param_name)
+    kwargs['rng'] = GetRNG(config, base, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']
@@ -69,14 +73,14 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     return gal, safe
 
 
-def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
+def _BuildRealGalaxyOriginal(config, base, ignore, gsparams):
     """Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    gal, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
+    gal, safe = _BuildRealGalaxy(config, base, ignore, gsparams,
                                    param_name='RealGalaxyOriginal')
     return gal.original_gal, safe
 
-def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
+def _BuildChromaticRealGalaxy(config, base, ignore, gsparams):
     """Build a ChromaticRealGalaxy from several real_catalog input items.
     """
     param_name = 'ChromaticRealGalaxy'
@@ -101,7 +105,7 @@ def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
     kwargs, safe = GetAllParams(config, base, req, opt, single, ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    kwargs['rng'] = GetRNG(config, base, logger, param_name)
+    kwargs['rng'] = GetRNG(config, base, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']

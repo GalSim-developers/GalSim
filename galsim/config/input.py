@@ -16,14 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 
+import logging
+
 from multiprocessing.managers import NamespaceProxy
 
-from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
+from .util import RemoveCurrent, GetRNG, get_cls_params
 from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum, single_threaded
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from .value import RegisterValueType
 from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
 from ..catalog import Catalog, Dict
+
+logger = logging.getLogger(__name__)
 
 # This file handles processing the input items according to the specifications in config['input'].
 # This file includes the basic functionality, which is often sufficient for simple input types,
@@ -77,7 +81,7 @@ def InputProxy(target):
 
     return ProxyType
 
-def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
+def ProcessInput(config, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -93,7 +97,6 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
     Parameters:
         config:             The configuration dict to process
-        logger:             If given, a logger object to log progress. [default: None]
         file_scope_only:    If True, only process the input items that are marked as being
                             possibly relevant for file- and image-level items. [default: False]
         safe_only:          If True, only process the input items whose construction parameters
@@ -101,7 +104,6 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                             used by multiple processes if appropriate. [default: False]
     """
     if 'input' in config:
-        logger = LoggerWrapper(logger)
         file_num = config.get('file_num',0)
         logger.debug('file %d: Start ProcessInput',file_num)
 
@@ -166,14 +168,14 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
             if file_scope_only and not loader.file_scope: continue
 
             logger.debug('file %d: Process input key %s',file_num,key)
-            LoadAllInputObj(config, key, safe_only, logger)
+            LoadAllInputObj(config, key, safe_only)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
         CheckAllParams(config['input'], ignore=valid_keys)
 
 
-def SetupInput(config, logger=None):
+def SetupInput(config):
     """Process the input field if it hasn't been processed yet.
 
     This is mostly useful if the user isn't running through the full processing and just starting
@@ -182,16 +184,15 @@ def SetupInput(config, logger=None):
 
     Parameters:
         config:     The configuration dict in which to setup the input items.
-        logger:     If given, a logger object to log progress. [default: None]
     """
     if '_input_objs' not in config:
         # Make sure any user-set index keys are propagated properly.
         if 'input' in config:
             PropagateIndexKeyRNGNum(config['input'])
-        ProcessInput(config, logger=logger)
+        ProcessInput(config)
 
 
-def LoadAllInputObj(config, key, safe_only=False, logger=None):
+def LoadAllInputObj(config, key, safe_only=False):
     """Load all items of a single input type, named key, with definition given by the dict field.
 
     This function just detects if the dict item for this key is a list and calls LoadInputObj
@@ -209,16 +210,15 @@ def LoadAllInputObj(config, key, safe_only=False, logger=None):
         config:     The configuration dict to process
         key:        The key name of this input type
         safe_only:  Only load "safe" input objects.
-        logger:     If given, a logger object to log progress. [default: None]
     """
     fields = config['input'][key]
     nfields = len(fields) if isinstance(fields, list) else 1
     for num in range(nfields):
-        input_obj = LoadInputObj(config, key, num, safe_only, logger)
+        input_obj = LoadInputObj(config, key, num, safe_only)
     return input_obj
 
 
-def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
+def LoadInputObj(config, key, num=0, safe_only=False):
     """Load a single input object, named key, with definition given by the dict field.
 
     .. note::
@@ -234,12 +234,10 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         key:        The key name of this input type
         num:        Which number in the list of this key, if needed. [default: 0]
         safe_only:  Only load "safe" input objects.
-        logger:     If given, a logger object to log progress. [default: None]
 
     Returns:
         The constructed input object, which is also saved in config['_input_objs'][key]
     """
-    logger = LoggerWrapper(logger)
     if '_input_objs' not in config:
         config['_input_objs'] = {}
     all_input_objs = config['_input_objs']
@@ -268,7 +266,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     # Not loaded or not current.
     logger.debug('file %d: Build input type %s',file_num,key)
     try:
-        kwargs, safe = loader.getKwargs(field, config, logger)
+        kwargs, safe = loader.getKwargs(field, config)
     except Exception as e:
         # If an exception was raised here, and we are doing the safe_only run,
         # then it probably needed an rng that we don't have yet.  So really, that
@@ -280,9 +278,9 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         if str(e).startswith("No input"):
             dep_input = str(e).split()[2]
             logger.info("%s input seems to depend on %s.  Try loading that.", key, dep_input)
-            input_obj = LoadAllInputObj(config, dep_input, safe_only=safe_only, logger=logger)
+            input_obj = LoadAllInputObj(config, dep_input, safe_only=safe_only)
             # Now recurse to try this key again.
-            return LoadInputObj(config, key, num=num, safe_only=safe_only, logger=logger)
+            return LoadInputObj(config, key, num=num, safe_only=safe_only)
         if safe_only:
             logger.debug('file %d: caught exception: %s', file_num,e)
             safe = False
@@ -297,13 +295,9 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
     use_proxy = ('_input_manager' in config
                  and 'current_nproc' not in config
-                 and valid_input_types[key].useProxy(config, logger))
+                 and valid_input_types[key].useProxy(config))
     if use_proxy:
         tag = key + str(num)
-        if 'logger' in kwargs:
-            # Loggers can't be pickled. (At least prior to py3.7.  Maybe they fixed this?)
-            # So if we have a logger, switch it for a proxy instead.
-            kwargs['logger'] = GetLoggerProxy(kwargs['logger'])
         input_obj = getattr(config['_input_manager'],tag)(**kwargs)
     else:
         input_obj = loader.init_func(**kwargs)
@@ -318,7 +312,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
             logger.info('Input %s has %d objects', key, input_obj.getNObjects())
 
     input_objs[num] = input_obj
-    loader.initialize(input_objs, num, config, logger)
+    loader.initialize(input_objs, num, config)
 
     # Invalidate any currently cached values that use this kind of input object:
     # TODO: This isn't quite correct if there are multiple versions of this input
@@ -336,7 +330,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     return input_obj
 
 
-def ProcessInputNObjects(config, logger=None, approx=False):
+def ProcessInputNObjects(config, approx=False):
     """Process the input field, just enough to determine the number of objects.
 
     Some input items are relevant for determining the number of objects in a file or image.
@@ -353,20 +347,18 @@ def ProcessInputNObjects(config, logger=None, approx=False):
 
     Parameters:
         config:     The configuration dict to process
-        logger:     If given, a logger object to log progress. [default: None]
         approx:     Whether an approximate count is ok. [default: False]
 
     Returns:
         the number of objects to use.
     """
-    logger = LoggerWrapper(logger)
     if 'input' in config:
-        SetupInput(config, logger=logger)
+        SetupInput(config)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
                 # If it's a list, just use the first one.
-                input_obj = LoadInputObj(config, key, num=0, logger=logger)
+                input_obj = LoadInputObj(config, key, num=0)
                 if approx and hasattr(input_obj, 'getApproxNObjects'):
                     nobj = input_obj.getApproxNObjects()
                 else:
@@ -378,15 +370,14 @@ def ProcessInputNObjects(config, logger=None, approx=False):
     return None
 
 
-def SetupInputsForImage(config, logger=None):
+def SetupInputsForImage(config):
     """Do any necessary setup of the input items at the start of an image.
 
     Parameters:
         config:     The configuration dict to process
-        logger:     If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
-        SetupInput(config, logger=logger)
+        SetupInput(config)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
@@ -398,7 +389,7 @@ def SetupInputsForImage(config, logger=None):
                 for num in range(len(fields)):
                     field = fields[num]
                     input_obj = input_objs[num]
-                    loader.setupImage(input_obj, field, config, logger)
+                    loader.setupImage(input_obj, field, config)
 
 def GetNumInputObj(input_type, base):
     """Get the number of input objects of the given type
@@ -477,10 +468,6 @@ class InputLoader:
                 dict input object. Thus, dict is our canonical example of an input type for
                 which this parameter should be True.
 
-    takes_logger
-                Whether the input object has a logger attribute.  If so, and a proxy is being
-                used, then the logger will be replaced with a logger proxy. [default: False]
-
     use_proxy
                 Whether to use a proxy for commicating between processes.  This is normally
                 necessary whenever multiprocessing is being used, but there are cases where it
@@ -497,12 +484,11 @@ class InputLoader:
                 A function to provide the necessary arguments to worker_init. [default: None]
                 This is required whenever worker_init is not None.
     """
-    def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False,
+    def __init__(self, init_func, has_nobj=False, file_scope=False,
                  use_proxy=True, worker_init=None, worker_initargs=None):
         self.init_func = init_func
         self.has_nobj = has_nobj
         self.file_scope = file_scope
-        self.takes_logger = takes_logger
         self.use_proxy = use_proxy
         if (worker_init is None) != (worker_initargs is None):
             raise GalSimError("Must provide both worker_init and worker_initargs")
@@ -510,7 +496,7 @@ class InputLoader:
             worker_init_fns.append(worker_init)
             worker_initargs_fns.append(worker_initargs)
 
-    def getKwargs(self, config, base, logger):
+    def getKwargs(self, config, base):
         """Parse the config dict and return the kwargs needed to build the input object.
 
         The default implementation looks for special class attributes called:
@@ -534,7 +520,6 @@ class InputLoader:
         Parameters:
             config:     The config dict for this input item
             base:       The base config dict
-            logger:     If given, a logger object to log progress. [default: None]
 
         Returns:
             kwargs, safe
@@ -542,14 +527,12 @@ class InputLoader:
         req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single)
         if takes_rng:
-            rng = GetRNG(config, base, logger, 'input '+self.init_func.__name__)
+            rng = GetRNG(config, base, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
-        if self.takes_logger:
-            kwargs['logger'] = logger
         return kwargs, safe
 
-    def useProxy(self, config, logger=None):
+    def useProxy(self, config):
         """Return whether to use a proxy for the input object.
 
         The default behavior is to return self.use_proxy, which is set by the constructor
@@ -558,11 +541,10 @@ class InputLoader:
 
         Parameters:
             config:     The base configuration dict.
-            logger:     If given, a logger object to log progress.  [default: None]
         """
         return self.use_proxy
 
-    def setupImage(self, input_obj, config, base, logger):
+    def setupImage(self, input_obj, config, base):
         """Do any necessary setup at the start of each image.
 
         In the base class, this function does not do anything.  But see PowerSpectrumLoader
@@ -572,11 +554,10 @@ class InputLoader:
             input_obj:  The input object to use
             config:     The configuration dict for the input type
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.  [default: None]
         """
         pass
 
-    def initialize(self, input_objs, num, base, logger):
+    def initialize(self, input_objs, num, base):
         """Do any global setup for input objects right after they are loaded.
 
         In the base class, this function does not do anything. It can be used to do
@@ -592,7 +573,6 @@ class InputLoader:
             input_objs:  The (current) list of input objects.
             num:         The entry in the list that was loaded.
             base:        The base configuration dict.
-            logger:      If given, a logger object to log progress.  [default: None]
         """
         pass
 
