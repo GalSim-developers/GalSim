@@ -335,7 +335,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                                   aper=aper, gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
-            bp_dict = getBandpasses()
+            bp_dict = getBandpasses(include_all_bands=True)
             bp = bp_dict[bandpass]
             PSF = PSF.interpolate(waves=np.linspace(bp.blue_limit, bp.red_limit, n_waves),
                                   oversample_fac=1.5)
