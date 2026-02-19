@@ -112,7 +112,7 @@ class RomanBandpassBuilder(BandpassBuilder):
             from ..deprecated import depr
             depr('W149', 2.5, 'W146', 'Note: this is to match current Roman filter naming schemes')
             name = 'W146'
-        bandpass = getBandpasses()[name]
+        bandpass = getBandpasses(include_all_bands=True)[name]
 
         return bandpass, safe
 
@@ -200,7 +200,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
     def getBandpass(self, filter_name):
         if not hasattr(self, 'all_roman_bp'):
-            self.all_roman_bp = getBandpasses()
+            self.all_roman_bp = getBandpasses(include_all_bands=True)
         return self.all_roman_bp[filter_name]
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
