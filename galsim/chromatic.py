@@ -1902,8 +1902,8 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             @np.vectorize
             def detjac(w):
-                return np.linalg.det(np.asarray(self._jac(w)).reshape(2,2))
-            sed *= np.abs(detjac)
+                return np.abs(np.linalg.det(np.asarray(self._jac(w)).reshape(2,2)))
+            sed *= detjac
         elif self._jac is not None:
             sed *= np.abs(np.linalg.det(np.asarray(self._jac).reshape(2,2)))
 
