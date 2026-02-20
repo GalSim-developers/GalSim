@@ -2844,6 +2844,11 @@ def test_chromatic_invariant():
     str(chrom)
     repr(chrom)
 
+    chrom = galsim.Transform(gsobj, jac = (0.5, 0.5, 1, -1), flux_ratio=bulge_SED)
+    expected_flux = flux*bulge_SED.calculateFlux(bandpass)
+    chromobj_flux = chrom.calculateFlux(bandpass)
+    np.testing.assert_allclose(expected_flux, chromobj_flux)
+
     # ChromaticOpticalPSF
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2,
                                            scale_unit='arcmin')
