@@ -533,6 +533,17 @@ def test_roman_bandpass_subsets():
         galsim.roman.getBandpasses(bandnames=["u", "g", "r", "i"])
 
 @timer
+def test_roman_single_bandpass():
+    """Test getting a single bandpass from the Roman bandpass utility.
+    """
+    bp = galsim.roman.getBandpass('F184')
+    assert bp.name == 'F184'
+
+    # Test for a non-imaging bandpass.
+    bp = galsim.roman.getBandpass("SNPrism")
+    assert bp.name == "SNPrism"
+
+@timer
 def test_roman_detectors():
     """Test the Roman detector routines for consistency with standard detector routines.
     """

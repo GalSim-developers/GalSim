@@ -179,3 +179,28 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
         bandpass_dict[bp.name] = bp
 
     return bandpass_dict
+
+def getBandpass(bandname, AB_zeropoint=True, default_thin_trunc=True, **kwargs):
+    """Utility to get a single bandpass from the Roman ST bandpasses used.
+
+    If you need to get more than one bandpass, use `getBandpasses` instead.
+    This function just provides a cleaner interface when only one bandpass
+    is needed.
+
+    See also `getBandpasses`.
+
+    Parameters:
+        bandname:           Name of the bandpass to get.
+        AB_zeropoint:       Should the routine set an AB zeropoint before returning the bandpass?
+                            If False, then it is up to the user to set a zero point.  [default:
+                            True]
+        default_thin_trunc: Use the default thinning and truncation options?  Users who wish to
+                            use no thinning and truncation of bandpasses, or who want control over
+                            the level of thinning and truncation, should have this be False.
+                            [default: True]
+        **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
+                            `Bandpass.truncate` as appropriate.
+
+    @returns A Bandpass object for the specified band.
+    """
+    return getBandpasses(AB_zeropoint=AB_zeropoint, default_thin_trunc=default_thin_trunc, include_all_bands=True, bandnames=[bandname], **kwargs)[bandname]
