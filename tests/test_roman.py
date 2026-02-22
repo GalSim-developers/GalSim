@@ -543,6 +543,10 @@ def test_roman_single_bandpass():
     bp_dict = galsim.roman.getBandpasses()
     assert bp == bp_dict[bp.name]
 
+    # Explicitly check for the W-band, since that's a special case.
+    bp = galsim.roman.getBandpass("W146")
+    assert bp == bp_dict[bp.name]
+
     # Test for a non-imaging bandpass.
     bp = galsim.roman.getBandpass("SNPrism")
     assert bp.name == "SNPrism"
