@@ -513,6 +513,24 @@ def test_roman_nonimaging_bandpass():
     assert 'Grism_1stOrder' not in bp_imaging
     assert 'SNPrism' not in bp_imaging
 
+@timer
+def test_roman_bandpass_subsets():
+    """Test that we can get a subset of Roman bandpasses.
+    """
+    bandnames = ["J129", "H158"]
+    bp_dict = galsim.roman.getBandpasses(bandnames=bandnames)
+
+    # Check that the imaging bandpasses are a subset of the all bandpasses
+    for bandname in bandnames:
+        assert bandname in bp_dict
+        bp_dict.pop(bandname)
+
+    # Check that we have no bandpasses left
+    assert len(bp_dict) == 0
+
+    # Test that we get an error for invalid bandpasses
+    with assert_raises(galsim.GalSimValueError):
+        galsim.roman.getBandpasses(bandnames=["u", "g", "r", "i"])
 
 @timer
 def test_roman_detectors():

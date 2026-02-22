@@ -26,10 +26,11 @@ import numpy as np
 import os
 
 from .. import meta_data
-from ..errors import galsim_warn
+from ..errors import GalSimValueError, galsim_warn
 from .. import Bandpass, LookupTable
 
-def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=False, **kwargs):
+def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=False, bandnames=None,
+    **kwargs):
     """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all Roman
@@ -96,6 +97,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
                             There is currently no estimate for the thermal background for these
                             bands and they are set to zero arbitrarily.
                             [default: False]
+        bandnames:          Iterable of bandpass names to get. If None, it gets all the imaging
+                            bands if ``include_all_bands`` is False, or all bands if
+                            ``include_all_bands`` is True.
         **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
                             `Bandpass.truncate` as appropriate.
 
@@ -108,6 +112,14 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
+
+    if bandnames is None:
+        bandnames = data.dtype.names[1:]
+    elif (invalid_bandnames := set(bandnames).difference(data.dtype.names[1:])):
+        raise GalSimValueError("Invalid Roman bandpasses requested;",
+                               value=invalid_bandnames,
+                               allowed_values=data.dtype.names[1:],
+                               )
 
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(meta_data.share_dir, "roman", "roman_sky_backgrounds.txt")
@@ -138,7 +150,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     # Set up a dictionary.
     bandpass_dict = {}
     # Loop over the bands.
-    for index, bp_name in enumerate(data.dtype.names[1:]):
+    for index, bp_name in enumerate(bandnames):
         if include_all_bands is False and bp_name in non_imaging_bands:
             continue
 
