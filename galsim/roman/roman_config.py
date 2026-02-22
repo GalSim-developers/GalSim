@@ -20,7 +20,7 @@ from . import addReciprocityFailure, applyNonlinearity, applyIPC
 from . import n_pix, exptime, dark_current, read_noise, gain
 from . import stray_light_fraction, thermal_backgrounds
 from .roman_psfs import getPSF
-from .roman_bandpass import getBandpasses
+from .roman_bandpass import getBandpass, getBandpasses
 from .roman_wcs import getWCS
 from .roman_backgrounds import getSkyLevel
 from ..config import ParseAberrations, BandpassBuilder, GetAllParams, GetRNG
@@ -112,7 +112,7 @@ class RomanBandpassBuilder(BandpassBuilder):
             from ..deprecated import depr
             depr('W149', 2.5, 'W146', 'Note: this is to match current Roman filter naming schemes')
             name = 'W146'
-        bandpass = getBandpasses(include_all_bands=True)[name]
+        bandpass = getBandpass(name)
 
         return bandpass, safe
 

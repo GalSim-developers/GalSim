@@ -22,7 +22,7 @@ import os
 from . import pixel_scale, n_pix, pixel_scale_mm
 from . import n_pix, n_sca, longwave_bands, shortwave_bands
 from . import diameter, obscuration
-from .roman_bandpass import getBandpasses
+from .roman_bandpass import getBandpass
 
 from ..utilities import LRU_Cache
 from ..position import PositionD
@@ -335,8 +335,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                                   aper=aper, gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
-            bp_dict = getBandpasses(include_all_bands=True)
-            bp = bp_dict[bandpass]
+            bp = getBandpass(bandpass)
             PSF = PSF.interpolate(waves=np.linspace(bp.blue_limit, bp.red_limit, n_waves),
                                   oversample_fac=1.5)
     else:
