@@ -1879,7 +1879,7 @@ def least_squares(fun, x0, args=(), kwargs={}, max_iter=1000, tol=1e-9, lambda_i
         A = JTJ + lambda_ * np.eye(len(JTJ))
         try:
             delta_params = np.linalg.solve(A, JTr)
-        except np.linalg.LinAlgError:
+        except np.linalg.LinAlgError:  # pragma: no cover
             lambda_ *= 2
             continue
 
