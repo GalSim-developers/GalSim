@@ -123,9 +123,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
 
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(meta_data.share_dir, "roman", "roman_sky_backgrounds.txt")
-    sky_data = np.loadtxt(sky_file).transpose()
-    ecliptic_lat = sky_data[0, :]
-    ecliptic_lon = sky_data[1, :]
+    sky_data = np.genfromtxt(sky_file, names=True)
+    ecliptic_lat = sky_data['Latitude']
+    ecliptic_lon = sky_data['Longitude']
 
     # Parse kwargs for truncation, thinning, etc., and check for nonsense.
     truncate_kwargs = ['blue_limit', 'red_limit', 'relative_throughput']
@@ -172,7 +172,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
         bp._ecliptic_lon = ecliptic_lon
-        bp._sky_level = sky_data[2+index, :]
+        bp._sky_level = sky_data[bp_name]
 
         # Add it to the dictionary.
         bp.name = bp_name if bp_name != 'W149' else 'W146'
