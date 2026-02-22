@@ -45,3 +45,11 @@ Changes from v2.8.2 to v2.8.3
 -----------------------------
 
 - Updated build to use std=c++14 to allow for eigen version 5.0, which now requires it.
+
+Changes from v2.8.3 to v2.8.4
+-----------------------------
+
+- Fixed an error in chromatic drawing that could result in negative flux images if the
+  WCS involves a reflection.  (#1346, #1349)
+- Fixed the Roman bandpass functions using config interface to allow non-imaging bands.
+  (#1347)
