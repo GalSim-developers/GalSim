@@ -203,4 +203,5 @@ def getBandpass(bandname, AB_zeropoint=True, default_thin_trunc=True, **kwargs):
 
     @returns A Bandpass object for the specified band.
     """
-    return getBandpasses(AB_zeropoint=AB_zeropoint, default_thin_trunc=default_thin_trunc, include_all_bands=True, bandnames=[bandname], **kwargs)[bandname]
+    return getBandpasses(AB_zeropoint=AB_zeropoint, default_thin_trunc=default_thin_trunc,
+                          include_all_bands=True, bandnames=[bandname], **kwargs)[bandname]
