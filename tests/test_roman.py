@@ -539,6 +539,10 @@ def test_roman_single_bandpass():
     bp = galsim.roman.getBandpass('F184')
     assert bp.name == 'F184'
 
+    # Check that the default values are the same for getBandpass and getBandpasses.
+    bp_dict = galsim.roman.getBandpasses()
+    assert bp == bp_dict[bp.name]
+
     # Test for a non-imaging bandpass.
     bp = galsim.roman.getBandpass("SNPrism")
     assert bp.name == "SNPrism"
