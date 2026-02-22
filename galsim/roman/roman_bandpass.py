@@ -150,7 +150,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     # Set up a dictionary.
     bandpass_dict = {}
     # Loop over the bands.
-    for index, bp_name in enumerate(bandnames):
+    for bp_name in bandnames:
         if include_all_bands is False and bp_name in non_imaging_bands:
             continue
 
