@@ -115,12 +115,13 @@
 <span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">Bandpass</span><span class="p">,</span> <span class="n">LookupTable</span>
 
 <div class="viewcode-block" id="getBandpasses">
 <a class="viewcode-back" href="../../../roman.html#galsim.roman.getBandpasses">[docs]</a>
-<span class="k">def</span> <span class="nf">getBandpasses</span><span class="p">(</span><span class="n">AB_zeropoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default_thin_trunc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_all_bands</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">getBandpasses</span><span class="p">(</span><span class="n">AB_zeropoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default_thin_trunc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_all_bands</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bandnames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility to get a dictionary containing the Roman ST bandpasses used for imaging.</span>
 
 <span class="sd">    This routine reads in a file containing a list of wavelengths and throughput for all Roman</span>
@@ -187,6 +188,9 @@
 <span class="sd">                            There is currently no estimate for the thermal background for these</span>
 <span class="sd">                            bands and they are set to zero arbitrarily.</span>
 <span class="sd">                            [default: False]</span>
+<span class="sd">        bandnames:          Iterable of bandpass names to get. If None, it gets all the imaging</span>
+<span class="sd">                            bands if ``include_all_bands`` is False, or all bands if</span>
+<span class="sd">                            ``include_all_bands`` is True.</span>
 <span class="sd">        **kwargs:           Other kwargs are passed to either `Bandpass.thin` or</span>
 <span class="sd">                            `Bandpass.truncate` as appropriate.</span>
 
@@ -200,11 +204,19 @@
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">wave</span> <span class="o">=</span> <span class="mf">1000.</span><span class="o">*</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Wave&#39;</span><span class="p">]</span>
 
+    <span class="k">if</span> <span class="n">bandnames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bandnames</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">invalid_bandnames</span> <span class="o">:=</span> <span class="nb">set</span><span class="p">(</span><span class="n">bandnames</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">:])):</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid Roman bandpasses requested;&quot;</span><span class="p">,</span>
+                               <span class="n">value</span><span class="o">=</span><span class="n">invalid_bandnames</span><span class="p">,</span>
+                               <span class="n">allowed_values</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                               <span class="p">)</span>
+
     <span class="c1"># Read in and manipulate the sky background info.</span>
     <span class="n">sky_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s2">&quot;roman&quot;</span><span class="p">,</span> <span class="s2">&quot;roman_sky_backgrounds.txt&quot;</span><span class="p">)</span>
-    <span class="n">sky_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">sky_file</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
-    <span class="n">ecliptic_lat</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
-    <span class="n">ecliptic_lon</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">sky_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">sky_file</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ecliptic_lat</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="s1">&#39;Latitude&#39;</span><span class="p">]</span>
+    <span class="n">ecliptic_lon</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="s1">&#39;Longitude&#39;</span><span class="p">]</span>
 
     <span class="c1"># Parse kwargs for truncation, thinning, etc., and check for nonsense.</span>
     <span class="n">truncate_kwargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;blue_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;red_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_throughput&#39;</span><span class="p">]</span>
@@ -229,7 +241,7 @@
     <span class="c1"># Set up a dictionary.</span>
     <span class="n">bandpass_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="c1"># Loop over the bands.</span>
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">bp_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+    <span class="k">for</span> <span class="n">bp_name</span> <span class="ow">in</span> <span class="n">bandnames</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">include_all_bands</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">bp_name</span> <span class="ow">in</span> <span class="n">non_imaging_bands</span><span class="p">:</span>
             <span class="k">continue</span>
 
@@ -251,7 +263,7 @@
         <span class="c1"># Store the sky level information as an attribute.</span>
         <span class="n">bp</span><span class="o">.</span><span class="n">_ecliptic_lat</span> <span class="o">=</span> <span class="n">ecliptic_lat</span>
         <span class="n">bp</span><span class="o">.</span><span class="n">_ecliptic_lon</span> <span class="o">=</span> <span class="n">ecliptic_lon</span>
-        <span class="n">bp</span><span class="o">.</span><span class="n">_sky_level</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="mi">2</span><span class="o">+</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">bp</span><span class="o">.</span><span class="n">_sky_level</span> <span class="o">=</span> <span class="n">sky_data</span><span class="p">[</span><span class="n">bp_name</span><span class="p">]</span>
 
         <span class="c1"># Add it to the dictionary.</span>
         <span class="n">bp</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">bp_name</span> <span class="k">if</span> <span class="n">bp_name</span> <span class="o">!=</span> <span class="s1">&#39;W149&#39;</span> <span class="k">else</span> <span class="s1">&#39;W146&#39;</span>
@@ -259,6 +271,32 @@
 
     <span class="k">return</span> <span class="n">bandpass_dict</span></div>
 
+
+<span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="n">bandname</span><span class="p">,</span> <span class="n">AB_zeropoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default_thin_trunc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility to get a single bandpass from the Roman ST bandpasses used.</span>
+
+<span class="sd">    If you need to get more than one bandpass, use `getBandpasses` instead.</span>
+<span class="sd">    This function just provides a cleaner interface when only one bandpass</span>
+<span class="sd">    is needed.</span>
+
+<span class="sd">    See also `getBandpasses`.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        bandname:           Name of the bandpass to get.</span>
+<span class="sd">        AB_zeropoint:       Should the routine set an AB zeropoint before returning the bandpass?</span>
+<span class="sd">                            If False, then it is up to the user to set a zero point.  [default:</span>
+<span class="sd">                            True]</span>
+<span class="sd">        default_thin_trunc: Use the default thinning and truncation options?  Users who wish to</span>
+<span class="sd">                            use no thinning and truncation of bandpasses, or who want control over</span>
+<span class="sd">                            the level of thinning and truncation, should have this be False.</span>
+<span class="sd">                            [default: True]</span>
+<span class="sd">        **kwargs:           Other kwargs are passed to either `Bandpass.thin` or</span>
+<span class="sd">                            `Bandpass.truncate` as appropriate.</span>
+
+<span class="sd">    @returns A Bandpass object for the specified band.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">getBandpasses</span><span class="p">(</span><span class="n">AB_zeropoint</span><span class="o">=</span><span class="n">AB_zeropoint</span><span class="p">,</span> <span class="n">default_thin_trunc</span><span class="o">=</span><span class="n">default_thin_trunc</span><span class="p">,</span>
+                          <span class="n">include_all_bands</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bandnames</span><span class="o">=</span><span class="p">[</span><span class="n">bandname</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">bandname</span><span class="p">]</span>
 </pre></div>
 
            </div>

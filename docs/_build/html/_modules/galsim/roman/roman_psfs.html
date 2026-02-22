@@ -111,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">pixel_scale_mm</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_sca</span><span class="p">,</span> <span class="n">longwave_bands</span><span class="p">,</span> <span class="n">shortwave_bands</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">obscuration</span>
-<span class="kn">from</span> <span class="nn">.roman_bandpass</span> <span class="kn">import</span> <span class="n">getBandpasses</span>
+<span class="kn">from</span> <span class="nn">.roman_bandpass</span> <span class="kn">import</span> <span class="n">getBandpass</span>
 
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">LRU_Cache</span>
 <span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
@@ -427,8 +427,7 @@
                                   <span class="n">aper</span><span class="o">=</span><span class="n">aper</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n_waves</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># To decide the range of wavelengths to use, check the bandpass.</span>
-            <span class="n">bp_dict</span> <span class="o">=</span> <span class="n">getBandpasses</span><span class="p">()</span>
-            <span class="n">bp</span> <span class="o">=</span> <span class="n">bp_dict</span><span class="p">[</span><span class="n">bandpass</span><span class="p">]</span>
+            <span class="n">bp</span> <span class="o">=</span> <span class="n">getBandpass</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
             <span class="n">PSF</span> <span class="o">=</span> <span class="n">PSF</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">waves</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">bp</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bp</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">n_waves</span><span class="p">),</span>
                                   <span class="n">oversample_fac</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

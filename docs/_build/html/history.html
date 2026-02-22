@@ -69,6 +69,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changes-from-v2-8-0-to-v2-8-2">Changes from v2.8.0 to v2.8.2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changes-from-v2-8-2-to-v2-8-3">Changes from v2.8.2 to v2.8.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changes-from-v2-8-3-to-v2-8-4">Changes from v2.8.3 to v2.8.4</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
@@ -168,6 +169,15 @@ as in GalSim versions &lt;= 2.7.  (#1332, #1341)</p></li>
 <h3>Changes from v2.8.2 to v2.8.3<a class="headerlink" href="#changes-from-v2-8-2-to-v2-8-3" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Updated build to use std=c++14 to allow for eigen version 5.0, which now requires it.</p></li>
+</ul>
+</section>
+<section id="changes-from-v2-8-3-to-v2-8-4">
+<h3>Changes from v2.8.3 to v2.8.4<a class="headerlink" href="#changes-from-v2-8-3-to-v2-8-4" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fixed an error in chromatic drawing that could result in negative flux images if the
+WCS involves a reflection.  (#1346, #1349)</p></li>
+<li><p>Fixed the Roman bandpass functions using config interface to allow non-imaging bands.
+(#1347)</p></li>
 </ul>
 </section>
 </section>
