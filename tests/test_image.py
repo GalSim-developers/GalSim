@@ -629,9 +629,9 @@ def test_Image_FITS_IO(run_slow):
         # Test rice
         # Avoid astropy 5.3 issue reading rice-compressed file.
         # cf. https://github.com/astropy/astropy/issues/15477
-        # Hopefull they will fix it before 5.4 comes out...
+        # Fixed in version 7.3.
         import astropy
-        if astropy.__version__ >= "5.3" and astropy.__version__ < "5.4": continue
+        if astropy.__version__ >= "5.3" and astropy.__version__ < "7.3": continue
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
