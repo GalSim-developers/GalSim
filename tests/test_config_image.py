@@ -1367,7 +1367,11 @@ def test_tiled():
             gal = galsim.Gaussian(sigma=sigma, flux=flux)
             gal.drawImage(stamp)
             stamp.addNoise(galsim.GaussianNoise(sigma=0.5, rng=ud))
-            im1a[stamp.bounds] = stamp
+            if is_jax_galsim():
+                # jax-galsim uses the JAX .at API for inplace ops
+                im1a = im1a.at[stamp.bounds].set(stamp)
+            else:
+                im1a[stamp.bounds] = stamp
 
     # Compare to what config builds
     im1b = galsim.config.BuildImage(config)
