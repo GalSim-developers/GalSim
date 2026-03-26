@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1902,10 +1902,10 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             @np.vectorize
             def detjac(w):
-                return np.linalg.det(np.asarray(self._jac(w)).reshape(2,2))
+                return np.abs(np.linalg.det(np.asarray(self._jac(w)).reshape(2,2)))
             sed *= detjac
         elif self._jac is not None:
-            sed *= np.linalg.det(np.asarray(self._jac).reshape(2,2))
+            sed *= np.abs(np.linalg.det(np.asarray(self._jac).reshape(2,2)))
 
         return sed
 

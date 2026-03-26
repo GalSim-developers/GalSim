@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -881,6 +881,21 @@ def test_dz_val():
                 atol=2e-13, rtol=0
             )
 
+        zk_coefs = dz.xycoef(*uv_vector)
+        for zk, c in zip(zk_list, zk_coefs):
+            # Zk may have trailing zeros...
+            ncoef = len(c)
+            np.testing.assert_allclose(
+                zk.coef[:ncoef],
+                c,
+                atol=2e-13, rtol=0
+            )
+        for i, (u, v) in enumerate(zip(*uv_vector)):
+            np.testing.assert_equal(
+                zk_coefs[i],
+                dz.xycoef(u, v)
+            )
+
         # Check asserts
         with assert_raises(AssertionError):
             dz(0.0, [1.0])
@@ -1555,6 +1570,71 @@ def test_dz_mean():
         np.testing.assert_equal(
             (mean_uv.R_inner, mean_uv.R_outer),
             (mean_uv2.R_inner, mean_uv2.R_outer),
+        )
+
+
+def test_large_j(run_slow):
+    # The analytic form for an annular Zernike of the form (n, m) = (n, n) or (n, -n)
+    # is:
+    #   r^n sincos(n theta) sqrt((2n+2) / sum_i=0^n-1 eps^(2i))
+    # where sincos is sin if n is even and cos if n is odd, and eps = R_inner/R_outer.
+
+    rng = galsim.BaseDeviate(1234).as_numpy_generator()
+    x = rng.uniform(-1.0, 1.0, size=100)
+    y = rng.uniform(-1.0, 1.0, size=100)
+
+    R_outer = 1.0
+    R_inner = 0.5
+    eps = R_inner/R_outer
+
+    test_vals = [
+        (10, 1e-12, 1e-12),  # Z66
+        (20, 1e-12, 1e-12),  # Z231
+        (40, 1e-9, 1e-12),   # Z861
+    ]
+    if run_slow:
+        test_vals += [
+            (60, 1e-6, 1e-12),  # Z1891
+            (80, 1e-3, 1e-12),  # Z3321
+            (100, None, 1e-11),   # Z5151
+            (200, None, 1e-11),   # Z20301
+        ]
+
+    print()
+    for n, tol, tol2 in test_vals:
+        j = (n+1)*(n+2)//2
+        _, m = galsim.zernike.noll_to_zern(j)
+        print(f"Z{j} => (n, m) = ({n}, {m})")
+        assert n == abs(m)
+        coefs = [0]*j+[1]
+        zk = Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
+
+        def analytic_zk(x, y):
+            r = np.hypot(x, y)
+            theta = np.arctan2(y, x)
+            factor = np.sqrt((2*n+2) / np.sum([eps**(2*i) for i in range(n+1)]))
+            if m > 0:
+                return r**n * np.cos(n*theta) * factor
+            else:
+                return r**n * np.sin(n*theta) * factor
+
+        analytic_vals = analytic_zk(x, y)
+        if n < 100:
+            np.testing.assert_allclose(
+                zk(x, y),
+                analytic_vals,
+                atol=tol, rtol=tol
+            )
+
+        robust_vals = zk.evalCartesianRobust(x, y)
+        np.testing.assert_allclose(
+            robust_vals,
+            analytic_vals,
+            atol=tol2, rtol=tol2
+        )
+        np.testing.assert_equal(
+            robust_vals,
+            zk(x, y, robust=True)
         )
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,10 +26,11 @@ import numpy as np
 import os
 
 from .. import meta_data
-from ..errors import galsim_warn
+from ..errors import GalSimValueError, galsim_warn
 from .. import Bandpass, LookupTable
 
-def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=False, **kwargs):
+def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=False, bandnames=None,
+    **kwargs):
     """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all Roman
@@ -96,6 +97,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
                             There is currently no estimate for the thermal background for these
                             bands and they are set to zero arbitrarily.
                             [default: False]
+        bandnames:          Iterable of bandpass names to get. If None, it gets all the imaging
+                            bands if ``include_all_bands`` is False, or all bands if
+                            ``include_all_bands`` is True.
         **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
                             `Bandpass.truncate` as appropriate.
 
@@ -109,11 +113,19 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
 
+    if bandnames is None:
+        bandnames = data.dtype.names[1:]
+    elif (invalid_bandnames := set(bandnames).difference(data.dtype.names[1:])):
+        raise GalSimValueError("Invalid Roman bandpasses requested;",
+                               value=invalid_bandnames,
+                               allowed_values=data.dtype.names[1:],
+                               )
+
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(meta_data.share_dir, "roman", "roman_sky_backgrounds.txt")
-    sky_data = np.loadtxt(sky_file).transpose()
-    ecliptic_lat = sky_data[0, :]
-    ecliptic_lon = sky_data[1, :]
+    sky_data = np.genfromtxt(sky_file, names=True)
+    ecliptic_lat = sky_data['Latitude']
+    ecliptic_lon = sky_data['Longitude']
 
     # Parse kwargs for truncation, thinning, etc., and check for nonsense.
     truncate_kwargs = ['blue_limit', 'red_limit', 'relative_throughput']
@@ -138,7 +150,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
     # Set up a dictionary.
     bandpass_dict = {}
     # Loop over the bands.
-    for index, bp_name in enumerate(data.dtype.names[1:]):
+    for bp_name in bandnames:
         if include_all_bands is False and bp_name in non_imaging_bands:
             continue
 
@@ -160,10 +172,36 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, include_all_bands=
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
         bp._ecliptic_lon = ecliptic_lon
-        bp._sky_level = sky_data[2+index, :]
+        bp._sky_level = sky_data[bp_name]
 
         # Add it to the dictionary.
         bp.name = bp_name if bp_name != 'W149' else 'W146'
         bandpass_dict[bp.name] = bp
 
     return bandpass_dict
+
+def getBandpass(bandname, AB_zeropoint=True, default_thin_trunc=True, **kwargs):
+    """Utility to get a single bandpass from the Roman ST bandpasses used.
+
+    If you need to get more than one bandpass, use `getBandpasses` instead.
+    This function just provides a cleaner interface when only one bandpass
+    is needed.
+
+    See also `getBandpasses`.
+
+    Parameters:
+        bandname:           Name of the bandpass to get.
+        AB_zeropoint:       Should the routine set an AB zeropoint before returning the bandpass?
+                            If False, then it is up to the user to set a zero point.  [default:
+                            True]
+        default_thin_trunc: Use the default thinning and truncation options?  Users who wish to
+                            use no thinning and truncation of bandpasses, or who want control over
+                            the level of thinning and truncation, should have this be False.
+                            [default: True]
+        **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
+                            `Bandpass.truncate` as appropriate.
+
+    @returns A Bandpass object for the specified band.
+    """
+    return getBandpasses(AB_zeropoint=AB_zeropoint, default_thin_trunc=default_thin_trunc,
+                          include_all_bands=True, bandnames=[bandname], **kwargs)[bandname]

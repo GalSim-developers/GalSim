@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -684,9 +684,9 @@ def test_Image_FITS_IO(run_slow):
         # Test rice
         # Avoid astropy 5.3 issue reading rice-compressed file.
         # cf. https://github.com/astropy/astropy/issues/15477
-        # Hopefull they will fix it before 5.4 comes out...
+        # Fixed in version 7.3.
         import astropy
-        if astropy.__version__ >= "5.3" and astropy.__version__ < "5.4": continue
+        if astropy.__version__ >= "5.3" and astropy.__version__ < "7.3": continue
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
@@ -1789,6 +1789,19 @@ def test_Image_inplace_add():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
+        # Adding via array:
+        image4 = image2.copy()
+        image4.array += image2.array
+        np.testing.assert_allclose(image4.array, 2*image2.array)
+        image4.array[:] += image2.array
+        np.testing.assert_allclose(image4.array, 3*image2.array)
+        image4.array = image4.array + image2.array
+        np.testing.assert_allclose(image4.array, 4*image2.array)
+        with assert_raises(ValueError):
+            image4.array += image2.array[:2,:]
+        with assert_raises(ValueError):
+            image4.array = image4.array[:2,:] + image2.array[:2,:]
+
         with assert_raises(ValueError):
             image1 += image1.subImage(galsim.BoundsI(0,4,0,4))
 
@@ -1830,6 +1843,19 @@ def test_Image_inplace_subtract():
             np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                     err_msg="Inplace subtract in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        # Subtracting via array:
+        image4 = 5*image2
+        image4.array -= image2.array
+        np.testing.assert_allclose(image4.array, 4*image2.array)
+        image4.array[:] -= image2.array
+        np.testing.assert_allclose(image4.array, 3*image2.array)
+        image4.array = image4.array - image2.array
+        np.testing.assert_allclose(image4.array, 2*image2.array)
+        with assert_raises(ValueError):
+            image4.array -= image2.array[:2,:]
+        with assert_raises(ValueError):
+            image4.array = image4.array[:2,:] - image2.array[:2,:]
 
         with assert_raises(ValueError):
             image1 -= image1.subImage(galsim.BoundsI(0,4,0,4))
@@ -1962,6 +1988,17 @@ def test_Image_inplace_scalar_add():
                 err_msg="Inplace scalar add in Image class does not match reference for dtype = "
                 +str(types[i]))
 
+        # Adding via array:
+        image4 = image1.copy()
+        image4.array += 1
+        np.testing.assert_allclose(image4.array, image1.array + 1)
+        image4.array[:] += 1
+        np.testing.assert_allclose(image4.array, image1.array + 2)
+        image4.array = image4.array + 1
+        np.testing.assert_allclose(image4.array, image1.array + 3)
+        with assert_raises(ValueError):
+            image4.array = image4.array[:2,:] + 1
+
 
 @timer
 def test_Image_inplace_scalar_subtract():
@@ -2016,6 +2053,17 @@ def test_Image_inplace_scalar_multiply():
                 err_msg="Inplace scalar multiply in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
 
+        # Multiplying via array:
+        image4 = image2.copy()
+        image4.array *= 2
+        np.testing.assert_allclose(image4.array, 2*image2.array)
+        image4.array[:] *= 2
+        np.testing.assert_allclose(image4.array, 4*image2.array)
+        image4.array = image4.array * 2
+        np.testing.assert_allclose(image4.array, 8*image2.array)
+        with assert_raises(ValueError):
+            image4.array = image4.array[:2,:] * 2
+
 
 @timer
 def test_Image_inplace_scalar_divide():
@@ -2042,6 +2090,36 @@ def test_Image_inplace_scalar_divide():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                 err_msg="Inplace scalar divide in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
+
+        # Dividing via array:
+        image4 = 16*image2
+        if simple_types[i] is int:
+            with assert_raises(TypeError):
+                image4.array /= 2
+            with assert_raises(TypeError):
+                image4.array[:] /= 2
+            np.testing.assert_array_equal(image4.array, 16*image2.array)  # unchanged yet
+            image4.array //= 2
+            np.testing.assert_array_equal(image4.array, 8*image2.array)
+            image4.array[:] //= 2
+            np.testing.assert_array_equal(image4.array, 4*image2.array)
+            image4.array = image4.array // 2
+            np.testing.assert_array_equal(image4.array, 2*image2.array)
+            # The following works for integer by explicitly rounding and casting.
+            # The native numpy operation would use floor to cast to int, which is 1 smaller.
+            image4.array = (image4.array / 2.0001)
+            np.testing.assert_array_equal(image4.array, image2.array)
+            with assert_raises(ValueError):
+                image4.array = image4.array[:2,:] // 2
+        else:
+            image4.array /= 2
+            np.testing.assert_allclose(image4.array, 8*image2.array)
+            image4.array[:] /= 2
+            np.testing.assert_allclose(image4.array, 4*image2.array)
+            image4.array = image4.array / 2
+            np.testing.assert_allclose(image4.array, 2*image2.array)
+            with assert_raises(ValueError):
+                image4.array = image4.array[:2,:] / 2
 
 
 @timer

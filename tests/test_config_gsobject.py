@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -669,8 +669,15 @@ def test_sersic():
     # and would be rather slow.
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
+    with assert_warns(galsim.GalSimFFTSizeWarning):
+        gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
+
+    # If galsim.errors.raise_fft_size_error is True, then it raises an exception instead.
+    # (This was the behavior until version 2.7.)
+    galsim.errors.raise_fft_size_error = True
     with assert_raises(galsim.GalSimFFTSizeError):
         gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
+    galsim.errors.raise_fft_size_error = False
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)

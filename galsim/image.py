@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -478,6 +478,10 @@ class Image:
         next row.  This just checks that each individual row has a stride of 1.
         """
         return self._array.strides[1]//self._array.itemsize == 1
+
+    @array.setter
+    def array(self, other):
+        self._array[:] = self._safe_cast(other)
 
     @lazy_property
     def _image(self):
@@ -1586,13 +1590,18 @@ class Image:
 
         # Find the first value with I < 0.5 * Imax
         k = np.argmax(data < 0.5 * Imax)
-        Ik = data[k] / Imax
+        # If there are duplicate rsq values, argmax won't be deterministic across numpy versions.
+        # To achieve consistent results, we take the average of all data values with the same rsq.
+        k2 = np.searchsorted(rsqf, rsqf[k], side='right')
+        Ik = np.mean(data[k:k2]) / Imax
 
         # Interpolate (linearly) between this and the previous value.
         if k == 0:
             rsqhm = rsqf[0] * (0.5 / Ik)
         else:
-            Ikm1 = data[k-1] / Imax
+            # Similarly, use the mean data for all rsq equal to rsqf[k-1].
+            k1 = np.searchsorted(rsqf, rsqf[k-1], side='left')
+            Ikm1 = np.mean(data[k1:k]) / Imax
             rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
 
         # This has all been done in pixels.  So normalize according to the pixel scale.
@@ -1785,7 +1794,10 @@ class Image:
     def __ipow__(self, other):
         if not isinstance(other, int) and not isinstance(other, float):
             raise TypeError("Can only raise an image to a float or int power!")
-        self.array[:,:] **= other
+        if not self.isinteger or isinstance(other, int):
+            self.array[:,:] **= other
+        else:
+            self.array[:,:] = self._safe_cast(self.array ** other)
         return self
 
     def __neg__(self):

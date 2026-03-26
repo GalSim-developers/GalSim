@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -73,6 +73,11 @@ def test_read():
     check_pickle(header)
     # Can explicitly give an hdu number to use.  In this case, there is only 1, so need to use 0.
     header = galsim.FitsHeader(file_name=file_name, dir=dir, hdu=0)
+    check_tpv(header)
+    check_pickle(header)
+    # Can also pass the hdu itself.
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(hdu_list=hdu_list[0])
     check_tpv(header)
     check_pickle(header)
     # If you pass in a pyfits Header object, that should also work

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -513,6 +513,43 @@ def test_roman_nonimaging_bandpass():
     assert 'Grism_1stOrder' not in bp_imaging
     assert 'SNPrism' not in bp_imaging
 
+@timer
+def test_roman_bandpass_subsets():
+    """Test that we can get a subset of Roman bandpasses.
+    """
+    bandnames = ["J129", "H158"]
+    bp_dict = galsim.roman.getBandpasses(bandnames=bandnames)
+
+    # Check that the imaging bandpasses are a subset of the all bandpasses
+    for bandname in bandnames:
+        assert bandname in bp_dict
+        bp_dict.pop(bandname)
+
+    # Check that we have no bandpasses left
+    assert len(bp_dict) == 0
+
+    # Test that we get an error for invalid bandpasses
+    with assert_raises(galsim.GalSimValueError):
+        galsim.roman.getBandpasses(bandnames=["u", "g", "r", "i"])
+
+@timer
+def test_roman_single_bandpass():
+    """Test getting a single bandpass from the Roman bandpass utility.
+    """
+    bp = galsim.roman.getBandpass('F184')
+    assert bp.name == 'F184'
+
+    # Check that the default values are the same for getBandpass and getBandpasses.
+    bp_dict = galsim.roman.getBandpasses()
+    assert bp == bp_dict[bp.name]
+
+    # Explicitly check for the W-band, since that's a special case.
+    bp = galsim.roman.getBandpass("W146")
+    assert bp == bp_dict[bp.name]
+
+    # Test for a non-imaging bandpass.
+    bp = galsim.roman.getBandpass("SNPrism")
+    assert bp.name == "SNPrism"
 
 @timer
 def test_roman_detectors():

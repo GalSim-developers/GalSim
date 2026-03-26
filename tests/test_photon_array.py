@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -733,6 +733,12 @@ def test_dcr():
     }
     im2c = galsim.config.BuildImage(config)
     assert im2c == im2
+
+    # Make sure it's ok if sky_pos is set.  (This used to be a bug.)
+    config['sky_pos'] = galsim.CelestialCoord(15 * galsim.degrees, -25 * galsim.degrees)
+    galsim.config.RemoveCurrent(config)
+    im2d = galsim.config.BuildImage(config)
+    assert im2d == im2
 
     # Should work with fft, but not quite match (because of inexact photon locations).
     im3 = galsim.ImageF(50, 50, scale=pixel_scale)

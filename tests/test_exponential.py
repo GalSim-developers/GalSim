@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -109,6 +109,11 @@ def test_exponential_properties():
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
         outFlux = expon.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
+
+    # Check that stepk and maxk scale correctly with radius
+    expon2 = galsim.Exponential(flux=test_flux, scale_radius=5*test_scale)
+    np.testing.assert_almost_equal(expon2.maxk, expon.maxk/5)
+    np.testing.assert_almost_equal(expon2.stepk, expon.stepk/5)
 
 
 @timer

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -70,21 +70,21 @@ inst = all_files_from('src', '.inst')
 shared_data = all_files_from('share')
 
 copt =  {
-    'gcc' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp'],
-    'gcc w/ GPU' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp','-foffload=nvptx-none','-DGALSIM_USE_GPU'],
-    'icc' : ['-O2','-vec-report0','-std=c++11','-openmp'],
-    'clang' : ['-O2','-std=c++11',
+    'gcc' : ['-O2','-std=c++14','-fvisibility=hidden','-fopenmp'],
+    'gcc w/ GPU' : ['-O2','-std=c++14','-fvisibility=hidden','-fopenmp','-foffload=nvptx-none','-DGALSIM_USE_GPU'],
+    'icc' : ['-O2','-vec-report0','-std=c++14','-openmp'],
+    'clang' : ['-O2','-std=c++14',
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ OpenMP' : ['-O2','-std=c++11','-fopenmp',
+    'clang w/ OpenMP' : ['-O2','-std=c++14','-fopenmp',
                          '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ Intel OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ Intel OpenMP' : ['-O2','-std=c++14','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ manual OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ manual OpenMP' : ['-O2','-std=c++14','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
+    'clang w/ GPU' : ['-O2','-msse2','-std=c++14','-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
                       '-Wno-shorten-64-to-32','-fvisibility=hidden', '-DGALSIM_USE_GPU'],
-    'nvc++' : ['-O2','-std=c++11','-mp=gpu','-DGALSIM_USE_GPU'],
+    'nvc++' : ['-O2','-std=c++14','-mp=gpu','-DGALSIM_USE_GPU'],
     'unknown' : [],
 }
 lopt =  {
@@ -102,10 +102,12 @@ lopt =  {
 }
 
 # If we build with debug, undefine NDEBUG flag
-# Note: setuptools stopped allowing --debug, so if we need this, we'll need to find another
-# mechanism.
+# Note: setuptools stopped allowing --debug, so edit this manually if you want debugging.
+# (The other debug variable is just for verbose output to debug this setup script.)
+full_debug = False
+
 undef_macros = []
-if "--debug" in sys.argv:
+if full_debug:
     undef_macros+=['NDEBUG']
     for name in copt.keys():
         if name != 'unknown':
@@ -118,7 +120,7 @@ else:
 
 # Verbose is the default for setuptools logging, but if it's on the command line, we take it
 # to mean that we should also be verbose.
-if "--debug" in sys.argv or "--verbose" in sys.argv:
+if full_debug or "--verbose" in sys.argv:
     debug = True
 
 local_tmp = 'tmp'
@@ -682,17 +684,29 @@ def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
     """)
     return try_compile(cpp_code, compiler, cflags, lflags, prepend=prepend)
 
-def try_cpp11(compiler, cflags=[], lflags=[], check_warning=False):
-    """Check if compiling c++11 code with the given compiler works properly.
+def try_cpp14(compiler, cflags=[], lflags=[], check_warning=False):
+    """Check if compiling c++14 code with the given compiler works properly.
     """
     from textwrap import dedent
     cpp_code = dedent("""
     #include <iostream>
-    #include <forward_list>
+    #include <forward_list> // c++11 feature
     #include <cmath>
+    #include <memory>
 
     int main(void) {
+        // c++11 feature
         std::cout << std::tgamma(1.3) << std::endl;
+
+        // c++14 feature
+        auto func = [](int i) { return i + 5; };
+        std::cout << "Result of func(3): " << func(3) << std::endl;
+
+        // A more sophisticated c++14 feature
+        std::unique_ptr<int> ptr(new int(10));
+        auto lambda = [value = std::move(ptr)]() { if (value) return *value; };
+        std::cout << "Value from lambda(): " << lambda() << std::endl;
+
         return 0;
     }
     """)
@@ -820,7 +834,7 @@ def fix_compiler(compiler, njobs):
     extra_cflags = copt[comp_type]
     extra_lflags = lopt[comp_type]
 
-    success = try_cpp11(compiler, extra_cflags, extra_lflags)
+    success = try_cpp14(compiler, extra_cflags, extra_lflags)
     if not success:
         # In case libc++ doesn't work, try letting the system use the default stdlib
         try:
@@ -829,16 +843,16 @@ def fix_compiler(compiler, njobs):
         except (AttributeError, ValueError):
             pass
         else:
-            success = try_cpp11(compiler, extra_cflags, extra_lflags)
+            success = try_cpp14(compiler, extra_cflags, extra_lflags)
     if not success:
-        print('The compiler %s with flags %s did not successfully compile C++11 code'%
+        print('The compiler %s with flags %s did not successfully compile C++14 code'%
               (cc, ' '.join(extra_cflags)))
-        raise OSError("Compiler is not C++-11 compatible")
+        raise OSError("Compiler is not C++-14 compatible")
 
     # Also see if adding -msse2 works (and doesn't give a warning)
     if '-msse2' not in extra_cflags:
         extra_cflags.append('-msse2')
-    if try_cpp11(compiler, extra_cflags, extra_lflags, check_warning=True):
+    if try_cpp14(compiler, extra_cflags, extra_lflags, check_warning=True):
         print('Using cflag -msse2')
     else:
         print('warning with -msse2.')
@@ -1196,6 +1210,9 @@ class my_build_ext(build_ext):
         if int(os.environ.get('GALSIM_BUILD_SHARED', 0)):
             self.run_command("build_shared_clib")
 
+        if int(os.environ.get('GALSIM_RUN_TEST', 0)):
+            self.run_command("run_cpp_test")
+
 
 class my_install(install):
     user_options = install.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
@@ -1227,24 +1244,9 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
         install_scripts.run(self)
         self.distribution.script_install_dir = self.install_dir
 
-class my_test(test):
-    # TODO: setuptools v72 deprecated python setup.py test, so we need to figure out another
-    # way to test the C++ code.  For now, we are pinning setuptools to <72.
+class my_run_cpp_test(my_build_ext):
 
-    # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
-    user_options = [('njobs=', 'j', "Number of jobs to use in py.test")]
-
-    def initialize_options(self):
-        test.initialize_options(self)
-        self.pytest_args = None
-        self.njobs = None
-
-    def finalize_options(self):
-        test.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_cpp_tests(self):
+    def run(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
         cflags, lflags = fix_compiler(compiler, 1)
@@ -1306,32 +1308,6 @@ class my_test(test):
             raise RuntimeError("C++ tests failed")
         print("All C++ tests passed.")
 
-    def run_tests(self):
-
-        if int(os.environ.get('GALSIM_TEST_PY', 1)):
-            njobs = parse_njobs(self.njobs, 'pytest', 'test')
-            pytest_args = ['-n=%d'%njobs, '--timeout=60']
-            original_dir = os.getcwd()
-            os.chdir('tests')
-            test_files = glob.glob('test*.py')
-
-            import pytest
-            pytest.main(['--version'])
-            errno = pytest.main(pytest_args + test_files)
-            py_err = errno != 0
-
-            os.chdir(original_dir)
-
-        # Build and run the C++ tests
-        if int(os.environ.get('GALSIM_TEST_CPP', 1)):
-            self.run_cpp_tests()
-
-        if int(os.environ.get('GALSIM_TEST_PY', 1)):
-            if py_err:
-                raise RuntimeError("Some Python tests failed")
-            else:
-                print("All python tests passed.")
-
 
 lib=("galsim", {'sources' : cpp_sources,
                 'depends' : headers + inst,
@@ -1343,7 +1319,7 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros,
               extra_link_args = ["-lfftw3"])
 
-build_dep = ['setuptools>=38,<72', 'pybind11>=2.2', 'numpy>=1.17']
+build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy', 'pyyaml']
 
@@ -1366,7 +1342,7 @@ else:
 print('GalSim version is %s'%(galsim_version))
 
 # Write a Version.h file that has this information for people using the C++ library.
-vi = re.split('\.|-',galsim_version)
+vi = re.split(r'\.|-',galsim_version)
 version_info = tuple([int(x) for x in vi if x.isdigit()])
 if len(version_info) == 2:
     version_info = version_info + (0,)
@@ -1432,7 +1408,7 @@ dist = setup(name="GalSim",
                 'install': my_install,
                 'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
-                'test': my_test,
+                'run_cpp_test': my_run_cpp_test,
                 },
     entry_points = {'console_scripts' : [
             'galsim = galsim.__main__:run_main',

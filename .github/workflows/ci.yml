@@ -25,7 +25,7 @@ jobs:
             matrix:
                 # First all python versions in basic linux
                 os: [ ubuntu-latest ]
-                py: [ 3.7, 3.8, 3.9, "3.10", 3.11, 3.12 ]
+                py: [ 3.9, "3.10", 3.11, 3.12, 3.13, 3.14 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
                 FFTW_DIR: [ "/usr/local/lib" ]
@@ -111,7 +111,7 @@ jobs:
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
                 # it gets downloaded and installed properly if it isn't installed.
-                if ${{ matrix.py != 3.7 }}; then sudo -H apt install -y libeigen3-dev; fi
+                if ${{ matrix.py != 3.12 }}; then sudo -H apt install -y libeigen3-dev; fi
 
                 # Need this for the mpeg tests
                 sudo -H apt install -y ffmpeg
@@ -152,7 +152,7 @@ jobs:
 
                 # Do these three first to clarify potential conflicts
                 pip install -U numpy
-                pip install -U "setuptools<72"
+                pip install -U setuptools
                 pip install -U wheel
 
                 # Standard dependencies
@@ -164,13 +164,15 @@ jobs:
 
                 pip install -U matplotlib
 
-            - name: Install astroplan
-              # astroplan isn't yet numpy 2.0 compatible.  So don't install that on 3.9+.
-              # I'm also getting errors with starlink, which I think may be related to
-              # numpy 2.0.
-              if: (matrix.py == 3.8) || (matrix.py == 3.9)
-              run: |
                 pip install -U astroplan
+
+            # Starlink doesn't seem to work anymore.  Even with numpy 1.x, I'm getting
+            # "ModuleNotFoundError: No module named 'numpy'" when building the wheel.
+            # This after already installing numpy, so it should be there.
+            # Revisit from time to time to see if they fix it.
+            - name: Install starlink
+              if: 0
+              run: |
                 pip install -U starlink-pyast
 
             - name: Install CPython-only dependencies
@@ -193,7 +195,7 @@ jobs:
                 FFTW_DIR=$FFTW_DIR pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
-              if: matrix.py == 3.7 && github.base_ref != ''
+              if: matrix.py == 3.12 && github.base_ref != ''
               run: |
                 git status
                 git --no-pager log --graph --pretty=oneline --abbrev-commit | head -50
@@ -210,11 +212,11 @@ jobs:
                        # Less confusing to include it explicitly.
 
             - name: Check shared library
-              if: matrix.py == 3.8
+              if: matrix.py == 3.12
               run: |
-                # On a few systems (arbitrarily py3.8, where we also check mac and clang),
+                # On a few systems (arbitrarily py3.12, where we also check mac and clang),
                 # check the shared library creation and link.
-                GALSIM_BUILD_SHARED=1 python setup.py install
+                GALSIM_BUILD_SHARED=1 python setup.py build
 
                 # These directories/files should now exist.
                 echo "Look for the shared library:"
@@ -222,15 +224,8 @@ jobs:
                 ls build/shared_clib
                 ls build/shared_clib/libgalsim.*
 
-                # For now, use `python setup.py test` to test linking to the shared library.
-                # We run some C++ tests there, and we use the shared library for linking.
-                # Caveats:
-                #  1. The C++ tests are not very comprehensive, so it won't catch all errors.
-                #  2. Apparently setup.py test is deprecated.  I'm getting warnings when I run
-                #     it that indicate it may go away at some point.  So whenever that happens,
-                #     we'll have to revisit this test to find another way to build and run
-                #     the C++ tests.
-                GALSIM_TEST_PY=0 python setup.py test
+                # Build and run the C++ test suite
+                GALSIM_RUN_TEST=1 python setup.py build
 
             - name: Upload coverage to codecov
               if: matrix.py != 'pypy-3.7'

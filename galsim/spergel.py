@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -205,7 +205,7 @@ class Spergel(GSObject):
 
     @property
     def _stepk(self):
-        R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold) * self._r0
+        R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold)
         # Go to at least 5*hlr
         R = max(R, self.gsparams.stepk_minimum_hlr * self.half_light_radius)
         return math.pi / R

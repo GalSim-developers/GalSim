@@ -12,6 +12,7 @@ Zernike Functions
     .. automethod:: galsim.zernike.Zernike.__call__
 
 .. autoclass:: galsim.zernike.DoubleZernike
+    :members:
 
 .. autofunction:: galsim.zernike.noll_to_zern
 .. autofunction:: galsim.zernike.zernikeRotMatrix

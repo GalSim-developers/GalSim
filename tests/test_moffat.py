@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -172,6 +172,19 @@ def test_moffat_properties():
                                 trunc=2*fwhm_backwards_compatible, flux=inFlux)
         outFlux = psfFlux.flux
         np.testing.assert_array_almost_equal(outFlux, inFlux)
+
+    # Check that stepk and maxk scale correctly with radius
+    psf2 = galsim.Moffat(beta=2.0, half_light_radius=5.,
+                         trunc=5*2*fwhm_backwards_compatible, flux=test_flux)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    np.testing.assert_almost_equal(psf2.stepk, psf.stepk/5)
+
+    # Repeat without truncation
+    psf = galsim.Moffat(beta=5.0, half_light_radius=1., flux=test_flux)
+    psf2 = galsim.Moffat(beta=5.0, half_light_radius=5., flux=test_flux)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    np.testing.assert_almost_equal(psf2.stepk, psf.stepk/5)
+
 
 @timer
 def test_moffat_maxk():

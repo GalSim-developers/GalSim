@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1489,23 +1489,34 @@ def test_analytic_integrator():
 def test_gsparams():
     """Check that gsparams actually gets processed by ChromaticObjects.
     """
-    # Setting maximum_fft_size this low causes an exception to be raised for GSObjects, so
+    # Setting maximum_fft_size this low causes a warning to be emitted for GSObjects, so
     # make sure it does for ChromaticObjects too, thereby assuring that gsparams is really
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
     gal = galsim.Gaussian(fwhm=1, gsparams=gsparams) * bulge_SED
-    with assert_raises(galsim.GalSimFFTSizeError):
+    with assert_warns(galsim.GalSimFFTSizeWarning):
         gal.drawImage(bandpass)
     assert (galsim.Gaussian(fwhm=1) * bulge_SED) != gal
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(gsparams) == gal
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(maximum_fft_size=16) == gal
 
+    # Should raise an exception if raise_fft_size_error is True
+    galsim.errors.raise_fft_size_error = True
+    with assert_raises(galsim.GalSimFFTSizeError):
+        gal.drawImage(bandpass)
+    galsim.errors.raise_fft_size_error = False
+
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
     psf = galsim.Gaussian(sigma=0.4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
+    with assert_warns(galsim.GalSimFFTSizeWarning):
+        final.drawImage(bandpass)
+
+    galsim.errors.raise_fft_size_error = True
     with assert_raises(galsim.GalSimFFTSizeError):
         final.drawImage(bandpass)
+    galsim.errors.raise_fft_size_error = False
 
     # Use a restrictive one this time, so we test the "most restrictive gsparams" feature
     gsp2 = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
@@ -2833,6 +2844,11 @@ def test_chromatic_invariant():
     # Not picklable, but run str, repr
     str(chrom)
     repr(chrom)
+
+    chrom = galsim.Transform(gsobj, jac = (0.5, 0.5, 1, -1), flux_ratio=bulge_SED)
+    expected_flux = flux*bulge_SED.calculateFlux(bandpass)
+    chromobj_flux = chrom.calculateFlux(bandpass)
+    np.testing.assert_allclose(expected_flux, chromobj_flux)
 
     # ChromaticOpticalPSF
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2,

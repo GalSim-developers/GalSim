@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,6 +23,7 @@ import numpy as np
 import pickle
 import yaml
 import json
+import warnings
 
 from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
 from ._utilities import lazy_property
@@ -130,7 +131,10 @@ class Catalog:
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an
         # error if one tries to convert them to float at some point.
-        self._data = np.loadtxt(self.file_name, comments=self.comments, dtype=bytes, ndmin=2)
+        with warnings.catch_warnings():
+            # numpy 1.23 emits a stupid warning here about max_rows even though we're not using it.
+            warnings.filterwarnings("ignore", category=UserWarning)
+            self._data = np.loadtxt(self.file_name, comments=self.comments, dtype=bytes, ndmin=2)
         # Convert the bytes to str.  For Py2, this is a no op.
         self._data = self._data.astype(str)
 

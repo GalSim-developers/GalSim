@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -161,6 +161,11 @@ def test_kolmogorov_properties():
         out_flux = img.array.sum(dtype=float)
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
+
+    # Check that stepk and maxk scale correctly with radius
+    psf2 = galsim.Kolmogorov(lam_over_r0=5*lor, flux=test_flux)
+    np.testing.assert_almost_equal(psf2.maxk, psf.maxk/5)
+    np.testing.assert_almost_equal(psf2.stepk, psf.stepk/5)
 
 
 @timer

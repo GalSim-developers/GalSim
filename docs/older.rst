@@ -5,6 +5,89 @@ listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
+v2.8
+----
+
+*Dependency Changes*
+
+- Removed setuptools<72 pin. (#1335)
+- Updated build to use std=c++14 to allow for eigen version 5.0. (#1343)
+
+
+*API Change*
+
+- Changed behavior for large FFTs to be a warning, rather than an error. (#1332, #1341)
+
+
+*Bug Fixes*
+
+- Fixed a bug in `Image.calculateFWHM` that started with numpy version 2.3. (#1336, #1337)
+- Fixed an error in chromatic drawing when WCS involves a reflection. (#1346, #1349)
+- Fixed the Roman bandpass functions using config interface to allow non-imaging bands. (#1347)
+
+
+v2.7
+----
+
+*New Features*
+
+- Added `DoubleZernike.xycoef`. (#1327)
+- Added a setter for the `Image.array` property. (#1272, #1329)
+- Added an option ``recalc=True`` to `SiliconSensor.accumulate`.  (#1328)
+
+
+*Performance Improvements*
+
+- Switched to inbuilt operators on lists rather than numpy operators in a few places (#1316)
+- Added ``robust=True`` option to `Zernike.__call__`. (#1326, #1327)
+- Reduced memory use in the Silicon class. (#1331)
+
+
+*Bug Fixes*
+
+- Fixed an error in the `Spergel` stepk calculation. (#1324, #1325)
+- Fixed an error in PhotonDCR use of zenith_angle if sky_pos is also given. (#1330)
+
+
+v2.6
+----
+
+*Dependency Change*
+
+- Removed an accidental implicit dependency we had on scipy in `FittedSIPWCS`. (#1253, #1305)
+
+
+*API Changes*
+
+- Changed the behavior of random_seed. cf. `Image Field Attributes`. (#1309)
+
+
+*Config Updates*
+
+- Changed the behavior of random_seed to be less confusing and safer for most use cases. (#1309)
+- Added Quantity and Unit types. (#1311)
+
+
+*New Features*
+
+- Added `InterpolatedChromaticObject.from_images`. (#1294, #1296)
+- Allow PosixPath instances in constructors for `Bandpass` and `SED`. (#1270, #1304)
+- Added filter information for the Prism and Grism in the roman module. (#1307)
+- Added options to give some unitful values as an astropy Quantity. (#1311)
+
+
+*Bug Fixes*
+
+- Fixed a bug in the config-layer parsing of Position items. (#1299, #1300)
+- Fixed a bug in `DoubleZernike` to handle integer arguments. (#1283, #1303)
+- Fixed a bug in `ChromaticConvolution` with a simple `GSObject` and one with an inseparable SED.
+  (#1302, #1306)
+- Fixed a build problem for some compilers when GPU offloading is enabled. (#1313, #1314)
+- Fixed a bug for chromatic photon shooting if the realized flux is zero. (#1317)
+- Fixed a bug that could occasionally cause singular matrix exceptions in `FittedSIPWCS`. (#1319)
+- Fixed a bug in the object centering when drawing with nx, ny and center. (#1322, #1323)
+
+
 v2.5
 ----
 

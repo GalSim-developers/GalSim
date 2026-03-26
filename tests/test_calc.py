@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -368,6 +368,31 @@ def test_fwhm():
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="non-square image.calculateFWHM is not accurate.")
 
+
+def test_fwhm_deterministic_fwhm():
+    # This test was proposed by Wiliam Lucas in issue #1336.
+    # Numpy changed some details about how argsort works, so different numpy versions had
+    # given different answers to the following calculation.
+
+    gal = galsim.Gaussian(flux=1.e5, sigma=5.)
+    rng = galsim.BaseDeviate(1234)
+    img = gal.drawImage(method='phot', rng=rng, nx=50, ny=50)
+    fwhm = img.calculateFWHM()
+    # This value used to be different on systems with different numpy versions.
+    # Note: this only affects situations where the center is a pixel center or pixel corner
+    # (or some other very special locations) such that the rsq values include repeated values.
+    # Then argsort could return a different data index for what pixel was the first one past
+    # the half max value.  For symmetric profiles, even this probalby wasn't a problem, since all
+    # data values at that radius have the same value.  But for photon shooting, there is photon
+    # noise, which means the values are not identical, leading to indeterminacy in the FWHM value.
+    print(fwhm)
+
+    # The code was changed in GalSim version 2.7 to be insensitive to the details of what argsort
+    # does with repeated values.  Specifically, we now take the mean of all data values with the
+    # same rsq value.
+    # Thus, this value should be consistent across any algorithmic changes numpy might make to
+    # how argsort works in detail.
+    assert np.isclose(fwhm, 13.715780373024351)
 
 if __name__ == "__main__":
     runtests(__file__)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -140,7 +140,7 @@ def __noll_coef_array(jmax, obscuration):
 _noll_coef_array = LRU_Cache(__noll_coef_array)
 
 
-def _xy_contribution(rho2_power, rho_power, shape):
+def __xy_contribution(rho2_power, rho_power):
     """Convert (rho, |rho|^2) bivariate polynomial coefficients to (x, y) bivariate polynomial
     coefficients.
     """
@@ -162,25 +162,29 @@ def _xy_contribution(rho2_power, rho_power, shape):
     #
     # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
     # |rho|^2.
+    if rho2_power == 0 and rho_power == 0:
+        return np.array([[1]], dtype=np.complex128)
+
+    if rho2_power > 0:
+        prev = _xy_contribution(rho2_power-1, rho_power)
+        shape = (prev.shape[0] + 2, prev.shape[1] +2)
+        out = np.zeros(shape, dtype=np.complex128)
+        for (i, j) in zip(*np.nonzero(prev)):
+            val = prev[i, j]
+            out[i+2, j] += val
+            out[i, j+2] += val
+        return out
+
+    # else rho_power > 0
+    prev = _xy_contribution(rho2_power, rho_power-1)
+    shape = (prev.shape[0] + 1, prev.shape[1] + 1)
     out = np.zeros(shape, dtype=np.complex128)
-    out[0,0] = 1
-    while rho2_power >= 1:
-        new = np.zeros_like(out)
-        for (i, j) in zip(*np.nonzero(out)):
-            val = out[i, j]
-            new[i+2, j] += val
-            new[i, j+2] += val
-        rho2_power -= 1
-        out = new
-    while rho_power >= 1:
-        new = np.zeros_like(out)
-        for (i, j) in zip(*np.nonzero(out)):
-            val = out[i, j]
-            new[i+1, j] += val
-            new[i, j+1] += 1j*val
-        rho_power -= 1
-        out = new
+    for (i, j) in zip(*np.nonzero(prev)):
+        val = prev[i, j]
+        out[i+1, j] += val
+        out[i, j+1] += 1j*val
     return out
+_xy_contribution = LRU_Cache(__xy_contribution)
 
 
 def _rrsq_to_xy(coefs, shape):
@@ -190,7 +194,8 @@ def _rrsq_to_xy(coefs, shape):
 
     # Now we loop through the elements of coefs and compute their contribution to new_coefs
     for (i, j) in zip(*np.nonzero(coefs)):
-        new_coefs += (coefs[i, j]*_xy_contribution(i, j, shape)).real
+        contribution = (coefs[i, j]*_xy_contribution(i, j)).real
+        new_coefs[:contribution.shape[0], :contribution.shape[1]] += contribution
     return new_coefs
 
 
@@ -387,7 +392,7 @@ def __annular_zern_rho_coefs(n, m, eps):
             if i % 2 == 1: continue
             j = i // 2
             more_coefs = (norm**j) * binomial(-eps**2, 1, j)
-            out[0:i+1:2] += coef*more_coefs
+            out[0:i+1:2] += float(coef)*more_coefs
     elif m == n:  # Equation (25)
         norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
         out[n] = norm
@@ -716,17 +721,40 @@ class Zernike:
         newCoef /= self.R_outer
         return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
-    def __call__(self, x, y):
+    def __call__(self, x, y, robust=False):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
         Synonym for `evalCartesian`.
 
         Parameters:
-            x:    x-coordinate of evaluation points.  Can be list-like.
-            y:    y-coordinate of evaluation points.  Can be list-like.
+            x:       x-coordinate of evaluation points.  Can be list-like.
+            y:       y-coordinate of evaluation points.  Can be list-like.
+            robust:  If True, use a more robust method for evaluating the polynomial.
+                     This can sometimes be slower, but is usually more accurate,
+                     especially for large Noll indices.  [default: False]
         Returns:
             Series evaluations as numpy array.
         """
+        if robust:
+            return self.evalCartesianRobust(x, y)
         return self.evalCartesian(x, y)
+
+    def evalCartesianRobust(self, x, y):
+        """Evaluate this Zernike polynomial series at Cartesian coordinates x and y using a more
+        robust method than the default `evalCartesian`.
+
+        Parameters:
+            x:    x-coordinate of evaluation points.  Can be list-like.
+            y:    y-coordinate of evaluation points.  Can be list-like.
+
+        Returns:
+            Series evaluations as numpy array.
+        """
+        x = np.asarray(x)
+        y = np.asarray(y)
+        rho = (x + 1j*y) / self.R_outer
+        rhosq = np.abs(rho)**2
+        ar = _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
+        return horner2d(rhosq, rho, ar).real
 
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
@@ -738,7 +766,8 @@ class Zernike:
         Returns:
             Series evaluations as numpy array.
         """
-        return horner2d(x, y, self._coef_array_xy, dtype=float)
+        ar = self._coef_array_xy
+        return horner2d(x, y, ar, dtype=float)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
@@ -1214,6 +1243,20 @@ class DoubleZernike:
                 else: # xy vector
                     assert np.shape(x) == np.shape(u)
                     return horner4d(u, v, x, y, self._coef_array_uvxy)
+
+    def xycoef(self, u, v):
+        """Return the xy Zernike coefficients for a given uv point or points.
+
+        Parameters:
+            u, v: float or array.  UV point(s).
+
+        Returns:
+            [npoint, jmax] array.  Zernike coefficients for the given UV point(s).
+        """
+        uu, vv = np.broadcast_arrays(u, v)
+        out = np.array([z(uu, vv) for z in self._xy_series]).T
+        out[..., 0] = 0.0  # Zero out piston term
+        return out
 
     def __neg__(self):
         """Negate a DoubleZernike."""

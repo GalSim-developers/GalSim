@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -204,21 +204,6 @@ def test_galsim_hsm_error():
     check_pickle(err)
 
 
-@timer
-def test_galsim_fft_size_error():
-    """Test basic usage of GalSimFFTSizeError
-    """
-    err = galsim.GalSimFFTSizeError("Test FFT is too big.", 10240)
-    print('str = ',str(err))
-    print('repr = ',repr(err))
-    assert str(err) == ("Test FFT is too big.\nThe required FFT size would be 10240 x 10240, "
-                        "which requires 2.34 GB of memory.\nIf you can handle "
-                        "the large FFT, you may update gsparams.maximum_fft_size.")
-    assert err.size == 10240
-    np.testing.assert_almost_equal(err.mem, 2.34375)
-    assert isinstance(err, galsim.GalSimError)
-    check_pickle(err)
-
 
 @timer
 def test_galsim_config_error():
@@ -295,6 +280,32 @@ def test_galsim_deprecation_warning():
     print('repr = ',repr(err))
     assert str(err) == "Test"
     assert isinstance(err, UserWarning)
+    check_pickle(err)
+
+@timer
+def test_galsim_fftsize_warning():
+    """Test basic usage of GalSimFFTSizeWarning
+    """
+    err = galsim.GalSimFFTSizeWarning("Test", 10240)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err).startswith("Test")
+    assert isinstance(err, UserWarning)
+    check_pickle(err)
+
+@timer
+def test_galsim_fft_size_error():
+    """Test basic usage of GalSimFFTSizeError
+    """
+    err = galsim.GalSimFFTSizeError("Test FFT is too big.", 10240)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == ("Test FFT is too big.\nThe required FFT size would be 10240 x 10240, "
+                        "which requires 2.34 GB of memory.\nIf you can handle "
+                        "the large FFT, you may update gsparams.maximum_fft_size.")
+    assert err.size == 10240
+    np.testing.assert_almost_equal(err.mem, 2.34375)
+    assert isinstance(err, galsim.GalSimError)
     check_pickle(err)
 
 

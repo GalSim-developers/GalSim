@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,7 +20,7 @@ from . import addReciprocityFailure, applyNonlinearity, applyIPC
 from . import n_pix, exptime, dark_current, read_noise, gain
 from . import stray_light_fraction, thermal_backgrounds
 from .roman_psfs import getPSF
-from .roman_bandpass import getBandpasses
+from .roman_bandpass import getBandpass, getBandpasses
 from .roman_wcs import getWCS
 from .roman_backgrounds import getSkyLevel
 from ..config import ParseAberrations, BandpassBuilder, GetAllParams, GetRNG
@@ -112,7 +112,7 @@ class RomanBandpassBuilder(BandpassBuilder):
             from ..deprecated import depr
             depr('W149', 2.5, 'W146', 'Note: this is to match current Roman filter naming schemes')
             name = 'W146'
-        bandpass = getBandpasses()[name]
+        bandpass = getBandpass(name)
 
         return bandpass, safe
 
@@ -200,7 +200,7 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
 
     def getBandpass(self, filter_name):
         if not hasattr(self, 'all_roman_bp'):
-            self.all_roman_bp = getBandpasses()
+            self.all_roman_bp = getBandpasses(include_all_bands=True)
         return self.all_roman_bp[filter_name]
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):

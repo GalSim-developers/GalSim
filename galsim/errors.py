@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,11 +25,15 @@ __all__ = [ 'GalSimError', 'GalSimValueError', 'GalSimKeyError', 'GalSimIndexErr
             'GalSimSEDError', 'GalSimHSMError', 'GalSimFFTSizeError',
             'GalSimConfigError', 'GalSimConfigValueError',
             'GalSimNotImplementedError',
-            'GalSimWarning', 'GalSimDeprecationWarning',
-            'convert_cpp_errors', 'galsim_warn', ]
+            'GalSimWarning', 'GalSimDeprecationWarning', 'GalSimFFTSizeWarning',
+            'convert_cpp_errors', 'galsim_warn', 'galsim_warn_fft' ]
 
 import warnings
 from contextlib import contextmanager
+
+# Set this to True to have large FFTs raise a GalSimFFTSizeError  exception rather
+# merely emit a GalSimFFTSizeWarning.
+raise_fft_size_error = False
 
 # Note to developers about which exception to throw.
 #
@@ -124,10 +128,6 @@ from contextlib import contextmanager
 #
 # GalSimHSMError:       Use this for errors from the HSM algorithm.  They are emitted in C++, but
 #                       we use `with convert_cpp_errors(GalSimHSMError):` to convert them.
-#
-# GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size
-#                       for the object, so the recommendation is raise this parameter if that
-#                       is possible.
 #
 # GalSimConfigError:    Use this for errors processing a config dict.
 #
@@ -411,6 +411,34 @@ class GalSimDeprecationWarning(GalSimWarning):
     """A GalSim-specific warning class used for deprecation warnings.
     """
     def __repr__(self): return 'galsim.GalSimDeprecationWarning(%r)'%(str(self))
+
+class GalSimFFTSizeWarning(GalSimWarning):
+    """A GalSim-specific warning class indicating that a requested FFT exceeds the relevant
+    maximum_fft_size.
+
+    Attributes:
+        size:       The size that was deemed too large
+        mem:        The estimated memory that would be required (in GB) for the FFT.
+    """
+    def __init__(self, message, size):
+        self.message = message
+        self.size = size
+        self.mem = size * size * 24. / 1024**3
+        message += "\nThe required FFT size would be {0} x {0}, which requires ".format(size)
+        message += "{0:.2f} GB of memory.\n".format(self.mem)
+        message += "If you can handle the large FFT and want to suppress this warning,\n"
+        message += "you may update gsparams.maximum_fft_size."
+        super(GalSimFFTSizeWarning, self).__init__(message)
+    def __repr__(self):
+        return 'galsim.GalSimFFTSizeWarning(%r,%r)'%(self.message, self.size)
+    def __reduce__(self):
+        return GalSimFFTSizeWarning, (self.message, self.size)
+
+def galsim_warn_fft(message, size):
+    if raise_fft_size_error:
+        raise GalSimFFTSizeError(message, size)
+    else:
+        warnings.warn(GalSimFFTSizeWarning(message, size))
 
 @contextmanager
 def convert_cpp_errors(error_type=GalSimError):

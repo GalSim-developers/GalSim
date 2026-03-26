@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2023 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2026 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -129,7 +129,7 @@ class SiliconSensor(Sensor):
 
         lsst_e2v_50_8
                     The E2V sensor being used for LSST, using 8 points along each side of the
-                    pixel boundaries. 
+                    pixel boundaries.
 
         lsst_e2v_50_32
                     The E2V sensor being used for LSST, using 32 points along each side of the
@@ -175,7 +175,10 @@ class SiliconSensor(Sensor):
                             take more time. If it is increased larger than 4, the size of the
                             Poisson simulation must be increased to match. [default: 3]
         nrecalc:            The number of electrons to accumulate before recalculating the
-                            distortion of the pixel shapes. [default: 10000]
+                            distortion of the pixel shapes.  If this is 0, then no automatic
+                            recalculations are done during an accumulation. Coupled with
+                            resume=True and recalc=True options, this allows the user to fully
+                            control when recalculations happen. [default: 10000]
         treering_func:      A `LookupTable` giving the tree ring pattern f(r). [default: None]
         treering_center:    A `PositionD` object with the center of the tree ring pattern in pixel
                             coordinates, which may be outside the pixel region. [default: None;
@@ -296,7 +299,7 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=PositionI(0,0), resume=False):
+    def accumulate(self, photons, image, orig_center=PositionI(0,0), resume=False, recalc=False):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -310,6 +313,8 @@ class SiliconSensor(Sensor):
                             accumulation to see what flux is already on the image, which can
                             be more efficient, especially when the number of pixels is large.
                             [default: False]
+            recalc:         Whether to force a recalculation of the pixel boundaries at the
+                            start. [default: False]
 
         Returns:
             the total flux that fell onto the image.
@@ -325,10 +330,42 @@ class SiliconSensor(Sensor):
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")
 
-        if resume:
+        # Cases:
+        # 1. Brand new image.
+        #      - resume=False
+        #    Set image and initialize
+        #    Set nbatch to effective_nrecalc (or all)
+        #
+        # 2. Continuing previous image with recalc according to nrecalc
+        #      - resume=True
+        #      - nrecalc > 0
+        #    Don't initialize image.  Use _last_image.
+        #    Set nbatch to how many left in current recalc
+        #
+        # 3. Continuing previous image with manual recalculation
+        #      - resume=True
+        #      - nrecalc = 0
+        #    Don't initialize image.  Use _last_image.
+        #    Do an update at the start if recalc=True
+        #    Set nbatch to total photon flux
+
+        nphotons = len(photons)
+
+        if self.effective_nrecalc == 0:
+            # Case 3 or 1
+            nbatch = np.inf  # We won't actually use this, but logically this makes sense.
+            i2 = nphotons
+            if resume:
+                self._silicon.subtractDelta(image._image)
+            else:
+                self._silicon.initialize(image._image, orig_center._p);
+                self._accum_flux_since_update = 0.
+        elif resume:
+            # Case 2
             # The number in this batch is the total per recalc minus the number of photons
             # shot in the last pass(es) of this function since being updated.
             nbatch = self.effective_nrecalc - self._accum_flux_since_update
+            i2 = 0
 
             # We also need to subtract off the delta image from the last pass.
             # This represents the flux in the image that hasn't updated the pixel boundaries
@@ -337,20 +374,26 @@ class SiliconSensor(Sensor):
             # not added twice.
             self._silicon.subtractDelta(image._image)
         else:
+            # Case 1
             nbatch = self.effective_nrecalc
+            i2 = 0
             self._silicon.initialize(image._image, orig_center._p);
             self._accum_flux_since_update = 0
 
+        if resume and recalc:
+            self._silicon.update(image._image)
+            self._accum_flux_since_update = 0
+
         i1 = 0
-        nphotons = len(photons)
         # added_flux is how much flux acctually lands on the sensor.
         # accum_flux is how much flux is in the photons that we have accumulated so far.
         # cumsum_flux is an array with the cumulate sum of the photon fluxes in the photon array.
         added_flux = accum_flux = 0.
         cumsum_flux = np.cumsum(photons.flux)
         while i1 < nphotons:
-            i2 = np.searchsorted(cumsum_flux, accum_flux+nbatch) + 1
-            i2 = min(i2, nphotons)
+            if i2 == 0:
+                i2 = np.searchsorted(cumsum_flux, accum_flux+nbatch) + 1
+                i2 = min(i2, nphotons)
             added_flux += self._silicon.accumulate(photons._pa, i1, i2, self.rng._rng, image._image)
             if i2 < nphotons:
                 self._silicon.update(image._image)
@@ -360,6 +403,7 @@ class SiliconSensor(Sensor):
             else:
                 self._accum_flux_since_update += cumsum_flux[-1] - accum_flux
             i1 = i2
+            i2 = 0
 
         # On the last pass, we don't update the pixel positions, but we do need to add the
         # current running delta image to the full image.
