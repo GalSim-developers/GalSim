@@ -1183,6 +1183,15 @@ def test_thin_bandpass():
     bp = galsim.Bandpass(galsim.LookupTable([950, 980, 1000], [0.1, 1.0, 0.1]), 'nm')
     assert_raises(galsim.GalSimError, s.thin, bandpass=bp)
 
+    # If the SED and bandpass already share the same support, then preserve_range=True and
+    # trim_zeros=False should not need to add any extra front/back points.
+    s = galsim.SED(galsim.LookupTable(bp_waves_nm, sed_vals[2:-3], interpolant='linear'),
+                   'nm', 'fphotons')
+    bp = galsim.Bandpass(galsim.LookupTable(bp_waves_nm, bp_vals, interpolant='linear'), 'nm')
+    thin_s = s.thin(rel_err=1.e-3, preserve_range=True, trim_zeros=False, bandpass=bp)
+    np.testing.assert_allclose([thin_s.blue_limit, thin_s.red_limit],
+                               [s.blue_limit, s.red_limit])
+
     # Use a realistic tabulated SED and bandpass with mixed wavelength units plus redshift.
     s = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda',
                    fast=False, interpolant='linear').atRedshift(0.2)
