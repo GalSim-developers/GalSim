@@ -916,15 +916,9 @@ class SED:
             # bandpass target is provided we need to evaluate the throughput at the same physical
             # observed wavelengths.  This helper converts SED-native wavelengths into the native
             # wavelength units used by bandpass._tp.
-            if self.wave_factor:
-                observed_nm = waves / self.wave_factor
-            else:
-                observed_nm = (waves * self.wave_type).to(units.nm, units.spectral()).value
+            observed_nm = waves / self.wave_factor
             observed_nm *= (1.0 + self.redshift)
-            if bandpass.wave_factor:
-                return observed_nm * bandpass.wave_factor
-            else:
-                return (observed_nm * units.nm).to(bandpass.wave_type, units.spectral()).value
+            return observed_nm * bandpass.wave_factor
 
         if bandpass is not None:
             if self.blue_limit > bandpass.red_limit or self.red_limit < bandpass.blue_limit:
