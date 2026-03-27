@@ -1116,6 +1116,104 @@ def test_thin():
     np.testing.assert_equal(s.wave_list, [0,1])
 
 @timer
+def test_thin_bandpass():
+    # Check bandpass-targeted thinning on a synthetic case where we can make strong assertions
+    # about the intended semantics without depending on quirks of any particular throughput file.
+    sed_waves_nm = np.array(
+            [400, 450, 500, 510, 520, 540, 560, 580, 600, 620, 640, 660, 680, 700, 800, 900],
+            dtype=float)
+    sed_vals = np.array(
+            [0.2, 1.0, 3.0, 2.85, 2.7, 2.4, 2.2, 2.0, 1.8, 1.6, 1.4, 1.2, 1.0, 0.8, 0.4, 0.1],
+            dtype=float)
+    bp_waves_nm = np.array([500, 520, 540, 560, 580, 600, 620, 640, 660, 680, 700], dtype=float)
+    bp_vals = np.array([0.0, 2.e-4, 0.03, 0.25, 0.68, 1.0, 0.68, 0.25, 0.03, 2.e-4, 0.0],
+                       dtype=float)
+
+    for sed_wave_type, bp_wave_type in [('ang', 'nm'), ('nm', 'ang')]:
+        # Exercise both directions of the unit conversion logic in SED.thin:
+        # SED-native Angstroms with an nm bandpass, and vice versa.
+        sed_scale = 10. if sed_wave_type == 'ang' else 1.
+        bp_scale = 10. if bp_wave_type == 'ang' else 1.
+        sed_table = galsim.LookupTable(sed_waves_nm * sed_scale, sed_vals, interpolant='linear')
+        bp_table = galsim.LookupTable(bp_waves_nm * bp_scale, bp_vals, interpolant='linear')
+        s = galsim.SED(sed_table, sed_wave_type, 'fphotons')
+        bp = galsim.Bandpass(bp_table, bp_wave_type)
+        flux = s.calculateFlux(bp)
+        wave_list, _, _ = galsim.utilities.combine_wave_list(s, bp)
+        combined_in_band = wave_list[np.logical_and(wave_list >= bp.blue_limit,
+                                                    wave_list <= bp.red_limit)]
+        print('wave_types = ', sed_wave_type, bp_wave_type)
+        print('unthinned: ',s.wave_list)
+        print('in band: ',combined_in_band)
+
+        # Default preserve_range=True, trim_zeros=True keeps the full range of the
+        # bandpass, not the SED's original full range.
+        thin_s = s.thin(rel_err=1.e-3, bandpass=bp)
+        print('thinned: ',thin_s.wave_list)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = abs((thin_flux - flux) / flux)
+        assert thin_err < 1.e-3
+        np.testing.assert_allclose([thin_s.blue_limit, thin_s.red_limit], [500., 700.])
+        assert len(thin_s.wave_list) < len(s.wave_list)
+        assert len(thin_s.wave_list) < len(combined_in_band)
+
+        # preserve_range=False can trim the support further when the bandpass tails are
+        # insignificant for the requested error tolerance.
+        thin_s2 = s.thin(rel_err=1.e-3, preserve_range=False, bandpass=bp)
+        print('preserve_range=False: ',thin_s2.wave_list)
+        thin_flux2 = thin_s2.calculateFlux(bp.truncate(thin_s2.blue_limit, thin_s2.red_limit))
+        thin_err2 = abs((thin_flux2 - flux) / flux)
+        assert thin_err2 < 1.e-3
+        assert thin_s2.blue_limit > bp.blue_limit
+        assert thin_s2.red_limit < bp.red_limit
+
+        # preserve_range=True, trim_zeros=False should keep the original SED support even though
+        # the bandpass only matters over a narrower interval.
+        thin_s3 = s.thin(rel_err=1.e-3, preserve_range=True, trim_zeros=False, bandpass=bp)
+        print('trim_zeros=False: ',thin_s3.wave_list)
+        thin_flux3 = thin_s3.calculateFlux(bp)
+        thin_err3 = abs((thin_flux3 - flux) / flux)
+        assert thin_err3 < 1.e-3
+        np.testing.assert_allclose([thin_s3.blue_limit, thin_s3.red_limit],
+                                   [s.blue_limit, s.red_limit])
+        # This is not required in general, but is true here.
+        assert len(thin_s3.wave_list) > len(thin_s.wave_list)
+
+    # Non-overlapping wavelength ranges raises an exception.
+    bp = galsim.Bandpass(galsim.LookupTable([950, 980, 1000], [0.1, 1.0, 0.1]), 'nm')
+    assert_raises(galsim.GalSimError, s.thin, bandpass=bp)
+
+    # Use a realistic tabulated SED and bandpass with mixed wavelength units plus redshift.
+    s = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda',
+                   fast=False, interpolant='linear').atRedshift(0.2)
+    bp = galsim.Bandpass('LSST_r.dat', 'nm')
+    flux = s.calculateFlux(bp)
+    wave_list, _, _ = galsim.utilities.combine_wave_list(s, bp)
+    combined_in_band = wave_list[np.logical_and(wave_list >= bp.blue_limit,
+                                                wave_list <= bp.red_limit)]
+    print('CWW original: ',len(combined_in_band), s.wave_list)
+    print('in band: ',len(combined_in_band), combined_in_band)
+
+    thin_s = s.thin(rel_err=1.e-3, preserve_range=True, bandpass=bp)
+    thin_flux = thin_s.calculateFlux(bp)
+    thin_err = abs((thin_flux - flux) / flux)
+    print('thinned', len(thin_s.wave_list), thin_s.wave_list)
+    assert thin_err < 1.e-3
+    np.testing.assert_allclose([thin_s.blue_limit, thin_s.red_limit],
+                               [bp.blue_limit, bp.red_limit])
+    assert len(thin_s.wave_list) < len(combined_in_band)
+    assert len(thin_s.wave_list) < len(s.wave_list)
+
+    # trim_zeros=False should retain the original redshifted SED support.
+    thin_s2 = s.thin(rel_err=1.e-3, preserve_range=True, trim_zeros=False, bandpass=bp)
+    print('trim_zeros=False', len(thin_s2.wave_list), thin_s2.wave_list)
+    thin_flux2 = thin_s2.calculateFlux(bp)
+    thin_err2 = abs((thin_flux2 - flux) / flux)
+    assert thin_err2 < 1.e-3
+    np.testing.assert_allclose([thin_s2.blue_limit, thin_s2.red_limit],
+                               [s.blue_limit, s.red_limit])
+
+@timer
 def test_broadcast():
     """ Check that constand SED broadcasts over waves.
     """
