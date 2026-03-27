@@ -31,3 +31,9 @@ pytest_session.txt
 downloaded_eigen
 .vscode
 .ipynb_checkpoints
+*.pstats
+tests.log
+output
+output_psf
+output_fits
+AGENTS.md
