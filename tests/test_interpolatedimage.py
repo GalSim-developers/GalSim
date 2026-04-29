@@ -1890,5 +1890,87 @@ def test_drawreal_seg_fault():
     np.testing.assert_array_equal(image.array, 0)
 
 
+def _find_maxk(kim, thresh, count_thresh=True):
+    No2 = kim.xmax
+    dk = np.pi / No2
+
+    thresh *= thresh
+    max_ix = No2
+    n_below_thresh = 0
+    maxk_ix = 0
+
+    ix = 0
+    while ix <= max_ix:
+
+        iy = 0
+        while iy <= ix:
+            # The bottom side of the square in the lower-right quadrant.
+            norm_kval = kim(iy, -ix)
+            norm_kval = (norm_kval * norm_kval.conjugate()).real
+
+            if norm_kval <= thresh and iy != ix and ix != No2:
+                # The top side of the square in the upper-right quadrant.
+                norm_kval = kim(iy, ix)
+                norm_kval = (norm_kval * norm_kval.conjugate()).real
+
+            if norm_kval <= thresh and iy > 0:
+                # The right side of the square in the lower-right quadrant.
+                norm_kval = kim(ix, -iy)
+                norm_kval = (norm_kval * norm_kval.conjugate()).real
+
+            if norm_kval <= thresh and ix > 0 and iy != No2:
+                # The right side of the square in the upper-right quadrant.
+                norm_kval = kim(ix, iy)
+                norm_kval = (norm_kval * norm_kval.conjugate()).real
+
+            iy += 1
+
+            if norm_kval > thresh:
+                maxk_ix = ix
+                n_below_thresh = 0
+                break
+
+        if count_thresh:
+            if norm_kval <= thresh:
+                n_below_thresh += 1
+        else:
+            n_below_thresh += 1
+        if n_below_thresh == 5:
+            break
+
+        ix += 1
+
+    maxk_ix += 1
+    return maxk_ix * dk
+
+
+@timer
+def test_interpolatedimage_maxk_python():
+    # this code makes an image where there is a gap in the fourier
+    # space image of 4 pixels where pixels go above and below the
+    # maxk threshold. Four pixels is exactly the gap needed to trigger
+    # the bug in the maxk code we are testing for.
+    im = galsim.Gaussian(fwhm=0.9).drawImage(scale=0.2)
+    iim = galsim.InterpolatedImage(im)
+    orig_maxk = iim.maxk
+    kim = iim._xim.copy()
+    kim.wcs = galsim.PixelScale(1.0)
+    kim = kim.calculate_fft()
+    kx, ky = kim.get_pixel_centers()
+    kx *= kim.scale
+    ky *= kim.scale
+    thresh = iim.gsparams.maxk_threshold * kim(0,0).real
+    maxk_py = _find_maxk(kim, thresh, count_thresh=True)
+    maxk_ix = np.floor(maxk_py / kim.scale).astype(int)
+    kim[maxk_ix, maxk_ix + 4] = kim[0, 0].real * 0.1
+
+    maxk_py_false = _find_maxk(kim, thresh, count_thresh=False) / im.wcs._maxScale()
+    maxk_py_true = _find_maxk(kim, thresh, count_thresh=True) / im.wcs._maxScale()
+
+    print("galsim|pybuggy|pyfixed:", orig_maxk, maxk_py_false, maxk_py_true)
+    assert maxk_py_false != maxk_py_true
+    assert orig_maxk == maxk_py_true
+
+
 if __name__ == "__main__":
     runtests(__file__)
