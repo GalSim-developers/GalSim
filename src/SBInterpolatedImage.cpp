@@ -1174,9 +1174,11 @@ namespace galsim {
         for(int ix=0; ix<=max_ix; ++ix) {
             xdbg<<"Start search for ix = "<<ix<<std::endl;
             // Search along the two sides with either kx = ix or ky = ix.
+            double norm_kval = INFINITY; // something we know is above threshold
+
             for(int iy=0; iy<=ix; ++iy) {
                 // The bottom side of the square in the lower-right quadrant.
-                double norm_kval = fast_norm((*_kimage)(iy,-ix));
+                norm_kval = fast_norm((*_kimage)(iy,-ix));
                 xdbg<<"norm_kval at "<<iy<<','<<-ix<<" = "<<norm_kval<<std::endl;
                 if (norm_kval <= thresh && iy != ix && ix != No2) {
                     // The top side of the square in the upper-right quadrant.
@@ -1205,8 +1207,13 @@ namespace galsim {
                 }
             }
             xdbg<<"Done ix = "<<ix<<".  Current count = "<<n_below_thresh<<std::endl;
+            // we can get here either if the loop above finishes normally or if it hits
+            // the break statement. So we have to test the last value of norm_kval to
+            // see if the break statement was hit. If it was not, then we can increment
+            // the counter for the # below thresh.
+            if (norm_kval <= thresh) ++n_below_thresh;
             // If we get through 5 rows with nothing above the threshold, stop looking.
-            if (++n_below_thresh == 5) break;
+            if (n_below_thresh == 5) break;
         }
         xdbg<<"Finished.  maxk_ix = "<<maxk_ix<<std::endl;
         // Add 1 to get the first row that is below the threshold.
