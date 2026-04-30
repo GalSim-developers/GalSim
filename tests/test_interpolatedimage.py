@@ -1917,8 +1917,10 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
 
     print("\n| offset | orig       | new via direct C++ | new via galsim II |")
     print("|--------|------------|--------------------|-------------------|")
-    for offset in [3, 4, 5, 6, 7]:
+    for offset in [0, 3, 4, 5, 6, 7]:
         im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
+        new_im = im.copy().calculate_fft().calculate_inverse_fft()
+        np.testing.assert_allclose(im.array, new_im[im.bounds].array, atol=1e-6, rtol=1e-6)
         iim = galsim.InterpolatedImage(im, scale=1)
         orig_maxk = iim.maxk
 
@@ -1930,15 +1932,19 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
         # to the last pixel it finds above threshold to compute orig_maxk
         # and so we subtract 1
         maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
-        kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
+        if offset > 0:
+            kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real * iim.gsparams.maxk_threshold * 2.0
         new_im = kim.calculate_inverse_fft()
         new_maxk = _compute_maxk_cpp(new_im, iim)
+
+        if offset == 0:
+            np.testing.assert_allclose(im.array, new_im[iim._image.bounds].array, atol=1e-6, rtol=1e-6)
 
         print("| % 6d | %10.6f | %18.6f | %17.6f |" % (
             offset,
             orig_maxk,
             new_maxk,
-            galsim.InterpolatedImage(new_im, scale=1).maxk),
+            galsim.InterpolatedImage(new_im[iim._image.bounds], scale=1).maxk),
         )
 
         if offset <= 5:
