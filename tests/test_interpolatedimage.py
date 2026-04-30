@@ -1915,26 +1915,28 @@ def test_interpolatedimage_maxk_python():
         sbii.calculateMaxK(0)  # this call is needed to invoke the C++ code
         return sbii.maxK()
 
-    im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
-    iim = galsim.InterpolatedImage(im, scale=1)
-    orig_maxk = _compute_maxk_cpp(iim._xim, iim)
-
+    print(" ")
     for offset in [3, 4, 5, 6, 7]:
+        im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
+        iim = galsim.InterpolatedImage(im, scale=1)
+        orig_maxk = _compute_maxk_cpp(iim._xim, iim)
+
         kim = iim._xim.copy().calculate_fft()
         kx, ky = kim.get_pixel_centers()
         kx *= kim.scale
         ky *= kim.scale
-        # maxk_ix is the last pixel above threshold
-        # we subtract 1 since galsim adds 1 in the C++ code
+        # this is the last pixel above threshold. galsim adds 1
+        # to the last pixel it finds above threshold to compute orig_maxk
+        # and so we subtract 1
         maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
-        kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real * 0.1
+        kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
         new_im = kim.calculate_inverse_fft()
         new_maxk = _compute_maxk_cpp(new_im, iim)
 
         print("offset|orig|new:", offset, orig_maxk, new_maxk)
 
-        if offset < 5:
-            # for offsets smaller than 5, we should get an offset of offset pixels
+        if offset <= 5:
+            # for offsets <=5, we should get an offset of offset pixels
             # in the location of maxk
             np.testing.assert_allclose(new_maxk - orig_maxk, offset * kim.scale, atol=1e-12, rtol=0)
         else:
