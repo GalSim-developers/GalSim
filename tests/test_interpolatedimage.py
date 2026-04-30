@@ -1933,7 +1933,7 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
         # and so we subtract 1
         maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
         if offset > 0:
-            kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real * iim.gsparams.maxk_threshold * 2.0
+            kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
         new_im = kim.calculate_inverse_fft()
         new_maxk = _compute_maxk_cpp(new_im, iim)
 
