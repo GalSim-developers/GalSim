@@ -201,12 +201,11 @@ jobs:
 
             - name: Run unit tests
               run: |
-                # cd tests
-                pytest -vvsx -k test_interpolatedimage_maxk_python
-                # coverage run -m pytest -v
-                # pytest -v run_examples.py
-                # cd ..  # N.B. This seems to happen automatically if omitted.
-                #        # Less confusing to include it explicitly.
+                cd tests
+                coverage run -m pytest -v
+                pytest -v run_examples.py
+                cd ..  # N.B. This seems to happen automatically if omitted.
+                       # Less confusing to include it explicitly.
 
             - name: Check shared library
               if: matrix.py == 3.12
