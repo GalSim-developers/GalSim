@@ -1890,98 +1890,55 @@ def test_drawreal_seg_fault():
     np.testing.assert_array_equal(image.array, 0)
 
 
-def _find_maxk(kim, thresh, count_thresh=True):
-    No2 = kim.xmax
-    dk = np.pi / No2
-
-    thresh *= thresh
-    max_ix = No2
-    n_below_thresh = 0
-    maxk_ix = 0
-
-    ix = 0
-    while ix <= max_ix:
-
-        iy = 0
-        while iy <= ix:
-            # The bottom side of the square in the lower-right quadrant.
-            norm_kval = kim(iy, -ix)
-            norm_kval = (norm_kval * norm_kval.conjugate()).real
-
-            if norm_kval <= thresh and iy != ix and ix != No2:
-                # The top side of the square in the upper-right quadrant.
-                norm_kval = kim(iy, ix)
-                norm_kval = (norm_kval * norm_kval.conjugate()).real
-
-            if norm_kval <= thresh and iy > 0:
-                # The right side of the square in the lower-right quadrant.
-                norm_kval = kim(ix, -iy)
-                norm_kval = (norm_kval * norm_kval.conjugate()).real
-
-            if norm_kval <= thresh and ix > 0 and iy != No2:
-                # The right side of the square in the upper-right quadrant.
-                norm_kval = kim(ix, iy)
-                norm_kval = (norm_kval * norm_kval.conjugate()).real
-
-            if norm_kval > thresh:
-                maxk_ix = ix
-                n_below_thresh = 0
-                break
-
-            iy += 1
-
-        if count_thresh:
-            if norm_kval <= thresh:
-                n_below_thresh += 1
-        else:
-            n_below_thresh += 1
-        if n_below_thresh == 5:
-            break
-
-        ix += 1
-
-    maxk_ix += 1
-    return maxk_ix * dk
-
-
 @timer
 def test_interpolatedimage_maxk_python():
     # this code makes an image where there is a gap in the fourier
-    # space image of 4 pixels where pixels go above and below the
-    # maxk threshold. Four pixels is exactly the gap needed to trigger
-    # the bug in the maxk code we are testing for.
+    # space image of a certain number pixels where pixels go above
+    # and below the maxk threshold. At five pixels, galsim should
+    # ignore the gap, but less than that it should increase maxk.
+
+    def _compute_maxk_cpp(xim, iim):
+        # this little function exists only to invoke the C++
+        # maxk code...
+        # we use copies to avoid side effects
+        ikim = xim.copy()
+        sbii = galsim._galsim.SBInterpolatedImage(
+            ikim._image,
+            ikim.bounds._b,
+            iim._pad_image.copy().bounds._b,
+            iim._x_interpolant._i,
+            iim._k_interpolant._i,
+            0,
+            0,
+            iim.gsparams._gsp,
+        )
+        sbii.calculateMaxK(0)  # this call is needed to invoke the C++ code
+        return sbii.maxK()
+
     im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
-    iim = galsim.InterpolatedImage(im)
-    xim = iim._xim.copy()
-    kim = xim.calculate_fft()
-    kx, ky = kim.get_pixel_centers()
-    kx *= kim.scale
-    ky *= kim.scale
-    thresh = iim.gsparams.maxk_threshold * kim(0,0).real
-    maxk_py = _find_maxk(kim, thresh, count_thresh=True)
-    maxk_ix = np.floor(maxk_py / kim.scale).astype(int)
-    kim[maxk_ix, maxk_ix + 4] = kim[0, 0].real * 0.1
+    iim = galsim.InterpolatedImage(im, scale=1)
+    orig_maxk = _compute_maxk_cpp(iim._xim, iim)
 
-    new_im = kim.calculate_inverse_fft()
-    sbii = galsim._galsim.SBInterpolatedImage(
-        new_im._image,
-        new_im.bounds._b,
-        iim._pad_image.bounds._b,
-        iim._x_interpolant._i,
-        iim._k_interpolant._i,
-        0,
-        0,
-        iim.gsparams._gsp,
-    )
+    for offset in [3, 4, 5, 6, 7]:
+        kim = iim._xim.copy().calculate_fft()
+        kx, ky = kim.get_pixel_centers()
+        kx *= kim.scale
+        ky *= kim.scale
+        # maxk_ix is the last pixel above threshold
+        # we subtract 1 since galsim adds 1 in the C++ code
+        maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
+        kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real * 0.1
+        new_im = kim.calculate_inverse_fft()
+        new_maxk = _compute_maxk_cpp(new_im, iim)
 
-    maxk_py_false = _find_maxk(kim, thresh, count_thresh=False) / im.wcs._maxScale()
-    maxk_py_true = _find_maxk(kim, thresh, count_thresh=True) / im.wcs._maxScale()
-    sbii.calculateMaxK(0)
-    sbii_maxk = sbii.maxK()
+        print("offset|orig|new:", offset, orig_maxk, new_maxk)
 
-    print("galsim|pybuggy|pyfixed:", sbii_maxk, maxk_py_false, maxk_py_true)
-    assert np.abs(maxk_py_false - maxk_py_true) >= kim.scale
-    np.testing.assert_allclose(sbii_maxk, maxk_py_true, atol=1e-12, rtol=0)
+        if offset < 5:
+            # for offsets smaller than 5, we should get an offset of offset pixels
+            # in the location of maxk
+            np.testing.assert_allclose(new_maxk - orig_maxk, offset * kim.scale, atol=1e-12, rtol=0)
+        else:
+            np.testing.assert_allclose(new_maxk, orig_maxk, atol=1e-12, rtol=0)
 
 
 if __name__ == "__main__":
