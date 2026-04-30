@@ -1894,7 +1894,7 @@ def test_drawreal_seg_fault():
 def test_interpolatedimage_maxk_kspace_pixel_gap():
     # this code makes an image where there is a gap in the fourier
     # space image of a certain number pixels where pixels go above
-    # and below the maxk threshold. At five pixels, galsim should
+    # and below the maxk threshold. At >five pixels, galsim should
     # ignore the gap, but less than that it should increase maxk.
 
     def _compute_maxk_cpp(xim, iim):
