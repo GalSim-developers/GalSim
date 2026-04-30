@@ -1936,15 +1936,16 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
             kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
         new_im = kim.calculate_inverse_fft()
         new_maxk = _compute_maxk_cpp(new_im, iim)
+        new_im = new_im[iim._image.bounds]
 
         if offset == 0:
-            np.testing.assert_allclose(im.array, new_im[iim._image.bounds].array, atol=1e-6, rtol=1e-6)
+            np.testing.assert_allclose(im.array, new_im.array, atol=1e-6, rtol=1e-6)
 
         print("| % 6d | %10.6f | %18.6f | %17.6f |" % (
             offset,
             orig_maxk,
             new_maxk,
-            galsim.InterpolatedImage(new_im[iim._image.bounds], scale=1).maxk),
+            galsim.InterpolatedImage(new_im, scale=1).maxk),
         )
 
         if offset <= 5:
