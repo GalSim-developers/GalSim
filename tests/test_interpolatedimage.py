@@ -1923,12 +1923,12 @@ def _find_maxk(kim, thresh, count_thresh=True):
                 norm_kval = kim(ix, iy)
                 norm_kval = (norm_kval * norm_kval.conjugate()).real
 
-            iy += 1
-
             if norm_kval > thresh:
                 maxk_ix = ix
                 n_below_thresh = 0
                 break
+
+            iy += 1
 
         if count_thresh:
             if norm_kval <= thresh:
@@ -1950,12 +1950,10 @@ def test_interpolatedimage_maxk_python():
     # space image of 4 pixels where pixels go above and below the
     # maxk threshold. Four pixels is exactly the gap needed to trigger
     # the bug in the maxk code we are testing for.
-    im = galsim.Gaussian(fwhm=0.9).drawImage(scale=0.2)
+    im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
     iim = galsim.InterpolatedImage(im)
-    orig_maxk = iim.maxk
-    kim = iim._xim.copy()
-    kim.wcs = galsim.PixelScale(1.0)
-    kim = kim.calculate_fft()
+    xim = iim._xim.copy()
+    kim = xim.calculate_fft()
     kx, ky = kim.get_pixel_centers()
     kx *= kim.scale
     ky *= kim.scale
@@ -1964,12 +1962,26 @@ def test_interpolatedimage_maxk_python():
     maxk_ix = np.floor(maxk_py / kim.scale).astype(int)
     kim[maxk_ix, maxk_ix + 4] = kim[0, 0].real * 0.1
 
+    new_im = kim.calculate_inverse_fft()
+    sbii = galsim._galsim.SBInterpolatedImage(
+        new_im._image,
+        new_im.bounds._b,
+        iim._pad_image.bounds._b,
+        iim._x_interpolant._i,
+        iim._k_interpolant._i,
+        0,
+        0,
+        iim.gsparams._gsp,
+    )
+
     maxk_py_false = _find_maxk(kim, thresh, count_thresh=False) / im.wcs._maxScale()
     maxk_py_true = _find_maxk(kim, thresh, count_thresh=True) / im.wcs._maxScale()
+    sbii.calculateMaxK(0)
+    sbii_maxk = sbii.maxK()
 
-    print("galsim|pybuggy|pyfixed:", orig_maxk, maxk_py_false, maxk_py_true)
-    assert maxk_py_false != maxk_py_true
-    assert orig_maxk == maxk_py_true
+    print("galsim|pybuggy|pyfixed:", sbii_maxk, maxk_py_false, maxk_py_true)
+    assert np.abs(maxk_py_false - maxk_py_true) >= kim.scale
+    np.testing.assert_allclose(sbii_maxk, maxk_py_true, atol=1e-12, rtol=0)
 
 
 if __name__ == "__main__":
