@@ -1890,5 +1890,58 @@ def test_drawreal_seg_fault():
     np.testing.assert_array_equal(image.array, 0)
 
 
+@timer
+def test_interpolatedimage_maxk_kspace_pixel_gap():
+    # this code makes an image where there is a gap in the fourier
+    # space image of a certain number pixels where pixels go above
+    # and below the maxk threshold. At >five pixels, galsim should
+    # ignore the gap, but less than that it should increase maxk.
+
+    def _compute_maxk_cpp(xim, iim):
+        # this little function exists only to invoke the C++
+        # maxk code...
+        # we use copies to avoid side effects
+        ikim = xim.copy()
+        sbii = galsim._galsim.SBInterpolatedImage(
+            ikim._image,
+            ikim.bounds._b,
+            iim._pad_image.copy().bounds._b,
+            iim._x_interpolant._i,
+            iim._k_interpolant._i,
+            0,
+            0,
+            iim.gsparams._gsp,
+        )
+        sbii.calculateMaxK(0)  # this call is needed to invoke the C++ code
+        return sbii.maxK()
+
+    print(" ")
+    for offset in [3, 4, 5, 6, 7]:
+        im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
+        iim = galsim.InterpolatedImage(im, scale=1)
+        orig_maxk = _compute_maxk_cpp(iim._xim, iim)
+
+        kim = iim._xim.copy().calculate_fft()
+        kx, ky = kim.get_pixel_centers()
+        kx *= kim.scale
+        ky *= kim.scale
+        # this is the last pixel above threshold. galsim adds 1
+        # to the last pixel it finds above threshold to compute orig_maxk
+        # and so we subtract 1
+        maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
+        kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
+        new_im = kim.calculate_inverse_fft()
+        new_maxk = _compute_maxk_cpp(new_im, iim)
+
+        print("offset|orig|new:", offset, orig_maxk, new_maxk)
+
+        if offset <= 5:
+            # for offsets <=5, we should get an offset of offset pixels
+            # in the location of maxk
+            np.testing.assert_allclose(new_maxk - orig_maxk, offset * kim.scale, atol=1e-12, rtol=0)
+        else:
+            np.testing.assert_allclose(new_maxk, orig_maxk, atol=1e-12, rtol=0)
+
+
 if __name__ == "__main__":
     runtests(__file__)
