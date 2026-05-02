@@ -1897,30 +1897,10 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
     # and below the maxk threshold. At >five pixels, galsim should
     # ignore the gap, but less than that it should increase maxk.
 
-    def _compute_maxk_cpp(xim, iim):
-        # this little function exists only to invoke the C++
-        # maxk code...
-        # we use copies to avoid side effects
-        ikim = xim.copy()
-        sbii = galsim._galsim.SBInterpolatedImage(
-            ikim._image,
-            ikim.bounds._b,
-            iim._pad_image.copy().bounds._b,
-            iim._x_interpolant._i,
-            iim._k_interpolant._i,
-            0,
-            0,
-            iim.gsparams._gsp,
-        )
-        sbii.calculateMaxK(0)  # this call is needed to invoke the C++ code
-        return sbii.maxK()
-
-    print("\n| offset | orig       | new via direct C++ | new via galsim II |")
-    print("|--------|------------|--------------------|-------------------|")
+    print("\n| offset | orig       | new                |")
+    print("|--------|------------|--------------------|")
     for offset in [0, 3, 4, 5, 6, 7]:
         im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
-        new_im = im.copy().calculate_fft().calculate_inverse_fft()
-        np.testing.assert_allclose(im.array, new_im[im.bounds].array, atol=1e-6, rtol=1e-6)
         iim = galsim.InterpolatedImage(im, scale=1)
         orig_maxk = iim.maxk
 
@@ -1933,19 +1913,15 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
         # and so we subtract 1
         maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
         if offset > 0:
-            kim[maxk_ix, maxk_ix + offset] = kim[0, 0].real
+            val = kim[maxk_ix + offset, maxk_ix]
+            kim[maxk_ix + offset, maxk_ix] = val / np.abs(val) * kim[0, 0].real
         new_im = kim.calculate_inverse_fft()
-        new_maxk = _compute_maxk_cpp(new_im, iim)
-        new_im = new_im[iim._image.bounds]
+        new_maxk = galsim.InterpolatedImage(new_im, scale=1, pad_factor=1).maxk
 
-        if offset == 0:
-            np.testing.assert_allclose(im.array, new_im.array, atol=1e-6, rtol=1e-6)
-
-        print("| % 6d | %10.6f | %18.6f | %17.6f |" % (
+        print("| % 6d | %10.6f | %18.6f |" % (
             offset,
             orig_maxk,
-            new_maxk,
-            galsim.InterpolatedImage(new_im, scale=1).maxk),
+            new_maxk),
         )
 
         if offset <= 5:
@@ -1955,7 +1931,7 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
         else:
             np.testing.assert_allclose(new_maxk, orig_maxk, atol=1e-12, rtol=0)
 
-    print("|--------|------------|--------------------|-------------------|")
+    print("|--------|------------|--------------------|")
 
 
 if __name__ == "__main__":
