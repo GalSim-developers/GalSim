@@ -1913,8 +1913,7 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
         # and so we subtract 1
         maxk_ix = np.floor(orig_maxk / kim.scale).astype(int) - 1
         if offset > 0:
-            val = kim[maxk_ix + offset, maxk_ix]
-            kim[maxk_ix + offset, maxk_ix] = val / np.abs(val) * kim[0, 0].real
+            kim[maxk_ix + offset, maxk_ix] = kim[0, 0].real
         new_im = kim.calculate_inverse_fft()
         new_maxk = galsim.InterpolatedImage(new_im, scale=1, pad_factor=1).maxk
 
