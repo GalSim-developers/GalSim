@@ -1900,7 +1900,7 @@ def test_interpolatedimage_maxk_kspace_pixel_gap():
     print("\n| offset | orig       | new                |")
     print("|--------|------------|--------------------|")
     for offset in [0, 3, 4, 5, 6, 7]:
-        im = galsim.Gaussian(fwhm=0.9 / 0.2).drawImage(scale=1)
+        im = galsim.Gaussian(fwhm=4.5).drawImage(scale=1)
         iim = galsim.InterpolatedImage(im, scale=1)
         orig_maxk = iim.maxk
 
