@@ -760,6 +760,7 @@ def test_describe_zernike():
     assert galsim.zernike.describe_zernike(3) == "sqrt(4) * (y)"
     assert galsim.zernike.describe_zernike(4) == "sqrt(3) * (-1 + 2y^2 + 2x^2)"
     assert galsim.zernike.describe_zernike(10) == "sqrt(8) * (-3xy^2 + x^3)"
+    assert galsim.zernike.describe_zernike(11) == "sqrt(5) * (1 - 6y^2 + 6y^4 - 6x^2 + 12x^2y^2 + 6x^4)"
 
     Z22str = (
         "sqrt(7) * (-1 + 12y^2 - 30y^4 + 20y^6 + 12x^2"
