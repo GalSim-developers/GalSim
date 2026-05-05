@@ -421,14 +421,15 @@ def describe_zernike(j):
     first = True
     out = "sqrt({}) * (".format(var)
 
+    # i, k indicate powers of x and y, respectively.
     for (i, k), val in np.ndenumerate(arr):
         if val != 0:
             if not first:
                 out += " + "
             first = False
             ival = int(np.round(val))
-            if ival != 1:
-                out += str(int(np.round(val)))
+            if ival != 1 or (i == 0 and k == 0):
+                out += str(ival)
             if i >= 1:
                 out += "x"
             if i >= 2:
@@ -442,8 +443,6 @@ def describe_zernike(j):
     out = out.replace("(-1x", "(-x")
     out = out.replace("(-1y", "(-y")
     out = out.replace("+ -", "- ")
-    if out == "sqrt(1) * ()":
-        out = "sqrt(1) * (1)"
     return out
 
 
