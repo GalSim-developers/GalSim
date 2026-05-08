@@ -20,31 +20,31 @@
 #ifndef GalSim_Stopwatch_H
 #define GalSim_Stopwatch_H
 
-#include <sys/time.h>
+#include <chrono>
 
 namespace galsim {
 
 class Stopwatch
 {
 private:
+    typedef std::chrono::steady_clock clock_type;
     double seconds;
-    struct timeval tpStart;
+    clock_type::time_point tpStart;
     bool running;
 public:
     Stopwatch() : seconds(0.), running(false) {}
 
-    void start() { gettimeofday(&tpStart, NULL); running=true; }
+    void start() { tpStart = clock_type::now(); running = true; }
 
     void stop()
     {
         if (!running) return;
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-        seconds += (tp.tv_sec - tpStart.tv_sec)
-            + 1e-6*(tp.tv_usec - tpStart.tv_usec);
+        auto tp = clock_type::now();
+        std::chrono::duration<double> dt = tp - tpStart;
+        seconds += dt.count();
         running = false;
     }
-    void reset() { seconds=0.; running=false; }
+    void reset() { seconds = 0.; running = false; }
     operator double() const { return seconds; }
 };
 

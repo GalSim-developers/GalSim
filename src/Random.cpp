@@ -17,12 +17,17 @@
  *    and/or other materials provided with the distribution.
  */
 
+#ifndef _WIN32
 #include <sys/time.h>
 #include <fcntl.h>
+#include <unistd.h>
+#else
+#include <chrono>
+#include <random>
+#endif
 #include <string>
 #include <vector>
 #include <sstream>
-#include <unistd.h>
 #include <cstring>  // For memcpy
 
 #ifdef _OPENMP
@@ -129,6 +134,14 @@ namespace galsim {
 
     void BaseDeviate::seedurandom()
     {
+#ifdef _WIN32
+        // Windows has no /dev/urandom; use std::random_device which delegates
+        // to the platform CSPRNG (CryptGenRandom / BCryptGenRandom on Windows
+        // CRTs).  Same observable contract as the POSIX path: produce a
+        // single int worth of entropy and feed the Mersenne twister.
+        std::random_device rd;
+        _impl->_rng->seed(rd());
+#else
         // This implementation shamelessly taken from:
         // http://stackoverflow.com/questions/2572366/how-to-use-dev-random-or-urandom-in-c
         int randomData = open("/dev/urandom", O_RDONLY);
@@ -144,13 +157,22 @@ namespace galsim {
         }
         close(randomData);
         _impl->_rng->seed(myRandomInteger);
+#endif
     }
 
     void BaseDeviate::seedtime()
     {
+#ifdef _WIN32
+        // Match the POSIX path's observable behaviour: seed with the
+        // microsecond portion of the wall clock.
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
+        _impl->_rng->seed(static_cast<unsigned int>(us % 1000000));
+#else
         struct timeval tp;
         gettimeofday(&tp,NULL);
         _impl->_rng->seed(tp.tv_usec);
+#endif
     }
 
     void BaseDeviate::seed(long lseed)

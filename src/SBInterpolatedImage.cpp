@@ -200,7 +200,7 @@ namespace galsim {
         if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
 
         // We'll need these for each row.  Save them.
-        double xwt[p2-p1+1];
+        std::vector<double> xwt(p2-p1+1);
         for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _xInterp.xval(p-x);
 
         double sum = 0.;
@@ -427,7 +427,7 @@ namespace galsim {
         dbg<<"q range = "<<q1<<"..."<<q2<<std::endl;
 
         // We'll need these for each row.  Save them.
-        double xwt[p2-p1+1];
+        std::vector<double> xwt(p2-p1+1);
         for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
 
         std::complex<double> sum = 0.;
@@ -437,7 +437,7 @@ namespace galsim {
         dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
         for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
             if (qwrap == No2) qwrap -= N;
-            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,*_kimage);
+            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt.data(),*_kimage);
             sum += xsum * _kInterp.xval(q-ky);
         }
 
@@ -549,9 +549,9 @@ namespace galsim {
         // a given q is independent of y, so we save that as well.
 
         double x = x0;
-        double xwt[_xInterp.ixrange() * mm];
-        double p1ar[mm];
-        double p2ar[mm];
+        std::vector<double> xwt(_xInterp.ixrange() * mm);
+        std::vector<double> p1ar(mm);
+        std::vector<double> p2ar(mm);
         int k=0;
         for (int i=i1; i<i2; ++i,x+=dx) {
             int p1,p2;
@@ -584,9 +584,9 @@ namespace galsim {
 
         im.setZero();
         double y = y0;
-        double temp[mm];
+        std::vector<double> temp(mm);
         for (int j=j1; j<j2; ++j,y+=dy,ptr+=skip) {
-            memset(temp, 0, mm * sizeof(double)); // Zero out temp array
+            std::fill(temp.begin(), temp.end(), 0.0); // Zero out temp array
             xdbg<<"j = "<<j<<", y = "<<y<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             // Otherwise, have a range based on xInterp.xrange()
@@ -634,7 +634,7 @@ namespace galsim {
 
                 // Now add that to the output row with the ywt scaling.
                 double ywt = _xInterp.xval(q-y);
-                double* tptr = temp;
+                double* tptr = temp.data();
                 std::vector<double>::const_iterator row_it = rowq.begin();
                 for (int i=i1; i<i2; ++i) {
                     *tptr++ += *row_it++ * ywt;
@@ -645,7 +645,7 @@ namespace galsim {
             // the stack while doing the calculation above, this is also important for
             // accuracy if the output image is T=float, so we don't gratuitously
             // lose precision by adding floats rather than doubles.
-            double* tptr = temp;
+            double* tptr = temp.data();
             for (int i=i1; i<i2; ++i) *ptr++ = *tptr++;
         }
         dbg<<"Done SBInterpolatedImage fillXImage\n";
@@ -740,7 +740,7 @@ namespace galsim {
                 if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
                 if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
 
-                double xwt[p2-p1+1];
+                std::vector<double> xwt(p2-p1+1);
                 for (int p=p1, pp=0; p<=p2; ++p, ++pp) {
                     xwt[pp] = _xInterp.xval(p-x);
                 }
@@ -825,9 +825,9 @@ namespace galsim {
         // is that we need to wrap around the p,q values and handle the conjugation possibility
         // correctly.  (cf. comments in kValue method.)
         kx = kx0;
-        double xwt[_kInterp.ixrange() * mm];
-        double p1ar[mm];
-        double p2ar[mm];
+        std::vector<double> xwt(_kInterp.ixrange() * mm);
+        std::vector<double> p1ar(mm);
+        std::vector<double> p2ar(mm);
         int k=0;
         for (int i=i1; i<i2; ++i,kx+=dkx) {
             int p1, p2;  // Range over which we need to sum.
@@ -861,9 +861,9 @@ namespace galsim {
         im.setZero();
         ky = ky0;
         uyit = uy.begin();
-        double temp[2*mm]; // Can't put complex<double> array on stack, so reinterpret_cast below.
+        std::vector<double> temp(2*mm); // Backing storage for the complex<double> view below; reinterpret_cast below.
         for (int j=j1; j<j2; ++j,ky+=dky,ptr+=skip,++uyit) {
-            memset(temp, 0, 2*mm * sizeof(double));
+            std::fill(temp.begin(), temp.end(), 0.0);
             xdbg<<"j = "<<j<<", ky = "<<ky<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             int q1,q2,qmin;
@@ -898,18 +898,18 @@ namespace galsim {
                         int p1 = p1ar[i-i1];
                         int p2 = p2ar[i-i1];
                         int pwrap1 = WrapKIndex(p1, No2, N);
-                        *row_it++ = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,&xwt[k],*_kimage);
+                        *row_it++ = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt.data()+k,*_kimage);
                         k += p2-p1+1;
                     }
                 }
 
                 // Now add that to the output row with the ywt scaling.
                 double ywt = _kInterp.xval(q-ky);
-                std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
+                std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp.data());
                 std::vector<std::complex<double> >::const_iterator row_it = rowq.begin();
                 for (int i=i1; i<i2; ++i) {
                     xassert(row_it < rowq.end());
-                    xassert((void*)tptr < (void*)(temp + 2*mm));
+                    xassert((void*)tptr < (void*)(temp.data() + 2*mm));
                     *tptr++ += *row_it++ * ywt;
                 }
             }
@@ -921,12 +921,12 @@ namespace galsim {
             // accuracy if the output image is complex<float>, so we don't gratuitously
             // lose precision by adding floats rather than doubles.
             uxit = ux.begin();
-            std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
+            std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp.data());
             for (int i=i1; i<i2; ++i) {
                 xassert(ptr < im.getData() + im.getNElements());
                 xassert(uxit < ux.end());
                 xassert(uyit < uy.end());
-                xassert((void*)tptr < (void*)(temp + 2*mm));
+                xassert((void*)tptr < (void*)(temp.data() + 2*mm));
                 *ptr++ = *uxit++ * *uyit * *tptr++;
             }
         }
@@ -982,7 +982,7 @@ namespace galsim {
                     int q1 = int(std::ceil(ky-_kInterp.xrange()));
                     int q2 = int(std::floor(ky+_kInterp.xrange()));
 
-                    double xwt[p2-p1+1];
+                    std::vector<double> xwt(p2-p1+1);
                     for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
 
                     std::complex<double> sum = 0.;
@@ -991,7 +991,7 @@ namespace galsim {
                     for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
                         if (qwrap == No2) qwrap -= N;
                         double ywt = _kInterp.xval(q-ky);
-                        sum += ywt * KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,*_kimage);
+                        sum += ywt * KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt.data(),*_kimage);
                     }
                     *ptr++ = _xInterp.uval(ux) * _xInterp.uval(uy) * sum;
                 }
@@ -1438,7 +1438,7 @@ namespace galsim {
         dbg<<"q range = "<<q1<<"..."<<q2<<std::endl;
 
         // We'll need these for each row.  Save them.
-        double xwt[p2-p1+1];
+        std::vector<double> xwt(p2-p1+1);
         for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
 
         std::complex<double> sum = 0.;
@@ -1448,7 +1448,7 @@ namespace galsim {
         dbg<<"kimage bounds = "<<_kimage.getBounds()<<std::endl;
         for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
             if (qwrap == No2) qwrap -= N;
-            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,_kimage);
+            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt.data(),_kimage);
             sum += xsum * _kInterp.xval(q-ky);
         }
 
