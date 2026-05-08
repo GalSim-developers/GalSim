@@ -33,7 +33,6 @@ try:
     from setuptools.command.install import install
     from setuptools.command.install_scripts import install_scripts
     from setuptools.command.easy_install import easy_install
-    from setuptools.command.test import test
     import setuptools
     print("Using setuptools version",setuptools.__version__)
 except ImportError:
@@ -44,6 +43,14 @@ except ImportError:
     print("****")
     print()
     raise
+
+# setuptools.command.test was removed in setuptools 72.0.0; tolerate its absence.
+try:
+    from setuptools.command.test import test  # noqa: F401
+except ImportError:
+    pass
+
+IS_WINDOWS = sys.platform == 'win32'
 
 # Turn this on for more verbose debugging output about compile attempts.
 debug = False
@@ -116,7 +123,8 @@ if full_debug:
 else:
     # Including mmgr.cpp in the library leads to problems if the other files don't
     # include mmgr.h.  So remove it.
-    cpp_sources.remove('src/mmgr.cpp')
+    mmgr_path = os.path.join('src', 'mmgr.cpp')
+    cpp_sources = [s for s in cpp_sources if os.path.normpath(s) != mmgr_path]
 
 # Verbose is the default for setuptools logging, but if it's on the command line, we take it
 # to mean that we should also be verbose.
@@ -275,7 +283,7 @@ def find_fftw_lib(output=False):
     # Check the directories in LD_LIBRARY_PATH.  This doesn't work on OSX >= 10.11
     for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
         if path in os.environ:
-            for dir in os.environ[path].split(':'):
+            for dir in os.environ[path].split(os.pathsep):
                 try_libdirs.append(dir)
 
     # The user's home directory is often a good place to check.
@@ -384,7 +392,7 @@ def find_eigen_dir(output=False):
     # Also if there is a C_INCLUDE_PATH, check those dirs.
     for path in ['C_INCLUDE_PATH']:
         if path in os.environ:
-            for dir in os.environ[path].split(':'):
+            for dir in os.environ[path].split(os.pathsep):
                 try_dirs.append(dir)
 
     # Finally, (last resort) check our own download of eigen.
@@ -1418,10 +1426,10 @@ dist = setup(name="GalSim",
     )
 
 # Check that the path includes the directory where the scripts are installed.
-real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]
+real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(os.pathsep)]
 if hasattr(dist,'script_install_dir'):
     print('scripts installed into ',dist.script_install_dir)
-    if (dist.script_install_dir not in os.environ['PATH'].split(':') and
+    if (dist.script_install_dir not in os.environ['PATH'].split(os.pathsep) and
         os.path.realpath(dist.script_install_dir) not in real_env_path):
 
         print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
