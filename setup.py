@@ -92,6 +92,8 @@ copt =  {
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
                       '-Wno-shorten-64-to-32','-fvisibility=hidden', '-DGALSIM_USE_GPU'],
     'nvc++' : ['-O2','-std=c++14','-mp=gpu','-DGALSIM_USE_GPU'],
+    'msvc' : ['/O2', '/std:c++14', '/EHsc', '/openmp',
+              '/Zc:__cplusplus', '/utf-8', '/DNOMINMAX'],
     'unknown' : [],
 }
 lopt =  {
@@ -105,6 +107,7 @@ lopt =  {
     'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64-nvidia-cuda',
                       '-Wno-openmp-mapping','-Wno-unknown-cuda-version'],
     'nvc++' : ['-mp=gpu'],
+    'msvc' : [],
     'unknown' : [],
 }
 
@@ -139,6 +142,12 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
     be called cc or gcc.
     """
     if debug: output=True
+    # MSVC's CCompiler subclass does not expose ``compiler_so`` (a Unix-only
+    # attribute).  Detect it directly via ``compiler_type``.
+    if getattr(compiler, 'compiler_type', None) == 'msvc':
+        if output:
+            print('Compiler is MSVC.')
+        return 'msvc'
     cc = compiler.compiler_so[0]
     if cc == 'ccache':
         cc = compiler.compiler_so[1]
@@ -262,10 +271,13 @@ def find_fftw_lib(output=False):
     if debug: output = True
     try_libdirs = []
 
-    # Start with the explicit FFTW_DIR, if present.
+    # Start with the explicit FFTW_DIR, if present.  Support both Unix
+    # ``<root>/lib`` and conda-style ``<root>/Library/lib`` layouts.
     if 'FFTW_DIR' in os.environ:
-        try_libdirs.append(os.environ['FFTW_DIR'])
-        try_libdirs.append(os.path.join(os.environ['FFTW_DIR'],'lib'))
+        fftw_root = os.environ['FFTW_DIR']
+        try_libdirs.append(fftw_root)
+        try_libdirs.append(os.path.join(fftw_root, 'lib'))
+        try_libdirs.append(os.path.join(fftw_root, 'Library', 'lib'))
 
     # Add the python system library directory.
     try_libdirs.append(distutils.sysconfig.get_config_var('LIBDIR'))
@@ -273,18 +285,27 @@ def find_fftw_lib(output=False):
     # If using Anaconda, add their lib dir in case fftw is installed there.
     # (With envs, this might be different than the sysconfig LIBDIR.)
     if 'CONDA_PREFIX' in os.environ:
-        try_libdirs.append(os.path.join(os.environ['CONDA_PREFIX'],'lib'))
+        conda_root = os.environ['CONDA_PREFIX']
+        try_libdirs.append(os.path.join(conda_root, 'lib'))
+        # On Windows conda installs C libs under ``<env>\Library\lib``.
+        try_libdirs.append(os.path.join(conda_root, 'Library', 'lib'))
 
-    # Try some standard locations where things get installed
-    try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
-    if sys.platform == "darwin":
-        try_libdirs.extend(['/sw/lib', '/opt/local/lib'])
+    if IS_WINDOWS:
+        # vcpkg layout
+        if 'VCPKG_ROOT' in os.environ:
+            try_libdirs.append(os.path.join(
+                os.environ['VCPKG_ROOT'], 'installed', 'x64-windows', 'lib'))
+    else:
+        # Try some standard locations where things get installed
+        try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
+        if sys.platform == "darwin":
+            try_libdirs.extend(['/sw/lib', '/opt/local/lib'])
 
     # Check the directories in LD_LIBRARY_PATH.  This doesn't work on OSX >= 10.11
     for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
         if path in os.environ:
-            for dir in os.environ[path].split(os.pathsep):
-                try_libdirs.append(dir)
+            for d in os.environ[path].split(os.pathsep):
+                try_libdirs.append(d)
 
     # The user's home directory is often a good place to check.
     try_libdirs.append(os.path.join(os.path.expanduser("~"),"lib"))
@@ -296,21 +317,34 @@ def find_fftw_lib(output=False):
     except ImportError:
         pass
 
-    if sys.platform == "darwin":
-        lib_ext = '.dylib'
+    if IS_WINDOWS:
+        # MSVC import library produced by conda-forge / vcpkg / fftw.org.
+        lib_names = ['fftw3.lib', 'libfftw3.lib', 'libfftw3-3.lib']
+    elif sys.platform == "darwin":
+        lib_names = ['libfftw3.dylib']
     else:
-        lib_ext = '.so'
-    name = 'libfftw3' + lib_ext
-    if output: print("Looking for ",name)
+        lib_names = ['libfftw3.so']
+    if output: print("Looking for ", ' or '.join(lib_names))
     tried_dirs = set()  # Keep track, so we don't try the same thing twice.
     for dir in try_libdirs:
-        if dir == '': continue  # This messes things up if it's in there.
+        if not dir: continue  # Filters out '' and ``None`` (sysconfig may yield None on win32).
         if dir in tried_dirs: continue
         else: tried_dirs.add(dir)
         if not os.path.isdir(dir): continue
-        libpath = os.path.join(dir, name)
-        if not os.path.isfile(libpath): continue
+        for name in lib_names:
+            libpath = os.path.join(dir, name)
+            if os.path.isfile(libpath):
+                break
+        else:
+            continue
         if output: print("  ", dir, end='')
+        if IS_WINDOWS:
+            # On Windows the file we located is the import library, not the
+            # DLL.  ``ctypes.cdll.LoadLibrary`` only loads runtime DLLs and
+            # would fail here, so just trust the path and let the linker
+            # use it.
+            if output: print("  (yes)")
+            return libpath
         try:
             lib = ctypes.cdll.LoadLibrary(libpath)
             if output: print("  (yes)")
@@ -331,12 +365,18 @@ def find_fftw_lib(output=False):
 
     # If we didn't find it anywhere, but the user has set FFTW_DIR, trust it.
     if 'FFTW_DIR' in os.environ:
-        libpath = os.path.join(os.environ['FFTW_DIR'], name)
+        libpath = os.path.join(os.environ['FFTW_DIR'], lib_names[0])
         print("WARNING:")
-        print("Could not find an installed fftw3 library named %s"%(name))
+        print("Could not find an installed fftw3 library named %s"%(lib_names[0]))
         print("Trusting the provided FFTW_DIR=%s for the library location."%(libpath))
         print("If this is incorrect, you may have errors later when linking.")
         return libpath
+
+    if IS_WINDOWS:
+        print("Could not find fftw3 library.  On Windows, install fftw via conda-forge")
+        print("(``conda install -c conda-forge fftw``) or vcpkg, or set FFTW_DIR to a")
+        print("directory containing fftw3.lib (and fftw3.dll on PATH at runtime).")
+        raise OSError("fftw3 import library not found")
 
     # Last ditch attempt.  Use ctypes.util.find_library, which sometimes manages to find it
     # when the above attempts fail.
@@ -379,21 +419,29 @@ def find_eigen_dir(output=False):
     # Add the python system include directory.
     try_dirs.append(distutils.sysconfig.get_config_var('INCLUDEDIR'))
 
-    # If using Anaconda, add their lib dir in case fftw is installed there.
-    # (With envs, this might be different than the sysconfig LIBDIR.)
+    # If using Anaconda, add their include dir in case eigen is installed there.
+    # (With envs, this might be different than the sysconfig INCLUDEDIR.)
     if 'CONDA_PREFIX' in os.environ:
-        try_dirs.append(os.path.join(os.environ['CONDA_PREFIX'],'lib'))
+        conda_root = os.environ['CONDA_PREFIX']
+        try_dirs.append(os.path.join(conda_root, 'include'))
+        # Windows conda packages live under ``<env>\Library\include``.
+        try_dirs.append(os.path.join(conda_root, 'Library', 'include'))
 
-    # Some standard install locations:
-    try_dirs.extend(['/usr/local/include', '/usr/include'])
-    if sys.platform == "darwin":
-        try_dirs.extend(['/sw/include', '/opt/local/include'])
+    if IS_WINDOWS:
+        if 'VCPKG_ROOT' in os.environ:
+            try_dirs.append(os.path.join(
+                os.environ['VCPKG_ROOT'], 'installed', 'x64-windows', 'include'))
+    else:
+        # Some standard install locations:
+        try_dirs.extend(['/usr/local/include', '/usr/include'])
+        if sys.platform == "darwin":
+            try_dirs.extend(['/sw/include', '/opt/local/include'])
 
     # Also if there is a C_INCLUDE_PATH, check those dirs.
     for path in ['C_INCLUDE_PATH']:
         if path in os.environ:
-            for dir in os.environ[path].split(os.pathsep):
-                try_dirs.append(dir)
+            for d in os.environ[path].split(os.pathsep):
+                try_dirs.append(d)
 
     # Finally, (last resort) check our own download of eigen.
     if os.path.isdir('downloaded_eigen'):
@@ -503,6 +551,27 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None, check_wa
     # Another named temporary file for the executable
     with tempfile.NamedTemporaryFile(delete=False, suffix='.exe', dir=local_tmp) as exe_file:
         exe_name = exe_file.name
+
+    # MSVC's distutils CCompiler does not expose Unix-style ``compiler_so``
+    # / ``linker_so`` lists; compose probe builds via the high-level API.
+    if getattr(compiler, 'compiler_type', None) == 'msvc':
+        try:
+            objects = compiler.compile([cpp_name], output_dir=local_tmp,
+                                       extra_postargs=list(cflags))
+            exe_root = os.path.splitext(exe_name)[0]
+            compiler.link_executable(objects, exe_root,
+                                     extra_postargs=list(lflags),
+                                     target_lang='c++')
+        except Exception as e:
+            if debug:
+                print('MSVC compile/link probe failed: ', repr(e))
+            return False
+        # Probe succeeded.  Best-effort cleanup.
+        for f in [cpp_name, o_name, exe_name]:
+            if os.path.exists(f):
+                try: os.remove(f)
+                except OSError: pass
+        return True
 
     # Try compiling with the given flags
     cc = [compiler.compiler_so[0]]
@@ -784,6 +853,8 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
 
 
 def fix_compiler(compiler, njobs):
+    is_msvc = getattr(compiler, 'compiler_type', None) == 'msvc'
+
     # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
     try:
         compiler.compiler_so.remove("-Wstrict-prototypes")
@@ -798,22 +869,27 @@ def fix_compiler(compiler, njobs):
 
     # Figure out what compiler it will use
     comp_type = get_compiler_type(compiler, output=True)
-    cc = compiler.compiler_so[0]
-    already_have_ccache = False
-    if cc == 'ccache':
-        already_have_ccache = True
-        cc = compiler.compiler_so[1]
-    if cc == comp_type:
-        print('Using compiler %s'%(cc))
+    if is_msvc:
+        cc = 'msvc'
+        already_have_ccache = False
+        print('Using compiler MSVC')
     else:
-        print('Using compiler %s, which is %s'%(cc,comp_type))
+        cc = compiler.compiler_so[0]
+        already_have_ccache = False
+        if cc == 'ccache':
+            already_have_ccache = True
+            cc = compiler.compiler_so[1]
+        if cc == comp_type:
+            print('Using compiler %s'%(cc))
+        else:
+            print('Using compiler %s, which is %s'%(cc,comp_type))
 
     # Make sure the compiler works with a simple c++ code
     if not try_cpp(compiler):
         # One failure mode is that sometimes there is a -B /path/to/compiler_compat
         # which can cause problems.  If we get here, try removing that.
         success = False
-        if '-B' in compiler.linker_so:
+        if not is_msvc and '-B' in compiler.linker_so:
             for i in range(len(compiler.linker_so)):
                 if (compiler.linker_so[i] == '-B' and
                     'compiler_compat' in compiler.linker_so[i+1]):
@@ -823,66 +899,84 @@ def fix_compiler(compiler, njobs):
                     break
         if not success:
             print("There seems to be something wrong with the compiler or cflags")
-            print(str(compiler.compiler_so))
+            if not is_msvc:
+                print(str(compiler.compiler_so))
             raise OSError("Compiler does not work for compiling C++ code")
 
     # Check if we can use ccache to speed up repeated compilation.
-    if not already_have_ccache and try_cpp(compiler, prepend='ccache'):
+    if (not is_msvc and not already_have_ccache and
+            try_cpp(compiler, prepend='ccache')):
         print('Using ccache')
         compiler.set_executable('compiler_so', ['ccache'] + compiler.compiler_so)
 
-    if njobs > 1:
+    if njobs > 1 and not IS_WINDOWS:
         # Global variable for tracking the number of jobs to use.
         # We can't pass this to parallel compile, since the signature is fixed.
         # So if using parallel compile, set this value to use within parallel compile.
         global glob_use_njobs
         glob_use_njobs = njobs
         compiler.compile = types.MethodType(parallel_compile, compiler)
+    elif IS_WINDOWS and njobs > 1:
+        # MSVC drives parallel compilation via ``/MP`` rather than a Python
+        # multiprocessing pool; the monkey-patched ``parallel_compile`` above
+        # is built around the Unix one-source-at-a-time invocation pattern
+        # and currently misbehaves under MSVC.  Stick to single-process
+        # compile here -- per-extension speedup can be regained later by
+        # adding ``/MP`` to the MSVC ``copt`` entry.
+        print('Note: forcing single-process compile on Windows.')
 
-    extra_cflags = copt[comp_type]
-    extra_lflags = lopt[comp_type]
+    extra_cflags = list(copt[comp_type])
+    extra_lflags = list(lopt[comp_type])
 
-    success = try_cpp14(compiler, extra_cflags, extra_lflags)
-    if not success:
-        # In case libc++ doesn't work, try letting the system use the default stdlib
-        try:
-            extra_cflags.remove('-stdlib=libc++')
-            extra_lflags.remove('-stdlib=libc++')
-        except (AttributeError, ValueError):
-            pass
-        else:
-            success = try_cpp14(compiler, extra_cflags, extra_lflags)
+    if is_msvc:
+        # The Unix-style probe in try_cpp14 has been adapted via the MSVC
+        # branch in try_compile; trust MSVC for C++14 support.
+        success = True
+    else:
+        success = try_cpp14(compiler, extra_cflags, extra_lflags)
+        if not success:
+            # In case libc++ doesn't work, try letting the system use the default stdlib
+            try:
+                extra_cflags.remove('-stdlib=libc++')
+                extra_lflags.remove('-stdlib=libc++')
+            except (AttributeError, ValueError):
+                pass
+            else:
+                success = try_cpp14(compiler, extra_cflags, extra_lflags)
     if not success:
         print('The compiler %s with flags %s did not successfully compile C++14 code'%
               (cc, ' '.join(extra_cflags)))
         raise OSError("Compiler is not C++-14 compatible")
 
-    # Also see if adding -msse2 works (and doesn't give a warning)
-    if '-msse2' not in extra_cflags:
-        extra_cflags.append('-msse2')
-    if try_cpp14(compiler, extra_cflags, extra_lflags, check_warning=True):
-        print('Using cflag -msse2')
-    else:
-        print('warning with -msse2.')
-        extra_cflags.remove('-msse2')
+    if not is_msvc:
+        # Also see if adding -msse2 works (and doesn't give a warning).  This flag
+        # is GCC/Clang-only; MSVC enables SSE2 by default on x64 builds.
+        if '-msse2' not in extra_cflags:
+            extra_cflags.append('-msse2')
+        if try_cpp14(compiler, extra_cflags, extra_lflags, check_warning=True):
+            print('Using cflag -msse2')
+        else:
+            print('warning with -msse2.')
+            extra_cflags.remove('-msse2')
 
     # If doing develop installation, it's important for the build directory to be before any
     # other directories.  Particularly ones that might have another version of GalSim installed.
     # Otherwise the wrong library can be linked, which leads to errors.
     # So, make sure that the -Lbuild/... directive happens first among any -L directives in
-    # the link flags.
-    linker_so = compiler.linker_so
-    # Find the first -L flag among the current flags (if any)
-    for i, flag in enumerate(linker_so):
-        if flag.startswith('-L'):
-            print('Found link: ',i,flag)
-            break
-    else:
-        i = len(linker_so)
-    # Insert -Llib for any libs that are in build directory, to make sure they are first.
-    linker_so[i:i] = ['-L' + l for l in compiler.library_dirs if l.startswith('build')]
-    # Copy this list back to the compiler object
-    compiler.set_executable('linker_so', linker_so)
+    # the link flags.  ``linker_so`` is a Unix-only attribute, so guard the rewrite.
+    if hasattr(compiler, 'linker_so'):
+        linker_so = list(compiler.linker_so)
+        # Find the first -L flag among the current flags (if any)
+        for i, flag in enumerate(linker_so):
+            if flag.startswith('-L'):
+                print('Found link: ',i,flag)
+                break
+        else:
+            i = len(linker_so)
+        # Insert -Llib for any libs that are in build directory, to make sure they are first.
+        linker_so[i:i] = ['-L' + l for l in compiler.library_dirs if l.startswith('build')]
+        # Copy this list back to the compiler object
+        compiler.set_executable('linker_so', linker_so)
 
     # Return the extra cflags, since those will be added to the build step in a different place.
     print('Using extra flags ',extra_cflags)
@@ -1216,7 +1310,10 @@ class my_build_ext(build_ext):
 
         # If requested, also build the shared library.
         if int(os.environ.get('GALSIM_BUILD_SHARED', 0)):
-            self.run_command("build_shared_clib")
+            if IS_WINDOWS:
+                print('GALSIM_BUILD_SHARED is not supported on Windows yet; skipping.')
+            else:
+                self.run_command("build_shared_clib")
 
         if int(os.environ.get('GALSIM_RUN_TEST', 0)):
             self.run_command("run_cpp_test")
@@ -1321,11 +1418,20 @@ lib=("galsim", {'sources' : cpp_sources,
                 'depends' : headers + inst,
                 'include_dirs' : ['include', 'include/galsim'],
                 'undef_macros' : undef_macros })
-ext=Extension("galsim._galsim",
-              py_sources,
-              depends = cpp_sources + headers + inst,
-              undef_macros = undef_macros,
-              extra_link_args = ["-lfftw3"])
+if IS_WINDOWS:
+    # MSVC link line uses ``libraries`` + ``library_dirs`` (populated by
+    # ``add_dirs`` via ``find_fftw_lib``).  ``-lfftw3`` is GCC-only.
+    ext=Extension("galsim._galsim",
+                  py_sources,
+                  depends = cpp_sources + headers + inst,
+                  undef_macros = undef_macros,
+                  libraries = ['fftw3'])
+else:
+    ext=Extension("galsim._galsim",
+                  py_sources,
+                  depends = cpp_sources + headers + inst,
+                  undef_macros = undef_macros,
+                  extra_link_args = ["-lfftw3"])
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
 run_dep = ['astropy', 'LSSTDESC.Coord']
