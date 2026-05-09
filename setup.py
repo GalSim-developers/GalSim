@@ -30,6 +30,7 @@ try:
     from setuptools import setup, Extension, find_packages
     from setuptools.command.build_ext import build_ext
     from setuptools.command.build_clib import build_clib
+    from setuptools.command.build_py import build_py
     from setuptools.command.install import install
     from setuptools.command.install_scripts import install_scripts
     from setuptools.command.easy_install import easy_install
@@ -1070,6 +1071,64 @@ do_output = True  # Keep track of whether we used output=True in add_dirs yet.
                   # but we only want to output on the first pass through add_dirs.
                   # (Unless debug = True, then also output in the second pass.)
 
+
+class my_build_py(build_py):
+    """build_py wrapper that ships ``share/`` data on Windows checkouts
+    where the ``galsim/share`` git symlink was materialised as a text
+    file rather than a real link.
+
+    GalSim packages its data tree (Roman SCA, SEDs, filters, sensor
+    files) by relying on ``galsim/share`` being a symlink to the
+    repo-level ``share/`` directory; ``package_data={'galsim':
+    shared_data + headers}`` then resolves to real files via the
+    symlink.  On a Windows checkout with the default
+    ``core.symlinks=false``, git writes the symlink target text into
+    a regular file, so setuptools' package_data scan sees an 8-byte
+    file rather than a directory and the wheel ships no share data.
+
+    After the standard build_py copies whatever package_data it can
+    locate, this subclass detects the stub-file situation and copies
+    the repo-level ``share/`` tree directly into
+    ``<build_lib>/galsim/share/`` so the wheel is complete.  The
+    source tree itself is not touched.  Linux/macOS checkouts have a
+    working symlink, so the stub detection is False and this branch
+    is a no-op.
+    """
+
+    _SHARE_STUB_BODIES = ('../share', '..\\share')
+
+    def run(self):
+        build_py.run(self)
+        repo_share = 'share'
+        pkg_share = os.path.join('galsim', 'share')
+        if not os.path.isdir(repo_share):
+            return
+        # Detect the stub: a regular file whose body is the symlink target.
+        if os.path.isdir(pkg_share):
+            return  # symlink resolved correctly; nothing to do
+        if not os.path.isfile(pkg_share):
+            return
+        try:
+            with open(pkg_share, 'r', encoding='utf-8', errors='replace') as f:
+                body = f.read().strip()
+        except OSError:
+            return
+        if body not in self._SHARE_STUB_BODIES:
+            return
+        dest = os.path.join(self.build_lib, 'galsim', 'share')
+        # Replace any stale stub copy that the standard build_py may
+        # have written into build_lib.
+        if os.path.isdir(dest):
+            shutil.rmtree(dest)
+        elif os.path.isfile(dest):
+            os.remove(dest)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copytree(repo_share, dest)
+        print("galsim: copied %s -> %s "
+              "(Windows symlink-stub fallback for galsim/share)"
+              % (repo_share, dest))
+
+
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_clib(build_clib):
     user_options = build_ext.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
@@ -1516,7 +1575,8 @@ dist = setup(name="GalSim",
     setup_requires=build_dep,
     install_requires=build_dep + run_dep,
     tests_require=test_dep,
-    cmdclass = {'build_ext': my_build_ext,
+    cmdclass = {'build_py': my_build_py,
+                'build_ext': my_build_ext,
                 'build_clib': my_build_clib,
                 'build_shared_clib': my_build_shared_clib,
                 'install': my_install,
