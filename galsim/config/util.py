@@ -249,8 +249,8 @@ def CopyConfig(config):
     return config1
 
 class SafeManager(BaseManager):
-    """There are a few places we need a Manager object.  This one uses the 'fork' context,
-    rather than whatever the default is on your system (which may be fork or may be spawn).
+    """There are a few places we need a Manager object.  This one prefers the 'fork' context,
+    falling back to 'spawn' where 'fork' is unavailable (e.g. Windows); see _get_mp_context.
 
     Starting in python 3.8, the spawn context started becoming more popular.  It's supposed to
     be safer, but it wants to pickle a lot of things that aren't picklable, so it doesn't work.
@@ -259,6 +259,16 @@ class SafeManager(BaseManager):
     """
     def __init__(self):
         super(SafeManager, self).__init__(ctx=_get_mp_context())
+
+
+class _LoggerManager(SafeManager):
+    """Manager subclass used by `GetLoggerProxy` to proxy a logger across processes.
+
+    Defined at module scope (rather than nested inside GetLoggerProxy) so the manager type is
+    picklable under the 'spawn' start method on Windows, where the manager's server process
+    receives the manager type by reference.
+    """
+    pass
 
 
 def GetLoggerProxy(logger):
@@ -272,10 +282,9 @@ def GetLoggerProxy(logger):
         a proxy for the given logger
     """
     if logger:
-        class LoggerManager(SafeManager): pass
         logger_generator = SimpleGenerator(logger)
-        LoggerManager.register('logger', callable = logger_generator)
-        logger_manager = LoggerManager()
+        _LoggerManager.register('logger', callable = logger_generator)
+        logger_manager = _LoggerManager()
         with single_threaded():
             logger_manager.start()
         logger_proxy = logger_manager.logger()
@@ -678,6 +687,63 @@ def UpdateConfig(config, new_params, logger=None):
         SetInConfig(config, key, value, logger)
 
 
+def _mp_worker(task_queue, results_queue, config, logger, initializers, initargs, item, job_func):
+    """Run one worker process for `MultiProcess`.
+
+    Defined at module scope (rather than nested inside MultiProcess) so it is picklable and
+    therefore usable under the 'spawn' start method on Windows, where 'fork' is unavailable.
+    ``item`` and ``job_func``, previously captured from the enclosing scope, are now passed in
+    explicitly.
+    """
+    proc = current_process().name
+
+    for init, args in zip(initializers, initargs):
+        init(*args)
+
+    # The logger object passed in here is a proxy object.  This means that all the arguments
+    # to any logging commands are passed through the pipe to the real Logger object on the
+    # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
+    # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
+    # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
+    # LoggerWrapper that checks whether it is worth sending the arguments back to the original
+    # Logger before calling the functions.
+    logger = LoggerWrapper(logger)
+
+    if 'profile' in config and config['profile']:
+        pr = cProfile.Profile()
+        pr.enable()
+    else:
+        pr = None
+
+    for task in iter(task_queue.get, 'STOP'):
+        try :
+            logger.debug('%s: Received job to do %d %ss, starting with %s',
+                         proc,len(task),item,task[0][1])
+            for kwargs, k in task:
+                t1 = time.time()
+                kwargs['config'] = config
+                kwargs['logger'] = logger
+                result = job_func(**kwargs)
+                t2 = time.time()
+                results_queue.put( (result, k, t2-t1, proc) )
+        except Exception as e:
+            tr = traceback.format_exc()
+            logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
+            results_queue.put( (e, k, tr, proc) )
+    logger.debug('%s: Received STOP', proc)
+    if pr is not None:
+        pr.disable()
+        pr.dump_stats(config.get('root', 'galsim') + '-' + str(proc) + '.pstats')
+        s = StringIO()
+        sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
+                         # alias for this that is backwards compatible to older versions
+                         # of pstats.
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
+        ps.print_stats()
+        logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
+                     proc,s.getvalue(),proc)
+
+
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                  done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
@@ -727,60 +793,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     """
     from .input import worker_init_fns, worker_initargs_fns
 
-    # The worker function will be run once in each process.
-    # It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue
-    # to send them back to the main process.
-    # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
-    # with the kwargs from the list of jobs.
-    # Each job also carries with it its index in the original list of all jobs.
-    def worker(task_queue, results_queue, config, logger, initializers, initargs):
-        proc = current_process().name
-
-        for init, args in zip(initializers, initargs):
-            init(*args)
-
-        # The logger object passed in here is a proxy object.  This means that all the arguments
-        # to any logging commands are passed through the pipe to the real Logger object on the
-        # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
-        # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
-        # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
-        # LoggerWrapper that checks whether it is worth sending the arguments back to the original
-        # Logger before calling the functions.
-        logger = LoggerWrapper(logger)
-
-        if 'profile' in config and config['profile']:
-            pr = cProfile.Profile()
-            pr.enable()
-        else:
-            pr = None
-
-        for task in iter(task_queue.get, 'STOP'):
-            try :
-                logger.debug('%s: Received job to do %d %ss, starting with %s',
-                             proc,len(task),item,task[0][1])
-                for kwargs, k in task:
-                    t1 = time.time()
-                    kwargs['config'] = config
-                    kwargs['logger'] = logger
-                    result = job_func(**kwargs)
-                    t2 = time.time()
-                    results_queue.put( (result, k, t2-t1, proc) )
-            except Exception as e:
-                tr = traceback.format_exc()
-                logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
-                results_queue.put( (e, k, tr, proc) )
-        logger.debug('%s: Received STOP', proc)
-        if pr is not None:
-            pr.disable()
-            pr.dump_stats(config.get('root', 'galsim') + '-' + str(proc) + '.pstats')
-            s = StringIO()
-            sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
-                             # alias for this that is backwards compatible to older versions
-                             # of pstats.
-            ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
-            ps.print_stats()
-            logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
-                         proc,s.getvalue(),proc)
+    # The per-process work is done by the module-level _mp_worker (defined above), which is
+    # picklable and therefore usable under the 'spawn' start method on Windows.
 
     njobs = sum([len(task) for task in tasks])
 
@@ -837,8 +851,9 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 # processes, so for the sake of the logging output, we name the processes explicitly.
                 initializers = worker_init_fns
                 initargs = [initargs_fn() for initargs_fn in worker_initargs_fns]
-                p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy,
-                                                 initializers, initargs),
+                p = Process(target=_mp_worker,
+                            args=(task_queue, results_queue, config, logger_proxy,
+                                  initializers, initargs, item, job_func),
                             name='Process-%d'%(j+1))
                 p.start()
                 p_list.append(p)
