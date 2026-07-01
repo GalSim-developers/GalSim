@@ -32,6 +32,7 @@
  */
 
 #include <sstream>
+#include <cstdint>
 
 #include "Image.h"
 
@@ -91,7 +92,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        explicit BaseDeviate(long lseed);
+        explicit BaseDeviate(int64_t lseed);
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -157,7 +158,7 @@ namespace galsim {
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        virtual void seed(long lseed);
+        virtual void seed(int64_t lseed);
 
         /**
          * @brief Like seed(lseed), but severs the relationship between other Deviates.
@@ -165,7 +166,7 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this
          * Deviate will obtain a fresh RNG seed according to lseed.
          */
-        void reset(long lseed);
+        void reset(int64_t lseed);
 
         /**
          * @brief Make this object share its random number generator with another Deviate.

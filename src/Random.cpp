@@ -87,7 +87,7 @@ namespace galsim {
         _impl(new BaseDeviateImpl())
     {}
 
-    BaseDeviate::BaseDeviate(long lseed) :
+    BaseDeviate::BaseDeviate(int64_t lseed) :
         _impl(new BaseDeviateImpl())
     { seed(lseed); }
 
@@ -175,7 +175,7 @@ namespace galsim {
 #endif
     }
 
-    void BaseDeviate::seed(long lseed)
+    void BaseDeviate::seed(int64_t lseed)
     {
         if (lseed == 0) {
             try {
@@ -211,7 +211,7 @@ namespace galsim {
         clearCache();
     }
 
-    void BaseDeviate::reset(long lseed)
+    void BaseDeviate::reset(int64_t lseed)
     { _impl.reset(new BaseDeviateImpl()); seed(lseed); }
 
     void BaseDeviate::reset(const BaseDeviate& dev)

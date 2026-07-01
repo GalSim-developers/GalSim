@@ -89,11 +89,11 @@ namespace galsim {
     void pyExportRandom(py::module& _galsim)
     {
         py::class_<BaseDeviate> (_galsim, "BaseDeviateImpl")
-            .def(py::init<long>())
+            .def(py::init<int64_t>())
             .def(py::init<const BaseDeviate&>())
             .def(py::init<const char*>())
             .def("duplicate", &BaseDeviate::duplicate)
-            .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed)
+            .def("seed", (void (BaseDeviate::*) (int64_t) )&BaseDeviate::seed)
             .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset)
             .def("clearCache", &BaseDeviate::clearCache)
             .def("serialize", &BaseDeviate::serialize)
