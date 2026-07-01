@@ -37,6 +37,15 @@ max_queue_size = 32767  # This is where multiprocessing.Queue starts to have tro
                         # We make it a settable parameter here really for unit testing.
                         # I don't think there is any reason for end users to want to set this.
 
+def _get_mp_context():
+    """Return the 'fork' multiprocessing context, falling back to 'spawn' on
+    platforms (Windows) where 'fork' is unavailable.
+    """
+    try:
+        return get_context('fork')
+    except ValueError:
+        return get_context('spawn')
+
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or
@@ -249,7 +258,7 @@ class SafeManager(BaseManager):
     only have one place to change this is there is a different strategy that works better.
     """
     def __init__(self):
-        super(SafeManager, self).__init__(ctx=get_context('fork'))
+        super(SafeManager, self).__init__(ctx=_get_mp_context())
 
 
 def GetLoggerProxy(logger):
@@ -778,7 +787,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
     if nproc > 1:
         logger.warning("Using %d processes for %s processing",nproc,item)
 
-        ctx = get_context('fork')
+        ctx = _get_mp_context()
         Process = ctx.Process
         Queue = ctx.Queue
 
