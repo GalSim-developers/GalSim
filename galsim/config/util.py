@@ -842,6 +842,24 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
             # for a new task. If there is one there, it grabs it and does it. If not, it waits
             # until there is one to grab. When it finds a 'STOP', it shuts down.
             results_queue = Queue(ntasks)
+
+            # Under the 'spawn' start method (used where 'fork' is unavailable, e.g. Windows),
+            # the Process args are pickled, but config may hold unpicklable cached values
+            # (e.g. compiled Eval lambdas in '_fn' items or generator functions in '_gen_fn'
+            # items).  So pass the workers a CopyConfig copy, which strips those caches but
+            # keeps the already-built '_input_objs'; the workers rebuild the caches lazily as
+            # needed.  Also drop '_eval_gdict', which holds module objects that can't be
+            # pickled (it too is rebuilt lazily), and 'output_manager', a started BaseManager
+            # instance (holds weakrefs, unpicklable); the workers only need the dict/list
+            # proxies stored in the extra builders, which pickle fine.  Under 'fork', pass
+            # config as is to preserve the usual shared-memory semantics.
+            if ctx.get_start_method() == 'fork':
+                worker_config = config
+            else:
+                worker_config = CopyConfig(config)
+                worker_config.pop('_eval_gdict', None)
+                worker_config.pop('output_manager', None)
+
             p_list = []
             for j in range(nproc):
                 # The process name is actually the default name that Process would generate on its
@@ -852,7 +870,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                 initializers = worker_init_fns
                 initargs = [initargs_fn() for initargs_fn in worker_initargs_fns]
                 p = Process(target=_mp_worker,
-                            args=(task_queue, results_queue, config, logger_proxy,
+                            args=(task_queue, results_queue, worker_config, logger_proxy,
                                   initializers, initargs, item, job_func),
                             name='Process-%d'%(j+1))
                 p.start()

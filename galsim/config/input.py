@@ -59,6 +59,15 @@ worker_initargs_fns = []
 def InputProxy(target):
     """ Create a derived NamespaceProxy class for `target`. """
 
+    # If we already made a proxy type for this target, reuse it.  This also makes the
+    # dynamically generated class picklable by reference (needed for the 'spawn' start
+    # method, e.g. on Windows), since we publish it as a module attribute below.
+    # Note: use globals() rather than getattr to avoid recursing into the module-level
+    # __getattr__ defined below.
+    proxy_name = target.__name__ + "_Proxy"
+    if proxy_name in globals():
+        return globals()[proxy_name]
+
     # This bit follows what multiprocessing.managers.MakeProxy normally does.
     dic = {}
     public_methods = [m for m in dir(target) if m[0] != '_']
@@ -75,7 +84,36 @@ def InputProxy(target):
     # Expose all the public methods and also __getattribute__ and __setattr__.
     ProxyType._exposed_ = tuple(public_methods + ['__getattribute__', '__setattr__'])
 
+    # Publish the class as a module attribute so pickle can find it by reference.
+    ProxyType.__module__ = __name__
+    globals()[proxy_name] = ProxyType
+
     return ProxyType
+
+
+def __getattr__(name):
+    # PEP 562 module-level __getattr__.
+    # When pickle looks up a dynamically generated proxy class by reference (e.g.
+    # galsim.config.input.Catalog_Proxy) in a freshly spawned process, InputProxy has not
+    # been called there yet, so the attribute doesn't exist.  Regenerate it on demand from
+    # the registered input types.
+    if name.endswith('_Proxy'):
+        target_name = name[:-len('_Proxy')]
+        for loader in valid_input_types.values():
+            if loader.init_func.__name__ == target_name:
+                return InputProxy(loader.init_func)
+    raise AttributeError("module %r has no attribute %r" % (__name__, name))
+
+
+class _InputManager(SafeManager):
+    """Manager subclass used by `ProcessInput` to proxy input objects across processes.
+
+    Defined at module scope (rather than nested inside ProcessInput) so the manager type is
+    picklable under the 'spawn' start method on Windows, where the manager's server process
+    receives the manager type by reference.
+    """
+    pass
+
 
 def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     """
@@ -136,9 +174,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                    ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
 
         if use_manager and '_input_manager' not in config:
-            class InputManager(SafeManager): pass
-
-            # Register each input field with the InputManager class
+            # Register each input field with the _InputManager class
             for key in all_keys:
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
@@ -146,9 +182,9 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     tag = key + str(num)
                     init_func = valid_input_types[key].init_func
                     proxy = InputProxy(init_func)
-                    InputManager.register(tag, init_func, proxy)
+                    _InputManager.register(tag, init_func, proxy)
             # Start up the input_manager
-            config['_input_manager'] = InputManager()
+            config['_input_manager'] = _InputManager()
             with single_threaded():
                 # Starting in python 3.12, there is a deprecation warning about using fork when
                 # a process is multithreaded. This can get triggered here by the start()

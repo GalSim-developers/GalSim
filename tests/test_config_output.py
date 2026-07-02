@@ -1695,7 +1695,12 @@ def test_timeout():
         im1 = galsim.fits.read('output/test_timeout_%d.fits'%n)
         assert im1 == im
 
-    if platform.python_implementation() != 'PyPy':
+    # Under the 'spawn' start method (e.g. on Windows), Process.start() blocks while each
+    # worker boots and reads its (pickled) args, so these fast stamp jobs all finish before
+    # the main process starts waiting on the results queue, and the tiny timeout below never
+    # triggers.  So only check this where 'fork' is available.
+    from multiprocessing import get_all_start_methods
+    if platform.python_implementation() != 'PyPy' and 'fork' in get_all_start_methods():
         # Check that it behaves sensibly if it hits timeout limit.
         # This time, it will continue on after each error, but report the error in the log.
         config2 = galsim.config.CleanConfig(config2)
