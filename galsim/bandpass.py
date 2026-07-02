@@ -22,7 +22,7 @@ import numpy as np
 import os
 from astropy import units
 from numbers import Real
-from pathlib import PosixPath
+from pathlib import PurePath
 
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .table import LookupTable, _LookupTable
@@ -228,7 +228,7 @@ class Bandpass:
 
         if self._tp is not None:
             pass
-        elif isinstance(self._orig_tp, (basestring, PosixPath)):
+        elif isinstance(self._orig_tp, (basestring, PurePath)):
             isfile, filename = utilities.check_share_file(self._orig_tp, 'bandpasses')
             if isfile:
                 self._tp = LookupTable.from_file(filename, interpolant=self.interpolant)
