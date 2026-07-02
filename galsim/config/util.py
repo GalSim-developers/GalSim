@@ -697,6 +697,13 @@ def _mp_worker(task_queue, results_queue, config, logger, initializers, initargs
     """
     proc = current_process().name
 
+    # Custom modules listed in config['modules'] register their types via import side effects.
+    # Under the 'spawn' start method (e.g. on Windows), this fresh process hasn't imported them,
+    # so re-import them here to rebuild the registries.  Under 'fork' they are already in
+    # sys.modules, so this is essentially free.
+    from .process import ImportModules  # Local import; module-level would be circular.
+    ImportModules(config)
+
     for init, args in zip(initializers, initargs):
         init(*args)
 

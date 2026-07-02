@@ -1192,25 +1192,32 @@ def test_retry_io():
     assert "File 5 = output/test_flaky_fits_5.fits" in cl.output
 
     # Also works in nproc > 1 mode
-    config['output']['nproc'] = 2
-    galsim.config.RemoveCurrent(config)
-    with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
-    if galsim.config.UpdateNProc(2, nfiles, config) > 1:
-        assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
-                         cl.output)
-        assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-        assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
-        assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
-        assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
-        assert re.search("Process-.: Exception caught for file 4 = output/test_flaky_fits_4.fits",
-                         cl.output)
-        assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
-        assert re.search("Process-.: File 5 = output/test_flaky_fits_5.fits", cl.output)
+    # Under the 'spawn' start method (e.g. on Windows), the FlakyFits and flaky_weight types
+    # registered above are defined inside this test function, so they cannot be pickled to the
+    # spawned worker processes.  So only check this where 'fork' is available.
+    from multiprocessing import get_all_start_methods
+    if 'fork' in get_all_start_methods():
+        config['output']['nproc'] = 2
+        galsim.config.RemoveCurrent(config)
+        with CaptureLog() as cl:
+            galsim.config.Process(config, logger=cl.logger)
+        #print(cl.output)
+        if galsim.config.UpdateNProc(2, nfiles, config) > 1:
+            assert re.search(
+                "Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
+                cl.output)
+            assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
+            assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
+            assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
+            assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
+            assert re.search(
+                "Process-.: Exception caught for file 4 = output/test_flaky_fits_4.fits",
+                cl.output)
+            assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
+            assert re.search("Process-.: File 5 = output/test_flaky_fits_5.fits", cl.output)
+        del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
 
     # But with except_abort = True, it will stop after the first failure
-    del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
     with CaptureLog() as cl:
         try:
             galsim.config.Process(config, logger=cl.logger, except_abort=True)
