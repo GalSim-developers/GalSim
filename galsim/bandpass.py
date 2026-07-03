@@ -20,7 +20,7 @@ __all__ = [ 'Bandpass' ]
 
 import numpy as np
 import os
-from astropy import units
+from ._astropy_shim import units
 from numbers import Real
 from pathlib import PurePath
 

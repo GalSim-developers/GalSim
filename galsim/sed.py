@@ -19,8 +19,8 @@
 __all__ = [ 'SED', 'EmissionLine' ]
 
 import numpy as np
-from astropy import units
-from astropy import constants
+from ._astropy_shim import units
+from ._astropy_shim import constants
 from numbers import Real
 from pathlib import PurePath
 

@@ -19,7 +19,7 @@
 __all__ = [ 'Airy' ]
 
 import math
-import astropy.units as u
+from ._astropy_shim import units as u
 
 from . import _galsim
 from .gsobject import GSObject
