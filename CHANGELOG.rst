@@ -53,3 +53,8 @@ Changes from v2.8.3 to v2.8.4
   WCS involves a reflection.  (#1346, #1349)
 - Fixed the Roman bandpass functions using config interface to allow non-imaging bands.
   (#1347)
+
+Changes from v2.8.4 to v2.8.5
+-----------------------------
+
+- Fixed a bug in the handling of the Roman telescope pupil plane images. (#1363)
