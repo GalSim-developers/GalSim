@@ -290,6 +290,12 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
 
+    #The project provides pupils in the exit frame orientation. To switch to WFI coords, we need to flip following:
+    #https://github.com/Roman-HLIS-Cosmology-PIT/PSFSim/blob/main/docs/coordinates.rst, which has the chirality
+    #looking in the telescope. Can be accomplished by flipping the vertical axis.  
+           
+    pupil_plane_im = pupil_plane_im[::-1, :]
+
     aper = Aperture(lam=wave, diam=diameter,
                     obscuration=obscuration,
                     pupil_plane_im=pupil_plane_im,
