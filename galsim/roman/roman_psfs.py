@@ -294,7 +294,7 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
     #https://github.com/Roman-HLIS-Cosmology-PIT/PSFSim/blob/main/docs/coordinates.rst, which has the chirality
     #looking in the telescope. Can be accomplished by flipping the vertical axis.  
            
-    pupil_plane_im = pupil_plane_im[::-1, :]
+    pupil_plane_im = pupil_plane_im.flip_ud()
 
     aper = Aperture(lam=wave, diam=diameter,
                     obscuration=obscuration,
