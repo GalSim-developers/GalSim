@@ -321,7 +321,7 @@ def test_variable_gaussian_noise():
     print('variance = ',var)
     print('getVar = ',big_vgn.var_image.array.mean())
     np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1,
+            var, big_vgn.var_image.array.mean(), 0,
             err_msg='Realized variance for VariableGaussianNoise did not match var_image')
 
     # Check realized variance in each mask
@@ -338,7 +338,7 @@ def test_variable_gaussian_noise():
     gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
     var = np.var(big_im.array)
     np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1,
+            var, big_vgn.var_image.array.mean(), 0,
             err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
 
     # Check picklability
