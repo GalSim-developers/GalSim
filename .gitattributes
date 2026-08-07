@@ -1,2 +1,5 @@
 *.eps binary
 *.fits binary
+# Pickle files are binary (protocol-0 pickles are corrupted by CRLF conversion)
+*.p binary
+*.pkl binary

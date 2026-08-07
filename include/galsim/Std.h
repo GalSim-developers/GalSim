@@ -47,6 +47,12 @@
 #include <map>
 
 #ifdef _WIN32
+// Suppress Windows.h's ``min``/``max`` macros which clash with std::min/std::max
+// (and Eigen's templated members).  Set this before the include even though the
+// MSVC build also passes ``/DNOMINMAX`` -- belt and suspenders for direct includes.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>
 #else
 #include <sys/time.h>

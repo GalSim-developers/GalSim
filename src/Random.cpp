@@ -17,12 +17,17 @@
  *    and/or other materials provided with the distribution.
  */
 
+#ifndef _WIN32
 #include <sys/time.h>
 #include <fcntl.h>
+#include <unistd.h>
+#else
+#include <chrono>
+#include <random>
+#endif
 #include <string>
 #include <vector>
 #include <sstream>
-#include <unistd.h>
 #include <cstring>  // For memcpy
 
 #ifdef _OPENMP
@@ -82,7 +87,7 @@ namespace galsim {
         _impl(new BaseDeviateImpl())
     {}
 
-    BaseDeviate::BaseDeviate(long lseed) :
+    BaseDeviate::BaseDeviate(int64_t lseed) :
         _impl(new BaseDeviateImpl())
     { seed(lseed); }
 
@@ -129,6 +134,14 @@ namespace galsim {
 
     void BaseDeviate::seedurandom()
     {
+#ifdef _WIN32
+        // Windows has no /dev/urandom; use std::random_device which delegates
+        // to the platform CSPRNG (CryptGenRandom / BCryptGenRandom on Windows
+        // CRTs).  Same observable contract as the POSIX path: produce a
+        // single int worth of entropy and feed the Mersenne twister.
+        std::random_device rd;
+        _impl->_rng->seed(rd());
+#else
         // This implementation shamelessly taken from:
         // http://stackoverflow.com/questions/2572366/how-to-use-dev-random-or-urandom-in-c
         int randomData = open("/dev/urandom", O_RDONLY);
@@ -144,16 +157,25 @@ namespace galsim {
         }
         close(randomData);
         _impl->_rng->seed(myRandomInteger);
+#endif
     }
 
     void BaseDeviate::seedtime()
     {
+#ifdef _WIN32
+        // Match the POSIX path's observable behaviour: seed with the
+        // microsecond portion of the wall clock.
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
+        _impl->_rng->seed(static_cast<unsigned int>(us % 1000000));
+#else
         struct timeval tp;
         gettimeofday(&tp,NULL);
         _impl->_rng->seed(tp.tv_usec);
+#endif
     }
 
-    void BaseDeviate::seed(long lseed)
+    void BaseDeviate::seed(int64_t lseed)
     {
         if (lseed == 0) {
             try {
@@ -189,7 +211,7 @@ namespace galsim {
         clearCache();
     }
 
-    void BaseDeviate::reset(long lseed)
+    void BaseDeviate::reset(int64_t lseed)
     { _impl.reset(new BaseDeviateImpl()); seed(lseed); }
 
     void BaseDeviate::reset(const BaseDeviate& dev)
@@ -198,7 +220,7 @@ namespace galsim {
     void BaseDeviate::discard(int n)
     { _impl->_rng->discard(n); }
 
-    long BaseDeviate::raw()
+    int64_t BaseDeviate::raw()
     { return (*_impl->_rng)(); }
 
     void BaseDeviate::generate(long long N, double* data)
@@ -324,7 +346,7 @@ namespace galsim {
         boost::random::uniform_real_distribution<> _urd;
     };
 
-    UniformDeviate::UniformDeviate(long lseed) :
+    UniformDeviate::UniformDeviate(int64_t lseed) :
         BaseDeviate(lseed), _devimpl(new UniformDeviateImpl()) {}
 
     UniformDeviate::UniformDeviate(const BaseDeviate& rhs) :
@@ -356,7 +378,7 @@ namespace galsim {
         boost::random::normal_distribution<> _normal;
     };
 
-    GaussianDeviate::GaussianDeviate(long lseed, double mean, double sigma) :
+    GaussianDeviate::GaussianDeviate(int64_t lseed, double mean, double sigma) :
         BaseDeviate(lseed), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
 
     GaussianDeviate::GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma) :
@@ -455,7 +477,7 @@ namespace galsim {
         boost::random::binomial_distribution<> _bd;
     };
 
-    BinomialDeviate::BinomialDeviate(long lseed, int N, double p) :
+    BinomialDeviate::BinomialDeviate(int64_t lseed, int N, double p) :
         BaseDeviate(lseed), _devimpl(new BinomialDeviateImpl(N,p)) {}
 
     BinomialDeviate::BinomialDeviate(const BaseDeviate& rhs, int N, double p) :
@@ -562,7 +584,7 @@ namespace galsim {
         shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
-    PoissonDeviate::PoissonDeviate(long lseed, double mean) :
+    PoissonDeviate::PoissonDeviate(int64_t lseed, double mean) :
         BaseDeviate(lseed), _devimpl(new PoissonDeviateImpl(mean)) {}
 
     PoissonDeviate::PoissonDeviate(const BaseDeviate& rhs, double mean) :
@@ -611,7 +633,7 @@ namespace galsim {
         boost::random::weibull_distribution<> _weibull;
     };
 
-    WeibullDeviate::WeibullDeviate(long lseed, double a, double b) :
+    WeibullDeviate::WeibullDeviate(int64_t lseed, double a, double b) :
         BaseDeviate(lseed), _devimpl(new WeibullDeviateImpl(a,b)) {}
 
     WeibullDeviate::WeibullDeviate(const BaseDeviate& rhs, double a, double b) :
@@ -658,7 +680,7 @@ namespace galsim {
         boost::random::gamma_distribution<> _gamma;
     };
 
-    GammaDeviate::GammaDeviate(long lseed, double k, double theta) :
+    GammaDeviate::GammaDeviate(int64_t lseed, double k, double theta) :
         BaseDeviate(lseed), _devimpl(new GammaDeviateImpl(k,theta)) {}
 
     GammaDeviate::GammaDeviate(const BaseDeviate& rhs, double k, double theta) :
@@ -705,7 +727,7 @@ namespace galsim {
         boost::random::chi_squared_distribution<> _chi_squared;
     };
 
-    Chi2Deviate::Chi2Deviate(long lseed, double n) :
+    Chi2Deviate::Chi2Deviate(int64_t lseed, double n) :
         BaseDeviate(lseed), _devimpl(new Chi2DeviateImpl(n)) {}
 
     Chi2Deviate::Chi2Deviate(const BaseDeviate& rhs, double n) :

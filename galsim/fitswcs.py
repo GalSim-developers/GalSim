@@ -22,7 +22,7 @@ __all__ = [ 'AstropyWCS', 'PyAstWCS', 'WcsToolsWCS', 'GSFitsWCS',
 import warnings
 import os
 import numpy as np
-import astropy.wcs
+from ._astropy_shim import wcs as _astropy_wcs
 import subprocess
 import copy
 
@@ -199,7 +199,7 @@ class AstropyWCS(CelestialWCS):
             # warnings, since we don't much care if the input file is non-standard
             # so long as we can make it work.
             warnings.simplefilter("ignore")
-            wcs = astropy.wcs.WCS(header.header)
+            wcs = _astropy_wcs.WCS(header.header)
         return wcs
 
     @property

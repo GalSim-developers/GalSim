@@ -19,10 +19,10 @@
 __all__ = [ 'SED', 'EmissionLine' ]
 
 import numpy as np
-from astropy import units
-from astropy import constants
+from ._astropy_shim import units
+from ._astropy_shim import constants
 from numbers import Real
-from pathlib import PosixPath
+from pathlib import PurePath
 
 from .table import LookupTable, _LookupTable
 from ._utilities import WeakMethod, lazy_property, basestring
@@ -322,7 +322,7 @@ class SED:
                 raise GalSimSEDError("Attempt to set spectral SED using float or integer.", self)
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
-        elif isinstance(self._orig_spec, (basestring, PosixPath)):
+        elif isinstance(self._orig_spec, (basestring, PurePath)):
             isfile, filename = utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
                 self._spec = LookupTable.from_file(filename, interpolant=self.interpolant)
