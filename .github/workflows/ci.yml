@@ -139,7 +139,7 @@ jobs:
               run: |
                 ls -l $HOME
                 if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
-                if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget --no-check-certificate http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME; fi
+                if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget "https://drive.usercontent.google.com/download?id=11-dRyJaH7RRrbk_vE53fZfT9WZGXkVa4&export=download&authuser=0&confirm=t&uuid=249c6a44-764d-4545-a5d5-48c181af9f5a&at=AMrWOn3ZoUdCALulXb1xzzAsvkBU%3A1789453625694" -O des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME; fi
                 ln -s $HOME/des_data examples/des/
 
             - name: Install basic dependencies
