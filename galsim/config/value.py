@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-from astropy.units import Quantity, Unit
+from .._astropy_shim import Quantity, Unit
 from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError

@@ -779,12 +779,12 @@ namespace galsim {
         ky0 *= ceny;
         dky *= ceny;
 
-        // Use the stack rather than the heap for these, since a bit faster and small
-        // enough that they should fit without any problem.
-        T xphase_kx[2*m];
-        T xphase_ky[2*n];
-        std::complex<T>* phase_kx = reinterpret_cast<std::complex<T>*>(xphase_kx);
-        std::complex<T>* phase_ky = reinterpret_cast<std::complex<T>*>(xphase_ky);
+        // VLAs are not portable (MSVC rejects them); use std::vector and
+        // .data() for the reinterpret view onto std::complex<T>.
+        std::vector<T> xphase_kx(2*m);
+        std::vector<T> xphase_ky(2*n);
+        std::complex<T>* phase_kx = reinterpret_cast<std::complex<T>*>(xphase_kx.data());
+        std::complex<T>* phase_ky = reinterpret_cast<std::complex<T>*>(xphase_ky.data());
 
         fillphase_1d<T>(phase_kx, m, kx0, dkx);
         fillphase_1d<T>(phase_ky, n, ky0, dky);

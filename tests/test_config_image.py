@@ -582,24 +582,29 @@ def test_reject():
     assert "Exception caught when building image" in cl.output
 
     # When in nproc > 1 mode, the error message is slightly different.
-    config['image']['nproc'] = 2
-    try:
-        with CaptureLog() as cl:
-            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
-    except (ValueError,IndexError,galsim.GalSimError):
-        pass
-    #print(cl.output)
-    if galsim.config.UpdateNProc(2, nimages, config) > 1:
-        assert re.search("Process-.: Exception caught when building stamp",cl.output)
+    # Under the 'spawn' start method (e.g. on Windows), the HighN type registered above is
+    # defined inside this test function, so it cannot be pickled to the spawned worker
+    # processes.  So only check this where 'fork' is available.
+    from multiprocessing import get_all_start_methods
+    if 'fork' in get_all_start_methods():
+        config['image']['nproc'] = 2
+        try:
+            with CaptureLog() as cl:
+                galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+        except (ValueError,IndexError,galsim.GalSimError):
+            pass
+        #print(cl.output)
+        if galsim.config.UpdateNProc(2, nimages, config) > 1:
+            assert re.search("Process-.: Exception caught when building stamp",cl.output)
 
-    try:
-        with CaptureLog() as cl:
-            galsim.config.BuildImages(nimages, config, logger=cl.logger)
-    except (ValueError,IndexError,galsim.GalSimError):
-        pass
-    #print(cl.output)
-    if galsim.config.UpdateNProc(2, nimages, config) > 1:
-        assert re.search("Process-.: Exception caught when building image",cl.output)
+        try:
+            with CaptureLog() as cl:
+                galsim.config.BuildImages(nimages, config, logger=cl.logger)
+        except (ValueError,IndexError,galsim.GalSimError):
+            pass
+        #print(cl.output)
+        if galsim.config.UpdateNProc(2, nimages, config) > 1:
+            assert re.search("Process-.: Exception caught when building image",cl.output)
 
     # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
     # report that no files were written.

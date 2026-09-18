@@ -20,7 +20,7 @@ __all__ = [ 'Aperture', 'PhaseScreenList', 'PhaseScreenPSF', 'OpticalPSF' ]
 
 from heapq import heappush, heappop
 import numpy as np
-import astropy.units as u
+from ._astropy_shim import units as u
 import copy
 
 from . import fits

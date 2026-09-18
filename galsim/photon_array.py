@@ -22,7 +22,7 @@ __all__ = [ 'PhotonArray', 'PhotonOp', 'WavelengthSampler', 'FRatioAngles',
             'ScaleFlux', 'ScaleWavelength' ]
 
 import numpy as np
-import astropy.units as u
+from ._astropy_shim import units as u
 
 from . import _galsim
 from .random import BaseDeviate

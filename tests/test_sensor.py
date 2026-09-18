@@ -447,7 +447,7 @@ def test_silicon_area():
     silicon = galsim.SiliconSensor(name='lsst_itl_8', rng=rng)
     area_image = silicon.calculate_pixel_areas(im)
     # Get the area data from the Poisson simulation
-    area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
+    area_filename = os.path.basename(silicon.vertex_file).strip('.dat')+'_areas.dat'
     area_dir = os.path.join(os.getcwd(),'sensor_validation/')
     area_data = np.loadtxt(area_dir+area_filename, skiprows = 1)
     # Now test that they are almost equal

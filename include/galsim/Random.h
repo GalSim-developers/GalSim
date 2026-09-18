@@ -32,6 +32,7 @@
  */
 
 #include <sstream>
+#include <cstdint>
 
 #include "Image.h"
 
@@ -91,7 +92,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        explicit BaseDeviate(long lseed);
+        explicit BaseDeviate(int64_t lseed);
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -157,7 +158,7 @@ namespace galsim {
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        virtual void seed(long lseed);
+        virtual void seed(int64_t lseed);
 
         /**
          * @brief Like seed(lseed), but severs the relationship between other Deviates.
@@ -165,7 +166,7 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this
          * Deviate will obtain a fresh RNG seed according to lseed.
          */
-        void reset(long lseed);
+        void reset(int64_t lseed);
 
         /**
          * @brief Make this object share its random number generator with another Deviate.
@@ -196,7 +197,7 @@ namespace galsim {
         /**
          * @brief Get a random value in its raw form as a long integer.
          */
-        long raw();
+        int64_t raw();
 
         /**
          * @brief Draw a new random number from the distribution
@@ -281,7 +282,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        UniformDeviate(long lseed);
+        UniformDeviate(int64_t lseed);
 
         /// @brief Construct a new UniformDeviate, sharing the random number generator with rhs.
         UniformDeviate(const BaseDeviate& rhs);
@@ -345,7 +346,7 @@ namespace galsim {
          * @param[in] mean  Mean of the output distribution
          * @param[in] sigma Standard deviation of the distribution
          */
-        GaussianDeviate(long lseed, double mean, double sigma);
+        GaussianDeviate(int64_t lseed, double mean, double sigma);
 
         /**
          * @brief Construct a new Gaussian-distributed RNG, sharing the random number
@@ -463,7 +464,7 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(long lseed, int N, double p);
+        BinomialDeviate(int64_t lseed, int N, double p);
 
         /**
          * @brief Construct a new binomial-distributed RNG, sharing the random number
@@ -565,7 +566,7 @@ namespace galsim {
          * @param[in] lseed Seed to use
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(long lseed, double mean);
+        PoissonDeviate(int64_t lseed, double mean);
 
         /**
          * @brief Construct a new Poisson-distributed RNG, sharing the random number
@@ -671,7 +672,7 @@ namespace galsim {
          * @param[in] a    Shape parameter of the output distribution, must be > 0.
          * @param[in] b    Scale parameter of the distribution, must be > 0.
          */
-        WeibullDeviate(long lseed, double a, double b);
+        WeibullDeviate(int64_t lseed, double a, double b);
 
         /**
          * @brief Construct a new Weibull-distributed RNG, sharing the random number
@@ -780,7 +781,7 @@ namespace galsim {
          * @param[in] k      Shape parameter of the output distribution, must be > 0.
          * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(long lseed, double k, double theta);
+        GammaDeviate(int64_t lseed, double k, double theta);
 
         /**
          * @brief Construct a new Gamma-distributed RNG, sharing the random number
@@ -892,7 +893,7 @@ namespace galsim {
          * @param[in] lseed Seed to use
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
          */
-        Chi2Deviate(long lseed, double n);
+        Chi2Deviate(int64_t lseed, double n);
 
         /**
          * @brief Construct a new Chi^2-distributed RNG, sharing the random number

@@ -36,6 +36,18 @@ from ..fits import writeMulti
 # builder classes that will perform the different processing functions.
 valid_extra_outputs = {}
 
+
+class _OutputManager(SafeManager):
+    """Manager subclass used by `SetupExtraOutput` to proxy work-space containers across
+    processes.
+
+    Defined at module scope (rather than nested inside SetupExtraOutput) so the manager type is
+    picklable under the 'spawn' start method on Windows, where the manager's server process
+    receives the manager type by reference.
+    """
+    pass
+
+
 def SetupExtraOutput(config, logger=None):
     """
     Set up the extra output items as necessary, including building Managers for the work
@@ -61,13 +73,11 @@ def SetupExtraOutput(config, logger=None):
             ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
 
     if use_manager and 'output_manager' not in config:
-        class OutputManager(SafeManager): pass
-
         # We'll use a list and a dict as work space to do the extra output processing.
-        OutputManager.register('dict', dict, DictProxy)
-        OutputManager.register('list', list, ListProxy)
+        _OutputManager.register('dict', dict, DictProxy)
+        _OutputManager.register('list', list, ListProxy)
         # Start up the output_manager
-        config['output_manager'] = OutputManager()
+        config['output_manager'] = _OutputManager()
         with single_threaded():
             config['output_manager'].start()
 

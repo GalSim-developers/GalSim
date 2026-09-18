@@ -763,7 +763,9 @@ def test_Image_MultiFITS_IO(run_slow):
         galsim.fits.writeMulti(image_list,test_multi_file)
 
         # Check pyfits read for sanity
-        with pyfits.open(test_multi_file) as fits:
+        # memmap=False so the lazily-loaded data doesn't keep the file handle open,
+        # which would break the later writeFile (clobber) on Windows.
+        with pyfits.open(test_multi_file, memmap=False) as fits:
             test_array = fits[0].data
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
                 err_msg="PyFITS failing to read multi file.")
@@ -1097,7 +1099,9 @@ def test_Image_CubeFITS_IO(run_slow):
         galsim.fits.writeCube(image_list,test_cube_file)
 
         # Check pyfits read for sanity
-        with pyfits.open(test_cube_file) as fits:
+        # memmap=False so the lazily-loaded data doesn't keep the file handle open,
+        # which would break the later writeCube (clobber) on Windows.
+        with pyfits.open(test_cube_file, memmap=False) as fits:
             test_array = fits[0].data
 
         wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
