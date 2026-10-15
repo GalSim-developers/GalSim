@@ -321,6 +321,29 @@ def test_SED_mul():
     np.testing.assert_almost_equal((sed3*sed4)(30), 12.0, 10, "Found wrong value in SED.__mul__")
 
 @timer
+def test_SED_mul_bandpass():
+    """Check wavelength units when filtering an SED. (Issue #1365.)
+    """
+    waves = np.array([400., 500., 600.])
+    spec_waves = np.arange(100., 1001., 50.)
+    for fast in [True, False]:
+        for spec in [lambda w: w / 500.,
+                     galsim.LookupTable(spec_waves, spec_waves / 500., interpolant='linear')]:
+            for z in [0., 1.]:
+                sed = galsim.SED(spec, 'nm', 'fphotons', fast=fast).atRedshift(z)
+                for wave_type, factor in [('nm', 1.), ('Angstrom', 10.), (units.um, 0.001)]:
+                    for throughput in [
+                        lambda w: w / (1000. * factor),
+                        galsim.LookupTable(waves * factor, waves / 1000., interpolant='linear')
+                    ]:
+                        bp = galsim.Bandpass(throughput, wave_type,
+                                            blue_limit=400. * factor, red_limit=600. * factor)
+                        for filtered in [sed * bp, bp * sed]:
+                            np.testing.assert_allclose(filtered(500.), sed(500.) * bp(500.))
+                            np.testing.assert_allclose(filtered(waves), sed(waves) * bp(waves))
+
+
+@timer
 def test_SED_div():
     """Check that SEDs divide like I think they should...
     """
