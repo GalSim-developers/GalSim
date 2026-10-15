@@ -533,7 +533,7 @@ class SED:
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
         wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
-        zfactor = (1.0+self.redshift) / other.wave_factor
+        zfactor = (1.0+self.redshift) * other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, LookupTable)
                     and not self._fast_spec.x_log
