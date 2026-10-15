@@ -517,9 +517,23 @@ def test_SED_withFlux():
     """ Check that setting the flux works.
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
+
+    # Make some equivalent bandpasses made in different ways.
+    # This one checks giving the file name using Path. Should be exactly equivalent.
     rband2 = galsim.Bandpass(Path(rband._orig_tp), 'nm')
     np.testing.assert_array_equal(rband.wave_list, rband2.wave_list)
     np.testing.assert_array_equal(rband(rband.wave_list), rband2(rband2.wave_list))
+
+    # These two are functionally the same, but uses Angstrom and meter for their wavelengths.
+    rband_A = galsim.Bandpass(
+        galsim.LookupTable(rband.wave_list * 10, rband(rband.wave_list), 'linear'), 'Angstrom')
+    rband_m = galsim.Bandpass(
+        galsim.LookupTable(rband.wave_list * 1.e-9, rband(rband.wave_list), 'linear'), units.m)
+
+    # This one has a finer binning for the wavelengths, but follows the same shape.
+    fine_wave = np.linspace(rband.blue_limit, rband.red_limit, 169101)
+    rband_fine = galsim.Bandpass(
+        galsim.LookupTable(fine_wave, rband(fine_wave), 'linear'), 'nm')
 
     for z in [0, 0.2, 0.4]:
         for fast in [True, False]:
@@ -551,16 +565,15 @@ def test_SED_withFlux():
                     ab.calculateFlux(bolo_bp), 1.0, 3,
                     "Calculating SED flux from sed * bp failed."
                 )
+                for bp in [rband2, rband_A, rband_m]:
+                    filtered = sed * bp
+                    np.testing.assert_allclose(filtered([600., 650.]), ab([600., 650.]))
+                    np.testing.assert_allclose(filtered.calculateFlux(bolo_bp),
+                                               ab.calculateFlux(bolo_bp))
 
                 # If one or the other table has finer wavelength gridding, then the agreement
                 # will be better.  Check with finer gridding for rband.
-                fine_wave = np.linspace(ab.blue_limit, ab.red_limit, 169101)
-                rband_fine = galsim.Bandpass(
-                    galsim.LookupTable(fine_wave, rband(fine_wave), 'linear'),
-                    'nm'
-                )
                 ab = sed * rband_fine
-
                 np.testing.assert_array_almost_equal(
                     ab.calculateFlux(bolo_bp), 1.0, 5,
                     "Calculating SED flux from sed * bp failed."
@@ -570,7 +583,7 @@ def test_SED_withFlux():
                 ba = rband_fine * sed
                 np.testing.assert_array_almost_equal(
                     ba.calculateFlux(bolo_bp), 1.0, 5,
-                    "Calculating SED flux from sed * bp failed."
+                    "Calculating SED flux from bp * sed failed."
                 )
 
     # Invalid for dimensionless SED
