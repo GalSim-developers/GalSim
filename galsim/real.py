@@ -1265,7 +1265,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Note: put NSED axis last, since significantly faster to compute them this way,
         # even though we eventually convert to images which are strided in this format.
         coef = np.zeros((nk, nk, NSED), dtype=np.complex128)
-        Sigma = np.empty((nk, nk, NSED, NSED), dtype=np.complex128)
+        Sigma = np.zeros((nk, nk, NSED, NSED), dtype=np.complex128)
 
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
