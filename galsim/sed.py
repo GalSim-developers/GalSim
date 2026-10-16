@@ -641,12 +641,16 @@ class SED:
         # Enable division by scalars or dimensionless callables (including dimensionless SEDs.)
         if isinstance(other, SED) and other.spectral:
             raise GalSimSEDError("Cannot divide by spectral SED.", other)
+        wave_type = 'nm'
+        flux_type = 'fphotons' if self.spectral else '1'
         if hasattr(other, '__call__'):
             spec = lambda w: self(w * (1.0 + self.redshift)) / other(w * (1.0 + self.redshift))
         elif isinstance(self._spec, LookupTable):
             # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
+            wave_type = self.wave_type
+            flux_type = self.flux_type
             x = self._spec.getArgs()
             f = [ val / other for val in self._spec.getVals() ]
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
@@ -654,7 +658,7 @@ class SED:
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
-        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type,
+        return SED(spec, flux_type=flux_type, wave_type=wave_type,
                    redshift=self.redshift, fast=self.fast,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
