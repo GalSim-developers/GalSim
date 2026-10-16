@@ -43,7 +43,7 @@ class Moffat(GSObject):
 
     For more information, refer to
 
-        http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html
+        https://ui.adsabs.harvard.edu/abs/1969A%26A.....3..455M/abstract
 
     A Moffat can be initialized using one (and only one) of three possible size parameters:
     ``scale_radius``, ``fwhm``, or ``half_light_radius``.  Exactly one of these three is required.
