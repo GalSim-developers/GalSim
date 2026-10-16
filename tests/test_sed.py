@@ -320,6 +320,24 @@ def test_SED_mul():
     np.testing.assert_almost_equal((sed2*sed4)(10), 8.0, 10, "Found wrong value in SED.__mul__")
     np.testing.assert_almost_equal((sed3*sed4)(30), 12.0, 10, "Found wrong value in SED.__mul__")
 
+    # Mix callable and tabulated SEDs, with the spectral SED carrying the redshift.
+    # Both multiplication orders must evaluate each operand at the observed wavelength.
+    wave = np.array([1., 2., 3., 4., 5.])
+    x = np.array([2.5, 3.5])
+    for wave_type, factor in [('nm', 1.), ('Angstrom', 10.), (units.m, 1.e-9)]:
+        specs = [lambda w: w / factor,
+                 galsim.LookupTable(wave * factor, wave, 'linear')]
+        for fast in [True, False]:
+            for z in [0, 0.2, 0.4]:
+                for spectral_spec in specs:
+                    a = galsim.SED(spectral_spec, wave_type, 'fphotons', fast=fast).atRedshift(z)
+                    for dimensionless_spec in specs:
+                        b = galsim.SED(dimensionless_spec, wave_type, '1', fast=fast)
+                        expected = a(x) * b(x)
+                        # A tabulated product approximates the quadratic between sample points.
+                        np.testing.assert_allclose((a*b)(x), expected, rtol=1.e-5)
+                        np.testing.assert_allclose((b*a)(x), expected, rtol=1.e-5)
+
 @timer
 def test_SED_div():
     """Check that SEDs divide like I think they should...
