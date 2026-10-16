@@ -374,6 +374,24 @@ def test_SED_div():
             np.testing.assert_almost_equal(d(x), a(x)/4.2/2/e(x), 10,
                                            err_msg="Found wrong value in SED.__div__")
 
+    # Division must preserve the evaluated photon density regardless of the input units.
+    wave = np.array([1., 2., 3., 4., 5.])
+    for wave_type, factor in [('nm', 1.), ('Angstrom', 10.), (units.m, 1.e-9)]:
+        specs = [lambda w: w / factor,
+                 galsim.LookupTable(wave * factor, wave, 'linear')]
+        for flux_type in ['fphotons', 'flambda', 'fnu', '1']:
+            for fast in [True, False]:
+                for z in [0, 0.2, 0.4]:
+                    # Use table nodes to avoid interpolation error in the quotient.
+                    x = np.array([2., 3.]) * (1.+z)
+                    for spec in specs:
+                        a = galsim.SED(spec, wave_type, flux_type, fast=fast).atRedshift(z)
+                        np.testing.assert_allclose((a/4.2)(x), a(x)/4.2, rtol=1.e-12)
+                        b = lambda w: w**2
+                        np.testing.assert_allclose((a/b)(x), a(x)/b(x), rtol=1.e-12)
+                        e = galsim.SED('wave', 'nm', '1', fast=fast)
+                        np.testing.assert_allclose((a/e)(x), a(x)/e(x), rtol=1.e-12)
+
     # Can't divide by spectral SED
     with assert_raises(galsim.GalSimSEDError):
         a0_lt / a0_fn
