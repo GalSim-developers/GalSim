@@ -1387,6 +1387,7 @@ with open(version_h_file, 'w') as f:
 headers.append(version_h_file)
 
 dist = setup(name="GalSim",
+    python_requires=">=3.9",
     version=galsim_version,
     author="GalSim Developers (point of contact: Mike Jarvis)",
     author_email="michael@jarvis.net",
