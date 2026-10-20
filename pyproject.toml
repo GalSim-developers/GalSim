@@ -1,6 +1,16 @@
 [build-system]
 requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
 
+[tool.cibuildwheel.linux]
+before-all = "yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install fftw eigen || true"
+
+[tool.cibuildwheel.macos.environment]
+FFTW_DIR = "/opt/homebrew/lib"
+MACOSX_DEPLOYMENT_TARGET = "14.0"
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
