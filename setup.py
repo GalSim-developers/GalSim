@@ -27,7 +27,7 @@ import tarfile
 import shutil
 
 try:
-    from setuptools import setup, Extension, find_packages
+    from setuptools import setup, Extension
     from setuptools.command.build_ext import build_ext
     from setuptools.command.build_clib import build_clib
     from setuptools.command.install import install
@@ -1319,15 +1319,9 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros,
               extra_link_args = ["-lfftw3"])
 
-build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
-run_dep = ['astropy', 'LSSTDESC.Coord']
-test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy', 'pyyaml']
 
 # If Eigen doesn't exist in the normal places, download it.
 find_eigen_dir(output=True)
-
-with open('README.rst') as file:
-    long_description = file.read()
 
 # Read in the galsim version from galsim/_version.py
 # cf. http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
@@ -1386,22 +1380,11 @@ with open(version_h_file, 'w') as f:
 
 headers.append(version_h_file)
 
-dist = setup(name="GalSim",
+dist = setup(
     version=galsim_version,
-    author="GalSim Developers (point of contact: Mike Jarvis)",
-    author_email="michael@jarvis.net",
-    description="The modular galaxy image simulation toolkit",
-    long_description=long_description,
-    license = "BSD License",
-    url="https://github.com/GalSim-developers/GalSim",
     download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
-    packages=find_packages(),
-    package_data={'galsim' : shared_data + headers},
     libraries=[lib],
     ext_modules=[ext],
-    setup_requires=build_dep,
-    install_requires=build_dep + run_dep,
-    tests_require=test_dep,
     cmdclass = {'build_ext': my_build_ext,
                 'build_clib': my_build_clib,
                 'build_shared_clib': my_build_shared_clib,
@@ -1410,11 +1393,6 @@ dist = setup(name="GalSim",
                 'easy_install': my_easy_install,
                 'run_cpp_test': my_run_cpp_test,
                 },
-    entry_points = {'console_scripts' : [
-            'galsim = galsim.__main__:run_main',
-            'galsim_download_cosmos = galsim.download_cosmos:run_main'
-            ]},
-    zip_safe=False,
     )
 
 # Check that the path includes the directory where the scripts are installed.
