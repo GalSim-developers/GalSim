@@ -142,25 +142,15 @@ jobs:
                 if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget "https://drive.usercontent.google.com/download?id=11-dRyJaH7RRrbk_vE53fZfT9WZGXkVa4&export=download&authuser=0&confirm=t&uuid=249c6a44-764d-4545-a5d5-48c181af9f5a&at=AMrWOn3ZoUdCALulXb1xzzAsvkBU%3A1789453625694" -O des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME; fi
                 ln -s $HOME/des_data examples/des/
 
-            - name: Install basic dependencies
+            - name: Install additional test dependencies
               run: |
-                python -m pip install -U pip
+                pip install coverage
 
-                # Do these three first to clarify potential conflicts
-                pip install -U numpy
-                pip install -U setuptools
-                pip install -U wheel
+                # only needed for `run_slow` and `slow`
+                pip install matplotlib
 
-                # Standard dependencies
-                pip install -U -r requirements.txt
-
-                # Extra packages needed for testing
-                pip install -U -r test_requirements.txt
-                pip install -U coverage
-
-                pip install -U matplotlib
-
-                pip install -U astroplan
+                # only needed for `test_dcr_angles()`
+                pip install astroplan
 
             # Starlink doesn't seem to work anymore.  Even with numpy 1.x, I'm getting
             # "ModuleNotFoundError: No module named 'numpy'" when building the wheel.
@@ -188,7 +178,7 @@ jobs:
               run: |
                 # The prefix is required for recent MacOS, because of System Integrity Protection.
                 # It's not necessary on Linux, but is harmless enough.
-                FFTW_DIR=$FFTW_DIR pip install -vvv .
+                FFTW_DIR=$FFTW_DIR pip install -vvv .[test]
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
               if: matrix.py == 3.12 && github.base_ref != ''
