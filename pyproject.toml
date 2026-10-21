@@ -9,7 +9,7 @@ before-all = "brew install fftw eigen || true"
 
 [tool.cibuildwheel.macos.environment]
 FFTW_DIR = "/opt/homebrew/lib"
-MACOSX_DEPLOYMENT_TARGET = "14.0"
+MACOSX_DEPLOYMENT_TARGET = "26.0"
 
 [tool.pytest.ini_options]
 testpaths = [
