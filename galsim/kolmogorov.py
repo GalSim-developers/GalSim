@@ -19,7 +19,7 @@
 __all__ = [ 'Kolmogorov' ]
 
 import numpy as np
-import astropy.units as u
+from ._astropy_shim import units as u
 import math
 
 from . import _galsim

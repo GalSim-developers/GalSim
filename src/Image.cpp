@@ -733,7 +733,7 @@ void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
     dbg<<"Start rfft\n";
     dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!in.getData() or !in.getBounds().isDefined())
+    if (!in.getData() || !in.getBounds().isDefined())
         throw ImageError("Attempting to perform fft on undefined image.");
 
     const int Nxo2 = in.getBounds().getXMax()+1;
@@ -817,7 +817,7 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
     dbg<<"Start irfft\n";
     dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!in.getData() or !in.getBounds().isDefined())
+    if (!in.getData() || !in.getBounds().isDefined())
         throw ImageError("Attempting to perform inverse fft on undefined image.");
 
     if (in.getBounds().getXMin() != 0)
@@ -917,7 +917,7 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
     dbg<<"Start cfft\n";
     dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!in.getData() or !in.getBounds().isDefined())
+    if (!in.getData() || !in.getBounds().isDefined())
         throw ImageError("Attempting to perform cfft on undefined image.");
 
     const int Nxo2 = in.getBounds().getXMax()+1;

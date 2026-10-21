@@ -17,7 +17,7 @@
 #
 import numpy as np
 import re
-from astropy.units import Quantity, Unit
+from .._astropy_shim import Quantity, Unit
 
 from .util import PropagateIndexKeyRNGNum
 from .value import GetCurrentValue, GetAllParams, RegisterValueType

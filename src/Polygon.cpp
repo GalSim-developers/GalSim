@@ -114,7 +114,7 @@ namespace galsim {
                         if (y1 != y2) {
                             xinters = (point.y-y1)*(x2-x1)/(y2-y1)+x1;
                         }
-                        if (x1 == x2 or point.x <= xinters) {
+                        if (x1 == x2 || point.x <= xinters) {
                             inside = !inside;
                         }
                     }

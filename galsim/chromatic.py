@@ -25,7 +25,7 @@ __all__ = [ 'ChromaticObject', 'ChromaticAtmosphere', 'ChromaticSum',
 
 import math
 import numpy as np
-from astropy import units
+from ._astropy_shim import units
 import copy
 
 from .gsobject import GSObject

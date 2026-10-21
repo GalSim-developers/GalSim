@@ -138,7 +138,7 @@ namespace galsim {
         int nblock = std::min(n, 256);
         xdbg<<"nblock = "<<nblock<<std::endl;
 
-        double temp[nblock];
+        std::vector<double> temp(nblock);
         if (abp) {
             dbg<<"Using abp\n";
             const double* Ap = abp;
@@ -150,8 +150,8 @@ namespace galsim {
                 xdbg<<"v = "<<v[0]<<std::endl;
                 xdbg<<"x = "<<x[0]<<std::endl;
                 xdbg<<"y = "<<y[0]<<std::endl;
-                Horner2D(u, v, n1, Ap, nabp, nabp, x, temp);  // x = Horner2D(u, v, Ap)
-                Horner2D(u, v, n1, Bp, nabp, nabp, y, temp);  // y = Horner2D(u, v, Bp)
+                Horner2D(u, v, n1, Ap, nabp, nabp, x, temp.data());  // x = Horner2D(u, v, Ap)
+                Horner2D(u, v, n1, Bp, nabp, nabp, y, temp.data());  // y = Horner2D(u, v, Bp)
                 xdbg<<"x => "<<x[0]<<std::endl;
                 xdbg<<"y => "<<y[0]<<std::endl;
                 x += n1;
@@ -170,10 +170,10 @@ namespace galsim {
 
         const double* A = ab;
         const double* B = ab + nab*nab;
-        double A_dudx[(nab-1)*(nab-1)];
-        double A_dudy[(nab-1)*(nab-1)];
-        double B_dvdx[(nab-1)*(nab-1)];
-        double B_dvdy[(nab-1)*(nab-1)];
+        std::vector<double> A_dudx((nab-1)*(nab-1));
+        std::vector<double> A_dudy((nab-1)*(nab-1));
+        std::vector<double> B_dvdx((nab-1)*(nab-1));
+        std::vector<double> B_dvdy((nab-1)*(nab-1));
         for (int i=1; i<nab; ++i) {
             for (int j=1; j<nab; ++j) {
                 int k = (i-1)*(nab-1) + (j-1);
@@ -196,12 +196,12 @@ namespace galsim {
 #endif
 
         // More temporary arrays
-        double du[nblock];
-        double dv[nblock];
-        double dudx[nblock];
-        double dudy[nblock];
-        double dvdx[nblock];
-        double dvdy[nblock];
+        std::vector<double> du(nblock);
+        std::vector<double> dv(nblock);
+        std::vector<double> dudx(nblock);
+        std::vector<double> dudy(nblock);
+        std::vector<double> dvdx(nblock);
+        std::vector<double> dvdy(nblock);
 
         const int MAX_ITER = 10;
         bool not_converged = false;
@@ -210,16 +210,16 @@ namespace galsim {
             dbg<<"n = "<<n<<std::endl;
             int n1 = std::min(n, 256);
             for (int iter=0; iter<10; ++iter) {
-                Horner2D(x, y, n1, A, nab, nab, du, temp);  // u' = Horner2D(x, y, A)
+                Horner2D(x, y, n1, A, nab, nab, du.data(), temp.data());  // u' = Horner2D(x, y, A)
                 for(int m=0; m<n1; ++m) du[m] -= u[m];      // du = u' - u
-                Horner2D(x, y, n1, B, nab, nab, dv, temp);  // v' = Horner2D(x, y, B)
+                Horner2D(x, y, n1, B, nab, nab, dv.data(), temp.data());  // v' = Horner2D(x, y, B)
                 for(int m=0; m<n1; ++m) dv[m] -= v[m];      // dv = v' - v
                 xdbg<<"du,dv = "<<du[0]<<", "<<dv[0]<<std::endl;
 
-                Horner2D(x, y, n1, A_dudx, nab-1, nab-1, dudx, temp);  // -> dudx
-                Horner2D(x, y, n1, A_dudy, nab-1, nab-1, dudy, temp);  // -> dudy
-                Horner2D(x, y, n1, B_dvdx, nab-1, nab-1, dvdx, temp);  // -> dvdx
-                Horner2D(x, y, n1, B_dvdy, nab-1, nab-1, dvdy, temp);  // -> dvdy
+                Horner2D(x, y, n1, A_dudx.data(), nab-1, nab-1, dudx.data(), temp.data());  // -> dudx
+                Horner2D(x, y, n1, A_dudy.data(), nab-1, nab-1, dudy.data(), temp.data());  // -> dudy
+                Horner2D(x, y, n1, B_dvdx.data(), nab-1, nab-1, dvdx.data(), temp.data());  // -> dvdx
+                Horner2D(x, y, n1, B_dvdy.data(), nab-1, nab-1, dvdy.data(), temp.data());  // -> dvdy
                 xdbg<<"dudx = "<<dudx[0]<<std::endl;
                 xdbg<<"dudy = "<<dudy[0]<<std::endl;
                 xdbg<<"dvdx = "<<dvdx[0]<<std::endl;
@@ -273,8 +273,8 @@ namespace galsim {
             while (n) {
                 dbg<<"n = "<<n<<std::endl;
                 int n1 = std::min(n, 256);
-                Horner2D(x, y, n1, A, nab, nab, du, temp);  // u' = Horner2D(x, y, A)
-                Horner2D(x, y, n1, B, nab, nab, dv, temp);  // v' = Horner2D(x, y, B)
+                Horner2D(x, y, n1, A, nab, nab, du.data(), temp.data());  // u' = Horner2D(x, y, A)
+                Horner2D(x, y, n1, B, nab, nab, dv.data(), temp.data());  // v' = Horner2D(x, y, B)
                 for(int m=0; m<n1; ++m) {
                     du[m] -= u[m];
                     dv[m] -= v[m];

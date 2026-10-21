@@ -427,7 +427,17 @@ def make_link(do_link, unpack_dir, link_dir, args, logger):
                     if yn == 'no':
                         return
                 os.remove(link_dir)
-    os.symlink(os.path.abspath(unpack_dir), link_dir)
+    try:
+        os.symlink(os.path.abspath(unpack_dir), link_dir)
+    except OSError:
+        # Windows without symlink privilege (WinError 1314): use a directory
+        # junction (no privilege needed), falling back to a full copy.
+        target = os.path.abspath(unpack_dir)
+        try:
+            import _winapi
+            _winapi.CreateJunction(target, link_dir)   # dir junction, Windows only
+        except (ImportError, OSError, AttributeError):
+            shutil.copytree(target, link_dir)
     logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
 
