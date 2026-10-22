@@ -15,35 +15,28 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import sys,os,glob,re
 import ctypes
 import ctypes.util
-import types
-import subprocess
+import glob
+import os
 import re
-import tempfile
-import urllib.request as urllib2
-import tarfile
 import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import types
+import urllib.request as urllib2
 
-try:
-    from setuptools import setup, Extension
-    from setuptools.command.build_ext import build_ext
-    from setuptools.command.build_clib import build_clib
-    from setuptools.command.install import install
-    from setuptools.command.install_scripts import install_scripts
-    from setuptools.command.easy_install import easy_install
-    from setuptools.command.test import test
-    import setuptools
-    print("Using setuptools version",setuptools.__version__)
-except ImportError:
-    print()
-    print("****")
-    print("    Installation requires setuptools version >= 38.")
-    print("    Please upgrade or install with pip install -U setuptools")
-    print("****")
-    print()
-    raise
+import setuptools
+from setuptools import Extension, setup
+from setuptools.command.build_clib import build_clib
+from setuptools.command.build_ext import build_ext
+from setuptools.command.easy_install import easy_install
+from setuptools.command.install import install
+from setuptools.command.install_scripts import install_scripts
+
+print("Using setuptools version",setuptools.__version__)
 
 # Turn this on for more verbose debugging output about compile attempts.
 debug = False
@@ -1008,8 +1001,8 @@ class my_build_clib(build_clib):
 class my_build_shared_clib(my_build_clib):
 
     def do_build_libraries(self, libraries):
-        from distutils.errors import DistutilsSetupError
         from distutils import log
+        from distutils.errors import DistutilsSetupError
         try:
             from setuptools.modified import newer_pairwise_group
         except ImportError:
