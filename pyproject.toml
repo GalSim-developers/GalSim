@@ -1,7 +1,38 @@
+[project]
+name = "GalSim"
+description = "The modular galaxy image simulation toolkit"
+readme = "README.rst"
+requires-python = ">=3.9"
+license-files = ["LICENSE"]
+authors = [{ name = "GalSim Developers" }, { name = "Mike Jarvis", email = "michael@jarvis.net" }]
+dependencies = ["LSSTDESC.Coord", "astropy"]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/GalSim-developers/GalSim"
+
+[project.scripts]
+galsim = "galsim.__main__:run_main"
+galsim_download_cosmos = "galsim.download_cosmos:run_main"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-xdist", "pytest-timeout", "scipy", "pyyaml"]
+
 [build-system]
-requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
+requires = ["numpy>=1.17", "pybind11>=2.2", "setuptools>=38"]
 
 [tool.pytest.ini_options]
 testpaths = [
-    "tests",
+  "tests",
 ]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+
+[tool.setuptools.package-data]
+"galsim" = ["share/*", "include/*"]
+
+[tool.setuptools_scm]
+version_file = "galsim/_version.py"
