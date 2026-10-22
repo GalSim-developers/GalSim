@@ -40,25 +40,18 @@ Running tests
 
 The simplest way to run our test suite by typing::
 
-    python setup.py test
+    pip install .[test]
+    pytest -n auto
 
 This should run all the Python-layer tests with pytest and also compile and
 run the C++ test suite.
-
-There are a number of packages that are used by the tests, but which are not
-required for GalSim installation and running.  These should be installed
-automatically by the above command, but you can install them manually via::
-
-    pip install -r test_requirements.txt
-
-(As usually, you may need to add either ``sudo`` or ``--user``.)
 
 By default, the tests will run in parallel using the pytest plugins
 ``pytest-xdist`` and ``pytest-timeout`` (to manage how much time each test is
 allowed to run).  If you want to run the Python tests in serial instead,
 you can do this via::
 
-    python setup.py test -j1
+    pytest
 
 You can also use this to modify how many jobs will be spawned for running the
 tests.
