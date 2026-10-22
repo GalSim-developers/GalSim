@@ -28,8 +28,7 @@ you can do::
 
     git clone git@github.com:GalSim-developers/GalSim.git
     cd GalSim
-    pip install -r requirements.txt
-    python setup.py install
+    pip install -e .
 
 (again possibly with either sudo or --user).
 
@@ -44,7 +43,7 @@ about how to do this.
 
 Eigen is also not pip installable, but it is a header-only library, so it doesn't
 require any installation.  Therefore, if you don't have it it locally in a place where
-setup.py can find it, a version of Eigen will be downloaded directly.
+``pip`` can find it, a version of Eigen will be downloaded directly.
 See `Installing Eigen` for more details.
 
 Finally, while GalSim is officially a Python package, there are some users who
@@ -66,9 +65,7 @@ other recent (especially later) versions will also work:
 
 There are a few others modules are not technically required, but we let pip
 install them along with GalSim, because they either add useful functionality
-or efficiency to GalSim.  These are listed in the requirements.txt file that
-pip uses to determine what else to install.  But if you install with
-``python setup.py install``, then these will not be installed.
+or efficiency to GalSim.
 
 - Starlink (3.10.0)  (Improved WCS functionality)
 - PyYaml (3.12)      (Reads YAML config files)
@@ -76,20 +73,7 @@ pip uses to determine what else to install.  But if you install with
 
 If you want to install these yourself, the quickest way is to do::
 
-    pip install -r requirements.txt
-
-If you want more control about which version you get or otherwise want to install
-each package individually, you can do::
-
-    pip install numpy
-    pip install future
-    pip install astropy
-    pip install pybind11
-    pip install LSSTDESC.Coord
-
-    pip install starlink-pyast
-    pip install pyyaml
-    pip install pandas
+    pip install starlink-pyast pyyaml pandas
 
 In all cases, you may need to precede the above commands with ``sudo`` or
 add ``--user`` to the end as you normally do when pip installing on your system.
@@ -157,13 +141,9 @@ any extra work on your part.
 If it is in a non-standard location, and you do not want to add this path
 to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
 variables from setup.py), then you can instead set the FFTW_DIR environment
-variable to tell GalSim where to look when running pip or setup.py::
+variable to tell GalSim where to look when running pip::
 
     FFTW_DIR=/path/to/fftw/lib pip install galsim
-
-or::
-
-    FFTW_DIR=/path/to/fftw/lib python setup.py install
 
 For instance, if libfftw3.so is located in /opt/cray/pe/lib64, you could use
 that with::
@@ -379,7 +359,7 @@ location in the ``include`` directory.  These files precisely specify the
 available C++-layer API for a given release.
 
 The compiled library file for linking user C++ code is not installed by the default
-pip or setup.py installation procedure.  The relevant functions are included
+pip installation procedure.  The relevant functions are included
 in the Python module file, called ``_galsim.so``, but this file is often not usable
 for linking your own C++ code.
 

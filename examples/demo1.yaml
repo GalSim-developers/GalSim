@@ -28,7 +28,7 @@
 # writing the corresponding python code.
 #
 # The executable that reads these YAML files is called galsim, which should be installed
-# by either `pip install galsim` or `python setup.py install`.  If you used the latter,
+# with `pip install galsim`. If you used the latter,
 # the output should end with a line something along the lines of:
 #
 #     scripts installed into  /usr/local/bin
