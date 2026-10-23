@@ -2,7 +2,7 @@
 requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
 
 [tool.cibuildwheel.linux]
-before-all = "yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev"
+before-all = "yum install -y fftw-devel || apt install libfftw3-dev || apk add --upgrade fftw-dev"
 
 [tool.cibuildwheel.macos]
 before-all = "brew install fftw eigen || true"
