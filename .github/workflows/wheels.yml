@@ -14,7 +14,7 @@ concurrency:
 permissions: {}
 
 jobs:
-  build:
+  wheels:
     strategy:
       matrix:
         runs-on:
@@ -27,10 +27,6 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3"
-      - run: pip install build
       - if: ${{ runner.os == 'Linux' }}
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
         with:
@@ -39,14 +35,31 @@ jobs:
         with:
           package-dir: ./
           output-dir: wheelhouse/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist-${{ runner.os }}-${{ runner.arch }}
+          path: ./dist/
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+      - run: sudo apt install libfftw3-dev
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3"
+      - run: pip install build
       - run: python -m build --sdist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: whl-${{ runner.os }}-${{ runner.arch }}
-          path: ./wheelhouse/
+          name: dist-src
+          path: ./dist/
   publish:
     if: (github.event_name == 'release') && (github.event.action == 'released')
-    needs: [build]
+    needs: [wheels, sdist]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -60,11 +73,11 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: whl*
-          path: wheelhouse/
+          pattern: dist*
+          path: dist/
           merge-multiple: true
       - uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
-          subject-path: "wheelhouse/*"
+          subject-path: "dist/*"
       # To upload to PyPI without a token, add this workflow file as a Trusted Publisher in the project settings on the PyPI website
       - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
