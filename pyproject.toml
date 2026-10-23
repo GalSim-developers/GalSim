@@ -1,12 +1,16 @@
 [build-system]
 requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
 
+[tool.cibuildwheel]
+# share cache directory between runs by using host mount
+before-build = "ccache -s"
+
 [tool.cibuildwheel.linux]
-before-all = "yum install -y fftw-devel || apt install libfftw3-dev || apk add --upgrade fftw-dev"
+before-all = "yum install -y fftw-devel ccache || apt install libfftw3-dev ccache || apk add --upgrade fftw-dev ccache && ccache -o cache_dir=/host$(ccache -k cache_dir)"
 
 [tool.cibuildwheel.macos]
 archs = ["arm64", "x86_64"]
-before-all = "brew install fftw eigen || true"
+before-all = "brew install fftw eigen ccache || true && ccache -o cache_dir=/host$(ccache -k cache_dir)"
 
 [tool.cibuildwheel.macos.environment]
 FFTW_DIR = "/opt/homebrew/lib"
