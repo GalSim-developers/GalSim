@@ -1,7 +1,6 @@
-name: build
+name: Build wheels and sdist and upload to PyPI
 
 on:
-  pull_request:
   workflow_dispatch:
   release:
     types:
@@ -65,7 +64,6 @@ jobs:
           name: dist-src
           path: ./dist/
   publish:
-    if: (github.event_name == 'release') && (github.event.action == 'released')
     needs: [wheels, sdist]
     runs-on: ubuntu-latest
     permissions:
