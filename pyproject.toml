@@ -9,12 +9,11 @@ before-build = "ccache -s"
 before-all = "yum install -y fftw-devel ccache || apt install libfftw3-dev ccache || apk add --upgrade fftw-dev ccache && ccache -o cache_dir=/host$(ccache -k cache_dir)"
 
 [tool.cibuildwheel.macos]
-archs = ["arm64", "x86_64"]
 before-all = "brew install fftw eigen ccache || true && ccache -o cache_dir=/host$(ccache -k cache_dir)"
 
 [tool.cibuildwheel.macos.environment]
 FFTW_DIR = "/opt/homebrew/lib"
-MACOSX_DEPLOYMENT_TARGET = "26.0"
+MACOSX_DEPLOYMENT_TARGET = "14.0"
 
 [tool.pytest.ini_options]
 testpaths = [
