@@ -75,7 +75,7 @@ jobs:
                   echo 'event.after: ${{ github.event.after }}'
 
             - name: Set up Python ${{ matrix.py }}
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v7.1.0
               with:
                 python-version: ${{ matrix.py }}
 
