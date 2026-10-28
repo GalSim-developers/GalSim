@@ -31,8 +31,6 @@ jobs:
           persist-credentials: false
       - name: cache C++ build objects
         uses: hendrikmuhs/ccache-action@f09c25b45002a07be2955cbe52e8cee55643f89d # v1.2.24
-        with:
-          key: ccache-${{ runner.os }}-${{ github.sha }}
       - uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3 # v4.3.4
         env:
           CIBW_BUILD: ${{ runner.os == 'Linux' && (matrix.clib == 'musl' && '*-musllinux_*' || '*-manylinux_*') || '*' }}
