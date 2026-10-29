@@ -140,8 +140,10 @@ jobs:
                 ls -l $HOME
                 if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
                 if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then
-                  python -m pip install gdown
-                  gdown 11-dRyJaH7RRrbk_vE53fZfT9WZGXkVa4 -O des_data.tar.gz
+                  curl --fail --location --retry 3 \
+                    https://github.com/GalSim-developers/GalSim/releases/download/v2.8.5/des_data.tar.gz \
+                    --output des_data.tar.gz
+                  echo "d2104c6fedd1ad457f462924750cded49e3baa64f049d17b3805f64440085c89  des_data.tar.gz" | shasum -a 256 -c -
                   tar xfz des_data.tar.gz -C $HOME
                 fi
                 ln -s $HOME/des_data examples/des/
