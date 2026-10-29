@@ -2,6 +2,12 @@ name: Build wheels and sdist and upload to PyPI
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_to_pypi:
+        description: publish to PyPI
+        type: boolean
+        required: false
+        default: true
   release:
     types:
       - released
@@ -58,6 +64,7 @@ jobs:
           name: dist-src
           path: ./wheelhouse/
   publish:
+    if: ((github.event_name == 'release') && (github.event.action == 'released')) || inputs.publish_to_pypi
     needs: [wheels, sdist]
     runs-on: ubuntu-latest
     permissions:
