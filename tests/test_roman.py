@@ -831,7 +831,7 @@ def test_roman_basic_numbers():
     # Would be better to have a non-trivial test, but this will do for now.
     ref_gain = 1.0
     ref_pixel_scale = 0.11  # arcsec / pixel
-    ref_diameter = 2.36  # meters
+    ref_diameter = 2.36312  # meters
     ref_obscuration = 0.32
     ref_exptime = 139.8  # s
     ref_dark_current = 0.015 # e-/pix/s
