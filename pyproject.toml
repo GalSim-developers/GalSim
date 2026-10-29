@@ -32,7 +32,7 @@ zip-safe = false
 [tool.setuptools.packages.find]
 
 [tool.setuptools.package-data]
-"galsim" = ["share/*", "include/*"]
+"galsim" = ["share/**", "include/**"]
 
 [tool.setuptools_scm]
 version_file = "galsim/_version.py"
