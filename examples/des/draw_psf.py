@@ -26,7 +26,9 @@ It works on a full DES exposure with 62 chip images and the files that are outpu
 DESDM and WL pipelines.  We don't include these files in the repo, since they total about
 700 MB.  You can download a tarball with the files used by this script at
 
-    http://www.sas.upenn.edu/~mjarvis/des_data.html
+    https://github.com/GalSim-developers/GalSim/releases/download/v2.8.5/des_data.tar.gz
+
+Extract the tarball in GalSim/examples/des to create the des_data directory.
 
 The DESDM pipeline produces a catalog of detected objects for each image, and also an
 interpolated PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
@@ -55,7 +57,8 @@ def main(argv):
         print('You will need to download some DES data to use this script.')
         print('Run the following commands from the directory GalSim/examples/des:')
         print()
-        print('    wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz')
+        print('    curl -fL https://github.com/GalSim-developers/GalSim/releases/download/'
+              'v2.8.5/des_data.tar.gz -o des_data.tar.gz')
         print('    tar xfz des_data.tar.gz')
         print()
         print('Then try running this script again.  It should work now.')
