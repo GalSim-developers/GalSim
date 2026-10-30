@@ -1,6 +1,20 @@
 [build-system]
 requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]
 
+[tool.cibuildwheel]
+# share cache directory between runs by using host mount
+before-build = "ccache -s"
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y fftw-devel ccache || apt install libfftw3-dev ccache || apk add --upgrade fftw-dev ccache && ccache -o cache_dir=/host$(ccache -k cache_dir)"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install fftw eigen ccache || true && ccache -o cache_dir=/host$(ccache -k cache_dir)"
+
+[tool.cibuildwheel.macos.environment]
+FFTW_DIR = "/opt/homebrew/lib"
+MACOSX_DEPLOYMENT_TARGET = "14.0"
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
