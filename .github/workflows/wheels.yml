@@ -24,7 +24,7 @@ jobs:
       matrix:
         runs-on:
           - ubuntu-latest
-          - macos-latest
+          - macos-14
         clib:
           - glib
         include:
