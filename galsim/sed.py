@@ -502,26 +502,24 @@ class SED:
 
         wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
         if fast:
+            zfactor1 = (1.+redshift) / (1.+self.redshift)
+            zfactor2 = (1.+redshift) / (1.+other.redshift)
             if (isinstance(self._fast_spec, LookupTable)
                     and not self._fast_spec.x_log
                     and not self._fast_spec.f_log):
-                x = wave_list / (1.0 + self.redshift)
+                x = wave_list / (1.0 + redshift)
                 # Add in 500 uniformly spaced values to help improve accuracy.
                 x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
-                zfactor2 = (1.+redshift) / (1.+other.redshift)
-                f = self._fast_spec(x) * other._fast_spec(x*zfactor2)
+                f = self._fast_spec(x*zfactor1) * other._fast_spec(x*zfactor2)
                 spec = _LookupTable(x, f, self._fast_spec.interpolant)
             elif (isinstance(other._fast_spec, LookupTable)
                     and not other._fast_spec.x_log
                     and not other._fast_spec.f_log):
-                x = wave_list / (1.0 + other.redshift)
+                x = wave_list / (1.0 + redshift)
                 x = utilities.merge_sorted([x, np.linspace(x[0], x[-1], 500)])
-                zfactor1 = (1.+redshift) / (1.+other.redshift)
-                f = self._fast_spec(x*zfactor1) * other._fast_spec(x)
+                f = self._fast_spec(x*zfactor1) * other._fast_spec(x*zfactor2)
                 spec = _LookupTable(x, f, other._fast_spec.interpolant)
             else:
-                zfactor1 = (1.+redshift) / (1.+self.redshift)
-                zfactor2 = (1.+redshift) / (1.+other.redshift)
                 spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
         else:
             spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
@@ -533,7 +531,7 @@ class SED:
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
         wave_list, blue_limit, red_limit = utilities.combine_wave_list(self, other)
-        zfactor = (1.0+self.redshift) / other.wave_factor
+        zfactor = (1.0+self.redshift) * other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, LookupTable)
                     and not self._fast_spec.x_log
@@ -643,12 +641,16 @@ class SED:
         # Enable division by scalars or dimensionless callables (including dimensionless SEDs.)
         if isinstance(other, SED) and other.spectral:
             raise GalSimSEDError("Cannot divide by spectral SED.", other)
+        wave_type = 'nm'
+        flux_type = 'fphotons' if self.spectral else '1'
         if hasattr(other, '__call__'):
             spec = lambda w: self(w * (1.0 + self.redshift)) / other(w * (1.0 + self.redshift))
         elif isinstance(self._spec, LookupTable):
             # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
+            wave_type = self.wave_type
+            flux_type = self.flux_type
             x = self._spec.getArgs()
             f = [ val / other for val in self._spec.getVals() ]
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
@@ -656,7 +658,7 @@ class SED:
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
-        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type,
+        return SED(spec, flux_type=flux_type, wave_type=wave_type,
                    redshift=self.redshift, fast=self.fast,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
