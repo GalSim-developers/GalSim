@@ -98,6 +98,13 @@ def test_add():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
 
+    # An interesting limit is the case of shooting a single photon. Then the photon can only
+    # be assigned to one component or the other (with the appropriate probability). It needs
+    # to end up with the full flux of the object, not a fraction of the flux.
+    for seed in range(1, 11):
+        photons = sum_gauss.shoot(1, galsim.BaseDeviate(seed))
+        np.testing.assert_allclose(photons.flux, sum_gauss.flux)
+
     check_basic(sum_gauss, "sum of 2 Gaussians")
 
     # Test photon shooting.
