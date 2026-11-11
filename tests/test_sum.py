@@ -138,6 +138,36 @@ def test_add():
 
 
 @timer
+def test_shoot_signed_flux():
+    """Test photon shooting a Sum when some components include negative flux photons."""
+    # This test is in response to Issue #1352, reported by Axel Guinot.
+    # There had been an error that the flux normalization in Sum was setting every photon
+    # in a component to the fluxPerPhoton value. This was correct for most profiles, but not
+    # when a component shoots photons with negative flux. Primarily, this is anything with an
+    # InterpolatedImage (including the OpticalPSF that Axel was using).
+    # This is a simplified version of the script Axel posted in that issue.
+
+    # Make a Sum of the same profile twice, and then divide by 2. It should be equivalent
+    # to the component profile. Specifically, the expected total flux is 1.0. (Not exactly,
+    # because of the varying signs.)
+    psf = galsim.OpticalPSF(lam_over_diam=0.1)
+    summed_psf = (psf + psf) / 2
+    n_photons = 100000
+    photons = summed_psf.shoot(n_photons, galsim.BaseDeviate(42))
+    absolute_flux = summed_psf.positive_flux + summed_psf.negative_flux
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(np.abs(photons.flux), absolute_flux / n_photons)
+    np.testing.assert_allclose(photons.getTotalFlux(), 1., atol=0.02)
+
+    # Also check this using a photon operator.
+    star = galsim.DeltaFunction(flux=1000.)
+    photons = star.makePhot(n_photons=n_photons, poisson_flux=False,
+                            photon_ops=[summed_psf], rng=galsim.BaseDeviate(42))
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(photons.getTotalFlux(), star.flux, rtol=0.02)
+
+
+@timer
 def test_sub_neg():
     """Test that a - b is the same as a + (-b)."""
     a = galsim.Gaussian(fwhm=1)
