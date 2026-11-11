@@ -936,6 +936,13 @@ def test_roman_psf_wcs():
     np.testing.assert_allclose(im_wcs.array, im_expected.array)
     assert not np.allclose(im_wcs.array, im_scale.array)
 
+    # Supplying a PixelScale WCS is equivalent to the default case.
+    scale_wcs = galsim.PixelScale(0.11)
+    scale_psf = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                                    SCA_pos=image_pos, wcs=scale_wcs)
+    im_scale2 = scale_psf.drawImage(scale=galsim.roman.pixel_scale, center=image_pos)
+    np.testing.assert_allclose(im_scale2.array, im_scale.array, atol=1.e-8)
+
     # Supplying boresight and telescope_PA provides a means to specify the telescope's
     # orientation directly. At the boresight, the rotation is telescope_PA - 60 degrees.
     # This is artificial: Roman's camera is off-axis, so the boresight cannot actually be
