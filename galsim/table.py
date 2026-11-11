@@ -951,12 +951,12 @@ class LookupTable2D:
         Returns:
             a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
-        if np.__version__ >= "2.0":  # pragma: no branch
+        if np.__version__ >= "2.0":
             # I'm not sure if there is a simpler way to do this in 2.0.
             # We want a copy when edge_mode == wrap. Otherwise, only copy if dtype changes or
             # x,y aren't already arrays. That used to be simple...
             copy = True if self.edge_mode=='wrap' else None
-        else:
+        else: # pragma: no cover
             copy = self.edge_mode=='wrap'
         x1 = np.array(x, dtype=float, copy=copy)
         y1 = np.array(y, dtype=float, copy=copy)
@@ -1071,9 +1071,9 @@ class LookupTable2D:
             A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
             values) or numpy arrays.
         """
-        if np.__version__ >= "2.0":  # pragma: no branch
+        if np.__version__ >= "2.0":
             copy = True if self.edge_mode=='wrap' else None
-        else:
+        else: # pragma: no cover
             copy = self.edge_mode=='wrap'
         x1 = np.array(x, dtype=float, copy=copy)
         y1 = np.array(y, dtype=float, copy=copy)
