@@ -899,7 +899,7 @@ def test_roman_basic_numbers():
 
 @timer
 def test_roman_psf_wcs():
-    """Test drawing the PSF with a provided WCS."""
+    """Test the wcs and optional orientation parameters for the PSF."""
 
     # Make a PSF without giving a wcs
     image_pos = galsim.PositionD(153, 921)
@@ -919,14 +919,80 @@ def test_roman_psf_wcs():
     wcs_dict = galsim.roman.getWCS(PA=PA, world_pos=world_pos, date=date)
     wcs = wcs_dict[5]
 
-    # Get the PSF in real world coordinates with this wcs
-    psf = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
-                              SCA_pos=image_pos, wcs=wcs)
-    # Draw on an image with this wcs.
-    im_wcs = psf.drawImage(bounds=im_scale.bounds, wcs=wcs, center=image_pos)
+    # With a wcs parameter, the PSF will be in sky coordinates. Only the rotation/reflection
+    # part of the WCS will be used to project to sky coords.
+    sky_psf = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
+                                  SCA_pos=image_pos, wcs=wcs)
+    # Extract the orthogonal factor using J = U diag(s) V^T.
+    # Removing the singular values leaves Q = U V^T as the orthogonal component of J.
+    jacobian = wcs.jacobian(image_pos=image_pos).getMatrix()
+    U, _, Vt = np.linalg.svd(jacobian)
+    Q = U @ Vt
+    expected = psf.transform(*Q.ravel())
 
-    np.testing.assert_allclose(im_wcs.array, im_scale.array)
+    # Drawing onto the detector applies the distortion in the WCS.
+    im_wcs = sky_psf.drawImage(bounds=im_scale.bounds, wcs=wcs, center=image_pos)
+    im_expected = expected.drawImage(bounds=im_scale.bounds, wcs=wcs, center=image_pos)
+    np.testing.assert_allclose(im_wcs.array, im_expected.array)
+    assert not np.allclose(im_wcs.array, im_scale.array)
 
+    # Supplying boresight and telescope_PA provides a means to specify the telescope's
+    # orientation directly. At the boresight, the rotation is telescope_PA - 60 degrees.
+    # This is artificial: Roman's camera is off-axis, so the boresight cannot actually be
+    # observed on an SCA, but the known rotation makes it a useful test case.
+    boresight = galsim.CelestialCoord(123*galsim.degrees, -35*galsim.degrees)
+    telescope_PA = 42 * galsim.degrees
+    affine = galsim.AffineTransform(0.11, 0, 0, 0.11, origin=image_pos)
+    wcs = galsim.TanWCS(affine, boresight)
+    oriented = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                                   SCA_pos=image_pos, wcs=wcs,
+                                   boresight=boresight, telescope_PA=telescope_PA)
+    expected = psf.rotate(-18*galsim.degrees).drawImage(scale=0.05)
+    image = oriented.drawImage(bounds=expected.bounds, scale=0.05)
+    np.testing.assert_allclose(image.array, expected.array, atol=1.e-8)
+
+    # In a more realistic geometry, the WCS projection point is the SCA center, off-axis
+    # from the boresight. The rotation needs to be with respect to local north at the source
+    # position rather than at the boresight.
+    sca_center = galsim.PositionD(galsim.roman.n_pix/2, galsim.roman.n_pix/2)
+    sky_center = galsim.CelestialCoord(123*galsim.degrees, -35.7*galsim.degrees)
+    affine = galsim.AffineTransform(0.11, 0, 0, 0.11, origin=sca_center)
+    wcs = galsim.TanWCS(affine, sky_center)
+    sky_pos = galsim.CelestialCoord(122.98*galsim.degrees, -35.65*galsim.degrees)
+    image_pos = wcs.toImage(sky_pos)
+    psf = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                            SCA_pos=image_pos)
+
+    # Independently construct V3 in Cartesian coordinates: at the boresight it is
+    # cos(PA)*north + sin(PA)*east, where north and east are tangent unit vectors.
+    # (This is intentionally a different method than we use in the code.)
+    sin_ra, cos_ra = boresight.ra.sincos()
+    sin_dec, cos_dec = boresight.dec.sincos()
+    north = np.array([-sin_dec*cos_ra, -sin_dec*sin_ra, cos_dec])
+    east = np.array([-sin_ra, cos_ra, 0.0])
+    sin_pa, cos_pa = telescope_PA.sincos()
+    v3 = cos_pa*north + sin_pa*east
+
+    # V3's components along the source's east and north give its local position angle.
+    # Subtract the pupil's 60-degree offset to get the expected PSF rotation.
+    sin_ra, cos_ra = sky_pos.ra.sincos()
+    sin_dec, cos_dec = sky_pos.dec.sincos()
+    north = np.array([-sin_dec*cos_ra, -sin_dec*sin_ra, cos_dec])
+    east = np.array([-sin_ra, cos_ra, 0.0])
+    theta = np.arctan2(v3.dot(east), v3.dot(north))*galsim.radians
+    assert np.isclose(theta.deg, 42.013387)  # I.e. not just 42 degrees.
+    expected = psf.rotate(theta-60*galsim.degrees).drawImage(bounds=expected.bounds, scale=0.05)
+    oriented = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                                   SCA_pos=image_pos, wcs=wcs,
+                                   boresight=boresight, telescope_PA=telescope_PA)
+    image = oriented.drawImage(bounds=expected.bounds, scale=0.05)
+    np.testing.assert_allclose(image.array, expected.array, atol=1.e-8)
+
+    # Need both boresight and telescope_PA if either is provided.
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        galsim.roman.getPSF(5, 'F184', boresight=boresight)
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        galsim.roman.getPSF(5, 'F184', telescope_PA=telescope_PA)
 
 @timer
 def test_config_psf():
@@ -992,6 +1058,31 @@ def test_config_psf():
     print('psf1 = ',str(psf1))
     print('psf2 = ',str(psf2))
     assert psf1 == psf2
+
+    # Include boresight and telescope_PA
+    image_pos = galsim.PositionD(153, 921)
+    boresight = galsim.CelestialCoord(123*galsim.degrees, -35*galsim.degrees)
+    wcs = galsim.TanWCS(galsim.AffineTransform(0.11, 0, 0, 0.11, origin=image_pos), boresight)
+    config = {
+        'modules': ['galsim.roman'],
+        'psf': {
+            'type': 'RomanPSF',
+            'SCA': 5,
+            'bandpass': 'F184',
+            'pupil_bin': 8,
+            'wavelength': 1950.,
+            'use_SCA_pos': True,
+            'boresight': boresight,
+            'telescope_PA': '42 degrees',
+        },
+        'image_pos': image_pos,
+        'wcs': wcs,
+    }
+    psf = galsim.config.BuildGSObject(config, 'psf')[0]
+    expected = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                                 SCA_pos=image_pos, wcs=wcs, boresight=boresight,
+                                 telescope_PA=42*galsim.degrees)
+    assert psf == expected
 
 
 @timer
