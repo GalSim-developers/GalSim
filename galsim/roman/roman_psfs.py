@@ -19,16 +19,17 @@
 import numpy as np
 import os
 
-from . import pixel_scale, n_pix, pixel_scale_mm
+from . import pixel_scale_mm
 from . import n_pix, n_sca, longwave_bands, shortwave_bands
 from . import diameter, obscuration
 from .roman_bandpass import getBandpass
 
 from ..utilities import LRU_Cache
 from ..position import PositionD
-from ..errors import GalSimValueError, GalSimRangeError
+from ..errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from ..bandpass import Bandpass
-from ..wcs import PixelScale
+from ..angle import degrees
+from ..celestial import CelestialCoord
 from ..gsparams import GSParams
 from ..phase_psf import Aperture
 from .. import OpticalPSF, ChromaticOpticalPSF
@@ -59,7 +60,8 @@ def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, wcs=None,
            n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
-           logger=None, high_accuracy=None, approximate_struts=None):
+           logger=None, high_accuracy=None, approximate_struts=None,
+           boresight=None, telescope_PA=None):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
@@ -99,11 +101,22 @@ def getPSF(SCA, bandpass,
 
     The PSF that is returned by default will be oriented with respect to the SCA coordinates,
     not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
-    with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
-    PSF in world coordinates, which can be convolved with galaxies (that are normally described
-    in world coordinates), you may pass in a ``wcs`` parameter to this function.  This will
-    project the PSF into world coordinates according to that WCS before returning it.  Otherwise,
-    the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.
+    with respect to the focal plane, so the PSF rotates with the telescope.
+
+    To orient the PSF on the sky, supply a ``wcs``. The local rotation and (if present) reflection
+    will be applied, but not any distortion component of the WCS. This means that the distortion
+    is correctly applied when drawing the PSF onto an image with the same WCS.
+
+    For real observations, the rotation direction can be improved further by passing
+    ``boresight`` and ``telescope_PA``. The latter in particular sets the field rotation
+    of the Roman v3 axis at the boresight position. These values are available in Roman
+    ASDF data files in ``roman.meta.pointing`` as the values ``ra_v1``, ``dec_v1``, and
+    ``pa_v3``::
+
+        boresight = galsim.CelestialCoord(ra_v1 * galsim.degrees, dec_v1 * galsim.degrees)
+        psf = galsim.roman.getPSF(
+            SCA, bandpass, SCA_pos=image_pos, wcs=wcs, boresight=boresight,
+            telescope_PA=pa_v3 * galsim.degrees)
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  (The Roman abberation data for Cycle 9 does in fact
@@ -163,8 +176,11 @@ def getPSF(SCA, bandpass,
                             the SCA is chosen. [default: None]
         pupil_bin:          The binning to apply to the pupil plane image. (See discussion above.)
                             [default: 4]
-        wcs:                The WCS to use to project the PSF into world coordinates.
-                            [default: galsim.PixelScale(galsim.roman.pixel_scale)]
+        wcs:                The image WCS used to orient the PSF in world coordinates. With no
+                            attitude information, only its local rotation and reflection are
+                            used. With ``boresight`` and ``telescope_PA``, it must be celestial
+                            and is used only to find the sky position at ``SCA_pos``.
+                            [default: None, which retains the native pupil orientation]
         n_waves:            Number of wavelengths to use for setting up interpolation of the
                             chromatic PSF objects, which can lead to much faster image
                             rendering.  If None, then no interpolation is used. Note that
@@ -187,6 +203,9 @@ def getPSF(SCA, bandpass,
                             bandpass.  [default: False]
         gsparams:           An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
+        boresight:          Telescope boresight as a `CelestialCoord`. [default: None]
+        telescope_PA:       Position angle of the telescope V3 axis at ``boresight``, measured
+                            from celestial north toward east, as a `galsim.Angle`. [default: None]
 
     Returns:
         A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
@@ -259,18 +278,54 @@ def getPSF(SCA, bandpass,
     if not isinstance(wavelength, (Bandpass, float, type(None))):
         raise TypeError("wavelength should either be a Bandpass, float, or None.")
 
+    # Attitude information must include both boresight and telescope_PA.
+    if (boresight is None) != (telescope_PA is None):
+        raise GalSimIncompatibleValuesError(
+            "boresight and telescope_PA must be supplied together",
+            boresight=boresight, telescope_PA=telescope_PA)
+
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                           n_waves, extra_aberrations, wavelength,
                           pupil_plane_type, gsparams)
 
-    # Apply WCS.
-    # The current version is in arcsec units, but oriented parallel to the image coordinates.
-    # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
-    # project back to world coordinates with the provided wcs.
-    if wcs is not None:
-        scale = PixelScale(pixel_scale)
-        psf = wcs.toWorld(scale.toImage(psf), image_pos=SCA_pos)
+    if boresight is not None:
+        # The boresight direction is what Roman defines as the V1 axis.
+        # V3 is a fixed direction perpendicular to this. It is normal to the Solar Array
+        # Sun Shield. Also called OBS +Z in the spacecraft coordinates.
+        # The telescope_PA is defined as the rotation angle between +V3 and North, where the
+        # sign is defined as sweeping from North towards East to the +V3 axis.
+        # The raw PSF we have now is oriented so "up" is -60 degrees from the V3 direction.
+        # So we need to rotate the PSF by approximately (telescope_PA - 60) degrees.
+        # Approximately, because the direction towards north varies across the focal plane.
+        # That is the angle to use at the boresight. In general, we need the direction of the
+        # V3 axis and find the local rotation angle at the given source position.
+
+        # Determine the V3 direction. We need it to be 90 degrees away from boresight and
+        # telescope_PA degrees rotated from local north.
+        # The Postel projection has this cool property that it preserves the angular distance
+        # from the origin, so if we set a point at 90 degrees from the origin in (u,v) at the
+        # correct angle from North (+v direction), then deprojecting with Postel will give us
+        # the CelestialCoord with the correct direction at a right angle to the boresight.
+        # Projected u increases towards west, so its eastward component has a minus sign.
+        sin_pa, cos_pa = telescope_PA.sincos()
+        v3 = boresight.deproject(-90*degrees*sin_pa, 90*degrees*cos_pa, projection='postel')
+
+        # Now measure the direction of V3 relative to local north at the source to get the
+        # correct rotation at the source position.
+        sky_pos = wcs.toWorld(SCA_pos)
+        north = CelestialCoord(0*degrees, 90*degrees)
+        theta = sky_pos.angleBetween(north, v3)
+        psf = psf.rotate(theta - 60*degrees)
+    elif wcs is not None:
+        # Without an explicit rotation angle from telescope_PA, we can get a good approximation
+        # to the correct rotation and possible reflection from the WCS directly. We don't want
+        # to apply the distortion, since that's real and needs to get applied when drawing, but
+        # we can use the orthogonal part of the jacobian to orient the PSF nearly correctly.
+        _, _, theta, flip = wcs.jacobian(image_pos=SCA_pos).getDecomposition()
+        if flip:
+            psf = psf.transform(0, 1, 1, 0)
+        psf = psf.rotate(theta)
 
     return psf
 
