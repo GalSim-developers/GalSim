@@ -651,7 +651,7 @@ class SED:
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             wave_type = self.wave_type
-            flux_type = self.flux_type
+            flux_type = self._flux_type
             x = self._spec.getArgs()
             f = [ val / other for val in self._spec.getVals() ]
             spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
@@ -921,7 +921,7 @@ class SED:
                     fast_search=fast_search, interpolant=interpolant)
 
             newspec = _LookupTable(newx, newf, interpolant=interpolant)
-            return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
+            return SED(newspec, self.wave_type, self._flux_type, redshift=self.redshift,
                        fast=self.fast)
         else:
             return self
