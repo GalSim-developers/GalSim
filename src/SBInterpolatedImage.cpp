@@ -1287,7 +1287,7 @@ namespace galsim {
         assert(N>=0);
 
         if (N<=0 || _pt.empty()) return;
-        double totalAbsFlux = _positiveFlux + _negativeFlux;
+        double totalAbsFlux = _pt.getTotalAbsFlux();
         double fluxPerPhoton = totalAbsFlux / N;
         dbg<<"posFlux = "<<_positiveFlux<<", negFlux = "<<_negativeFlux<<std::endl;
         dbg<<"totFlux = "<<_positiveFlux-_negativeFlux<<", totAbsFlux = "<<totalAbsFlux<<std::endl;

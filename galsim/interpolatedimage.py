@@ -723,7 +723,6 @@ class InterpolatedImage(GSObject):
     def _shoot(self, photons, rng):
         with convert_cpp_errors():
             self._sbp.shoot(photons._pa, rng._rng)
-        photons.flux *= self._flux_per_photon
 
     def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
         dx,dy = offset
