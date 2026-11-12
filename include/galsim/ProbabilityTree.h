@@ -69,6 +69,9 @@ namespace galsim {
         /// @brief Destructor - kill the `Element`s that have been stored away
         ~ProbabilityTree() { if (_root) delete _root; }
 
+        /// @brief Total absolute flux retained by the tree. Valid after buildTree().
+        double getTotalAbsFlux() const { return _totalAbsFlux; }
+
         /**
          * @brief Choose a member of the tree based on a uniform deviate
          *

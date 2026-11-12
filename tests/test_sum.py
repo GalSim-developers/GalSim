@@ -157,10 +157,11 @@ def test_shoot_signed_flux():
     # Make a Sum of the same profile twice, and then divide by 2. It should be equivalent
     # to the component profile. Specifically, the expected total flux is 1.0. (Not exactly,
     # because of the varying signs.)
+    rng = galsim.BaseDeviate(1234)
     psf = galsim.OpticalPSF(lam_over_diam=0.1)
     summed_psf = (psf + psf) / 2
     n_photons = 100000
-    photons = summed_psf.shoot(n_photons, galsim.BaseDeviate(42))
+    photons = summed_psf.shoot(n_photons, rng)
     absolute_flux = summed_psf.positive_flux + summed_psf.negative_flux
     assert np.any(photons.flux < 0)
     np.testing.assert_allclose(np.abs(photons.flux), absolute_flux / n_photons)
@@ -169,9 +170,21 @@ def test_shoot_signed_flux():
     # Also check this using a photon operator.
     star = galsim.DeltaFunction(flux=1000.)
     photons = star.makePhot(n_photons=n_photons, poisson_flux=False,
-                            photon_ops=[summed_psf], rng=galsim.BaseDeviate(42))
+                            photon_ops=[summed_psf], rng=rng)
     assert np.any(photons.flux < 0)
     np.testing.assert_allclose(photons.getTotalFlux(), star.flux, rtol=0.02)
+
+    # A similar idea exposed a different bug in InterpolatedImage. Here we make two profiles,
+    # one with all the pixels multiplied by 2, and another with them multiplied by -1.
+    # The Sum of these should be equivalent to a profile that does neither.
+    # There was a bug in the InterpolatedImage code that handled this incorrectly.
+    image = psf.drawImage(nx=33, ny=33, scale=0.05, dtype=float)
+    compensated_psf = galsim.InterpolatedImage(image * 2) + galsim.InterpolatedImage(image * -1)
+    expected_flux = image.array.sum()
+    np.testing.assert_allclose(compensated_psf.flux, expected_flux)
+    photons = compensated_psf.shoot(n_photons, rng)
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(photons.getTotalFlux(), expected_flux, rtol=0.02)
 
 
 @timer
