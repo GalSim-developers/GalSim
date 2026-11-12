@@ -494,9 +494,10 @@ class SED:
 
     def _mul_sed(self, other):
         """Equivalent to self * other when other is an SED, but no sanity checks."""
-        # There should only be one SED with a non-trivial redshift, so adding them
-        # should always give us the right net redshift to use.
-        redshift = self.redshift + other.redshift
+        # An absorbing screen is always at z <= the source redshift, so the larger redshift
+        # is the source's.  (The label divides out of spec below, so this only affects what
+        # redshift the product reports, not the spectrum it evaluates.)
+        redshift = max(self.redshift, other.redshift)
 
         fast = self.fast and other.fast
 
