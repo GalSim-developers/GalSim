@@ -12,6 +12,6 @@ but use conda for the dependencies, you can do::
 
     git clone git@github.com:GalSim-developers/GalSim.git
     cd GalSim
-    conda install astropy LSSTDESC.Coord
+    conda install --file conda_requirements.txt
     pip install -e .
 

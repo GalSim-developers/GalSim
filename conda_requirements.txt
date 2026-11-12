@@ -1,0 +1,14 @@
+# The requirements packages that can be installed with
+#    conda install -y -c conda-forge --file conda_requirements.txt
+python>=3.9
+numpy>=1.17
+astropy>=2.0
+#gcc>=4.8  # Rarely necessary anymore.  Uncomment if your compiler is too old to compile c++11.
+fftw>=3.3
+eigen>=3.3
+LSSTDESC.Coord>=1.2
+
+# Not technically required, but useful.
+pyyaml>=3.12
+pandas>=0.20
+
