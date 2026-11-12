@@ -379,7 +379,11 @@ def test_SED_div():
     for wave_type, factor in [('nm', 1.), ('Angstrom', 10.), (units.m, 1.e-9)]:
         specs = [lambda w: w / factor,
                  galsim.LookupTable(wave * factor, wave, 'linear')]
-        for flux_type in ['fphotons', 'flambda', 'fnu', '1']:
+        # Be sure to include an astropy unit that normalizes to one of the string aliases above
+        # *and* to a non-trivial flux_factor, so reconstruction has to go through _flux_type.
+        for flux_type in ['fphotons', 'flambda', 'fnu', '1',
+                          units.erg/(units.s*units.cm**2*units.AA),
+                          units.astrophys.photon/(units.s*units.cm**2*units.nm)]:
             for fast in [True, False]:
                 for z in [0, 0.2, 0.4]:
                     # Use table nodes to avoid interpolation error in the quotient.
@@ -1128,6 +1132,19 @@ def test_thin():
             print("realized error = ",(flux-thin_flux)/flux)
             assert np.abs(thin_err) < test_err,\
                 "Thinned SED failed accuracy goal, w/ range shrinkage."
+
+    # thin() rebuilds the LookupTable in native units, so it needs the original units.  A unit
+    # flux_type normalizes to a string alias, which drops the scale kept in flux_factor.
+    tw = np.linspace(100., 1000., 500)
+    for wave_type, factor in [('nm', 1.), ('Angstrom', 10.)]:
+        for flux_type in [units.erg/(units.s*units.cm**2*units.AA),
+                          units.astrophys.photon/(units.s*units.cm**2*units.nm)]:
+            s_u = galsim.SED(galsim.LookupTable(tw * factor, tw, 'linear'),
+                             wave_type, flux_type, fast=False)
+            x = np.array([200., 300.])
+            # The spec is linear in its native units, so thinning it is essentially exact.
+            np.testing.assert_allclose(s_u.thin(rel_err=1.e-6)(x), s_u(x), rtol=1.e-6,
+                                       err_msg="thin() did not preserve the SED units")
 
     assert_raises(ValueError, s.thin, rel_err=-0.5)
     assert_raises(ValueError, s.thin, rel_err=1.5)
