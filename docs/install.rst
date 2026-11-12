@@ -41,7 +41,7 @@ Running tests
 The simplest way to run our test suite by typing::
 
     pip install .[test]
-    pytest -n auto
+    pytest
 
 This should run all the Python-layer tests with pytest and also compile and
 run the C++ test suite.
