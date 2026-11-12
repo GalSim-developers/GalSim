@@ -25,7 +25,7 @@ from .. import meta_data, Image
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
-diameter = 2.36  # meters
+diameter = 2.36312  # meters (updated from STPSF/PSFSim)
 obscuration = 0.32
 collecting_area = 3.757e4 # cm^2, from Cycle 7
 exptime = 139.8  # s
@@ -96,7 +96,7 @@ n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-# Maxinum allowed angle from the telecope solar panels to the sun in degrees.
+# Maximum allowed angle from the telecope solar panels to the sun in degrees.
 max_sun_angle = 36.
 
 from .roman_bandpass import getBandpass, getBandpasses

@@ -337,7 +337,9 @@ def test_des():
 
         if not os.path.exists('des_data'):
             print('The des tests require the des_data directory.')
-            print('Download from http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz')
+            print('Download from https://github.com/GalSim-developers/GalSim/releases/download/'
+                  'v2.8.5/des_data.tar.gz')
+            print('Extract with tar xzf des_data.tar.gz in GalSim/examples/des.')
             return
 
         import draw_psf
