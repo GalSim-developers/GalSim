@@ -1312,7 +1312,6 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros,
               extra_link_args = ["-lfftw3"])
 
-
 # If Eigen doesn't exist in the normal places, download it.
 find_eigen_dir(output=True)
 

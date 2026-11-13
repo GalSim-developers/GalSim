@@ -28,14 +28,7 @@
 # writing the corresponding python code.
 #
 # The executable that reads these YAML files is called galsim, which should be installed
-# by either `pip install galsim` or `python setup.py install`.  If you used the latter,
-# the output should end with a line something along the lines of:
-#
-#     scripts installed into  /usr/local/bin
-#
-# telling you which directory they were installed in.  If that directory is not in your
-# path, then there should also be a message telling you to add it to your $PATH
-# environment variable.  If you used `pip install galsim --user`, then it was probably
+# with `pip install galsim`. If you used `pip install --user galsim`, then it was probably
 # installed into a directory called .local/bin in your home directory.  You can have
 # pip tell you where it is installing things by adding the `-v` option.
 #
