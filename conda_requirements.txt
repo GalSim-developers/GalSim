@@ -12,3 +12,8 @@ LSSTDESC.Coord>=1.2
 pyyaml>=3.12
 pandas>=0.20
 
+# the following are ONLY used to build the package,
+# and ONLY if you pass `--no-build-isolation` to `pip install`
+# (or `--no-isolation` to `python -m build`)
+setuptools>=38
+pybind11>=2.2
