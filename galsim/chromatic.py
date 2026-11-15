@@ -416,8 +416,7 @@ class ChromaticObject:
         """
         return self.sed.dimensionless
 
-    @staticmethod
-    def _get_integrator(integrator, wave_list):
+    def _get_integrator(self, integrator, wave_list, bandpass):
         # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
         # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
         # of `wave_list`.
@@ -437,7 +436,15 @@ class ChromaticObject:
                 integrator = integ.ContinuousIntegrator(rule)
         if not isinstance(integrator, integ.ImageIntegrator):
             raise TypeError("Invalid type passed in for integrator!")
-        return integrator
+
+        # Merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        if isinstance(integrator, integ.SampleIntegrator):
+            if len(wave_list) < 2:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
+                    integrator=integrator, bandpass=bandpass, sed=self.sed)
+            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        return integrator, bandpass
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Base implementation for drawing an image of a `ChromaticObject`.
@@ -527,15 +534,8 @@ class ChromaticObject:
         # specialize something in the subclass's drawImage method.
         assert kwargs.get('method', None) != 'phot'
 
-        integrator = self._get_integrator(integrator, wave_list)
-
-        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
-        if isinstance(integrator, integ.SampleIntegrator):
-            if len(wave_list) < 2:
-                raise GalSimIncompatibleValuesError(
-                    "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
-                    integrator=integrator, bandpass=bandpass, sed=self.sed)
-            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
 
         add_to_image = kwargs.pop('add_to_image', False)
         integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
@@ -601,11 +601,8 @@ class ChromaticObject:
             image = prof0.drawKImage(image=image, **kwargs)
             return image
 
-        integrator = self._get_integrator(integrator, wave_list)
-
-        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
-        if isinstance(integrator, integ.SampleIntegrator):
-            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
 
         add_to_image = kwargs.pop('add_to_image', False)
         image_int = integrator(self.evaluateAtWavelength, bandpass, image, kwargs, doK=True)
@@ -1539,16 +1536,6 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
-        if integrator == 'quadratic':
-            rule = integ.quadRule
-        elif integrator == 'trapezoidal':
-            rule = integ.trapzRule
-        elif integrator == 'midpoint':
-            rule = integ.midptRule
-        else:
-            raise GalSimValueError("Unrecognized integration rule", integrator,
-                                    ('trapezoidal', 'midpoint', 'quadratic'))
-
         if _flux_ratio is None:
             _flux_ratio = lambda w: np.ones_like(w)
         # _flux_ratio might be a constant float.  For simplicity below, turn it into a function.
@@ -1570,6 +1557,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         if isinstance(_flux_ratio, SED):
             wave_objs += [_flux_ratio]
         wave_list, _, _ = utilities.combine_wave_list(wave_objs)
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
+        wave_list = integrator.calculateWaves(bandpass)
 
         if np.any((wave_list < self.waves[0]) | (wave_list > self.waves[-1])):  # pragma: no cover
             # MJ: I'm pretty sure it's impossible to hit this.
@@ -1579,7 +1568,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                                    bad_waves, self.waves[0], self.waves[-1])
 
         # weights are the weights to use at each of the given wavelengths for the integration.
-        weights = rule.calculateWeights(wave_list, bandpass)
+        weights = integrator.rule.calculateWeights(wave_list, bandpass)
         # im_weights are the weights for the stored images.
         im_weights = np.zeros(len(self.waves))
         if self.use_exact_sed:
@@ -1621,8 +1610,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             integrate.
             image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
-            integrator:     The integration algorithm to use, given as a string.  Either
-                            'midpoint', 'trapezoidal', or 'quadratic' is allowed.
+            integrator:     The integration algorithm to use, as for `ChromaticObject.drawImage`.
                             [default: 'quadratic']
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
@@ -2181,9 +2169,6 @@ class ChromaticTransformation(ChromaticObject):
                             or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
                             quadratic integration rule automatically.]
-                            If the object being transformed is an `InterpolatedChromaticObject`,
-                            then ``integrator`` can only be a string, either 'midpoint',
-                            'trapezoidal', or 'quadratic'.
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:

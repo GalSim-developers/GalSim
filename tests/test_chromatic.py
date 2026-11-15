@@ -603,7 +603,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     check_pickle(PSF)
 
     # Check option to not use exact SED
@@ -622,7 +622,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     check_pickle(PSF)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
@@ -1805,6 +1805,15 @@ def test_interpolated_ChromaticObject():
     np.testing.assert_allclose(
         kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (trapz)')
+
+    # Can also use a ContinuousIntegrator if you want rather than a SampleIntegrator with
+    # one of the above rules. (Sample is implicit when using the names as above.)
+    source = interp_psf * bulge_SED
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.quadRule, N=4)
+    drawn = source.drawImage(bandpass, image=im_exact.copy(), integrator=integrator)
+    reference = galsim.ChromaticObject.drawImage(
+        source, bandpass, image=im_exact.copy(), integrator=integrator)
+    np.testing.assert_allclose(drawn.array, reference.array, atol=1.e-4, rtol=0.)
 
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.deinterpolated
