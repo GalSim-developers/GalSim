@@ -2832,12 +2832,25 @@ class ChromaticConvolution(ChromaticObject):
 
     @staticmethod
     def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
-        # Find scale at which to draw effective profile
-        # Use smallest nyquist scale among the fiducial profile and at the two limits of the bp.
-        _, prof0 = insep_obj._fiducial_profile(bandpass)
-        prof1 = insep_obj.evaluateAtWavelength(bandpass.red_limit)
-        prof2 = insep_obj.evaluateAtWavelength(bandpass.blue_limit)
-        iiscale = min(prof0.nyquist_scale, prof1.nyquist_scale, prof2.nyquist_scale)
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        wave_list, _, _ = utilities.combine_wave_list(insep_obj, bandpass)
+        integrator, bandpass = insep_obj._get_integrator(integrator, wave_list, bandpass)
+
+        # Evaluate the profiles at the wave values where the integrator will need them.
+        # We save them here in a dict, so we can use this in the integrator, but also
+        # get the stepk/maxk values to set the image size and scale appropriately.
+        profile_dict = {wave: insep_obj.evaluateAtWavelength(wave)
+                        for wave in integrator.calculateWaves(bandpass)}
+        profiles = profile_dict.values()
+
+        # Determine stepk, maxk the normal way we do this for sums so we can force
+        # them when making the InterpolatedImage. In addition to the efficiency benefit of
+        # saving the calls to calculateStepK and calculateMaxK, this is required if the
+        # insep_obj has zero flux, since those cannot calculate either value from the image.
+        prof0 = min(profiles, key=lambda prof: prof.stepk) # We use prof0 again below.
+        stepk = prof0.stepk
+        maxk = max(prof.maxk for prof in profiles)
+        iiscale = math.pi / maxk
         iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
                       # Not sure why, since I thought straight nyquist should be good enough.
                       # But if it's needed there, it's probably worth always doing, rather than
@@ -2847,18 +2860,17 @@ class ChromaticConvolution(ChromaticObject):
         if iimult is not None:
             iiscale /= iimult
 
-        # Prevent infinite recursive loop by using ChromaticObject.drawImage() on a
-        # ChromaticConvolution.
-        if isinstance(insep_obj, ChromaticConvolution):
-            effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, bandpass, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
-        else:
-            effective_prof_image = insep_obj.drawImage(
-                    bandpass, scale=iiscale, integrator=integrator,
-                    method='no_pixel')
+        # Set up the image using the one with the smallest stepk (needing the largest image).
+        image = prof0.drawImage(scale=iiscale, method='no_pixel', setup_only=True)
 
-        return InterpolatedImage(effective_prof_image, gsparams=gsparams)
+        # The dict __getitem__ function acts like a function of wavelength returning profiles,
+        # which is what the integrator needs.
+        effective_prof_image = integrator(profile_dict.__getitem__, bandpass, image,
+                                          {'method': 'no_pixel'})
+
+        # Use the calculated stepk, maxk directly here.
+        return InterpolatedImage(effective_prof_image, gsparams=gsparams,
+                                 _force_stepk=stepk, _force_maxk=maxk)
 
     @staticmethod
     def resize_effective_prof_cache(maxsize):
