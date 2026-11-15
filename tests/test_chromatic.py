@@ -2117,6 +2117,7 @@ def test_ChromaticOpticalPSF(run_slow):
     # this unit test, we use an interpolated version only.  The tests of
     # ChromaticObject in the previous unit test should be enough to ensure that exact
     # and interpolated evaluation match in general (given reasonable settings).
+    # Edit: This isn't really true anymore, but continue to use the interpolated version anyway.
 
     # First, compare the interpolated result with saved, exact results.
     # Note that if the saved results file cannot be found, then this function will (slowly)
@@ -2168,22 +2169,14 @@ def test_ChromaticOpticalPSF(run_slow):
         galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aper=psf2._aper, obscuration=0.3)
 
     # We will compare to this reference image below.  Make it if it doesn't exist yet.
+    # This used to take a long time to make, but now it's pretty fast (<2 seconds to make), so
+    # just make it on demand if it doesn't exist rather than store it in the repo.
+    # The interpolated version is still a lot faster, especially for repeated usage.
     if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
-        import warnings
-        warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "
-                      "should only happen if you intentionally deleted the file in order to "
-                      "regenerate it!")
-
-        # Generate exact results inside this if-block.
-        # This block took ~30 seconds to run on a ~2016 Macbook Pro, nearly all in the image
-        # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
-        # for this unit test takes about ~9 seconds to initialize, and ~1s for the image rendering
-        # process.  Obviously, if many images are to be rendered after incurring the overhead of
-        # initializing this object, the interpolated calculation leads to a huge savings compared to
-        # doing the exact calculation each time.
         t2 = time.time()
         obj = galsim.Convolve(star, psf)
-        im_r_ref = obj.drawImage(bandpass, scale=scale)
+        # Use iimult=2 for better accuracy on this "exact" version.
+        im_r_ref = obj.drawImage(bandpass, scale=scale, iimult=2)
         im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
         t3 = time.time()
         print("Time to draw ChromaticOpticalPSF: {0}s".format(t3-t2))
