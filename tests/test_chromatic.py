@@ -2621,6 +2621,30 @@ def test_chromatic_zero_flux():
         assert abs(image.array.sum()) < 1.e-7
         np.testing.assert_allclose(image.array, reference.array, atol=1.e-6, rtol=0.)
 
+        # Interpolating the signed profile also agrees with interpolating and drawing its parts.
+        kernel3 = kernel2.interpolate(waves)
+        plus3 = plus2.interpolate(waves)
+        minus3 = minus2.interpolate(waves)
+        image = galsim.Convolve(kernel3, blur).drawImage(bp, image=image.copy())
+        reference = galsim.Convolve(plus3, blur).drawImage(bp, image=image.copy())
+        reference -= galsim.Convolve(minus3, blur).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        assert abs(image.array.sum()) < 2.e-7
+        # The intermediate images use slightly different sizes and scales in the two cases,
+        # so the tolerance here isn't quite as low as other tests.
+        np.testing.assert_allclose(image.array, reference.array, atol=2.e-5, rtol=0.)
+
+        # Shearing and shifting the interpolated profiles preserve the same equivalence.
+        kernel4 = kernel3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        plus4 = plus3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        minus4 = minus3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        image = galsim.Convolve(kernel4, blur).drawImage(bp, image=image.copy())
+        reference = galsim.Convolve(plus4, blur).drawImage(bp, image=image.copy())
+        reference -= galsim.Convolve(minus4, blur).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        assert abs(image.array.sum()) < 2.e-7
+        np.testing.assert_allclose(image.array, reference.array, atol=2.e-5, rtol=0.)
+
     # If the sed itself is completely zero, that doesn't work.
     zero_sed = galsim.SED('0', 'nm', 'fphotons')
     for obj in [kernel * zero_sed, galsim.Convolve(psf, kernel) * zero_sed]:

@@ -2149,6 +2149,16 @@ class ChromaticTransformation(ChromaticObject):
 
         return ChromaticTransformationPhotonOp(self)
 
+    def _get_interp_image(self, bandpass, image, integrator, kwargs):
+        # This path is used only when original is an InterpolatedChromaticObject.
+        int_im = self.original._get_interp_image(
+            bandpass, image=image, integrator=integrator, _flux_ratio=self._flux_ratio, **kwargs)
+        # Shape transformations are achromatic, so their wavelength of evaluation is immaterial.
+        jac, offset, _ = self._getTransformations(bandpass.red_limit)
+        return transform.Transform(int_im, jac=jac, offset=_PositionD(*offset),
+                                   gsparams=self._gsparams,
+                                   propagate_gsparams=self._propagate_gsparams)
+
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
         See `ChromaticObject.drawImage` for a full description.
@@ -2179,16 +2189,7 @@ class ChromaticTransformation(ChromaticObject):
         if self.sed.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
         if isinstance(self.original, InterpolatedChromaticObject):
-            # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
-            # where it will be used to reweight the stored images.
-            int_im = self.original._get_interp_image(bandpass, image=image, integrator=integrator,
-                                                     _flux_ratio=self._flux_ratio, **kwargs)
-            # Get shape transformations at bandpass.red_limit (they are achromatic so it doesn't
-            # matter where you get them).
-            jac, offset, _ = self._getTransformations(bandpass.red_limit)
-            offset = _PositionD(*offset)
-            int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
-                                         propagate_gsparams=self._propagate_gsparams)
+            int_im = self._get_interp_image(bandpass, image, integrator, kwargs)
             image = int_im.drawImage(image=image, **kwargs)
         elif kwargs.get('method',None) == 'phot':
             # Need to calculate n_photons now using the fiducial profile, not self.original,
@@ -2832,6 +2833,14 @@ class ChromaticConvolution(ChromaticObject):
 
     @staticmethod
     def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
+        # Early return for types that already have a straightforward effective profile.
+        # This avoids an extra unnecessary resampling step.
+        if isinstance(insep_obj, InterpolatedChromaticObject):
+            return insep_obj._get_interp_image(bandpass, integrator=integrator)
+        elif (isinstance(insep_obj, ChromaticTransformation) and
+              isinstance(insep_obj.original, InterpolatedChromaticObject)):
+            return insep_obj._get_interp_image(bandpass, None, integrator, {})
+
         # Get the actual integrator object, and maybe adjust the bandpass if necessary.
         wave_list, _, _ = utilities.combine_wave_list(insep_obj, bandpass)
         integrator, bandpass = insep_obj._get_integrator(integrator, wave_list, bandpass)
