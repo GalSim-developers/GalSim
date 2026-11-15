@@ -434,6 +434,12 @@ class GSObject:
     @property
     def sed(self):
         return sed.SED(self.flux, 'nm', '1')
+    @lazy_property
+    def ref_sed(self):
+        return sed.SED(1., 'nm', '1')
+    @property
+    def ref_flux(self):
+        return self.flux
     @property
     def SED(self):
         from .deprecated import depr

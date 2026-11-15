@@ -2524,6 +2524,91 @@ def test_low_flux_phot():
     image = observed.drawImage(nx=53, ny=53, bandpass=bandpass, method="phot", rng=rng)
     np.testing.assert_array_equal(image.array, 0.)
 
+@timer
+def test_chromatic_zero_flux():
+    """Test drawing a chromatic object with zero total flux, but not a zero image.
+
+    This shows up in practice in Piff when we make images that are the derivative of a
+    profile. They have + and - parts, but the spatial integral is 0.
+    """
+    # A difference of normalized Gaussians has zero flux and a nonzero spatial profile.
+    bp = bandpass  # LSST r-band throughput loaded from LSST_r.dat above.
+    waves = bp.wave_list
+    sed = galsim.SED('(wave/600)**2', 'nm', 'fphotons').withFlux(1., bp)
+    psf = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4)).dilate(lambda w: w/600.)
+    plus = galsim.Gaussian(sigma=0.25)
+    minus = galsim.Gaussian(sigma=0.20)
+    kernel = plus - minus
+    assert kernel.flux == 0.
+
+    # Check that drawing the combined kernel is equivalent to the difference of the images
+    # you get from drawing plus and minus separately.
+    # Include putting a shift in, since zero-flux components don't have a measurable centroid,
+    # so make sure the code is insensitive to that.
+    for shift in [(0., 0.), (0.17, -0.23)]:
+        # First the simple separable case kernel * sed.
+        image = (kernel * sed).shift(shift).drawImage(bp, nx=96, ny=96, scale=0.1, dtype=float)
+        reference = (plus * sed).shift(shift).drawImage(bp, image=image.copy())
+        reference -= (minus * sed).shift(shift).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 5.e-4
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+        assert abs(image.array.sum()) < 1.e-10
+
+        # Also check as a sum of chromatic objects. I.e. apply sed to plus and minus separately.
+        # This is still separable, since the seds are equal.
+        (plus*sed - minus*sed).shift(shift).drawImage(bp, image=image)
+        assert np.max(np.abs(image.array)) > 1.e-3
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+        assert abs(image.array.sum()) < 1.e-10
+
+        # Check convolving the kernel by an inseparable component.
+        obj = (galsim.Convolve(psf, kernel) * sed).shift(*shift)
+        obj.drawImage(bp, image=image)
+        reference = (galsim.Convolve(psf, plus) * sed).shift(*shift).drawImage(
+            bp, image=image.copy())
+        reference -= (galsim.Convolve(psf, minus) * sed).shift(*shift).drawImage(
+            bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+        assert abs(image.array.sum()) < 1.e-8
+
+        # Check drawKImage similarly.
+        image = (kernel * sed).shift(*shift).drawKImage(bp, nx=33, ny=33, scale=0.1)
+        reference = (plus * sed).shift(*shift).drawKImage(bp, image=image.copy())
+        reference -= (minus * sed).shift(*shift).drawKImage(bp, image=image.copy())
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+        assert abs(image(0, 0)) < 1.e-10
+
+        # And with the psf convolution.
+        image = (galsim.Convolve(psf, kernel) * sed).shift(*shift).drawKImage(
+            bp, image=image.copy())
+        reference = (galsim.Convolve(psf, plus) * sed).shift(*shift).drawKImage(
+            bp, image=image.copy())
+        reference -= (galsim.Convolve(psf, minus) * sed).shift(*shift).drawKImage(
+            bp, image=image.copy())
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+        assert abs(image(0, 0)) < 1.e-10
+
+    # Check that drawing a convolution where the inseparable part has zero flux also works.
+    # A wavelength-dependent dilation makes the signed profile and its two parts inseparable.
+    kernel2 = galsim.ChromaticObject(kernel).dilate(lambda w: w/600.) * sed
+    plus2 = galsim.ChromaticObject(plus).dilate(lambda w: w/600.) * sed
+    minus2 = galsim.ChromaticObject(minus).dilate(lambda w: w/600.) * sed
+    blur = galsim.Gaussian(sigma=0.2)
+    image = galsim.Convolve(kernel2, blur).drawImage(bp, nx=96, ny=96, scale=0.1, dtype=float)
+    reference = galsim.Convolve(plus2, blur).drawImage(bp, image=image.copy())
+    reference -= galsim.Convolve(minus2, blur).drawImage(bp, image=image.copy())
+    assert np.max(np.abs(image.array)) > 1.e-4
+    assert abs(image.array.sum()) < 1.e-7
+    np.testing.assert_allclose(image.array, reference.array, atol=1.e-6, rtol=0.)
+
+    # If the sed itself is completely zero, that doesn't work.
+    zero_sed = galsim.SED('0', 'nm', 'fphotons')
+    for obj in [kernel * zero_sed, galsim.Convolve(psf, kernel) * zero_sed]:
+        with assert_raises(galsim.GalSimError):
+            obj.drawImage(bp, nx=32, ny=32, scale=0.1)
+        with assert_raises(galsim.GalSimError):
+            obj.drawKImage(bp, nx=33, ny=33, scale=0.2)
 
 @timer
 def test_chromatic_fiducial_wavelength():
@@ -2672,6 +2757,9 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
                 obj.evaluateAtWavelength(wave).drawImage().array.sum(dtype=float),
                 desired,
                 rtol=1e-2)
+
+        # Check invariant that sed = ref_sed * ref_flux.
+        np.testing.assert_allclose(obj.ref_sed(wave)*obj.ref_flux, desired)
 
     if obj.sed.spectral:
         for bp in bps:
