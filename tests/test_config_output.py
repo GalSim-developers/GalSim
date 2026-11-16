@@ -1699,6 +1699,8 @@ def test_timeout():
         # Check that it behaves sensibly if it hits timeout limit.
         # This time, it will continue on after each error, but report the error in the log.
         config2 = galsim.config.CleanConfig(config2)
+        # Use a different seed so it doesn't use the cached Sersic Hankel transforms.
+        config2['image']['random_seed'] = 1235
         config2['image']['timeout'] = 0.001
         with CaptureLog() as cl:
             galsim.config.Process(config2, logger=cl.logger)
@@ -1710,6 +1712,7 @@ def test_timeout():
 
         # If you want this to abort, use except_abort=True
         config2 = galsim.config.CleanConfig(config2)
+        config2['image']['random_seed'] = 1236
         with CaptureLog() as cl:
             with assert_raises(galsim.GalSimError):
                 galsim.config.Process(config2, logger=cl.logger, except_abort=True)
